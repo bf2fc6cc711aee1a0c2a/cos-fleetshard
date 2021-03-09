@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 @Controller
 public class CamelConnectorController implements ResourceController<CamelConnector> {
-    private static final Logger LOGGER = LoggerFactory.getLogger("");
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelConnectorController.class);
 
     @Override
     public void init(EventSourceManager eventSourceManager) {

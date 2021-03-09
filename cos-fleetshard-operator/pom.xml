@@ -24,7 +24,7 @@
     <dependencies>
         <dependency>
             <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-operator-camel</artifactId>
+            <artifactId>cos-fleetshard-controller-camel</artifactId>
         </dependency>
         <dependency>
             <groupId>io.javaoperatorsdk</groupId>

@@ -34,7 +34,7 @@
         <module>cos-fleetshard-api-camel</module>
         <module>cos-fleetshard-synchronizer-camel</module>
         <module>cos-fleetshard-synchronizer</module>
-        <module>cos-fleetshard-operator-camel</module>
+        <module>cos-fleetshard-controller-camel</module>
         <module>cos-fleetshard-operator</module>
     </modules>
 
@@ -81,7 +81,7 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-operator-camel</artifactId>
+                <artifactId>cos-fleetshard-controller-camel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
