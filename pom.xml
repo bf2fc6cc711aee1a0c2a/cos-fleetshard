@@ -16,8 +16,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
-        <quarkus.version>1.11.1.Final</quarkus.version>
-        <josdk.version>1.7.2</josdk.version>
+        <quarkus.version>1.12.1.Final</quarkus.version>
+        <josdk.version>1.7.4</josdk.version>
         <kubernetes-client.version>5.1.1</kubernetes-client.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -27,10 +27,18 @@
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
     </properties>
 
-    <modules></modules>
+    <modules>
+        <module>cos-fleetshard-api</module>
+        <module>cos-fleetshard-api-camel</module>
+        <module>cos-fleetshard-synchronizer-camel</module>
+        <module>cos-fleetshard-synchronizer</module>
+        <module>cos-fleetshard-operator-camel</module>
+        <module>cos-fleetshard-operator</module>
+    </modules>
 
     <dependencyManagement>
         <dependencies>
+            <!-- boms -->
             <dependency>
                 <groupId>io.fabric8</groupId>
                 <artifactId>kubernetes-client-bom</artifactId>
@@ -45,25 +53,53 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- deps -->
+            <dependency>
+                <groupId>io.javaoperatorsdk</groupId>
+                <artifactId>operator-framework-quarkus-extension</artifactId>
+                <version>${josdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.javaoperatorsdk</groupId>
+                <artifactId>operator-framework-core</artifactId>
+                <version>${josdk.version}</version>
+            </dependency>
+
+            <!-- deps :: local -->
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-api-camel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-camel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-synchronizer-camel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-synchronizer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.javaoperatorsdk</groupId>
-            <artifactId>operator-framework-quarkus-extension</artifactId>
-            <version>${josdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>crd-generator</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-common</artifactId>
-        </dependency>
-    </dependencies>
 
     <repositories>
         <repository>
@@ -140,7 +176,7 @@
                 <executions>
                     <execution>
                         <id>format</id>
-                        <phase>validate</phase>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>format</goal>
                         </goals>
