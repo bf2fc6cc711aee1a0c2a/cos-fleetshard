@@ -1,0 +1,8 @@
+apiVersion: cos.bf2.org/v1alpha1
+kind: CamelConnector
+metadata:
+  name: my-camel-connector
+  labels:
+    camel.apache.org/kamelet.type: "source"
+spec:
+  conenctorId: "my-connector"

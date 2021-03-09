@@ -8,9 +8,12 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.camel.CamelConnector;
 
 import io.javaoperatorsdk.operator.api.ResourceController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class CamelConnectorController implements ResourceController<CamelConnector> {
+    private static final Logger LOGGER = LoggerFactory.getLogger("");
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
@@ -18,11 +21,13 @@ public class CamelConnectorController implements ResourceController<CamelConnect
 
     @Override
     public UpdateControl<CamelConnector> createOrUpdateResource(CamelConnector connector, Context<CamelConnector> context) {
+        LOGGER.info("createOrUpdateResource {}", connector);
         return UpdateControl.noUpdate();
     }
 
     @Override
     public DeleteControl deleteResource(CamelConnector connector, Context<CamelConnector> context) {
+        LOGGER.info("deleteResource {}", connector);
         return DeleteControl.DEFAULT_DELETE;
     }
 }

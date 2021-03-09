@@ -15,7 +15,6 @@
     <packaging>jar</packaging>
 
     <properties>
-        <noDeps/>
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.group>${project.groupId}</quarkus.container-image.group>
         <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
