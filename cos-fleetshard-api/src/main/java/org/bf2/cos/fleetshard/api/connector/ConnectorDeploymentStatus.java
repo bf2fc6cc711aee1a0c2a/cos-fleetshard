@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.api.connector.camel;
+package org.bf2.cos.fleetshard.api.connector;
 
 import java.util.List;
 
@@ -7,7 +7,8 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 
-public class CamelConnectorStatus {
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
+public class ConnectorDeploymentStatus {
     private List<Condition> conditions;
 
     public List<Condition> getConditions() {
@@ -19,7 +20,7 @@ public class CamelConnectorStatus {
     }
 
     /**
-     * Defines a condition related to the CamelConnector status
+     * Defines a condition related to the Connector status
      */
     @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
     public static class Condition {
@@ -78,4 +79,5 @@ public class CamelConnectorStatus {
             this.lastTransitionTime = lastTransitionTime;
         }
     }
+
 }

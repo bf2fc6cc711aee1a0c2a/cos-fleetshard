@@ -1,14 +1,19 @@
-package org.bf2.cos.fleetshard.api.connector.camel;
+package org.bf2.cos.fleetshard.api.connector;
 
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
-import org.bf2.cos.fleetshard.api.connector.Connector;
 
+/**
+ * The deployment configuration to connect a Kafka topic to another system.
+ */
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
 @Version("v1alpha1")
 @Group("cos.bf2.org")
-public class CamelConnector extends Connector<CamelConnectorSpec, CamelConnectorStatus> {
+public class ConnectorDeployment
+        extends CustomResource<ConnectorDeploymentSpec, ConnectorDeploymentStatus>
+        implements Namespaced {
 }

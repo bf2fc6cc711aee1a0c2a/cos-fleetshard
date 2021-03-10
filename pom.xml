@@ -31,7 +31,6 @@
 
     <modules>
         <module>cos-fleetshard-api</module>
-        <module>cos-fleetshard-synchronizer</module>
         <module>cos-fleetshard-operator</module>
     </modules>
 
@@ -74,11 +73,6 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-operator</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-synchronizer</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -169,8 +163,8 @@
                 <artifactId>formatter-maven-plugin</artifactId>
                 <version>${formatter-maven-plugin-version}</version>
                 <configuration>
-                    <configFile>${cos.project.root}/etc/eclipse-formatter-config.xml</configFile>
                     <skip>${format.skip}</skip>
+                    <configFile>${cos.project.root}/etc/eclipse-formatter-config.xml</configFile>
                     <lineEnding>KEEP</lineEnding>
                 </configuration>
                 <executions>
@@ -188,10 +182,10 @@
                 <artifactId>impsort-maven-plugin</artifactId>
                 <version>${impsort-maven-plugin.version}</version>
                 <configuration>
-                    <groups>java.,javax.,org.w3c.,org.xml.,junit.</groups>
+                    <skip>${format.skip}</skip>
+                    <groups>java.,javax.,org.,com.</groups>
+                    <staticGroups>*</staticGroups>
                     <removeUnused>true</removeUnused>
-                    <staticAfter>true</staticAfter>
-                    <staticGroups>java.,javax.,org.w3c.,org.xml.,junit.</staticGroups>
                 </configuration>
             </plugin>
             <plugin>
