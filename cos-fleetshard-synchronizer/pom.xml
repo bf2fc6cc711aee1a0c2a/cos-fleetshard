@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-api-camel</artifactId>
+            <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
     </dependencies>
 

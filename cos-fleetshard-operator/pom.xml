@@ -23,13 +23,13 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-operator-camel</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.javaoperatorsdk</groupId>
             <artifactId>operator-framework-quarkus-extension</artifactId>
             <version>${josdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
     </dependencies>
 

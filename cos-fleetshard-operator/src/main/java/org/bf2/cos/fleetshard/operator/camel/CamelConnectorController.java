@@ -20,13 +20,19 @@ public class CamelConnectorController implements ResourceController<CamelConnect
     }
 
     @Override
-    public UpdateControl<CamelConnector> createOrUpdateResource(CamelConnector connector, Context<CamelConnector> context) {
+    public UpdateControl<CamelConnector> createOrUpdateResource(
+            CamelConnector connector,
+            Context<CamelConnector> context) {
+
         LOGGER.info("createOrUpdateResource {}", connector);
         return UpdateControl.noUpdate();
     }
 
     @Override
-    public DeleteControl deleteResource(CamelConnector connector, Context<CamelConnector> context) {
+    public DeleteControl deleteResource(
+            CamelConnector connector,
+            Context<CamelConnector> context) {
+
         LOGGER.info("deleteResource {}", connector);
         return DeleteControl.DEFAULT_DELETE;
     }
