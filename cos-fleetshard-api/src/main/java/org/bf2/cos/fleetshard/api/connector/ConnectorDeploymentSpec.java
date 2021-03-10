@@ -4,7 +4,16 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 public class ConnectorDeploymentSpec {
     private String connectorTypeId;
+
+    /*
+     * This is retrieved from the Control Plane
+     */
     private Connector<?, ?> connectorSpec;
+
+    /*
+     * This should point to the real connector resource and should replace
+     * the connectorSpec before persisting to k8s
+     */
     private ObjectReference connectorRef;
 
     public String getConnectorTypeId() {
