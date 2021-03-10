@@ -1,4 +1,6 @@
-package org.bf2.cos.fleetshard.api.camel;
+package org.bf2.cos.fleetshard.api.connector.debezium;
+
+import org.bf2.cos.fleetshard.api.connector.Connector;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
@@ -13,7 +15,7 @@ import io.sundr.builder.annotations.BuildableReference;
            editableEnabled = false)
 @Version("v1alpha1")
 @Group("cos.bf2.org")
-public class CamelConnector
-        extends CustomResource<CamelConnectorSpec, CamelConnectorStatus>
-        implements Namespaced {
+public class DebeziumConnector
+        extends CustomResource<DebeziumConnectorSpec, DebeziumConnectorStatus>
+        implements Connector, Namespaced {
 }

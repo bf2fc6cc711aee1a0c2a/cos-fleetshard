@@ -23,6 +23,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>kubernetes-model-common</artifactId>
         </dependency>
@@ -30,6 +34,10 @@
             <groupId>io.javaoperatorsdk</groupId>
             <artifactId>operator-framework-quarkus-extension</artifactId>
             <version>${josdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api-camel</artifactId>
         </dependency>
     </dependencies>
 
