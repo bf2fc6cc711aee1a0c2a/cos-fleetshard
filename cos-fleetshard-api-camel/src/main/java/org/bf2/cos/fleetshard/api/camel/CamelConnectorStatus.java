@@ -1,6 +1,8 @@
 package org.bf2.cos.fleetshard.api.camel;
 
-public class CamelConnectorStatus {
+import org.bf2.cos.fleetshard.api.ConnectorSpec;
+
+public class CamelConnectorStatus extends ConnectorSpec {
     private String phase;
 
     public String getPhase() {

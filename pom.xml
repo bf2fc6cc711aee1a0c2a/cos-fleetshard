@@ -17,7 +17,7 @@
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
         <quarkus.version>1.12.1.Final</quarkus.version>
-        <josdk.version>1.7.5-SNAPSHOT</josdk.version>
+        <josdk.version>1.7.6-SNAPSHOT</josdk.version>
         <kubernetes-client.version>5.1.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
 
@@ -34,7 +34,7 @@
         <module>cos-fleetshard-api-camel</module>
         <module>cos-fleetshard-synchronizer-camel</module>
         <module>cos-fleetshard-synchronizer</module>
-        <module>cos-fleetshard-controller-camel</module>
+        <module>cos-fleetshard-operator-camel</module>
         <module>cos-fleetshard-operator</module>
     </modules>
 
@@ -81,7 +81,7 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-controller-camel</artifactId>
+                <artifactId>cos-fleetshard-operator-camel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,6 +1,8 @@
 package org.bf2.cos.fleetshard.api.camel;
 
-public class CamelConnectorSpec {
+import org.bf2.cos.fleetshard.api.ConnectorSpec;
+
+public class CamelConnectorSpec extends ConnectorSpec {
     private String connectorId;
 
     public String getConnectorId() {

@@ -16,8 +16,8 @@ import org.bf2.cos.fleetshard.api.camel.CamelConnectorStatus;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @ApplicationScoped
-@Path("/api/managed-services-api/v1/cos/")
-@RegisterRestClient(configKey = "control-plane")
+@Path("/api/managed-services-api/v1/kafka-connector-clusters")
+@RegisterRestClient(configKey = "kafka-connector-clusters")
 public interface ControlPlaneClient {
     @PUT
     @Path("/{id}/status")
@@ -25,7 +25,7 @@ public interface ControlPlaneClient {
     void updateStatus(@PathParam("id") String id, CamelConnectorStatus status);
 
     @GET
-    @Path("/{id}/connectors")
+    @Path("/{id}/connectors/camel")
     @Produces(MediaType.APPLICATION_JSON)
     List<CamelConnector> getConnectors(@PathParam("id") String id);
 }
