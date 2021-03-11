@@ -58,8 +58,10 @@ public class ConnectorsSynchronizer {
 
     private void pollConnectors(ConnectorCluster connectorCluster) {
         String namespace = kubernetesClient.getNamespace();
-        List<Connector<?, ?>> connectors = controlPlane.getConnectors(agentId,
+        List<Connector<?, ?>> connectors = controlPlane.getConnectors(
+                agentId,
                 connectorCluster.getStatus().getResourceVersion());
+
         connectors.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
 
         for (Connector<?, ?> connector : connectors) {

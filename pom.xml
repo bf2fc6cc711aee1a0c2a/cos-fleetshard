@@ -16,8 +16,11 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
+
+
         <quarkus.version>1.12.1.Final</quarkus.version>
-        <josdk.version>1.7.6-SNAPSHOT</josdk.version>
+        <quarkus-operator-sdk.version>1.8.0.CR1</quarkus-operator-sdk.version>
+        <josdk.version>1.8.0</josdk.version>
         <kubernetes-client.version>5.1.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
 
@@ -55,13 +58,13 @@
             <!-- deps -->
             <dependency>
                 <groupId>io.javaoperatorsdk</groupId>
-                <artifactId>operator-framework-quarkus-extension</artifactId>
+                <artifactId>operator-framework-core</artifactId>
                 <version>${josdk.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.javaoperatorsdk</groupId>
-                <artifactId>operator-framework-core</artifactId>
-                <version>${josdk.version}</version>
+                <groupId>io.quarkiverse.operatorsdk</groupId>
+                <artifactId>quarkus-operator-sdk</artifactId>
+                <version>${quarkus-operator-sdk.version}</version>
             </dependency>
 
             <!-- deps :: local -->

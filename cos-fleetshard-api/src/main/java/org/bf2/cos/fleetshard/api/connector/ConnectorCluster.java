@@ -16,8 +16,8 @@ public class ConnectorCluster
 
     public boolean isReady() {
         return getStatus()
-            .getLatestCondition()
-            .map(c -> c.is(ConnectorClusterStatus.ConditionType.Ready))
-            .orElse(false);
+                .getLatestCondition()
+                .map(c -> c.is(ConnectorClusterStatus.ConditionType.Ready))
+                .orElse(false);
     };
 }
