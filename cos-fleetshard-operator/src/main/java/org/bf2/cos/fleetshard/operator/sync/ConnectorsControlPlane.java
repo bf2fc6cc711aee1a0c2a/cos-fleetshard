@@ -8,6 +8,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.api.connector.Connector;
@@ -17,7 +18,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 @ApplicationScoped
 @Path("/api/managed-services-api/v1/kafka-connector-clusters")
 @RegisterRestClient(configKey = "kafka-connector-clusters")
-public interface ConnectorClusterClient {
+public interface ConnectorsControlPlane {
     /**
      * Updates the status of the cluster.
      *
@@ -38,7 +39,7 @@ public interface ConnectorClusterClient {
     @GET
     @Path("/{id}/connectors/")
     @Consumes(MediaType.APPLICATION_JSON)
-    List<Connector> getConnectors(@PathParam("id") String id);
+    List<Connector<?, ?>> getConnectors(@PathParam("id") String id, @QueryParam("gt_version") long resourceVersion);
 
     /**
      * Updates the status of a connector.
