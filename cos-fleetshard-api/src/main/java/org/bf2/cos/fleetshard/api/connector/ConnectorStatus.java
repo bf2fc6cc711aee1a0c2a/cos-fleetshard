@@ -3,7 +3,9 @@ package org.bf2.cos.fleetshard.api.connector;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.sundr.builder.annotations.Buildable;
 
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public abstract class ConnectorStatus {
     private List<Condition> conditions;
 
@@ -18,6 +20,7 @@ public abstract class ConnectorStatus {
     /**
      * Defines a condition related to the Connector status
      */
+    //@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
     public static class Condition {
         public enum Type {
             Installing,
