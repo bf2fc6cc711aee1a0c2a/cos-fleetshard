@@ -8,6 +8,7 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.connector.camel.CamelConnector;
 
 import io.javaoperatorsdk.operator.api.ResourceController;
+import org.bf2.cos.fleetshard.api.connector.camel.CamelConnectorBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,7 @@ public class CamelConnectorController implements ResourceController<CamelConnect
             CamelConnector connector,
             Context<CamelConnector> context) {
 
+        new CamelConnectorBuilder().build();
         LOGGER.info("createOrUpdateResource {}", connector);
         return UpdateControl.noUpdate();
     }

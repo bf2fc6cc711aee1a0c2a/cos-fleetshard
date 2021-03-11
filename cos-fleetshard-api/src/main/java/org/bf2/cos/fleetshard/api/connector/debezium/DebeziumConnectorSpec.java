@@ -1,13 +1,6 @@
 package org.bf2.cos.fleetshard.api.connector.debezium;
 
-public class DebeziumConnectorSpec {
-    private String connectorId;
+import org.bf2.cos.fleetshard.api.connector.ConnectorSpec;
 
-    public String getConnectorId() {
-        return connectorId;
-    }
-
-    public void setConnectorId(String connectorId) {
-        this.connectorId = connectorId;
-    }
+public class DebeziumConnectorSpec extends ConnectorSpec {
 }
