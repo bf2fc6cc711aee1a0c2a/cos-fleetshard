@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.api.connector;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
@@ -14,10 +15,8 @@ public class ConnectorCluster
         extends CustomResource<ConnectorClusterSpec, ConnectorClusterStatus>
         implements Namespaced {
 
+    @JsonIgnore
     public boolean isReady() {
-        return getStatus()
-                .getLatestCondition()
-                .map(c -> c.is(ConnectorClusterStatus.ConditionType.Ready))
-                .orElse(false);
+        return getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready);
     };
 }

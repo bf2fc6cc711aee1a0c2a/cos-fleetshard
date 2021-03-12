@@ -17,8 +17,6 @@ import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
 import org.bf2.cos.fleetshard.api.connector.ConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.connector.ConnectorStatus;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.jboss.resteasy.annotations.SseElementType;
-import org.reactivestreams.Publisher;
 
 @ApplicationScoped
 @Path("/api/managed-services-api/v1/kafka-connector-clusters")
@@ -63,22 +61,20 @@ public interface ConnectorsControlPlane {
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion);
 
-    /**
-     * Subscribe to the connector deployment configurations that need to be placed on this cluster.
-     *
-     * @param  id              the id of the cluster
-     * @param  resourceVersion the resource version to start from
-     * @param  watch           if we want to watch or not
-     * @return                 a list of {@link Connector}
-     */
-    @GET
-    @Path("/{id}/connectors/")
-    @Produces(MediaType.SERVER_SENT_EVENTS)
-    @SseElementType(MediaType.APPLICATION_JSON)
-    Publisher<Connector<?, ?>> getConnectors(
-            @PathParam("id") String id,
-            @QueryParam("gt_version") long resourceVersion,
-            @QueryParam("watch") boolean watch);
+    //
+    // Subscribe to the connector deployment configurations that need to be placed on this cluster.
+    //
+    // TODO: not implemented by MP/Quarkus REST Client
+    //       https://github.com/quarkusio/quarkus/issues/12850
+    //
+    // @GET
+    // @Path("/{id}/connectors/")
+    // @Produces(MediaType.SERVER_SENT_EVENTS)
+    // @SseElementType(MediaType.APPLICATION_JSON)
+    // Publisher<Connector<?, ?>> getConnectors(
+    //        @PathParam("id") String id,
+    //        @QueryParam("gt_version") long resourceVersion);
+    //
 
     /**
      * Updates the status of a connector.

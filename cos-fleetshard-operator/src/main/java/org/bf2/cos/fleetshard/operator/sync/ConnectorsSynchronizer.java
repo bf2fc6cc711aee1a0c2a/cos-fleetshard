@@ -58,13 +58,8 @@ public class ConnectorsSynchronizer {
 
     private void pollConnectors(ConnectorCluster connectorCluster) {
         String namespace = kubernetesClient.getNamespace();
-        List<Connector<?, ?>> connectors = controlPlane.getConnectors(
-                agentId,
-                connectorCluster.getStatus().getResourceVersion());
 
-        connectors.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
-
-        for (Connector<?, ?> connector : connectors) {
+        for (Connector<?, ?> connector : getConnectors(connectorCluster)) {
             if (connector instanceof CamelConnector) {
                 kubernetesClient
                         .customResources(CamelConnector.class)
@@ -110,4 +105,13 @@ public class ConnectorsSynchronizer {
         return Optional.of(answer);
     }
 
+    private List<Connector<?, ?>> getConnectors(ConnectorCluster connectorCluster) {
+        List<Connector<?, ?>> connectors = controlPlane.getConnectors(
+                agentId,
+                connectorCluster.getStatus().getResourceVersion());
+
+        connectors.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
+
+        return connectors;
+    }
 }
