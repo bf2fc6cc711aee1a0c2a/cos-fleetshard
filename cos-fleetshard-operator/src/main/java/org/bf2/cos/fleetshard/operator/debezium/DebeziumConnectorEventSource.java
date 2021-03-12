@@ -1,10 +1,11 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnector;
-import org.bf2.cos.fleetshard.operator.support.DependantResourceEventSource;
+import org.bf2.cos.fleetshard.operator.support.ConnectorEventSource;
 
-public class DebeziumConnectorEventSource extends DependantResourceEventSource<DebeziumConnector> {
+import io.fabric8.kubernetes.client.KubernetesClient;
+
+public class DebeziumConnectorEventSource extends ConnectorEventSource<DebeziumConnector> {
     public static String EVENT_SOURCE_ID = "debezium-connector-event-source";
 
     public DebeziumConnectorEventSource(KubernetesClient client) {

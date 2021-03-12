@@ -1,11 +1,11 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import org.bf2.cos.fleetshard.api.connector.camel.CamelConnector;
-import org.bf2.cos.fleetshard.operator.support.DependantResourceEvent;
+import org.bf2.cos.fleetshard.operator.support.ConnectorEvent;
 
 import io.fabric8.kubernetes.client.Watcher;
 
-public class CamelConnectorEvent extends DependantResourceEvent<CamelConnector> {
+public class CamelConnectorEvent extends ConnectorEvent<CamelConnector> {
     public CamelConnectorEvent(
             Watcher.Action action,
             CamelConnector resource,

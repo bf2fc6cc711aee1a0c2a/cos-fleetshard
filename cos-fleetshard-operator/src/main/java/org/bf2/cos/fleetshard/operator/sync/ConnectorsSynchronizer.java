@@ -9,7 +9,6 @@ import javax.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleetshard.api.connector.Connector;
 import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
 import org.bf2.cos.fleetshard.api.connector.camel.CamelConnector;
@@ -38,7 +37,7 @@ public class ConnectorsSynchronizer {
      * to sketch how the sync task should work, if the scheduler take more time than the
      * configured interval, the task is skipped
      */
-    @Scheduled(every = "{cos.agent.poll.interval}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    //@Scheduled(every = "{cos.agent.poll.interval}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void pollConnectors() {
         LOGGER.debug("Polling for control plane managed connectors");
 
@@ -59,7 +58,7 @@ public class ConnectorsSynchronizer {
     private void pollConnectors(ConnectorCluster connectorCluster) {
         String namespace = kubernetesClient.getNamespace();
 
-        for (Connector<?, ?> connector : getConnectors(connectorCluster)) {
+        for (Connector connector : getConnectors(connectorCluster)) {
             if (connector instanceof CamelConnector) {
                 kubernetesClient
                         .customResources(CamelConnector.class)
@@ -76,7 +75,9 @@ public class ConnectorsSynchronizer {
             }
 
             // TODO: update resource version
-            connectorCluster.getStatus().setResourceVersion(connector.getSpec().getResourceVersion());
+            connectorCluster
+                    .getStatus()
+                    .setResourceVersion(connector.getSpec().getResourceVersion());
         }
     }
 
