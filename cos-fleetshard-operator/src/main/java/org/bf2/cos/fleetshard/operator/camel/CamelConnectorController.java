@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import javax.inject.Inject;
+
 import org.bf2.cos.fleetshard.api.connector.camel.CamelConnector;
 import org.bf2.cos.fleetshard.operator.support.DependantResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.DependantResourceEventSource;
@@ -19,11 +21,8 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 public class CamelConnectorController implements ResourceController<CamelConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelConnectorController.class);
 
-    private final KubernetesClient client;
-
-    public CamelConnectorController(KubernetesClient client) {
-        this.client = client;
-    }
+    @Inject
+    KubernetesClient client;
 
     @Override
     public void init(EventSourceManager eventSourceManager) {

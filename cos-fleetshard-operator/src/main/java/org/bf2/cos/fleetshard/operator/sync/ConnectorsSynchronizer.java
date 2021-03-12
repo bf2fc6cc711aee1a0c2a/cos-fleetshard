@@ -29,7 +29,7 @@ public class ConnectorsSynchronizer {
     @Inject
     KubernetesClient kubernetesClient;
 
-    @ConfigProperty(name = "cos.agent.id")
+    @ConfigProperty(name = "cos.agent.id", defaultValue = "cos")
     String agentId;
 
     /*
