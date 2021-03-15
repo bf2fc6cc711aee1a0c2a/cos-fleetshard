@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.sync;
+package org.bf2.cos.fleetshard.operator.sync.cp;
 
 import java.util.List;
 
@@ -19,9 +19,12 @@ import org.bf2.cos.fleetshard.api.connector.ConnectorStatus;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @ApplicationScoped
-@Path("/api/managed-services-api/v1/kafka-connector-clusters")
-@RegisterRestClient(configKey = "cos-control-plane")
-public interface ConnectorsControlPlane {
+@Path(ControlPlaneClient.BASE_PATH)
+@RegisterRestClient(configKey = ControlPlaneClient.CONFIG_KEY)
+public interface ControlPlaneClient {
+    String CONFIG_KEY = "control-plane";
+    String BASE_PATH = "/api/managed-services-api/v1/kafka-connector-clusters";
+
     /**
      * Updates the status of the agent.
      *
@@ -43,7 +46,7 @@ public interface ConnectorsControlPlane {
      * @return    a list of {@link ConnectorCluster}
      */
     @GET
-    @Path("/{id}/connectors/")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     ConnectorCluster getConnectorCluster(@PathParam("id") String id);
 

@@ -13,7 +13,7 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
 import org.bf2.cos.fleetshard.operator.camel.CamelConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumConnectorEventSource;
-import org.bf2.cos.fleetshard.operator.sync.ConnectorsControlPlane;
+import org.bf2.cos.fleetshard.operator.sync.cp.ControlPlaneClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,7 @@ public class ConnectorClusterController implements ResourceController<ConnectorC
 
     @Inject
     @RestClient
-    ConnectorsControlPlane controlPlane;
+    ControlPlaneClient controlPlane;
     @Inject
     KubernetesClient client;
 
