@@ -5,9 +5,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sundr.builder.annotations.Buildable;
 
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class Status {
     protected String phase;
     private List<Condition> conditions;
@@ -43,6 +45,7 @@ public abstract class Status {
         this.conditions = conditions;
     }
 
+    @JsonIgnore
     public Optional<Condition> getLatestCondition() {
         return conditions != null
                 ? Optional.of(conditions.get(conditions.size() - 1))

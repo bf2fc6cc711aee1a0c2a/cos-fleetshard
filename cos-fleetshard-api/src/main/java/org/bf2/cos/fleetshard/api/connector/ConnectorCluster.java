@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class))
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
 @Version("v1alpha1")
 @Group("cos.bf2.org")
 public class ConnectorCluster
@@ -18,5 +18,5 @@ public class ConnectorCluster
     @JsonIgnore
     public boolean isReady() {
         return getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready);
-    };
+    }
 }
