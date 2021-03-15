@@ -10,8 +10,8 @@ import io.sundr.builder.annotations.Buildable;
 
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public abstract class Status {
-    protected String phase;
+public class Status {
+    private String phase;
     private List<Condition> conditions;
 
     public String getPhase() {
@@ -50,5 +50,13 @@ public abstract class Status {
         return conditions != null
                 ? Optional.of(conditions.get(conditions.size() - 1))
                 : Optional.empty();
-    };
+    }
+
+    @Override
+    public String toString() {
+        return "Status{" +
+                "phase='" + phase + '\'' +
+                ", conditions=" + conditions +
+                '}';
+    }
 }

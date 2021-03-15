@@ -11,6 +11,7 @@ import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.Event;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.connector.ConnectorClusterStatus;
 import org.bf2.cos.fleetshard.operator.camel.CamelConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.sync.cp.ControlPlaneClient;
@@ -40,15 +41,24 @@ public class ConnectorClusterController implements ResourceController<ConnectorC
 
     @Override
     public UpdateControl<ConnectorCluster> createOrUpdateResource(
-            ConnectorCluster connector,
+            ConnectorCluster cluster,
             Context<ConnectorCluster> context) {
 
         for (Event e : context.getEvents().getList()) {
             // TODO: update last resource version
         }
 
-        LOGGER.info("createOrUpdateResource {}", connector);
+        LOGGER.info("createOrUpdateResource {}", cluster.getSpec());
+        LOGGER.info("createOrUpdateResource {}", cluster.getStatus());
         // TODO: update control plane
+
+        if (!cluster.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
+            cluster.getStatus().setPhase(ConnectorClusterStatus.PhaseType.Ready);
+
+            LOGGER.info("createOrUpdateResource {}", cluster.getStatus());
+
+            return UpdateControl.updateStatusSubResource(cluster);
+        }
 
         return UpdateControl.noUpdate();
     }

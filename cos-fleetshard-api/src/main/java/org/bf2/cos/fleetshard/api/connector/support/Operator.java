@@ -43,4 +43,13 @@ public class Operator {
         Deleted,
         Error;
     }
+
+    @Override
+    public String toString() {
+        return "Operator{" +
+            "id='" + id + '\'' +
+            ", version='" + version + '\'' +
+            ", conditions=" + conditions +
+            '}';
+    }
 }

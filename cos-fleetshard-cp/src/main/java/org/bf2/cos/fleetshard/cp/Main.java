@@ -5,10 +5,10 @@ import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
 
 @QuarkusMain
-public class ControlPlane implements QuarkusApplication {
+public class Main implements QuarkusApplication {
 
     public static void main(String... args) {
-        Quarkus.run(ControlPlane.class, args);
+        Quarkus.run(Main.class, args);
     }
 
     @Override
