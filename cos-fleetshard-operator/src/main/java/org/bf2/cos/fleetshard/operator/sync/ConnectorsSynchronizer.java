@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.sync;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -7,8 +9,12 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleetshard.api.connector.Connector;
 import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
@@ -113,12 +119,44 @@ public class ConnectorsSynchronizer {
     }
 
     private List<Connector<?, ?>> getConnectors(ConnectorCluster connectorCluster) {
-        List<Connector<?, ?>> connectors = controlPlane.getConnectors(
-                agentId,
-                connectorCluster.getStatus().getResourceVersion());
+        final ArrayNode nodes = controlPlane.getConnectors(agentId, connectorCluster.getStatus().getResourceVersion());
+        final List<Connector<?, ?>> answer = new ArrayList<>(nodes.size());
 
-        connectors.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
+        if (nodes.isEmpty()) {
+            LOGGER.info("No connectors with gv > {}", connectorCluster.getStatus().getResourceVersion());
+            return Collections.emptyList();
+        }
 
-        return connectors;
+        try {
+            for (JsonNode node : nodes) {
+                JsonNode kind = node.get("kind");
+                if (kind == null) {
+                    continue;
+                }
+
+                switch (kind.asText()) {
+                    case CamelConnector.KIND: {
+                        LOGGER.info("Got CamelConnector: {}", node);
+                        CamelConnector connector = Serialization.jsonMapper().treeToValue(node, CamelConnector.class);
+                        answer.add(connector);
+                        break;
+                    }
+                    case DebeziumConnector.KIND: {
+                        LOGGER.info("Got DebeziumConnector: {}", node);
+                        DebeziumConnector connector = Serialization.jsonMapper().treeToValue(node, DebeziumConnector.class);
+                        answer.add(connector);
+                        break;
+                    }
+                    default:
+                        throw new IllegalArgumentException("Unknown kind " + kind.asText());
+                }
+            }
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Unable to process connectors list", e);
+        }
+
+        answer.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
+
+        return answer;
     }
 }

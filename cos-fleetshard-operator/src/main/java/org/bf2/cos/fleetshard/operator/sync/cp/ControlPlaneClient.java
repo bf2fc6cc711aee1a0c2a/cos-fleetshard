@@ -1,7 +1,5 @@
 package org.bf2.cos.fleetshard.operator.sync.cp;
 
-import java.util.List;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -12,6 +10,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.bf2.cos.fleetshard.api.connector.Connector;
 import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
 import org.bf2.cos.fleetshard.api.connector.ConnectorClusterStatus;
@@ -60,7 +59,8 @@ public interface ControlPlaneClient {
     @GET
     @Path("/{id}/connectors/")
     @Produces(MediaType.APPLICATION_JSON)
-    List<Connector<?, ?>> getConnectors(
+    @Consumes(MediaType.APPLICATION_JSON)
+    ArrayNode getConnectors(
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion);
 

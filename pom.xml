@@ -205,21 +205,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <parameters>true</parameters>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
