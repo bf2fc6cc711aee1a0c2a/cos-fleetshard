@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.support;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
@@ -8,7 +9,7 @@ import io.javaoperatorsdk.operator.processing.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class DependantResourceEventSource<T> extends AbstractEventSource implements Watcher<T> {
+public abstract class DependantResourceEventSource<T extends HasMetadata> extends AbstractEventSource implements Watcher<T> {
     private final KubernetesClient client;
     private final Logger logger;
 

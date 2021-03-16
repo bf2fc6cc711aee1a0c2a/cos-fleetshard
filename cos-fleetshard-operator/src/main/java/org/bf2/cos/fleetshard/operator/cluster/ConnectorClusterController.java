@@ -45,12 +45,13 @@ public class ConnectorClusterController implements ResourceController<ConnectorC
             Context<ConnectorCluster> context) {
 
         for (Event e : context.getEvents().getList()) {
-            // TODO: update last resource version
+            // TODO: maybe update last resource version
         }
 
         LOGGER.info("createOrUpdateResource {}", cluster.getSpec());
         LOGGER.info("createOrUpdateResource {}", cluster.getStatus());
         // TODO: update control plane
+        //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
 
         if (!cluster.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
             cluster.getStatus().setPhase(ConnectorClusterStatus.PhaseType.Ready);

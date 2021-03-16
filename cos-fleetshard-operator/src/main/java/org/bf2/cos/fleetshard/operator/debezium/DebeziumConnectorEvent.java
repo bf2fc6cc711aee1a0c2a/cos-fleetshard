@@ -1,21 +1,20 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
 import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnector;
-import org.bf2.cos.fleetshard.operator.support.ConnectorEvent;
 
 import io.fabric8.kubernetes.client.Watcher;
+import org.bf2.cos.fleetshard.operator.support.DependantResourceEvent;
 
-public class DebeziumConnectorEvent extends ConnectorEvent<DebeziumConnector> {
+public class DebeziumConnectorEvent extends DependantResourceEvent {
     public DebeziumConnectorEvent(
             Watcher.Action action,
             DebeziumConnector resource,
-            String ownerUid,
             DebeziumConnectorEventSource eventSource) {
-        super(action, resource, ownerUid, eventSource);
+        super(action, resource, eventSource);
     }
 
     @Override
     public String toString() {
-        return "KameletBindingEvent{}";
+        return "DebeziumConnectorEvent{}";
     }
 }

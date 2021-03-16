@@ -1,11 +1,10 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnector;
-import org.bf2.cos.fleetshard.operator.support.ConnectorEventSource;
-
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnector;
+import org.bf2.cos.fleetshard.operator.support.DependantResourceEventSource;
 
-public class DebeziumConnectorEventSource extends ConnectorEventSource<DebeziumConnector> {
+public class DebeziumConnectorEventSource extends DependantResourceEventSource<DebeziumConnector> {
     public static String EVENT_SOURCE_ID = "debezium-connector-event-source";
 
     public DebeziumConnectorEventSource(KubernetesClient client) {
@@ -22,6 +21,7 @@ public class DebeziumConnectorEventSource extends ConnectorEventSource<DebeziumC
         getLogger().info("Event received for action: {}", action.name());
         if (action == Action.ERROR) {
             getLogger().warn("Skipping");
+
             return;
         }
 
@@ -29,7 +29,6 @@ public class DebeziumConnectorEventSource extends ConnectorEventSource<DebeziumC
                 new DebeziumConnectorEvent(
                         action,
                         resource,
-                        "",
                         this));
     }
 }
