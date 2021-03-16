@@ -57,6 +57,7 @@ public class ConnectorClusterController implements ResourceController<ConnectorC
 
             LOGGER.info("createOrUpdateResource {}", cluster.getStatus());
 
+            // does not work https://github.com/java-operator-sdk/java-operator-sdk/issues/371
             return UpdateControl.updateStatusSubResource(cluster);
         }
 

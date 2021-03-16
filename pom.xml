@@ -16,13 +16,12 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
-
-
         <quarkus.version>1.12.1.Final</quarkus.version>
         <quarkus-operator-sdk.version>1.8.0.CR1</quarkus-operator-sdk.version>
         <josdk.version>1.8.0</josdk.version>
         <kubernetes-client.version>5.1.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
+        <strimzi.version>0.21.1</strimzi.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -66,6 +65,11 @@
                 <groupId>io.quarkiverse.operatorsdk</groupId>
                 <artifactId>quarkus-operator-sdk</artifactId>
                 <version>${quarkus-operator-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.strimzi</groupId>
+                <artifactId>api</artifactId>
+                <version>${strimzi.version}</version>
             </dependency>
 
             <!-- deps :: local -->

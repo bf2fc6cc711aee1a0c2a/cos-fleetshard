@@ -1,17 +1,18 @@
 package org.bf2.cos.fleetshard.operator.support;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.client.Watcher;
 import io.javaoperatorsdk.operator.processing.event.AbstractEvent;
 import io.javaoperatorsdk.operator.processing.event.EventSource;
 
 public class DependantResourceEvent<T> extends AbstractEvent {
     private final Watcher.Action action;
-    private final T resource;
+    private final ObjectReference resource;
 
     public DependantResourceEvent(
             Watcher.Action action,
-            T resource,
+            ObjectReference resource,
             String ownerUid,
             EventSource eventSource) {
 
@@ -23,7 +24,7 @@ public class DependantResourceEvent<T> extends AbstractEvent {
 
     public DependantResourceEvent(
             Watcher.Action action,
-            T resource,
+            ObjectReference resource,
             HasMetadata hasMetadata,
             EventSource eventSource) {
 
@@ -34,7 +35,7 @@ public class DependantResourceEvent<T> extends AbstractEvent {
         return action;
     }
 
-    public T getResource() {
+    public ObjectReference getResource() {
         return resource;
     }
 }

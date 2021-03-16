@@ -47,9 +47,9 @@ public class Operator {
     @Override
     public String toString() {
         return "Operator{" +
-            "id='" + id + '\'' +
-            ", version='" + version + '\'' +
-            ", conditions=" + conditions +
-            '}';
+                "id='" + id + '\'' +
+                ", version='" + version + '\'' +
+                ", conditions=" + conditions +
+                '}';
     }
 }
