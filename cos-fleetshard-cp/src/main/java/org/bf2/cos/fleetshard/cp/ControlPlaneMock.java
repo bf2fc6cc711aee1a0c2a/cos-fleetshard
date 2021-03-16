@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Consumes;
@@ -33,7 +34,7 @@ import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnectorStatus;
 @Path("/api/managed-services-api/v1/kafka-connector-clusters")
 public class ControlPlaneMock {
     private final ConnectorCluster cluster;
-    private final List<Connector<?, ?>> connectors;
+    private final List<Connector> connectors;
 
     public ControlPlaneMock() {
         this.cluster = new ConnectorClusterBuilder().build();
@@ -71,12 +72,19 @@ public class ControlPlaneMock {
     @GET
     @Path("/{id}/connectors/")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Connector<?, ?>> getConnectors(
+    public List<Connector> getConnectors(
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion) {
 
-        return connectors.stream()
-                .filter(c -> resourceVersion < c.getSpec().getResourceVersion())
+        return Stream.concat(
+                connectors.stream()
+                        .filter(CamelConnector.class::isInstance)
+                        .map(CamelConnector.class::cast)
+                        .filter(c -> resourceVersion < c.getSpec().getResourceVersion()),
+                connectors.stream()
+                        .filter(DebeziumConnector.class::isInstance)
+                        .map(DebeziumConnector.class::cast)
+                        .filter(c -> resourceVersion < c.getSpec().getResourceVersion()))
                 .collect(Collectors.toList());
     }
 

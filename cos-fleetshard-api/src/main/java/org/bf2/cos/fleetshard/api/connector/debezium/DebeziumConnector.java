@@ -14,7 +14,7 @@ import org.bf2.cos.fleetshard.api.connector.Connector;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DebeziumConnector
         extends CustomResource<DebeziumConnectorSpec, DebeziumConnectorStatus>
-        implements Connector<DebeziumConnectorSpec, DebeziumConnectorStatus> {
+        implements Connector {
 
     public static final String VERSION = "v1alpha1";
     public static final String GROUP = "cos.bf2.org";

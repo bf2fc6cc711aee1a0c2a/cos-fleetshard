@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.sync;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,7 +67,7 @@ public class ConnectorsSynchronizer {
     private void pollConnectors(ConnectorCluster connectorCluster) {
         String namespace = kubernetesClient.getNamespace();
 
-        for (Connector<?, ?> connector : getConnectors(connectorCluster)) {
+        for (Connector connector : getConnectors(connectorCluster)) {
             LOGGER.info("got {}", connector);
 
             if (connector instanceof CamelConnector) {
@@ -76,20 +75,27 @@ public class ConnectorsSynchronizer {
                         .customResources(CamelConnector.class)
                         .inNamespace(namespace)
                         .createOrReplace((CamelConnector) connector);
+
+                // TODO: update resource version
+                // TODO: check version
+                connectorCluster
+                        .getStatus()
+                        .setResourceVersion(((CamelConnector) connector).getSpec().getResourceVersion());
             } else if (connector instanceof DebeziumConnector) {
                 kubernetesClient
                         .customResources(DebeziumConnector.class)
                         .inNamespace(namespace)
                         .createOrReplace((DebeziumConnector) connector);
+
+                // TODO: update resource version
+                // TODO: check version
+                connectorCluster
+                        .getStatus()
+                        .setResourceVersion(((DebeziumConnector) connector).getSpec().getResourceVersion());
             } else {
                 LOGGER.error("Unsupported connector type: {}", connector.getClass().getName());
-                continue;
             }
 
-            // TODO: update resource version
-            connectorCluster
-                    .getStatus()
-                    .setResourceVersion(connector.getSpec().getResourceVersion());
         }
     }
 
@@ -118,9 +124,9 @@ public class ConnectorsSynchronizer {
         return Optional.of(answer);
     }
 
-    private List<Connector<?, ?>> getConnectors(ConnectorCluster connectorCluster) {
+    private List<Connector> getConnectors(ConnectorCluster connectorCluster) {
         final ArrayNode nodes = controlPlane.getConnectors(agentId, connectorCluster.getStatus().getResourceVersion());
-        final List<Connector<?, ?>> answer = new ArrayList<>(nodes.size());
+        final List<Connector> answer = new ArrayList<>(nodes.size());
 
         if (nodes.isEmpty()) {
             LOGGER.info("No connectors with gv > {}", connectorCluster.getStatus().getResourceVersion());
@@ -154,8 +160,6 @@ public class ConnectorsSynchronizer {
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Unable to process connectors list", e);
         }
-
-        answer.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
 
         return answer;
     }
