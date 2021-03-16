@@ -46,13 +46,15 @@ public class ConnectorsSynchronizer {
         String namespace = kubernetesClient.getNamespace();
 
         getConnectorCluster().ifPresent(cc -> {
+
+            pollConnectors(cc);
             // update the ConnectorCluster state to include the new resources
             // TODO: should the control plane also be updated ? in such case it should probably a task
             //       for the ConnectorCluster controller
             kubernetesClient
                     .customResources(ConnectorCluster.class)
                     .inNamespace(namespace)
-                    .createOrReplace(cc);
+                    .updateStatus(cc);
         });
 
     }
@@ -61,6 +63,8 @@ public class ConnectorsSynchronizer {
         String namespace = kubernetesClient.getNamespace();
 
         for (Connector<?, ?> connector : getConnectors(connectorCluster)) {
+            LOGGER.info("got {}", connector);
+
             if (connector instanceof CamelConnector) {
                 kubernetesClient
                         .customResources(CamelConnector.class)

@@ -6,18 +6,24 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.sundr.builder.annotations.Buildable;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+import io.fabric8.kubernetes.api.model.Condition;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(Condition.class))
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Status {
     private String phase;
     private List<Condition> conditions;
 
+    @JsonProperty
     public String getPhase() {
         return phase;
     }
 
+    @JsonProperty
     public void setPhase(String phase) {
         this.phase = phase;
     }
@@ -37,10 +43,12 @@ public class Status {
         return Objects.equals(getPhase(), type.name());
     }
 
+    @JsonProperty
     public List<Condition> getConditions() {
         return conditions;
     }
 
+    @JsonProperty
     public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
     }

@@ -54,7 +54,7 @@ public class ConnectorClusterController implements ResourceController<ConnectorC
         //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
 
         if (!cluster.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
-            cluster.getStatus().setPhase(ConnectorClusterStatus.PhaseType.Ready);
+            cluster.getStatus().setPhase(ConnectorClusterStatus.PhaseType.Ready.name());
 
             LOGGER.info("createOrUpdateResource {}", cluster.getStatus());
 

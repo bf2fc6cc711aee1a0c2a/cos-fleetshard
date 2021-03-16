@@ -3,10 +3,12 @@ package org.bf2.cos.fleetshard.api.connector.support;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.fabric8.kubernetes.api.model.Condition;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(io.fabric8.kubernetes.api.model.Condition.class))
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(Condition.class))
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Operator {
     private String id;
