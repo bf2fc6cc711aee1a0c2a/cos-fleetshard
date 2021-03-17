@@ -6,9 +6,12 @@ metadata:
   name: camel-2
 spec:
   connector:
-    kamelets:
-    - apiVersion: camel.apache.org/v1alpha1
-      kind: Kamelet
-      spec:
-        flow: 
-          field: test
+    binding:
+      source:
+        ref:
+          name: "source-v1"
+          apiVersion: "camel.apache.org/v1alpha1"
+      sink:
+        ref:
+          name: "sink-v1"
+          apiVersion: "camel.apache.org/v1alpha1"

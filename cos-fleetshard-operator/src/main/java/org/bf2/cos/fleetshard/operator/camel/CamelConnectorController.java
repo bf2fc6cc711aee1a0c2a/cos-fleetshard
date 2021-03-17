@@ -35,6 +35,8 @@ public class CamelConnectorController extends AbstractResourceController<CamelCo
                     connector.getSpec());
             LOGGER.info("createOrUpdateResource spec: {}",
                     Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(connector.getSpec()));
+
+            //connector.getSpec().getConnector().getKamelets()
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

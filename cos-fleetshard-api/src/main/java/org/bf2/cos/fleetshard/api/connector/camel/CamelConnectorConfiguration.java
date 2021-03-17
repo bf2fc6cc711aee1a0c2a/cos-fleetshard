@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.api.connector.camel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,7 +13,10 @@ import io.sundr.builder.annotations.BuildableReference;
         @BuildableReference(KameletBindingSpec.class) })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CamelConnectorConfiguration {
-    private List<Kamelet> kamelets;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<Kamelet> kamelets = new ArrayList<>();
+
     private KameletBindingSpec binding;
 
     public List<Kamelet> getKamelets() {
