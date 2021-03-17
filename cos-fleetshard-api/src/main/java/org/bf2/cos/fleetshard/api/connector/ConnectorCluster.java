@@ -14,9 +14,4 @@ import io.sundr.builder.annotations.BuildableReference;
 public class ConnectorCluster
         extends CustomResource<ConnectorClusterSpec, ConnectorClusterStatus>
         implements Namespaced {
-
-    @JsonIgnore
-    public boolean isReady() {
-        return getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready);
-    }
 }

@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.api.connector;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sundr.builder.annotations.Buildable;
 import org.bf2.cos.fleetshard.api.connector.support.Status;

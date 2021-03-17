@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.sync.cp;
+package org.bf2.cos.fleetshard.operator.controlplane;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Consumes;

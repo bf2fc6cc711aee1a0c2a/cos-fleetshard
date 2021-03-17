@@ -1,22 +1,27 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import javax.inject.Inject;
+
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.api.Context;
+import io.javaoperatorsdk.operator.api.Controller;
+import io.javaoperatorsdk.operator.api.UpdateControl;
+import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.connector.debezium.DebeziumConnector;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.javaoperatorsdk.operator.api.Context;
-import io.javaoperatorsdk.operator.api.Controller;
-import io.javaoperatorsdk.operator.api.DeleteControl;
-import io.javaoperatorsdk.operator.api.ResourceController;
-import io.javaoperatorsdk.operator.api.UpdateControl;
-import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-
 @Controller
-public class DebeziumConnectorController implements ResourceController<DebeziumConnector> {
+public class DebeziumConnectorController extends AbstractResourceController<DebeziumConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumConnectorController.class);
+
+    @Inject
+    KubernetesClient client;
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
+        // TODO: watch owned resource
     }
 
     @Override
@@ -26,14 +31,5 @@ public class DebeziumConnectorController implements ResourceController<DebeziumC
 
         LOGGER.info("createOrUpdateResource {}", connector);
         return UpdateControl.noUpdate();
-    }
-
-    @Override
-    public DeleteControl deleteResource(
-            DebeziumConnector connector,
-            Context<DebeziumConnector> context) {
-
-        LOGGER.info("deleteResource {}", connector);
-        return DeleteControl.DEFAULT_DELETE;
     }
 }

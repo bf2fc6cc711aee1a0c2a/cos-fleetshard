@@ -9,6 +9,7 @@ import io.sundr.builder.annotations.BuildableReference;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectorSpec {
     private long resourceVersion;
+    private KafkaSpec kafka;
     private PodTemplateSpec template;
 
     public long getResourceVersion() {
@@ -19,11 +20,28 @@ public class ConnectorSpec {
         this.resourceVersion = resourceVersion;
     }
 
+    public KafkaSpec getKafka() {
+        return kafka;
+    }
+
+    public void setKafka(KafkaSpec kafka) {
+        this.kafka = kafka;
+    }
+
     public PodTemplateSpec getTemplate() {
         return template;
     }
 
     public void setTemplate(PodTemplateSpec template) {
         this.template = template;
+    }
+
+    @Override
+    public String toString() {
+        return "ConnectorSpec{" +
+                "resourceVersion=" + resourceVersion +
+                ", kafka=" + kafka +
+                ", template=" + template +
+                '}';
     }
 }

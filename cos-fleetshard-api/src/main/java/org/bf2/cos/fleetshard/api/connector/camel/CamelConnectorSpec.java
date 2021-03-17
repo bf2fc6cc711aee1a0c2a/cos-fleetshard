@@ -7,4 +7,21 @@ import org.bf2.cos.fleetshard.api.connector.ConnectorSpec;
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CamelConnectorSpec extends ConnectorSpec {
+    private CamelConnectorConfiguration connector;
+
+    public CamelConnectorConfiguration getConnector() {
+        return connector;
+    }
+
+    public void setConnector(CamelConnectorConfiguration connector) {
+        this.connector = connector;
+    }
+
+    @Override
+    public String toString() {
+        return "CamelConnectorSpec{" +
+                "super=" + super.toString() + "," +
+                "connector=" + connector +
+                '}';
+    }
 }
