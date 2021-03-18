@@ -1,6 +1,0 @@
-apiVersion: cos.bf2.org/v1alpha1
-kind: ConnectorCluster
-metadata:
-  name: my-connector-cluster
-spec:
-  connectorClusterId: "cos"

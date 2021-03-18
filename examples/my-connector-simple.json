@@ -1,0 +1,19 @@
+{
+  "id": "camel-c1",
+  "spec": {
+    "resourceVersion": 18,
+    "operatorId": "ck",
+    "resources": [
+      {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+          "name": "time-source-v1"
+        },
+        "data": {
+          "foo": "bar"
+        }
+      }
+    ]
+  }
+}

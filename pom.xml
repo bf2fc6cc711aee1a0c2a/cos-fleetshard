@@ -19,9 +19,8 @@
         <quarkus.version>1.12.1.Final</quarkus.version>
         <quarkus-operator-sdk.version>1.8.0.CR1</quarkus-operator-sdk.version>
         <josdk.version>1.8.0</josdk.version>
-        <kubernetes-client.version>5.1.1</kubernetes-client.version>
+        <kubernetes-client.version>5.2.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
-        <strimzi.version>0.21.1</strimzi.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
@@ -33,7 +32,6 @@
 
     <modules>
         <module>cos-fleetshard-api</module>
-        <module>cos-fleetshard-cp</module>
         <module>cos-fleetshard-operator</module>
     </modules>
 
@@ -76,11 +74,6 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-cp</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

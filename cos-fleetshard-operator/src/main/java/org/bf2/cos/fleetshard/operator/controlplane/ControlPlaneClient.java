@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.controlplane;
 
+import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -10,11 +12,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.bf2.cos.fleetshard.api.connector.Connector;
-import org.bf2.cos.fleetshard.api.connector.ConnectorCluster;
-import org.bf2.cos.fleetshard.api.connector.ConnectorClusterStatus;
-import org.bf2.cos.fleetshard.api.connector.ConnectorStatus;
+import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.Connector;
+import org.bf2.cos.fleetshard.api.Agent;
+import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @ApplicationScoped
@@ -34,20 +35,20 @@ public interface ControlPlaneClient {
     @Path("/{id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void updateConnectorCluster(
+    void updateAgent(
             @PathParam("id") String id,
-            ConnectorClusterStatus status);
+            AgentStatus status);
 
     /**
      * Retrieve the connector cluster configuration.
      *
      * @param  id the id of the cluster
-     * @return    a list of {@link ConnectorCluster}
+     * @return    a list of {@link Agent}
      */
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ConnectorCluster getConnectorCluster(@PathParam("id") String id);
+    Agent getAgent(@PathParam("id") String id);
 
     /**
      * Retrieve the connector deployment configurations that need to be placed on this cluster.
@@ -60,7 +61,7 @@ public interface ControlPlaneClient {
     @Path("/{id}/connectors/")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    ArrayNode getConnectors(
+    List<ConnectorDeployment> getConnectors(
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion);
 
@@ -90,5 +91,8 @@ public interface ControlPlaneClient {
     @Path("/{id}/connectors/{cid}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void updateConnector(@PathParam("id") String id, @PathParam("cid") String cid, ConnectorStatus status);
+    void updateConnector(
+            @PathParam("id") String id,
+            @PathParam("cid") String cid,
+            ConnectorDeployment.Status status);
 }
