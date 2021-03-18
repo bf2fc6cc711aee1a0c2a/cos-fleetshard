@@ -29,10 +29,12 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             Connector connector,
             Context<Connector> context) {
 
-        // Set up watcher for resources created by the connector
-        for (ObjectReference resource : connector.getStatus().getResources()) {
-            // TODO: implement
-            //watch(context, resource);
+        if (connector.getStatus() != null) {
+            // Set up watcher for resources created by the connector
+            for (ObjectReference resource : connector.getStatus().getResources()) {
+                // TODO: implement
+                //watch(context, resource);
+            }
         }
 
         context.getEvents().getLatestOfType(DependantResourceEvent.class).ifPresent(e -> {

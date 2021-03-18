@@ -9,6 +9,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -20,7 +21,10 @@ import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleetshard.api.Agent;
 import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.Connector;
+import org.bf2.cos.fleetshard.api.ConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
@@ -99,20 +103,19 @@ public class AgentController extends AbstractResourceController<Agent> {
                 throw new RuntimeException(e);
             }
 
-            /*
             kubernetesClient.customResources(Connector.class)
                     .inNamespace(connectorCluster.getMetadata().getNamespace())
-                    .withName(cd.getId())
                     .createOrReplace(
                             new ConnectorBuilder()
+                                    .withMetadata(new ObjectMetaBuilder()
+                                            .withName(cd.getId())
+                                            .build())
                                     .withSpec(new ConnectorSpecBuilder()
                                             .withConnectorResourceVersion(cd.getSpec().getResourceVersion())
                                             .withStatusExtractors(cd.getSpec().getStatusExtractors())
                                             .withResources(refs)
                                             .build())
                                     .build());
-
-             */
 
             // TODO: lookup target namespace
             // TODO: create resources cd.spec.resources
