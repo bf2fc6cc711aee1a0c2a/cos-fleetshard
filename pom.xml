@@ -21,6 +21,7 @@
         <josdk.version>1.8.1</josdk.version>
         <kubernetes-client.version>5.2.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
+        <lombok.version>1.18.18</lombok.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>

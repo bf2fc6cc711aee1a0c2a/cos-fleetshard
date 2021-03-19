@@ -7,19 +7,19 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class StatusExtractor {
-    private String apiVersion;
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+public class ResourceRef {
     private String kind;
     private String name;
-    private String path = ".status";
+    private String apiVersion;
 
-    public String getApiVersion() {
-        return apiVersion;
+    public ResourceRef() {
     }
 
-    public void setApiVersion(String apiVersion) {
+    public ResourceRef(String kind, String name, String apiVersion) {
+        this.kind = kind;
+        this.name = name;
         this.apiVersion = apiVersion;
     }
 
@@ -39,11 +39,12 @@ public class StatusExtractor {
         this.name = name;
     }
 
-    public String getPath() {
-        return path;
+    public String getApiVersion() {
+        return apiVersion;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
     }
+
 }

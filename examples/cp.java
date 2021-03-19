@@ -2,6 +2,7 @@
 //
 //DEPS io.quarkus:quarkus-bom:1.12.2.Final@pom
 //DEPS io.quarkus:quarkus-resteasy-jackson
+//DEPS io.quarkus:quarkus-kubernetes-client
 //DEPS org.bf2:cos-fleetshard-api:1.0.0-SNAPSHOT
 //DEPS org.bf2:cos-fleetshard-common:1.0.0-SNAPSHOT
 //
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -40,11 +42,14 @@ import org.slf4j.LoggerFactory;
 public class cp {
     private static final Logger LOGGER = LoggerFactory.getLogger(cp.class);
 
+
     private final Agent cluster;
+    private final AtomicLong counter;
     private final Map<String, ConnectorDeployment> connectors;
 
     public cp() {
         this.cluster = new Agent();
+        this.counter = new AtomicLong();
         this.connectors = new HashMap<>();
     }
 
@@ -100,6 +105,7 @@ public class cp {
             ConnectorDeployment connector)
             throws Exception {
 
+        connector.getSpec().setResourceVersion(counter.incrementAndGet());
         connectors.put(connector.getId(), connector);
     }
 

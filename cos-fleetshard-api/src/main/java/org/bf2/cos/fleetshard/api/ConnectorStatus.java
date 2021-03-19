@@ -4,20 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.sundr.builder.annotations.Buildable;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@ToString
+@EqualsAndHashCode
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectorStatus extends Status {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<ObjectReference> resources = new ArrayList<>();
+    private List<ResourceRef> resources = new ArrayList<>();
 
-    public List<ObjectReference> getResources() {
+    public List<ResourceRef> getResources() {
         return resources;
     }
 
-    public void setResources(List<ObjectReference> resources) {
+    public void setResources(List<ResourceRef> resources) {
         this.resources = resources;
     }
 

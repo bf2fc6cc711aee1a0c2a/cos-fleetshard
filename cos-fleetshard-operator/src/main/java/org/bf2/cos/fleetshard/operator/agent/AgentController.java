@@ -7,32 +7,30 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.api.Agent;
-import org.bf2.cos.fleetshard.api.AgentStatus;
-import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.common.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.JsonNode;
-
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import io.quarkus.scheduler.Scheduled;
+import org.bf2.cos.fleetshard.api.Agent;
+import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.Connector;
+import org.bf2.cos.fleetshard.api.ConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.common.ResourceUtil;
+import org.bf2.cos.fleetshard.common.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
+import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Controller
 public class AgentController extends AbstractResourceController<Agent> {
@@ -42,6 +40,8 @@ public class AgentController extends AbstractResourceController<Agent> {
     ControlPlane controlPlane;
     @Inject
     KubernetesClient kubernetesClient;
+    @Inject
+    UnstructuredClient uc;
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
@@ -57,7 +57,9 @@ public class AgentController extends AbstractResourceController<Agent> {
             Agent cluster,
             Context<Agent> context) {
 
-        // TODO: implement
+        if (cluster.getStatus() == null) {
+            cluster.setStatus(new AgentStatus());
+        }
         if (!cluster.getStatus().isInPhase(AgentStatus.PhaseType.Ready)) {
             cluster.getStatus().setPhase(AgentStatus.PhaseType.Ready.name());
         }
@@ -73,33 +75,27 @@ public class AgentController extends AbstractResourceController<Agent> {
     //
     // ******************************************
 
-    // TODO: maybe this should be part of the control loop
     @Scheduled(every = "{cos.agent.sync.interval}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void pollConnectors() {
         LOGGER.debug("Polling for control plane managed connectors");
         getConnectorCluster().ifPresent(this::pollConnectors);
     }
 
+    @SuppressWarnings("unchecked")
     private void pollConnectors(Agent connectorCluster) {
         for (ConnectorDeployment cd : controlPlane.getConnectors(connectorCluster)) {
             LOGGER.info("got {}", cd);
 
-            List<ObjectReference> refs = new ArrayList<>();
+            List<ResourceRef> refs = new ArrayList<>();
 
             try {
                 for (JsonNode node : cd.getSpec().getResources()) {
-                    String resource = Serialization.jsonMapper().writeValueAsString(node);
+                    Map<String, Object> result = uc.createOrReplace(
+                            connectorCluster.getMetadata().getNamespace(),
+                            node,
+                            Serialization.jsonMapper().treeToValue(node, Map.class));
 
-                    CustomResourceDefinitionContext ctx = ResourceUtil.asCustomResourceDefinitionContext(node);
-
-                    Map<String, Object> result = kubernetesClient.customResource(ctx)
-                            .inNamespace(connectorCluster.getMetadata().getNamespace())
-                            .create(resource);
-
-                    LOGGER.info(">>>> {}", resource);
-                    LOGGER.info(">>>> {}", result);
-
-                    refs.add(ResourceUtil.objectRef(result));
+                    refs.add(ResourceUtil.asResourceRef(result));
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -111,6 +107,7 @@ public class AgentController extends AbstractResourceController<Agent> {
                             new ConnectorBuilder()
                                     .withMetadata(new ObjectMetaBuilder()
                                             .withName(cd.getId())
+                                            .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
                                             .build())
                                     .withSpec(new ConnectorSpecBuilder()
                                             .withConnectorResourceVersion(cd.getSpec().getResourceVersion())
@@ -118,12 +115,6 @@ public class AgentController extends AbstractResourceController<Agent> {
                                             .withResources(refs)
                                             .build())
                                     .build());
-
-            // TODO: lookup target namespace
-            // TODO: create resources cd.spec.resources
-            // TODO: set owner ref
-            // TODO: check resource version
-            // TODO: create resource on k8s in the target namespace
         }
     }
 
@@ -144,7 +135,7 @@ public class AgentController extends AbstractResourceController<Agent> {
         }
 
         Agent answer = items.getItems().get(0);
-        if (!answer.getStatus().isInPhase(AgentStatus.PhaseType.Ready)) {
+        if (answer.getStatus() == null || !answer.getStatus().isInPhase(AgentStatus.PhaseType.Ready)) {
             LOGGER.debug("ConnectorCluster not yet configured");
             return Optional.empty();
         }

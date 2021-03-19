@@ -1,0 +1,78 @@
+{
+  "id": "camel-c1",
+  "spec": {
+    "resourceVersion": 5,
+    "operatorId": "ck",
+    "resources": [
+      {
+        "apiVersion": "camel.apache.org/v1alpha1",
+        "kind": "Kamelet",
+        "metadata": {
+          "name": "time-source-v1"
+        },
+        "spec": {
+          "flow": {
+            "from": {
+              "uri": "timer:tick",
+              "parameters": {
+                "period": "{{period}}"
+              },
+              "steps": [
+                {
+                  "set-body": {
+                    "constant": "{{message}}"
+                  }
+                },
+                {
+                  "to": "kamelet:sink"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "apiVersion": "camel.apache.org/v1alpha1",
+        "kind": "Kamelet",
+        "metadata": {
+          "name": "log-sink-v1"
+        },
+        "spec": {
+          "flow": {
+            "from": {
+              "uri": "kamelet:source",
+              "steps": [
+                {
+                  "to": "log:sink"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "apiVersion": "camel.apache.org/v1alpha1",
+        "kind": "KameletBinding",
+        "metadata": {
+          "name": "camel-c1"
+        },
+        "spec": {
+          "source": {
+            "kind": "Kamelet",
+            "apiVersion": "camel.apache.org/v1alpha1",
+            "name": "time-source-v1",
+            "properties": {
+              "period": "5s",
+              "message": "hello"
+            }
+          },
+          "sink": {
+            "kind": "Kamelet",
+            "apiVersion": "camel.apache.org/v1alpha1",
+            "name": "log-sink-v1"
+          }
+        }
+      }
+    ]
+  }
+}

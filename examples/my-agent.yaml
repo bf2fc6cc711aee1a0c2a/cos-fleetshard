@@ -1,6 +1,6 @@
 apiVersion: cos.bf2.org/v1alpha1
 kind: Agent
 metadata:
-  name: my-connector-cluster
+  name: my-cos-agent
 spec:
   agentId: "cos"

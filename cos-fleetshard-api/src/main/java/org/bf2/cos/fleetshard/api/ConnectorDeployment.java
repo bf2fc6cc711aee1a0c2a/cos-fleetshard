@@ -5,7 +5,11 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@ToString
+@EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectorDeployment {
     private String id;
@@ -36,6 +40,8 @@ public class ConnectorDeployment {
         this.status = status;
     }
 
+    @ToString
+    @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Spec {
         private long resourceVersion;
@@ -78,6 +84,8 @@ public class ConnectorDeployment {
         }
     }
 
+    @ToString
+    @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Status extends org.bf2.cos.fleetshard.api.Status {
         private String operatorId;

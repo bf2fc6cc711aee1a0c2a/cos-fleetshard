@@ -3,6 +3,7 @@
 //DEPS org.slf4j:slf4j-simple:1.7.30
 //DEPS org.bf2:cos-fleetshard-api:1.0.0-SNAPSHOT
 //DEPS org.bf2:cos-fleetshard-common:1.0.0-SNAPSHOT
+//DEPS org.bf2:cos-fleetshard-common:1.0.0-SNAPSHOT
 //
 
 import java.io.File;
