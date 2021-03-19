@@ -1,0 +1,27 @@
+{
+  "apiVersion": "camel.apache.org/v1alpha1",
+  "kind": "Kamelet",
+  "metadata": {
+    "name": "time-source-v1"
+  },
+  "spec": {
+    "flow": {
+      "from": {
+        "uri": "timer:tick2",
+        "parameters": {
+          "period": "{{period}}"
+        },
+        "steps": [
+          {
+            "set-body": {
+              "constant": "{{message}}"
+            }
+          },
+          {
+            "to": "kamelet:sink"
+          }
+        ]
+      }
+    }
+  }
+}

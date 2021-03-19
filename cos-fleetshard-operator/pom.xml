@@ -23,6 +23,15 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-common</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
@@ -61,10 +70,6 @@
         <dependency>
             <groupId>io.quarkiverse.operatorsdk</groupId>
             <artifactId>quarkus-operator-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
 
         <dependency>

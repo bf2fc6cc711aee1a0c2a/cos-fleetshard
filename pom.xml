@@ -16,9 +16,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
-        <quarkus.version>1.12.1.Final</quarkus.version>
-        <quarkus-operator-sdk.version>1.8.0.CR1</quarkus-operator-sdk.version>
-        <josdk.version>1.8.0</josdk.version>
+        <quarkus.version>1.12.2.Final</quarkus.version>
+        <quarkus-operator-sdk.version>1.8.0</quarkus-operator-sdk.version>
+        <josdk.version>1.8.1</josdk.version>
         <kubernetes-client.version>5.2.1</kubernetes-client.version>
         <jandex.version>2.2.3.Final</jandex.version>
 
@@ -32,6 +32,7 @@
 
     <modules>
         <module>cos-fleetshard-api</module>
+        <module>cos-fleetshard-common</module>
         <module>cos-fleetshard-operator</module>
     </modules>
 
@@ -74,6 +75,11 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

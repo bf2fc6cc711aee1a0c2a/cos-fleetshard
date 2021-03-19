@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.support;
+package org.bf2.cos.fleetshard.common;
 
 import java.util.Collections;
 import java.util.List;
@@ -115,17 +115,18 @@ public final class ResourceUtil {
         return builder.build();
     }
 
-    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(Map<String, Object> node)  {
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(Map<String, Object> node) {
         return asCustomResourceDefinitionContext(node, true);
     }
 
-    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(Map<String, Object> node, boolean namespaced) {
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(Map<String, Object> node,
+            boolean namespaced) {
         CustomResourceDefinitionContext.Builder builder = new CustomResourceDefinitionContext.Builder();
         if (namespaced) {
             builder.withScope(Scope.NAMESPACED.value());
         }
 
-        String version = (String)node.get("apiVersion");
+        String version = (String) node.get("apiVersion");
         if (version != null) {
             String[] items = version.split("/");
             if (items.length == 1) {
@@ -137,15 +138,15 @@ public final class ResourceUtil {
             }
         }
 
-        String kind = (String)node.get("kind");
+        String kind = (String) node.get("kind");
         if (kind != null) {
             builder.withKind(kind);
             builder.withPlural(Pluralize.toPlural(kind.toLowerCase(Locale.US)));
         }
 
-        Map<String, Object> meta = (Map<String, Object>)node.get("metadata");
+        Map<String, Object> meta = (Map<String, Object>) node.get("metadata");
         if (meta != null) {
-            String name = (String)meta.get("name");
+            String name = (String) meta.get("name");
             if (name != null) {
                 builder.withName(name);
             }

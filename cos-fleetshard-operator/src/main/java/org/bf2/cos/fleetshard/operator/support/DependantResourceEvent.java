@@ -8,8 +8,8 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.javaoperatorsdk.operator.processing.event.AbstractEvent;
 import io.javaoperatorsdk.operator.processing.event.EventSource;
 
-import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.objectRef;
-import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.ownerUid;
+import static org.bf2.cos.fleetshard.common.ResourceUtil.objectRef;
+import static org.bf2.cos.fleetshard.common.ResourceUtil.ownerUid;
 
 public class DependantResourceEvent extends AbstractEvent {
     private final Watcher.Action action;

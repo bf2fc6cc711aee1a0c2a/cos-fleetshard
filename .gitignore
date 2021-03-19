@@ -8,4 +8,6 @@ target
 .settings
 .factorypath
 .classpath
+kamel
+.kamel/
 

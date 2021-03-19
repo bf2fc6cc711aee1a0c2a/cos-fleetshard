@@ -1,8 +1,9 @@
 //usr/bin/env jbang "$0" "$@" ; exit $?
 //
-//DEPS io.quarkus:quarkus-bom:1.12.1.Final@pom
+//DEPS io.quarkus:quarkus-bom:1.12.2.Final@pom
 //DEPS io.quarkus:quarkus-resteasy-jackson
 //DEPS org.bf2:cos-fleetshard-api:1.0.0-SNAPSHOT
+//DEPS org.bf2:cos-fleetshard-common:1.0.0-SNAPSHOT
 //
 //JAVAC_OPTIONS -parameters
 //JAVA_OPTIONS -Djava.util.logging.manager=org.jboss.logmanager.LogManager

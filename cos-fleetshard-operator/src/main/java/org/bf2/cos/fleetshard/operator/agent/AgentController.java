@@ -7,7 +7,21 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.bf2.cos.fleetshard.api.Agent;
+import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.Connector;
+import org.bf2.cos.fleetshard.api.ConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.common.ResourceUtil;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
+import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JsonNode;
+
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.ObjectReference;
@@ -19,18 +33,6 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleetshard.api.Agent;
-import org.bf2.cos.fleetshard.api.AgentStatus;
-import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Controller
 public class AgentController extends AbstractResourceController<Agent> {
