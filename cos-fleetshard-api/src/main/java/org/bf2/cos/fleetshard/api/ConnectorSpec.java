@@ -2,11 +2,8 @@ package org.bf2.cos.fleetshard.api;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -53,18 +50,5 @@ public class ConnectorSpec {
 
     public void setStatusExtractors(List<StatusExtractor> statusExtractors) {
         this.statusExtractors = statusExtractors;
-    }
-
-    @JsonIgnore
-    public boolean shouldStatusBeExtracted(ObjectReference reference) {
-        for (StatusExtractor extractor : statusExtractors) {
-            if (Objects.equals(reference.getApiVersion(), extractor.getApiVersion()) &&
-                    Objects.equals(reference.getKind(), extractor.getKind()) &&
-                    Objects.equals(reference.getName(), extractor.getName())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
