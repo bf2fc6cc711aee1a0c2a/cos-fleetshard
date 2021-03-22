@@ -31,11 +31,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.bf2.cos.fleetshard.api.Agent;
 import org.bf2.cos.fleetshard.api.AgentStatus;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 @ApplicationScoped
 @Path("/api/managed-services-api/v1/kafka-connector-clusters")
@@ -93,9 +97,15 @@ public class cp {
     public void updateConnector(
             @PathParam("id") String id,
             @PathParam("cid") String cid,
-            ConnectorDeployment.Status status) {
+            ConnectorDeployment.Status status) throws JsonProcessingException {
 
-        LOGGER.info("Updating status {}", status);
+        LOGGER.info("Updating status {}", 
+            Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(status));
+
+        connectors.computeIfPresent(
+            cid, 
+            (k, v) -> { v.setStatus(status); return v; }
+        );
     }
 
     @POST

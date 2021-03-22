@@ -26,8 +26,8 @@ import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.support.DependantResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.ResourceEventSource;
 import org.slf4j.Logger;
@@ -41,70 +41,70 @@ public class ConnectorController extends AbstractResourceController<Connector> {
     KubernetesClient kubernetesClient;
     @Inject
     UnstructuredClient uc;
+    @Inject
+    ControlPlane controlPlane;
 
     @Override
     public UpdateControl<Connector> createOrUpdateResource(
             Connector connector,
             Context<Connector> context) {
 
-        LOGGER.info("createOrUpdateResource: {}", connector.getSpec());
-
-        if (connector.getStatus() != null) {
-            // Set up watcher for resources created by the connector
-            for (ResourceRef resource : connector.getStatus().getResources()) {
-                watch(context, connector, resource);
-            }
-        }
-
-        context.getEvents().getLatestOfType(DependantResourceEvent.class).ifPresent(e -> {
-            if (connector.getSpec().shouldStatusBeExtracted(e.getObjectReference())) {
-                // TODO: implement
-            }
-        });
-
-        if (connector.getStatus() == null) {
-            connector.setStatus(new ConnectorStatus());
-        }
-
-        //
-        // If the connector phase is "Provisioning", it means that the agent has received
-        // instructions to deploy or update a connector but it is still working to set it
-        // up (i.e. reconcile triggered before all the related resources have been created)
-        //
-        if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioning)) {
-            LOGGER.info("Connector {}/{}/{} provisioning, do nothing",
-                    connector.getApiVersion(),
-                    connector.getKind(),
-                    connector.getMetadata().getName());
-
-            return UpdateControl.noUpdate();
-        }
+        LOGGER.info("Reconcile {}/{}/{}",
+                connector.getApiVersion(),
+                connector.getKind(),
+                connector.getMetadata().getName());
 
         try {
+            //
+            // Set up watcher for resource types owned by the connectors. We don't
+            // create a watch for each resource the connector owns to avoid creating
+            // loads of watchers, instead we create a resource per type which will
+            // triggers connectors based on the UUID of the owner (see the 'monitor'
+            // method for more info)
+            //
+            for (ResourceRef resource : connector.getStatus().getResources()) {
+                monitor(context, connector, resource);
+            }
+
             setupResources(connector);
             cleanupResources(connector);
 
+            // TODO: make this a little bit smart, for the moment always update the
+            //       status with the latest info from resources and clean up every
+            //       eventually orphaned resource
+            connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioned);
             connector.getStatus().setResources(connector.getSpec().getResources());
             connector.getStatus().setResourceConditions(new ArrayList<>());
 
-            for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
-                LOGGER.info("Getting status for: {}", extractor);
+            //
+            // Don't report connector status till the connector is in "Provisioned"
+            // state.
+            //
+            // TODO: this of course happens all the time at the moment, left here
+            //       as an hint to improve the process
+            //
+            if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioned)) {
+                for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
+                    LOGGER.info("Scraping status for resource {}/{}/{}",
+                            extractor.getApiVersion(),
+                            extractor.getKind(),
+                            extractor.getName());
 
-                JsonNode unstructured = uc.getAsNode(connector.getMetadata().getNamespace(), extractor);
-                JsonNode conditions = unstructured.at(extractor.getConditionsPath());
+                    JsonNode unstructured = uc.getAsNode(connector.getMetadata().getNamespace(), extractor);
+                    JsonNode conditions = unstructured.at(extractor.getConditionsPath());
 
-                LOGGER.info("Extracted: {}", conditions);
+                    if (!conditions.isArray()) {
+                        throw new IllegalArgumentException("Unsupported conditions field type: " + conditions.getNodeType());
+                    }
 
-                if (!conditions.isArray()) {
-                    throw new IllegalArgumentException("Unsupported conditions field type: " + conditions.getNodeType());
+                    for (JsonNode condition : conditions) {
+                        connector.getStatus().getResourceConditions().add(new ResourceCondition(
+                                Serialization.jsonMapper().treeToValue(condition, Condition.class),
+                                extractor));
+                    }
                 }
 
-                for (JsonNode condition : conditions) {
-                    connector.getStatus().getResourceConditions().add(new ResourceCondition(
-                            Serialization.jsonMapper().treeToValue(condition, Condition.class),
-                            extractor));
-                }
-
+                controlPlane.updateConnector(connector);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -124,21 +124,27 @@ public class ConnectorController extends AbstractResourceController<Connector> {
     private void setupResources(Connector connector) throws IOException {
         for (ResourceRef ref : connector.getSpec().getResources()) {
             final Map<String, Object> unstructured = uc.get(connector.getMetadata().getNamespace(), ref);
+            if (unstructured == null) {
+                LOGGER.warn("Unable to find resource {}/{}/{}",
+                        ref.getApiVersion(),
+                        ref.getKind(),
+                        ref.getName());
+
+                return;
+            }
+
             final ObjectMeta meta = ResourceUtil.getObjectMeta(unstructured);
-
             if (ResourceUtil.setOwnerReferences(meta, connector)) {
-
                 unstructured.put("metadata", meta);
 
                 LOGGER.info(
-                        "Set connector {}/{}/{} as owners of resource {}/{}/{}, refs={}",
+                        "Set connector {}/{}/{} as owners of resource {}/{}/{}",
                         connector.getApiVersion(),
                         connector.getKind(),
                         connector.getMetadata().getName(),
                         ref.getApiVersion(),
                         ref.getKind(),
-                        ref.getName(),
-                        meta.getOwnerReferences().size());
+                        ref.getName());
 
                 uc.createOrReplace(connector.getMetadata().getNamespace(), ref, unstructured);
             }
@@ -152,7 +158,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
      *
      * @param connector the connector.
      */
-    private void cleanupResources(Connector connector) {
+    private void cleanupResources(Connector connector) throws IOException {
         List<ResourceRef> toRemove = connector.getStatus().getResources();
         toRemove.removeAll(connector.getSpec().getResources());
 
@@ -165,7 +171,12 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     connector.getKind(),
                     connector.getMetadata().getName());
 
-            uc.delete(connector.getMetadata().getNamespace(), ref);
+            boolean deleted = uc.delete(connector.getMetadata().getNamespace(), ref);
+
+            LOGGER.info("Resource {}/{}/{} deleted=", ref.getApiVersion(),
+                    ref.getKind(),
+                    ref.getName(),
+                    deleted);
         }
     }
 
@@ -177,7 +188,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
      * @param connector the connector that holds the resources
      * @param resource  the resource to watch
      */
-    private synchronized void watch(Context<Connector> context, Connector connector, ResourceRef resource) {
+    private synchronized void monitor(Context<Connector> context, Connector connector, ResourceRef resource) {
         final EventSourceManager manager = context.getEventSourceManager();
         final String key = resource.getKind() + "@" + resource.getApiVersion();
 
@@ -207,8 +218,6 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                         // TODO: check if the UUID is really needed.
                         //
                         for (OwnerReference or : meta.getOwnerReferences()) {
-                            LOGGER.info("Handle OW: {}", or);
-
                             eventHandler.handleEvent(
                                     new ResourceEvent(action, ref, or.getUid(), this));
                         }

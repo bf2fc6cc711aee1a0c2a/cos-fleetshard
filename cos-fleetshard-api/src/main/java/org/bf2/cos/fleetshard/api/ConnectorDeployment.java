@@ -88,14 +88,15 @@ public class ConnectorDeployment {
     @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Status extends org.bf2.cos.fleetshard.api.Status {
-        private String operatorId;
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private List<ResourceCondition> resourceConditions = new ArrayList<>();
 
-        public String getOperatorId() {
-            return operatorId;
+        public List<ResourceCondition> getResourceConditions() {
+            return resourceConditions;
         }
 
-        public void setOperatorId(String operatorId) {
-            this.operatorId = operatorId;
+        public void setResourceConditions(List<ResourceCondition> resourceConditions) {
+            this.resourceConditions = resourceConditions;
         }
     }
 

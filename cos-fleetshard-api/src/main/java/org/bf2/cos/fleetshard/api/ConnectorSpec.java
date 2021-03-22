@@ -16,11 +16,20 @@ import lombok.ToString;
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectorSpec {
+    private String agentId;
     private long connectorResourceVersion;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<StatusExtractor> statusExtractors = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<ResourceRef> resources = new ArrayList<>();
+
+    public String getAgentId() {
+        return agentId;
+    }
+
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
+    }
 
     public List<ResourceRef> getResources() {
         return resources;

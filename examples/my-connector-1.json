@@ -1,7 +1,7 @@
 {
   "id": "camel-c1",
   "spec": {
-    "resourceVersion": 5,
+    "resourceVersion": 2007,
     "operatorId": "ck",
     "statusExtractors": [
       {
@@ -15,7 +15,7 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "time-source-v1-5"
+          "name": "time-source-v1-2007"
         },
         "spec": {
           "flow": {
@@ -42,7 +42,7 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "log-sink-v1-5"
+          "name": "log-sink-v1-2007"
         },
         "spec": {
           "flow": {
@@ -68,7 +68,7 @@
             "ref": {
               "apiVersion": "camel.apache.org/v1alpha1",
               "kind": "Kamelet",
-              "name": "time-source-v1-5"
+              "name": "time-source-v1-2007"
             },
             "properties": {
               "period": "5s",
@@ -79,7 +79,7 @@
             "ref": {
               "apiVersion": "camel.apache.org/v1alpha1",
               "kind": "Kamelet",
-              "name": "log-sink-v1-5"
+              "name": "log-sink-v1-2007"
             }
           }
         }

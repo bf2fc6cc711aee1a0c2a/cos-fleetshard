@@ -16,11 +16,9 @@ import org.bf2.cos.fleetshard.api.Agent;
 import org.bf2.cos.fleetshard.api.AgentStatus;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ConnectorStatus;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
-import org.bf2.cos.fleetshard.operator.support.ThrowingConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,23 +84,9 @@ public class ConnectorSync {
             }
 
             try {
-                ConnectorDeployment deployment = entry.getValue().get(entry.getValue().size() - 1);
-
                 provision(
                         agent,
-                        deployment,
-                        connector -> {
-                            connector.getSpec().setStatusExtractors(deployment.getSpec().getStatusExtractors());
-                            connector.getSpec().setResources(new ArrayList<>());
-
-                            for (JsonNode node : deployment.getSpec().getResources()) {
-                                Map<String, Object> result = uc.createOrReplace(
-                                        agent.getMetadata().getNamespace(),
-                                        node);
-
-                                connector.getSpec().getResources().add(ResourceUtil.asResourceRef(result));
-                            }
-                        });
+                        entry.getValue().get(entry.getValue().size() - 1));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -111,8 +95,7 @@ public class ConnectorSync {
 
     private void provision(
             Agent agent,
-            ConnectorDeployment deployment,
-            ThrowingConsumer<Connector, Exception> consumer)
+            ConnectorDeployment deployment)
             throws Exception {
 
         LOGGER.info("deploying connector {}, {}", deployment.getId(), deployment.getSpec());
@@ -134,38 +117,28 @@ public class ConnectorSync {
             if (connector.getSpec().getConnectorResourceVersion() > deployment.getSpec().getResourceVersion()) {
                 return;
             }
-
-            connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioning.name());
-
-            //
-            // The connector already exists, update status
-            //
-            connector = kubernetesClient.customResources(Connector.class)
-                    .inNamespace(agent.getMetadata().getNamespace())
-                    .withName(deployment.getId())
-                    .updateStatus(connector);
-
         } else {
             connector = new Connector();
             connector.getMetadata().setName(deployment.getId());
             connector.getMetadata().setOwnerReferences(List.of(ResourceUtil.asOwnerReference(agent)));
-            connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioning);
-
-            //
-            // The connector does not exists, create it
-            //
-            connector = kubernetesClient.customResources(Connector.class)
-                    .inNamespace(agent.getMetadata().getNamespace())
-                    .create(connector);
+            connector.getSpec().setAgentId(agent.getSpec().getAgentId());
         }
 
-        consumer.accept(connector);
-
         connector.getSpec().setConnectorResourceVersion(deployment.getSpec().getResourceVersion());
-        connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioned.name());
+        connector.getSpec().setStatusExtractors(deployment.getSpec().getStatusExtractors());
+        connector.getSpec().setResources(new ArrayList<>());
+
+        for (JsonNode node : deployment.getSpec().getResources()) {
+            Map<String, Object> result = uc.createOrReplace(
+                    agent.getMetadata().getNamespace(),
+                    node);
+
+            connector.getSpec().getResources().add(ResourceUtil.asResourceRef(result));
+        }
 
         kubernetesClient.customResources(Connector.class)
                 .inNamespace(agent.getMetadata().getNamespace())
                 .createOrReplace(connector);
+
     }
 }

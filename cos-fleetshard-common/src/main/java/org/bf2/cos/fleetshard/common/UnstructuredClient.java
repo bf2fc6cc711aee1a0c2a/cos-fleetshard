@@ -28,14 +28,18 @@ public class UnstructuredClient {
     KubernetesClient kubernetesClient;
 
     public Map<String, Object> get(String namespace, ResourceRef ref) {
-        return get(namespace, asCustomResourceDefinitionContext(ref));
+        return get(
+                namespace,
+                asCustomResourceDefinitionContext(ref));
     }
 
     public JsonNode getAsNode(String namespace, ResourceRef ref) {
         Map<String, Object> unstructured = get(namespace, ref);
-        JsonNode answer = Serialization.jsonMapper().valueToTree(unstructured);
+        if (unstructured == null) {
+            return null;
+        }
 
-        return answer;
+        return Serialization.jsonMapper().valueToTree(unstructured);
     }
 
     public Map<String, Object> get(String namespace, JsonNode ref) {
@@ -49,19 +53,19 @@ public class UnstructuredClient {
                 .get(namespace, ctx.getName());
     }
 
-    public boolean delete(String namespace, ResourceRef ref) {
+    public boolean delete(String namespace, ResourceRef ref) throws IOException {
         return delete(namespace, asCustomResourceDefinitionContext(ref));
     }
 
-    public boolean delete(String namespace, JsonNode ref) {
+    public boolean delete(String namespace, JsonNode ref) throws IOException {
         return delete(namespace, asCustomResourceDefinitionContext(ref));
     }
 
-    public boolean delete(String namespace, CustomResourceDefinitionContext ctx) {
+    public boolean delete(String namespace, CustomResourceDefinitionContext ctx) throws IOException {
         return kubernetesClient
                 .customResource(ctx)
                 .inNamespace(namespace)
-                .delete(ctx.getName());
+                .delete(namespace, ctx.getName());
     }
 
     public Map<String, Object> createOrReplace(String namespace, ResourceRef ref, Map<String, Object> unstructured)

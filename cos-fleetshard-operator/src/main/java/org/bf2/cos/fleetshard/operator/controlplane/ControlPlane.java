@@ -45,4 +45,15 @@ public class ControlPlane {
                 connectorAgent.getSpec().getAgentId(),
                 gv);
     }
+
+    public void updateConnector(Connector connector) {
+        ConnectorDeployment.Status status = new ConnectorDeployment.Status();
+        status.setConditions(connector.getStatus().getConditions());
+        status.setResourceConditions(connector.getStatus().getResourceConditions());
+
+        controlPlane.updateConnector(
+                connector.getSpec().getAgentId(),
+                connector.getMetadata().getName(),
+                status);
+    }
 }
