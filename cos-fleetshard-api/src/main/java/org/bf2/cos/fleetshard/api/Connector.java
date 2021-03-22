@@ -22,4 +22,9 @@ public class Connector
 
     public static final String VERSION = "v1alpha1";
     public static final String GROUP = "cos.bf2.org";
+
+    public Connector() {
+        setSpec(new ConnectorSpec());
+        setStatus(new ConnectorStatus());
+    }
 }

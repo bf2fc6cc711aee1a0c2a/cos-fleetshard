@@ -1,12 +1,15 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -18,7 +21,9 @@ import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorStatus;
+import org.bf2.cos.fleetshard.api.ResourceCondition;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
@@ -42,10 +47,11 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             Connector connector,
             Context<Connector> context) {
 
+        LOGGER.info("createOrUpdateResource: {}", connector.getSpec());
+
         if (connector.getStatus() != null) {
             // Set up watcher for resources created by the connector
             for (ResourceRef resource : connector.getStatus().getResources()) {
-                // TODO: implement
                 watch(context, connector, resource);
             }
         }
@@ -56,22 +62,50 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             }
         });
 
-        // TODO: lookup target namespace
-        // TODO: create resources cd.spec.resources
-        // TODO: set owner ref
-        // TODO: check resource version
-        // TODO: create resource on k8s in the target namespace
-
         if (connector.getStatus() == null) {
             connector.setStatus(new ConnectorStatus());
+        }
+
+        //
+        // If the connector phase is "Provisioning", it means that the agent has received
+        // instructions to deploy or update a connector but it is still working to set it
+        // up (i.e. reconcile triggered before all the related resources have been created)
+        //
+        if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioning)) {
+            LOGGER.info("Connector {}/{}/{} provisioning, do nothing",
+                    connector.getApiVersion(),
+                    connector.getKind(),
+                    connector.getMetadata().getName());
+
+            return UpdateControl.noUpdate();
         }
 
         try {
             setupResources(connector);
             cleanupResources(connector);
 
-            connector.getStatus().setResources(
-                    connector.getSpec().getResources());
+            connector.getStatus().setResources(connector.getSpec().getResources());
+            connector.getStatus().setResourceConditions(new ArrayList<>());
+
+            for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
+                LOGGER.info("Getting status for: {}", extractor);
+
+                JsonNode unstructured = uc.getAsNode(connector.getMetadata().getNamespace(), extractor);
+                JsonNode conditions = unstructured.at(extractor.getConditionsPath());
+
+                LOGGER.info("Extracted: {}", conditions);
+
+                if (!conditions.isArray()) {
+                    throw new IllegalArgumentException("Unsupported conditions field type: " + conditions.getNodeType());
+                }
+
+                for (JsonNode condition : conditions) {
+                    connector.getStatus().getResourceConditions().add(new ResourceCondition(
+                            Serialization.jsonMapper().treeToValue(condition, Condition.class),
+                            extractor));
+                }
+
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -85,31 +119,29 @@ public class ConnectorController extends AbstractResourceController<Connector> {
      * by kubernetes' gc.
      *
      * @param  connector   the connector
-     * @throws IOException in case of network/serializiation failures or failures from Kuberntes API
+     * @throws IOException in case of network/serialization failures or failures from Kubernetes API
      */
     private void setupResources(Connector connector) throws IOException {
         for (ResourceRef ref : connector.getSpec().getResources()) {
             final Map<String, Object> unstructured = uc.get(connector.getMetadata().getNamespace(), ref);
             final ObjectMeta meta = ResourceUtil.getObjectMeta(unstructured);
 
-            ResourceUtil.addOwnerReferences(meta, connector);
+            if (ResourceUtil.setOwnerReferences(meta, connector)) {
 
-            unstructured.put("metadata", meta);
+                unstructured.put("metadata", meta);
 
-            LOGGER.info(
-                    "Add connector {}/{}/{} among owners of resource {}/{}/{}, refs={}",
-                    connector.getApiVersion(),
-                    connector.getKind(),
-                    connector.getMetadata().getName(),
-                    ref.getApiVersion(),
-                    ref.getKind(),
-                    ref.getName(),
-                    meta.getOwnerReferences().size());
+                LOGGER.info(
+                        "Set connector {}/{}/{} as owners of resource {}/{}/{}, refs={}",
+                        connector.getApiVersion(),
+                        connector.getKind(),
+                        connector.getMetadata().getName(),
+                        ref.getApiVersion(),
+                        ref.getKind(),
+                        ref.getName(),
+                        meta.getOwnerReferences().size());
 
-            LOGGER.info(
-                    "result: {}",
-                    Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
-                            uc.createOrReplace(connector.getMetadata().getNamespace(), ref, unstructured)));
+                uc.createOrReplace(connector.getMetadata().getNamespace(), ref, unstructured);
+            }
         }
     }
 
@@ -125,7 +157,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
         toRemove.removeAll(connector.getSpec().getResources());
 
         for (ResourceRef ref : toRemove) {
-            LOGGER.info("Resource {}/{}/{} is not more required by connector {}/{}/{}, remove owner ref",
+            LOGGER.info("Resource {}/{}/{} is not more required by connector {}/{}/{}, delete it",
                     ref.getApiVersion(),
                     ref.getKind(),
                     ref.getName(),
@@ -133,30 +165,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     connector.getKind(),
                     connector.getMetadata().getName());
 
-            final Map<String, Object> unstructured = uc.get(connector.getMetadata().getNamespace(), ref);
-            final ObjectMeta meta = ResourceUtil.getObjectMeta(unstructured);
-
-            //
-            // Since the current connector does not need this resource anymore, we should remove
-            // the connector from the owner references.
-            //
-            ResourceUtil.removeOwnerReferences(meta, connector);
-
-            //
-            // Resource may be shared among containers, as example camel-k kamelets, so they must
-            // not be removed if additional owners are listed.
-            //
-            if (meta.getOwnerReferences().isEmpty()) {
-                LOGGER.info("Resource {}/{}/{} is not more required by connector {}/{}/{} and no other refs, removing it.",
-                        ref.getApiVersion(),
-                        ref.getKind(),
-                        ref.getName(),
-                        connector.getApiVersion(),
-                        connector.getKind(),
-                        connector.getMetadata().getName());
-
-                uc.delete(connector.getMetadata().getNamespace(), ref);
-            }
+            uc.delete(connector.getMetadata().getNamespace(), ref);
         }
     }
 
@@ -168,16 +177,19 @@ public class ConnectorController extends AbstractResourceController<Connector> {
      * @param connector the connector that holds the resources
      * @param resource  the resource to watch
      */
-    private void watch(Context<Connector> context, Connector connector, ResourceRef resource) {
+    private synchronized void watch(Context<Connector> context, Connector connector, ResourceRef resource) {
         final EventSourceManager manager = context.getEventSourceManager();
         final String key = resource.getKind() + "@" + resource.getApiVersion();
 
         if (!manager.getRegisteredEventSources().containsKey(key)) {
+            LOGGER.info("Registering an event for: {}", key);
+
             manager.registerEventSource(key, new ResourceEventSource(kubernetesClient) {
                 @SuppressWarnings("unchecked")
                 @Override
                 public void eventReceived(Action action, String resource) {
                     LOGGER.info("Event received for action: {}", action.name());
+
                     if (action == Action.ERROR) {
                         getLogger().warn("Skipping");
                         return;
@@ -195,6 +207,8 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                         // TODO: check if the UUID is really needed.
                         //
                         for (OwnerReference or : meta.getOwnerReferences()) {
+                            LOGGER.info("Handle OW: {}", or);
+
                             eventHandler.handleEvent(
                                     new ResourceEvent(action, ref, or.getUid(), this));
                         }

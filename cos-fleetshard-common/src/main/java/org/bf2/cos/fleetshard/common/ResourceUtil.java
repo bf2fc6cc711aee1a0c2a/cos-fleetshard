@@ -87,6 +87,21 @@ public final class ResourceUtil {
                 : null;
     }
 
+    public static <T extends HasMetadata> boolean setOwnerReferences(T target, HasMetadata owner) {
+        return setOwnerReferences(target.getMetadata(), owner);
+    }
+
+    public static boolean setOwnerReferences(ObjectMeta target, HasMetadata owner) {
+        List<OwnerReference> references = target.getOwnerReferences();
+        if (references.size() == 1 && Objects.equals(references.get(0).getUid(), owner.getMetadata().getUid())) {
+            return false;
+        }
+
+        target.setOwnerReferences(List.of(asOwnerReference(owner)));
+
+        return true;
+    }
+
     public static <T extends HasMetadata> T addOwnerReferences(T target, HasMetadata owner) {
         addOwnerReferences(target.getMetadata(), owner);
         return target;
@@ -112,7 +127,7 @@ public final class ResourceUtil {
     public static OwnerReference asOwnerReference(HasMetadata owner) {
         return new OwnerReferenceBuilder()
                 .withApiVersion(owner.getApiVersion())
-                .withController(false)
+                .withController(true)
                 .withKind(owner.getKind())
                 .withName(owner.getMetadata().getName())
                 .withUid(owner.getMetadata().getUid())

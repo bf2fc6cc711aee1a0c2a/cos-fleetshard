@@ -3,12 +3,19 @@
   "spec": {
     "resourceVersion": 5,
     "operatorId": "ck",
+    "statusExtractors": [
+      {
+        "apiVersion": "camel.apache.org/v1alpha1",
+        "kind": "KameletBinding",
+        "name": "camel-c1"
+      }
+    ],
     "resources": [
       {
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "time-source-v1"
+          "name": "time-source-v1-5"
         },
         "spec": {
           "flow": {
@@ -35,7 +42,7 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "log-sink-v1"
+          "name": "log-sink-v1-5"
         },
         "spec": {
           "flow": {
@@ -58,18 +65,22 @@
         },
         "spec": {
           "source": {
-            "kind": "Kamelet",
-            "apiVersion": "camel.apache.org/v1alpha1",
-            "name": "time-source-v1",
+            "ref": {
+              "apiVersion": "camel.apache.org/v1alpha1",
+              "kind": "Kamelet",
+              "name": "time-source-v1-5"
+            },
             "properties": {
               "period": "5s",
               "message": "hello"
             }
           },
           "sink": {
-            "kind": "Kamelet",
-            "apiVersion": "camel.apache.org/v1alpha1",
-            "name": "log-sink-v1"
+            "ref": {
+              "apiVersion": "camel.apache.org/v1alpha1",
+              "kind": "Kamelet",
+              "name": "log-sink-v1-5"
+            }
           }
         }
       }

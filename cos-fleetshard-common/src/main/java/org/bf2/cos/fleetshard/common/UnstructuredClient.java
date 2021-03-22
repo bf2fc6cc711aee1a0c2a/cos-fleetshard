@@ -31,6 +31,13 @@ public class UnstructuredClient {
         return get(namespace, asCustomResourceDefinitionContext(ref));
     }
 
+    public JsonNode getAsNode(String namespace, ResourceRef ref) {
+        Map<String, Object> unstructured = get(namespace, ref);
+        JsonNode answer = Serialization.jsonMapper().valueToTree(unstructured);
+
+        return answer;
+    }
+
     public Map<String, Object> get(String namespace, JsonNode ref) {
         return get(namespace, asCustomResourceDefinitionContext(ref));
     }
@@ -73,6 +80,16 @@ public class UnstructuredClient {
                 namespace,
                 asCustomResourceDefinitionContext(ref),
                 unstructured);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> createOrReplace(String namespace, JsonNode unstructured)
+            throws IOException {
+
+        return createOrReplace(
+                namespace,
+                asCustomResourceDefinitionContext(unstructured),
+                Serialization.jsonMapper().treeToValue(unstructured, Map.class));
     }
 
     private Map<String, Object> createOrReplace(
