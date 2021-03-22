@@ -15,8 +15,6 @@ import lombok.ToString;
 public class ConnectorStatus extends Status {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<ResourceRef> resources = new ArrayList<>();
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<ResourceCondition> resourceConditions = new ArrayList<>();
 
     public List<ResourceRef> getResources() {
         return resources;
@@ -24,14 +22,6 @@ public class ConnectorStatus extends Status {
 
     public void setResources(List<ResourceRef> resources) {
         this.resources = resources;
-    }
-
-    public List<ResourceCondition> getResourceConditions() {
-        return resourceConditions;
-    }
-
-    public void setResourceConditions(List<ResourceCondition> resourceConditions) {
-        this.resourceConditions = resourceConditions;
     }
 
     public enum PhaseType {

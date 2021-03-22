@@ -43,17 +43,16 @@ public class ConnectorSync {
         LOGGER.debug("Sync connectors");
 
         String namespace = kubernetesClient.getNamespace();
-
         KubernetesResourceList<Agent> items = kubernetesClient.customResources(Agent.class).inNamespace(namespace).list();
 
         if (items.getItems().isEmpty()) {
             LOGGER.debug("Agent not yet configured");
             return;
         }
-
         if (items.getItems().size() > 1) {
             // TODO: report the failure status to the CR and control plane
             LOGGER.warn("More than one Agent");
+            return;
         }
 
         Agent agent = items.getItems().get(0);

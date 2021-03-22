@@ -20,6 +20,7 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleetshard.api.Connector;
+import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ConnectorStatus;
 import org.bf2.cos.fleetshard.api.ResourceCondition;
 import org.bf2.cos.fleetshard.api.ResourceRef;
@@ -74,7 +75,6 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             //       eventually orphaned resource
             connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioned);
             connector.getStatus().setResources(connector.getSpec().getResources());
-            connector.getStatus().setResourceConditions(new ArrayList<>());
 
             //
             // Don't report connector status till the connector is in "Provisioned"
@@ -84,6 +84,10 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             //       as an hint to improve the process
             //
             if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioned)) {
+                ConnectorDeployment.Status ds = new ConnectorDeployment.Status();
+                ds.setConditions(connector.getStatus().getConditions());
+                ds.setResourceConditions(new ArrayList<>());
+
                 for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
                     LOGGER.info("Scraping status for resource {}/{}/{}",
                             extractor.getApiVersion(),
@@ -98,13 +102,16 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     }
 
                     for (JsonNode condition : conditions) {
-                        connector.getStatus().getResourceConditions().add(new ResourceCondition(
+                        ds.getResourceConditions().add(new ResourceCondition(
                                 Serialization.jsonMapper().treeToValue(condition, Condition.class),
                                 extractor));
                     }
                 }
 
-                controlPlane.updateConnector(connector);
+                controlPlane.updateConnector(
+                        connector.getSpec().getAgentId(),
+                        connector.getMetadata().getName(),
+                        ds);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -171,12 +178,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     connector.getKind(),
                     connector.getMetadata().getName());
 
-            boolean deleted = uc.delete(connector.getMetadata().getNamespace(), ref);
-
-            LOGGER.info("Resource {}/{}/{} deleted=", ref.getApiVersion(),
-                    ref.getKind(),
-                    ref.getName(),
-                    deleted);
+            uc.delete(connector.getMetadata().getNamespace(), ref);
         }
     }
 
@@ -214,8 +216,6 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                         //
                         // Since we need to know the owner UUID of the resource to properly
                         // generate the event, we can use the list of the owners
-                        //
-                        // TODO: check if the UUID is really needed.
                         //
                         for (OwnerReference or : meta.getOwnerReferences()) {
                             eventHandler.handleEvent(

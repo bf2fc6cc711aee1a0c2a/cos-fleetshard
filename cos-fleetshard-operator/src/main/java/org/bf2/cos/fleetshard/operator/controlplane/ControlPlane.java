@@ -46,14 +46,7 @@ public class ControlPlane {
                 gv);
     }
 
-    public void updateConnector(Connector connector) {
-        ConnectorDeployment.Status status = new ConnectorDeployment.Status();
-        status.setConditions(connector.getStatus().getConditions());
-        status.setResourceConditions(connector.getStatus().getResourceConditions());
-
-        controlPlane.updateConnector(
-                connector.getSpec().getAgentId(),
-                connector.getMetadata().getName(),
-                status);
+    public void updateConnector(String agentId, String connectorId, ConnectorDeployment.Status status) {
+        controlPlane.updateConnector(agentId, connectorId, status);
     }
 }
