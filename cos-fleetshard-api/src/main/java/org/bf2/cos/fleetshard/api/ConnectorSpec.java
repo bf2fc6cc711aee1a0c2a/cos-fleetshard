@@ -14,6 +14,7 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConnectorSpec {
     private String agentId;
+    private String operatorId;
     private long connectorResourceVersion;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<StatusExtractor> statusExtractors = new ArrayList<>();
@@ -26,6 +27,14 @@ public class ConnectorSpec {
 
     public void setAgentId(String agentId) {
         this.agentId = agentId;
+    }
+
+    public String getOperatorId() {
+        return operatorId;
+    }
+
+    public void setOperatorId(String operatorId) {
+        this.operatorId = operatorId;
     }
 
     public List<ResourceRef> getResources() {

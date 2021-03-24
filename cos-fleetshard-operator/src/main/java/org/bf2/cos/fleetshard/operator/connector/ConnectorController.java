@@ -85,8 +85,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             //
             if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioned)) {
                 ConnectorDeployment.Status ds = new ConnectorDeployment.Status();
-                ds.setConditions(connector.getStatus().getConditions());
-                ds.setResourceConditions(new ArrayList<>());
+                ds.setConditions(new ArrayList<>());
 
                 for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
                     LOGGER.info("Scraping status for resource {}/{}/{}",
@@ -102,7 +101,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     }
 
                     for (JsonNode condition : conditions) {
-                        ds.getResourceConditions().add(new ResourceCondition(
+                        ds.getConditions().add(new ResourceCondition(
                                 Serialization.jsonMapper().treeToValue(condition, Condition.class),
                                 extractor));
                     }

@@ -87,17 +87,16 @@ public class ConnectorDeployment {
     @ToString
     @EqualsAndHashCode
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public static class Status extends org.bf2.cos.fleetshard.api.Status {
-        @JsonInclude(JsonInclude.Include.NON_EMPTY)
-        private List<ResourceCondition> resourceConditions = new ArrayList<>();
+    public static class Status {
+        private String phase;
+        private List<ResourceCondition> conditions;
 
-        public List<ResourceCondition> getResourceConditions() {
-            return resourceConditions;
+        public List<ResourceCondition> getConditions() {
+            return conditions;
         }
 
-        public void setResourceConditions(List<ResourceCondition> resourceConditions) {
-            this.resourceConditions = resourceConditions;
+        public void setConditions(List<ResourceCondition> conditions) {
+            this.conditions = conditions;
         }
     }
-
 }
