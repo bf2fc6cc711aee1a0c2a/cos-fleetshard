@@ -22,8 +22,6 @@ import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.util.stream.Collectors.groupingBy;
-
 /**
  * Implements the synchronization protocol for the connectors.
  */
@@ -68,24 +66,10 @@ public class ConnectorSync {
             LOGGER.info("No connectors for agent {}", agent.getMetadata().getName());
         }
 
-        for (var entry : deployments.stream().collect(groupingBy(ConnectorDeployment::getId)).entrySet()) {
-            entry.getValue().sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
-
-            //
-            // in a single poll cycle, we may get multiple revision for the same connector in case
-            // the user updates it during the poll interval so we should filter out any intermediate
-            // revision.
-            //
-            for (int i = 0; i < entry.getValue().size() - 1; i++) {
-                LOGGER.info("skip intermediate connector deployment (id={}, resource_version={})",
-                        entry.getKey(),
-                        entry.getValue().get(i).getSpec().getResourceVersion());
-            }
-
+        deployments.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
+        for (var deployment : deployments) {
             try {
-                provision(
-                        agent,
-                        entry.getValue().get(entry.getValue().size() - 1));
+                provision(agent, deployment);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
