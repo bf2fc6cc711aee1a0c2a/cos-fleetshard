@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.agent;
+package org.bf2.cos.fleetshard.operator.cluster;
 
 import javax.inject.Inject;
 
@@ -7,8 +7,8 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-import org.bf2.cos.fleetshard.api.Agent;
-import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.ConnectorClusterStatus;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Controller
-public class AgentController extends AbstractResourceController<Agent> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentController.class);
+public class ConnectorClusterController extends AbstractResourceController<ConnectorCluster> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorClusterController.class);
 
     @Inject
     ControlPlane controlPlane;
@@ -34,18 +34,18 @@ public class AgentController extends AbstractResourceController<Agent> {
     }
 
     @Override
-    public UpdateControl<Agent> createOrUpdateResource(
-            Agent cluster,
-            Context<Agent> context) {
+    public UpdateControl<ConnectorCluster> createOrUpdateResource(
+            ConnectorCluster cluster,
+            Context<ConnectorCluster> context) {
 
         if (cluster.getStatus() == null) {
-            cluster.setStatus(new AgentStatus());
+            cluster.setStatus(new ConnectorClusterStatus());
         }
-        if (!cluster.getStatus().isInPhase(AgentStatus.PhaseType.Ready)) {
-            cluster.getStatus().setPhase(AgentStatus.PhaseType.Ready.name());
+        if (!cluster.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
+            cluster.getStatus().setPhase(ConnectorClusterStatus.PhaseType.Ready.name());
         }
 
-        controlPlane.updateAgent(cluster);
+        controlPlane.updateClusterStatus(cluster);
 
         return UpdateControl.updateStatusSubResource(cluster);
     }

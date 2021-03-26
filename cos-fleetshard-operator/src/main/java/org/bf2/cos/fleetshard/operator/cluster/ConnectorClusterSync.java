@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.agent;
+package org.bf2.cos.fleetshard.operator.cluster;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
  * Implements the synchronization protocol for the agent.
  */
 @ApplicationScoped
-public class AgentSync {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AgentSync.class);
+public class ConnectorClusterSync {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorClusterSync.class);
 
     @Inject
     ControlPlane controlPlane;

@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleetshard.api.Agent;
-import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.ConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
@@ -41,7 +41,8 @@ public class ConnectorSync {
         LOGGER.debug("Sync connectors");
 
         String namespace = kubernetesClient.getNamespace();
-        KubernetesResourceList<Agent> items = kubernetesClient.customResources(Agent.class).inNamespace(namespace).list();
+        KubernetesResourceList<ConnectorCluster> items = kubernetesClient.customResources(ConnectorCluster.class)
+                .inNamespace(namespace).list();
 
         if (items.getItems().isEmpty()) {
             LOGGER.debug("Agent not yet configured");
@@ -53,8 +54,8 @@ public class ConnectorSync {
             return;
         }
 
-        Agent agent = items.getItems().get(0);
-        if (agent.getStatus() == null || !agent.getStatus().isInPhase(AgentStatus.PhaseType.Ready)) {
+        ConnectorCluster agent = items.getItems().get(0);
+        if (agent.getStatus() == null || !agent.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
             LOGGER.debug("Agent not yet configured");
             return;
         }
@@ -77,7 +78,7 @@ public class ConnectorSync {
     }
 
     private void provision(
-            Agent agent,
+            ConnectorCluster agent,
             ConnectorDeployment deployment)
             throws Exception {
 
@@ -104,7 +105,7 @@ public class ConnectorSync {
             connector = new Connector();
             connector.getMetadata().setName(deployment.getId());
             connector.getMetadata().setOwnerReferences(List.of(ResourceUtil.asOwnerReference(agent)));
-            connector.getSpec().setAgentId(agent.getSpec().getAgentId());
+            connector.getSpec().setClusterId(agent.getSpec().getId());
         }
 
         connector.getSpec().setConnectorResourceVersion(deployment.getSpec().getResourceVersion());

@@ -13,11 +13,11 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
-@Version(Agent.VERSION)
-@Group(Agent.GROUP)
+@Version(ConnectorCluster.VERSION)
+@Group(ConnectorCluster.GROUP)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Agent
-        extends CustomResource<AgentSpec, AgentStatus>
+public class ConnectorCluster
+        extends CustomResource<ConnectorClusterSpec, ConnectorClusterStatus>
         implements Namespaced {
 
     public static final String VERSION = "v1alpha1";

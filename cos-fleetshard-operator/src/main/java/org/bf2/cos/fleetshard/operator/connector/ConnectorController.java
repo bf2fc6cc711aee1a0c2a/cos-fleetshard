@@ -107,8 +107,8 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                     }
                 }
 
-                controlPlane.updateConnector(
-                        connector.getSpec().getAgentId(),
+                controlPlane.updateConnectorStatus(
+                        connector.getSpec().getClusterId(),
                         connector.getMetadata().getName(),
                         ds);
             }

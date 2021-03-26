@@ -9,14 +9,14 @@ import lombok.ToString;
 @EqualsAndHashCode
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AgentSpec {
-    private String agentId;
+public class ConnectorClusterSpec {
+    private String id;
 
-    public String getAgentId() {
-        return agentId;
+    public String getId() {
+        return id;
     }
 
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
+    public void setId(String id) {
+        this.id = id;
     }
 }

@@ -12,9 +12,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleetshard.api.AgentStatus;
+import org.bf2.cos.fleetshard.api.ConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.Agent;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -35,20 +35,9 @@ public interface ControlPlaneClient {
     @Path("/{id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void updateAgent(
+    ConnectorCluster updateClusterStatus(
             @PathParam("id") String id,
-            AgentStatus status);
-
-    /**
-     * Retrieve the connector cluster configuration.
-     *
-     * @param  id the id of the cluster
-     * @return    a list of {@link Agent}
-     */
-    @GET
-    @Path("/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    Agent getAgent(@PathParam("id") String id);
+            ConnectorClusterStatus status);
 
     /**
      * Retrieve the connector deployment configurations that need to be placed on this cluster.
@@ -65,21 +54,6 @@ public interface ControlPlaneClient {
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion);
 
-    //
-    // Subscribe to the connector deployment configurations that need to be placed on this cluster.
-    //
-    // TODO: not implemented by MP/Quarkus REST Client
-    //       https://github.com/quarkusio/quarkus/issues/12850
-    //
-    // @GET
-    // @Path("/{id}/connectors/")
-    // @Produces(MediaType.SERVER_SENT_EVENTS)
-    // @SseElementType(MediaType.APPLICATION_JSON)
-    // Publisher<Connector<?, ?>> getConnectors(
-    //        @PathParam("id") String id,
-    //        @QueryParam("gt_version") long resourceVersion);
-    //
-
     /**
      * Updates the status of a connector.
      *
@@ -91,7 +65,7 @@ public interface ControlPlaneClient {
     @Path("/{id}/connectors/{cid}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    void updateConnector(
+    void updateConnectorStatus(
             @PathParam("id") String id,
             @PathParam("cid") String cid,
             ConnectorDeployment.Status status);

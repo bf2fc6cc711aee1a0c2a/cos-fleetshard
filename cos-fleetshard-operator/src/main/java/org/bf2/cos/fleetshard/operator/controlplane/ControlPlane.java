@@ -6,7 +6,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.bf2.cos.fleetshard.api.Agent;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -23,13 +23,13 @@ public class ControlPlane {
     @Inject
     KubernetesClient kubernetesClient;
 
-    public void updateAgent(Agent cluster) {
-        controlPlane.updateAgent(
-                cluster.getSpec().getAgentId(),
+    public void updateClusterStatus(ConnectorCluster cluster) {
+        controlPlane.updateClusterStatus(
+                cluster.getSpec().getId(),
                 cluster.getStatus());
     }
 
-    public List<ConnectorDeployment> getConnectors(Agent connectorAgent) {
+    public List<ConnectorDeployment> getConnectors(ConnectorCluster connectorAgent) {
         // TODO: check namespaces
         // TODO: check labels
         final List<Connector> connectors = kubernetesClient.customResources(Connector.class)
@@ -42,11 +42,11 @@ public class ControlPlane {
                 .orElse(0);
 
         return controlPlane.getConnectors(
-                connectorAgent.getSpec().getAgentId(),
+                connectorAgent.getSpec().getId(),
                 gv);
     }
 
-    public void updateConnector(String agentId, String connectorId, ConnectorDeployment.Status status) {
-        controlPlane.updateConnector(agentId, connectorId, status);
+    public void updateConnectorStatus(String agentId, String connectorId, ConnectorDeployment.Status status) {
+        controlPlane.updateConnectorStatus(agentId, connectorId, status);
     }
 }

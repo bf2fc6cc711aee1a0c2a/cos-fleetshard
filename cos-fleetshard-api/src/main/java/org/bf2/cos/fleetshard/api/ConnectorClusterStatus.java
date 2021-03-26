@@ -12,7 +12,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AgentStatus extends Status {
+public class ConnectorClusterStatus extends Status {
     private long resourceVersion;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
