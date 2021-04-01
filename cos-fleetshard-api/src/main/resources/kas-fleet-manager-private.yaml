@@ -16,6 +16,15 @@ servers:
     description: localhost
   - url: /
     description: current domain
+tags:
+  - name: connectorTypes
+    description: Connector Types API
+  - name: connectors
+    description: Connectors API
+  - name: connectorClusters
+    description: Connector Clusters API
+  - name: agentClusters
+    description: Agent Clusters API
 paths:
   #
   # These are the connector related APIs
@@ -67,6 +76,8 @@ paths:
         - Bearer: [ ]
       operationId: getConnectorTypeByID
       summary: Get a connector type by name and version
+      tags:
+        - connectorTypes
 
   /api/managed-services-api/v1/kafka-connector-types:
     get:
@@ -102,6 +113,9 @@ paths:
         - Bearer: [ ]
       operationId: listConnectorTypes
       summary: Returns a list of connector types
+      tags:
+        - connectorTypes
+
   /api/managed-services-api/v1/kafka-connectors:
     parameters:
       - in: query
@@ -171,6 +185,8 @@ paths:
       security:
         - Bearer: [ ]
       summary: Create a new connector
+      tags:
+        - connectors
     get:
       parameters:
         - $ref: '#/components/parameters/page'
@@ -204,6 +220,9 @@ paths:
         - Bearer: [ ]
       operationId: listConnectors
       summary: Returns a list of connector types
+      tags:
+        - connectors
+
   '/api/managed-services-api/v1/kafkas-connectors/{connector_id}':
     parameters:
       - in: query
@@ -256,6 +275,8 @@ paths:
         - Bearer: [ ]
       operationId: getConnector
       summary: Get a connector
+      tags:
+        - connectors
     delete:
       responses:
         '204':
@@ -295,6 +316,8 @@ paths:
         - Bearer: [ ]
       operationId: deleteConnector
       summary: Delete a connector
+      tags:
+        - connectors
 
   # Endpoints for managing connector clusters and connector agent sync
   /api/managed-services-api/v1/kafka-connector-clusters:
@@ -360,6 +383,8 @@ paths:
       security:
         - Bearer: [ ]
       summary: Create a new connector cluster
+      tags:
+        - connectorClusters
     get:
       parameters:
         - $ref: '#/components/parameters/page'
@@ -393,6 +418,9 @@ paths:
         - Bearer: [ ]
       operationId: listConnectorClusters
       summary: Returns a list of connector clusters
+      tags:
+        - connectorClusters
+
   /api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}:
     parameters:
       - name: connector_cluster_id
@@ -440,6 +468,8 @@ paths:
         - Bearer: [ ]
       operationId: getConnectorCluster
       summary: Get a connector cluster
+      tags:
+        - connectorClusters
     delete:
       responses:
         '204':
@@ -479,6 +509,9 @@ paths:
         - Bearer: [ ]
       operationId: deleteConnectorCluster
       summary: Delete a connector cluster
+      tags:
+        - connectorClusters
+
   /api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/addon-parameters:
     parameters:
       - name: connector_cluster_id
@@ -526,6 +559,8 @@ paths:
         - Bearer: [ ]
       operationId: getConnectorClusterAddonParameters
       summary: Get a connector cluster's addon parameters
+      tags:
+        - connectorClusters
   '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/status':
     parameters:
       - name: connector_cluster_id
@@ -568,6 +603,8 @@ paths:
         - Bearer: [ ]
       operationId: updateKafkaConnectorAgentClusterStatus
       summary: Update the status of a connector agent cluster
+      tags:
+        - connectorClusters
 
   '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments':
     parameters:
@@ -592,7 +629,6 @@ paths:
           description: watch for changes to the resources and return them as a stream of watch events. Specify gt_version to specify the starting point.
           schema:
             type: boolean
-
       responses:
         '200':
           content:
@@ -625,6 +661,8 @@ paths:
         - Bearer: [ ]
       operationId: listClusterAsignedConnectorDeployments
       summary: Returns a list of connector types
+      tags:
+        - connectorClusters
 
   '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{connector_id}/status':
     parameters:
@@ -641,10 +679,6 @@ paths:
         in: path
         required: true
     put:
-      operationId: updateConnectorDeploymentStatus
-      summary: update the connector deployment status
-      security:
-        - Bearer: [ ]
       requestBody:
         content:
           application/json:
@@ -673,6 +707,12 @@ paths:
                   $ref: '#/components/examples/404Example'
           # This is deliberate to hide the endpoints for unauthorised users
           description: Auth token is not valid.
+      security:
+        - Bearer: [ ]
+      operationId: updateConnectorDeploymentStatus
+      summary: update the connector deployment status
+      tags:
+        - connectorClusters
 
   # Endpoints for data plane communications
   '/api/managed-services-api/v1/agent-clusters/{id}/status':
@@ -712,6 +752,8 @@ paths:
         - Bearer: [ ]
       operationId: updateAgentClusterStatus
       summary: Update the status of an agent cluster
+      tags:
+        - agentClusters
 
   '/api/managed-services-api/v1/agent-clusters/{id}/kafkas/status':
     put:
@@ -750,6 +792,8 @@ paths:
         - Bearer: [ ]
       operationId: updateKafkaClusterStatus
       summary: Update the status of Kafka clusters on an agent cluster
+      tags:
+        - agentClusters
 
   '/api/managed-services-api/v1/agent-clusters/{id}/kafkas':
     get:
@@ -785,6 +829,8 @@ paths:
         - Bearer: [ ]
       operationId: getKafkas
       summary: Get the list of ManagedaKafkas for the specified agent cluster
+      tags:
+        - agentClusters
 
   '/api/managed-services-api/v1/agent-clusters/{id}':
     get:
@@ -820,6 +866,8 @@ paths:
         - Bearer: [ ]
       operationId: getKafkaAgent
       summary: Get the spec of the ManagedKafkaAgent CR spec
+      tags:
+        - agentClusters
 
 components:
   schemas:
