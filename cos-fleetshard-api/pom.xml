@@ -31,6 +31,11 @@
             <version>${jakarta-annotation-api.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>${jackson-databind-nullable.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
@@ -71,16 +76,17 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
                             <generatorName>java</generatorName>
                             <library>vertx</library>
                             <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
-                            <modelPackage>org.bf2.cos.type.service.api.model</modelPackage>
+                            <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
                             <generateModels>true</generateModels>
                             <generateAliasAsModel>true</generateAliasAsModel>
                             <generateApis>false</generateApis>
                             <generateSupportingFiles>false</generateSupportingFiles>
                             <generateModelDocumentation>false</generateModelDocumentation>
+                            <generateModelTests>false</generateModelTests>
                             <configOptions>
                                 <dateLibrary>java8</dateLibrary>
                             </configOptions>
