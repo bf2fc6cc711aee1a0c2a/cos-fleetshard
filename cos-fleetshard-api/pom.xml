@@ -18,7 +18,7 @@
         <dependency>
             <groupId>io.swagger</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>${swagger-core.version}</version>
+            <version>${swagger-annotations.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -91,6 +91,32 @@
                             <configOptions>
                                 <dateLibrary>java8</dateLibrary>
                             </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/main/generated/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.outputDirectory}/META-INF/fabric8</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>**/*-v1.yml</include>
+                                        <include>**/*-v1.yaml</include>
+                                      </includes>
+                                </resource>
+                            </resources>
                         </configuration>
                     </execution>
                 </executions>

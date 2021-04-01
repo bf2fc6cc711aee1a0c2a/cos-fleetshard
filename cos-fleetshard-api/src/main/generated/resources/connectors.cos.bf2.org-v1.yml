@@ -1,0 +1,89 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: connectors.cos.bf2.org
+spec:
+  group: cos.bf2.org
+  names:
+    kind: Connector
+    plural: connectors
+    singular: connector
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          status:
+            properties:
+              resources:
+                items:
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    apiVersion:
+                      type: string
+                  type: object
+                type: array
+              phase:
+                type: string
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    observedGeneration:
+                      type: number
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                    additionalProperties:
+                      type: object
+                  type: object
+                type: array
+            type: object
+          spec:
+            properties:
+              clusterId:
+                type: string
+              operatorId:
+                type: string
+              connectorResourceVersion:
+                type: number
+              statusExtractors:
+                items:
+                  properties:
+                    conditionsPath:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    apiVersion:
+                      type: string
+                  type: object
+                type: array
+              resources:
+                items:
+                  properties:
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    apiVersion:
+                      type: string
+                  type: object
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
