@@ -80,6 +80,7 @@
                             <generatorName>java</generatorName>
                             <library>vertx</library>
                             <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
+                            <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList,DataPlaneKafkaStatusUpdateRequest=org.bf2.cos.fleet.manager.api.model.DataPlaneKafkaStatusUpdateRequest</importMappings>
                             <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
                             <generateModels>true</generateModels>
                             <generateAliasAsModel>true</generateAliasAsModel>
