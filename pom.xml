@@ -27,13 +27,17 @@
         <quarkus-operator-sdk.version>1.8.0</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
 
+        <cxf-rt-frontend-jaxrs.version>3.4.0</cxf-rt-frontend-jaxrs.version>
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
         <formatter-maven-plugin-version>2.14.0</formatter-maven-plugin-version>
         <impsort-maven-plugin.version>1.6.0</impsort-maven-plugin.version>
+        <jakarta.json.version>1.1.6</jakarta.json.version>
+        <jakarta.json.bind-api.version>1.0.2</jakarta.json.bind-api.version>
         <jandex-maven-plugin-version>1.0.8</jandex-maven-plugin-version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <openapi-generator-maven-plugin.version>5.1.0</openapi-generator-maven-plugin.version>
+        <quarkus-plugin.version>1.10.5.Final</quarkus-plugin.version>
         <meven-resources-plugin.version>3.2.0</meven-resources-plugin.version>
     </properties>
 
