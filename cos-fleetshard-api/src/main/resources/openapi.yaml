@@ -1,0 +1,286 @@
+openapi: 3.0.0 # need this as first line to allow IDEA to recognize it as op
+info:
+  title: Connector Type Service
+  version: 0.0.1
+  description: Interface to the connector type service
+servers:
+  - url: http://localhost:9091
+    description: localhost
+  - url: /
+    description: current domain
+paths:
+  '/api/managed-services-api/v1/kafka-connector-types':
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorTypeIdList'
+          description: The list of conenctor types
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No connector types exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: getConnectorTypes
+      summary: Get a list of connector types
+
+  '/api/managed-services-api/v1/kafka-connector-types/{connector_type_id}':
+    parameters:
+      - name: connector_type_id
+        description: The id of the connector type
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorType'
+          description: The connector type matching the request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching connector type exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: getConnectorTypeByID
+      summary: Get a connector type by name and version
+
+  '/api/managed-services-api/v1/kafka-connector-types/{connector_type_id}/reify/spec':
+    post:
+      parameters:
+        - name: connector_type_id
+          description: The id of the connector type
+          schema:
+            type: string
+          in: path
+          required: true
+      requestBody:
+        description: Connector deployment data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorReifyRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorDeploymentSpec'
+          description: The connector deployment spec
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching connector type exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: getConnectorDeploymentSpec
+      summary: Get a connector deployemnt spec
+
+components:
+  schemas:
+    ConnectorTypeIdList:
+      description: "List of connectors types"
+      type: object
+      properties:
+        connector_type_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorTypeId'
+
+    ConnectorTypeId:
+      description: "Connector Type ID"
+      type: string
+    ConnectorReifyRequest:
+      description: ConnectorReifyRequest is used to create ConnectorDeploymentSpec objects
+      type: object
+      properties:
+        connector_id:
+          type: string
+        resource_version:
+          type: integer
+          format: int64
+        kafka_id:
+          type: string
+        cluster_id:
+          type: string
+        cluster_status:
+          $ref: '#/components/schemas/ConnectorClusterStatus'
+        connector_spec:
+          type: object
+
+    ConnectorClusterStatus:
+      description: "Schema for the request to update a data plane cluster's status"
+      type: object
+      properties:
+        phase:
+          type: string
+        version:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
+        operators:
+          description: the list of installed operators
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: the id of the operator
+                type: string
+              version:
+                description: the version of the operator
+                type: string
+              namespace:
+                description: the namespace to which the operator has been installed
+                type: string
+              status:
+                description: the status of the operator
+                type: string
+
+    MetaV1Condition:
+      type: object
+      properties:
+        type:
+          type: string
+        reason:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        lastTransitionTime:
+          type: string
+          #format: date-time # enable this?? or just set it as pure plain string?
+
+    ConnectorDeploymentSpec:
+      description: Holds the deployment specification of a connector
+      type: object
+      properties:
+        connector_id:
+          type: string
+        operator_ids:
+          type: array
+          items:
+            type: string
+        resources:
+          type: array
+          items:
+            type: object
+        status_extractors:
+          type: array
+          items:
+            type: object
+            properties:
+              apiVersion:
+                type: string
+              kind:
+                type: string
+              name:
+                type: string
+              path:
+                type: string
+              conditionType:
+                type: string
+
+    ConnectorType:
+      description: >-
+        Represents a connector type supported by the API
+      required:
+        - name
+        - version
+        - json_schema
+      allOf:
+        - $ref: '#/components/schemas/ObjectReference'
+        - type: object
+          properties:
+            name:
+              description: Name of the connector type.
+              type: string
+            version:
+              description: Version of the connector type.
+              type: string
+            description:
+              description: A description of the connector.
+              type: string
+            icon_href:
+              description: URL to an icon of the connector.
+              type: string
+            labels:
+              description: labels used to categorize the connector
+              type: array
+              items:
+                type: string
+                enum: [ sink, source ]
+            json_schema:
+              description: >-
+                A json schema that can be used to validate a connectors
+                connector_spec field.
+              type: object # todo: replace with better type
+
+    Error:
+      allOf:
+        - $ref: "#/components/schemas/ObjectReference"
+        - type: object
+          properties:
+            code:
+              type: string
+            reason:
+              type: string
+            operation_id:
+              type: string
+
+    ObjectReference:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        href:
+          type: string
