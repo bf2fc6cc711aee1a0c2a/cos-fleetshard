@@ -5,6 +5,19 @@
 # The patterns follow closely to .gitignore or .dockerignore.
 #
 
+# ignore Kafka managed service models
 **/Dataplane*
 **/DataPlane*
 **/ManagedKafka*
+
+# ignore anything besides generated source, like extra build files
+**/*gradle*
+**/gradle/**
+**/gradlew*
+**/build.*
+**/*git*
+**/*.xml
+**/*.yml
+**/*.yaml
+**/README.md
+**/.openapi-generator-ignore

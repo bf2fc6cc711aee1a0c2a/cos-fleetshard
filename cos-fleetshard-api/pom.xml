@@ -50,20 +50,9 @@
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.json.bind</groupId>
-            <artifactId>jakarta.json.bind-api</artifactId>
-            <version>${jakarta.json.bind-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>jakarta.json</artifactId>
-            <version>${jakarta.json.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>${cxf-rt-frontend-jaxrs.version}</version>
-            <scope>compile</scope>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-multipart-provider</artifactId>
+            <version>${resteasy-multipart-provider.version}</version>
         </dependency>
     </dependencies>
     <build>
@@ -117,7 +106,7 @@
                         <configuration>
                             <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
                             <generatorName>java</generatorName>
-                            <library>microprofile</library>
+                            <library>resteasy</library>
                             <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                             <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
                             <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
@@ -127,7 +116,6 @@
                             <generateAliasAsModel>true</generateAliasAsModel>
                             <generateApis>true</generateApis>
                             <generateApiDocumentation>false</generateApiDocumentation>
-                            <generateSupportingFiles>true</generateSupportingFiles>
                             <generateModelDocumentation>false</generateModelDocumentation>
                             <generateModelTests>false</generateModelTests>
                             <configOptions>
