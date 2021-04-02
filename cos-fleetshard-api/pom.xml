@@ -50,23 +50,43 @@
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.json.bind</groupId>
-            <artifactId>jakarta.json.bind-api</artifactId>
-            <version>${jakarta.json.bind-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>jakarta.json</artifactId>
-            <version>${jakarta.json.version}</version>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>${cxf-rt-frontend-jaxrs.version}</version>
-            <scope>compile</scope>
+            <artifactId>cxf-rt-rs-extension-providers</artifactId>
+            <version>${cxf-rt-rs-extension-providers.version}</version>
         </dependency>
     </dependencies>
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi-generator-maven-plugin.version}</version>
+                    <configuration>
+                        <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
+                        <generatorName>java</generatorName>
+                        <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
+                        <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
+                        <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
+                        <apiPackage>org.bf2.cos.fleet.manager.api.client</apiPackage>
+                        <apisToGenerate>Connectors,ConnectorTypes,ConnectorClusters</apisToGenerate>
+                        <generateAliasAsModel>true</generateAliasAsModel>
+                        <generateApiDocumentation>false</generateApiDocumentation>
+                        <generateModelDocumentation>false</generateModelDocumentation>
+                        <generateModelTests>false</generateModelTests>
+                        <generateSupportingFiles>false</generateSupportingFiles>
+                        <configOptions>
+                            <dateLibrary>java8</dateLibrary>
+                            <serializationLibrary>jackson</serializationLibrary>
+                        </configOptions>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.jboss.jandex</groupId>
@@ -111,29 +131,26 @@
                 <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
                     <execution>
+                        <id>generate-model</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
-                            <generatorName>java</generatorName>
-                            <library>microprofile</library>
-                            <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
-                            <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
-                            <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
-                            <apiPackage>org.bf2.cos.fleet.manager.api.client</apiPackage>
-                            <apisToGenerate>Connectors,ConnectorTypes,ConnectorClusters</apisToGenerate>
+                            <library>resteasy</library>
                             <generateModels>true</generateModels>
-                            <generateAliasAsModel>true</generateAliasAsModel>
+                            <generateApis>false</generateApis>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <library>microprofile</library>
+                            <generateModels>false</generateModels>
                             <generateApis>true</generateApis>
-                            <generateApiDocumentation>false</generateApiDocumentation>
                             <generateSupportingFiles>true</generateSupportingFiles>
-                            <generateModelDocumentation>false</generateModelDocumentation>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <dateLibrary>java8</dateLibrary>
-                                <serializationLibrary>jackson</serializationLibrary>
-                            </configOptions>
                         </configuration>
                     </execution>
                 </executions>
