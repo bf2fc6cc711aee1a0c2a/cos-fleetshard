@@ -27,7 +27,6 @@
         <quarkus-operator-sdk.version>1.8.0</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
 
-        <cxf-rt-rs-extension-providers.version>3.4.0</cxf-rt-rs-extension-providers.version>
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
         <formatter-maven-plugin-version>2.14.0</formatter-maven-plugin-version>
         <impsort-maven-plugin.version>1.6.0</impsort-maven-plugin.version>

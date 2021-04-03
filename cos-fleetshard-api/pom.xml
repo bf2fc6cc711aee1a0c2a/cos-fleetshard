@@ -53,11 +53,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-rs-extension-providers</artifactId>
-            <version>${cxf-rt-rs-extension-providers.version}</version>
-        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
@@ -151,6 +146,7 @@
                             <generateModels>false</generateModels>
                             <generateApis>true</generateApis>
                             <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.basedir}/openapi-generator/templates</templateDirectory>
                         </configuration>
                     </execution>
                 </executions>
