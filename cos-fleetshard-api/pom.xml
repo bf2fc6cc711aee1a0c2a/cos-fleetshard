@@ -74,6 +74,7 @@
                         <generateModelDocumentation>false</generateModelDocumentation>
                         <generateModelTests>false</generateModelTests>
                         <generateSupportingFiles>false</generateSupportingFiles>
+                        <typeMappings>object=com.fasterxml.jackson.databind.JsonNode</typeMappings>
                         <configOptions>
                             <dateLibrary>java8</dateLibrary>
                             <serializationLibrary>jackson</serializationLibrary>
