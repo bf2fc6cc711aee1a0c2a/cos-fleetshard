@@ -68,7 +68,7 @@
                         <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
                         <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
                         <apiPackage>org.bf2.cos.fleet.manager.api.client</apiPackage>
-                        <apisToGenerate>Connectors,ConnectorTypes,ConnectorClusters</apisToGenerate>
+                        <apisToGenerate>ConnectorClustersAgent</apisToGenerate>
                         <generateAliasAsModel>true</generateAliasAsModel>
                         <generateApiDocumentation>false</generateApiDocumentation>
                         <generateModelDocumentation>false</generateModelDocumentation>
