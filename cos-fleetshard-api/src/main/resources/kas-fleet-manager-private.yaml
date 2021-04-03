@@ -223,7 +223,7 @@ paths:
       tags:
         - connectors
 
-  '/api/managed-services-api/v1/kafkas-connectors/{connector_id}':
+  '/api/managed-services-api/v1/kafka-connectors/{connector_id}':
     parameters:
       - in: query
         name: kafka_id
