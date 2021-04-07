@@ -43,6 +43,7 @@
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-common</module>
         <module>cos-fleetshard-operator</module>
+        <module>cos-fleetshard-mock</module>
     </modules>
 
     <dependencyManagement>

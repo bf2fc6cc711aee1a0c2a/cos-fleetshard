@@ -6,27 +6,31 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleet.manager.api.client.ApiException;
+import org.bf2.cos.fleet.manager.api.client.ConnectorClustersAgentApi;
+import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentList;
+import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class ControlPlane {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ControlPlane.class);
-
     @Inject
     @RestClient
-    ControlPlaneClient controlPlane;
+    ConnectorClustersAgentApi controlPlane;
     @Inject
     KubernetesClient kubernetesClient;
 
     public void updateClusterStatus(ConnectorCluster cluster) {
-        controlPlane.updateClusterStatus(
-                cluster.getSpec().getId(),
-                cluster.getStatus());
+        try {
+            controlPlane.updateKafkaConnectorClusterStatus(
+                    cluster.getSpec().getId(),
+                    cluster.getStatus());
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public List<ConnectorDeployment> getConnectors(ConnectorCluster connectorAgent) {
@@ -41,12 +45,29 @@ public class ControlPlane {
                 .max()
                 .orElse(0);
 
-        return controlPlane.getConnectors(
-                connectorAgent.getSpec().getId(),
-                gv);
+        ConnectorDeploymentList list;
+
+        try {
+            list = controlPlane.listClusterAsignedConnectorDeployments(
+                    connectorAgent.getSpec().getId(),
+                    null,
+                    null,
+                    gv,
+                    false);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
+
+        // TODO: loop pages
+
+        return list.getItems();
     }
 
-    public void updateConnectorStatus(String agentId, String connectorId, ConnectorDeployment.Status status) {
-        controlPlane.updateConnectorStatus(agentId, connectorId, status);
+    public void updateConnectorStatus(String agentId, String connectorId, ConnectorDeploymentStatus status) {
+        try {
+            controlPlane.updateConnectorDeploymentStatus(agentId, connectorId, status);
+        } catch (ApiException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

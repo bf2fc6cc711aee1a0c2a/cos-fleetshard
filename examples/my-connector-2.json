@@ -1,13 +1,17 @@
 {
-  "id": "camel-c3",
+  "id": "camel-c2",
+  "metadata": {
+    "resource_version": 2002,
+    "specChecksum": "csum"
+  },
   "spec": {
-    "resourceVersion": 6,
-    "operatorId": "ck",
+    "connector_id": "my-connector-2",
+    "operatorIds": [],
     "statusExtractors": [
       {
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "KameletBinding",
-        "name": "camel-c2"
+        "name": "camel-c1"
       }
     ],
     "resources": [
@@ -15,7 +19,7 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "time-source-v1-6"
+          "name": "time-source-v1-2002"
         },
         "spec": {
           "flow": {
@@ -42,7 +46,7 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "Kamelet",
         "metadata": {
-          "name": "log-sink-v1-6"
+          "name": "log-sink-v1-2002"
         },
         "spec": {
           "flow": {
@@ -61,14 +65,14 @@
         "apiVersion": "camel.apache.org/v1alpha1",
         "kind": "KameletBinding",
         "metadata": {
-          "name": "camel-c2"
+          "name": "camel-c1"
         },
         "spec": {
           "source": {
             "ref": {
               "apiVersion": "camel.apache.org/v1alpha1",
               "kind": "Kamelet",
-              "name": "time-source-v1-6"
+              "name": "time-source-v1-2002"
             },
             "properties": {
               "period": "5s",
@@ -79,7 +83,7 @@
             "ref": {
               "apiVersion": "camel.apache.org/v1alpha1",
               "kind": "Kamelet",
-              "name": "log-sink-v1-6"
+              "name": "log-sink-v1-2002"
             }
           }
         }

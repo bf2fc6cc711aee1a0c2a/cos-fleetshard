@@ -62,6 +62,10 @@ spec:
                   properties:
                     conditionsPath:
                       type: string
+                    conditionTypes:
+                      items:
+                        type: string
+                      type: array
                     kind:
                       type: string
                     name:

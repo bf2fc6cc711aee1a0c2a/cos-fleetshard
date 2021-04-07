@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,10 +18,10 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ConnectorStatus;
-import org.bf2.cos.fleetshard.api.ResourceCondition;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
@@ -84,8 +83,7 @@ public class ConnectorController extends AbstractResourceController<Connector> {
             //       as an hint to improve the process
             //
             if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioned)) {
-                ConnectorDeployment.Status ds = new ConnectorDeployment.Status();
-                ds.setConditions(new ArrayList<>());
+                ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
 
                 for (StatusExtractor extractor : connector.getSpec().getStatusExtractors()) {
                     LOGGER.info("Scraping status for resource {}/{}/{}",
@@ -100,10 +98,17 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                         throw new IllegalArgumentException("Unsupported conditions field type: " + conditions.getNodeType());
                     }
 
-                    for (JsonNode condition : conditions) {
-                        ds.getConditions().add(new ResourceCondition(
-                                Serialization.jsonMapper().treeToValue(condition, Condition.class),
-                                extractor));
+                    for (JsonNode conditionNode : conditions) {
+                        var condition = Serialization.jsonMapper().treeToValue(conditionNode, Condition.class);
+
+                        var rc = new MetaV1Condition();
+                        rc.setMessage(condition.getMessage());
+                        rc.setReason(condition.getReason());
+                        rc.setStatus(condition.getStatus());
+                        rc.setType(condition.getType());
+                        rc.setLastTransitionTime(condition.getLastTransitionTime());
+
+                        ds.addConditionsItem(rc);
                     }
                 }
 

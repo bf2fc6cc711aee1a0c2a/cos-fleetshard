@@ -4,7 +4,21 @@
 ## operator
 
 ```shell
+kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connector/connectorclusters.cos.bf2.org-v1.yml
+kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connector/connectors.cos.bf2.org-v1.yml
+
+# build
 ./mvnw install
-kubectl apply -f cos-fleetshard-api-camel/target/classes/META-INF/fabric8/camelconnectors.cos.bf2.org-v1.yml
+
+# run the control plane mock
+./mvnw -pl cos-fleetshard-mock quarkus:dev
+
+# run the operator
 ./mvnw -pl cos-fleetshard-operator quarkus:dev
+
+# create a sample connector
+curl -XPOST \
+  -H "Content-Type: application/json" \
+  http://localhost:9090/api/managed-services-api/v1/kafka-connector-clusters/test/connectors \
+  -d @examples/my-connector-1.json
 ```

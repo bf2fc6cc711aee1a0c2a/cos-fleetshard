@@ -9,6 +9,7 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.bf2.cos.fleet.manager.api.model.ConnectorClusterStatus;
 
 @ToString
 @EqualsAndHashCode
