@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -12,10 +14,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleetshard.api.ConnectorCluster;
-import org.bf2.cos.fleetshard.api.ConnectorClusterStatus;
+import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
@@ -55,7 +57,7 @@ public class ConnectorSync {
         }
 
         ConnectorCluster agent = items.getItems().get(0);
-        if (agent.getStatus() == null || !agent.getStatus().isInPhase(ConnectorClusterStatus.PhaseType.Ready)) {
+        if (agent.getStatus() == null || !Objects.equals(agent.getStatus().getPhase(), "ready")) {
             LOGGER.debug("Agent not yet configured");
             return;
         }
@@ -67,7 +69,16 @@ public class ConnectorSync {
             LOGGER.info("No connectors for agent {}", agent.getMetadata().getName());
         }
 
-        deployments.sort(Comparator.comparingLong(c -> c.getSpec().getResourceVersion()));
+        deployments.sort(Comparator.comparingLong(c -> {
+            if (c.getMetadata() == null) {
+                throw new IllegalArgumentException("Metadata must be defined");
+            }
+            if (c.getMetadata().getResourceVersion() == null) {
+                throw new IllegalArgumentException("Resource Version must be defined");
+            }
+            return c.getMetadata().getResourceVersion();
+        }));
+
         for (var deployment : deployments) {
             try {
                 provision(agent, deployment);
@@ -84,6 +95,16 @@ public class ConnectorSync {
 
         LOGGER.info("deploying connector {}, {}", deployment.getId(), deployment.getSpec());
 
+        if (deployment.getMetadata() == null) {
+            throw new IllegalArgumentException("Metadata must be defined");
+        }
+        if (deployment.getMetadata().getResourceVersion() == null) {
+            throw new IllegalArgumentException("Resource Version must be defined");
+        }
+        if (deployment.getSpec() == null) {
+            throw new IllegalArgumentException("Spec must be defined");
+        }
+
         Connector connector = kubernetesClient.customResources(Connector.class)
                 .inNamespace(agent.getMetadata().getNamespace())
                 .withName(deployment.getId())
@@ -98,7 +119,7 @@ public class ConnectorSync {
             //       out any unwanted resources so we may want to remove this once the system is proven
             //       to be stable enough.
             //
-            if (connector.getSpec().getConnectorResourceVersion() > deployment.getSpec().getResourceVersion()) {
+            if (connector.getSpec().getConnectorResourceVersion() > deployment.getMetadata().getResourceVersion()) {
                 return;
             }
         } else {
@@ -108,16 +129,34 @@ public class ConnectorSync {
             connector.getSpec().setClusterId(agent.getSpec().getId());
         }
 
-        connector.getSpec().setConnectorResourceVersion(deployment.getSpec().getResourceVersion());
-        connector.getSpec().setStatusExtractors(deployment.getSpec().getStatusExtractors());
+        if (deployment.getSpec().getStatusExtractors() != null) {
+            var extractors = deployment.getSpec().getStatusExtractors().stream().map(se -> {
+                var answer = new StatusExtractor();
+                answer.setApiVersion(se.getApiVersion());
+                answer.setKind(se.getKind());
+                answer.setName(se.getName());
+                answer.setConditionsPath(se.getJsonPath());
+                if (se.getConditionType() != null) {
+                    answer.setConditionTypes(List.of(se.getConditionType()));
+                }
+
+                return answer;
+            }).collect(Collectors.toList());
+
+            connector.getSpec().setStatusExtractors(extractors);
+        }
+
+        connector.getSpec().setConnectorResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().setResources(new ArrayList<>());
 
-        for (JsonNode node : deployment.getSpec().getResources()) {
-            Map<String, Object> result = uc.createOrReplace(
-                    agent.getMetadata().getNamespace(),
-                    node);
+        if (deployment.getSpec().getResources() != null) {
+            for (JsonNode node : deployment.getSpec().getResources()) {
+                Map<String, Object> result = uc.createOrReplace(
+                        agent.getMetadata().getNamespace(),
+                        node);
 
-            connector.getSpec().getResources().add(ResourceUtil.asResourceRef(result));
+                connector.getSpec().getResources().add(ResourceUtil.asResourceRef(result));
+            }
         }
 
         kubernetesClient.customResources(Connector.class)
