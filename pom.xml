@@ -21,7 +21,7 @@
         <jandex.version>2.2.3.Final</jandex.version>
         <josdk.version>1.8.1</josdk.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <kubernetes-client.version>5.2.1</kubernetes-client.version>
+        <kubernetes-client.version>5.3.0</kubernetes-client.version>
         <lombok.version>1.18.18</lombok.version>
         <quarkus.version>1.12.2.Final</quarkus.version>
         <quarkus-operator-sdk.version>1.8.0</quarkus-operator-sdk.version>
