@@ -15,7 +15,7 @@ import lombok.ToString;
 public class ConnectorSpec {
     private String clusterId;
     private String operatorId;
-    private long connectorResourceVersion;
+    private Long connectorResourceVersion;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<StatusExtractor> statusExtractors = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -45,11 +45,11 @@ public class ConnectorSpec {
         this.resources = resources;
     }
 
-    public long getConnectorResourceVersion() {
+    public Long getConnectorResourceVersion() {
         return connectorResourceVersion;
     }
 
-    public void setConnectorResourceVersion(long connectorResourceVersion) {
+    public void setConnectorResourceVersion(Long connectorResourceVersion) {
         this.connectorResourceVersion = connectorResourceVersion;
     }
 

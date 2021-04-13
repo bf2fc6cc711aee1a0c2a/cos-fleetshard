@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.controlplane;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -13,10 +15,15 @@ import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.operator.support.ConnectorDeploymentSupport;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class ControlPlane {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ControlPlane.class);
+
     @Inject
     @RestClient
     ConnectorClustersAgentApi controlPlane;
@@ -33,34 +40,46 @@ public class ControlPlane {
         }
     }
 
-    public List<ConnectorDeployment> getConnectors(ConnectorCluster connectorAgent) {
+    public List<ConnectorDeployment> getConnectors(ConnectorCluster cluster) {
         // TODO: check namespaces
         // TODO: check labels
         final List<Connector> connectors = kubernetesClient.customResources(Connector.class)
-                .inNamespace(connectorAgent.getMetadata().getNamespace())
+                .inNamespace(cluster.getMetadata().getNamespace())
                 .list().getItems();
 
         final long gv = connectors.stream()
+                .filter(c -> c.getSpec() != null && c.getSpec().getConnectorResourceVersion() != null)
                 .mapToLong(c -> c.getSpec().getConnectorResourceVersion())
                 .max()
                 .orElse(0);
 
-        ConnectorDeploymentList list;
+        List<ConnectorDeployment> answer = new ArrayList<>();
 
-        try {
-            list = controlPlane.listClusterAsignedConnectorDeployments(
-                    connectorAgent.getSpec().getId(),
-                    null,
+        for (int i = 0; i < Integer.MAX_VALUE; i++){
+            try {
+                ConnectorDeploymentList list = controlPlane.listClusterAsignedConnectorDeployments(
+                    cluster.getSpec().getId(),
+                    Integer.toString(i),
                     null,
                     gv,
                     false);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
+
+                answer.addAll(list.getItems());
+
+                if (list.getItems().isEmpty() || answer.size() == list.getTotal()) {
+                    break;
+                }
+            } catch (ApiException e) {
+                throw new RuntimeException(e);
+            }
         }
 
-        // TODO: loop pages
+        if (answer.isEmpty()) {
+            LOGGER.info("No connectors for agent {}", cluster.getSpec().getId());
+        }
 
-        return list.getItems();
+        answer.sort(Comparator.comparingLong(ConnectorDeploymentSupport::getResourceVersion));
+        return answer;
     }
 
     public void updateConnectorStatus(String agentId, String connectorId, ConnectorDeploymentStatus status) {

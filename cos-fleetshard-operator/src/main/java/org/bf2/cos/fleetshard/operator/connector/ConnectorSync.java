@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -17,6 +16,7 @@ import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.Connector;
 import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.ConnectorStatus;
 import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
@@ -63,23 +63,7 @@ public class ConnectorSync {
         }
 
         LOGGER.debug("Polling for control plane connectors");
-
-        List<ConnectorDeployment> deployments = controlPlane.getConnectors(agent);
-        if (deployments.isEmpty()) {
-            LOGGER.info("No connectors for agent {}", agent.getMetadata().getName());
-        }
-
-        deployments.sort(Comparator.comparingLong(c -> {
-            if (c.getMetadata() == null) {
-                throw new IllegalArgumentException("Metadata must be defined");
-            }
-            if (c.getMetadata().getResourceVersion() == null) {
-                throw new IllegalArgumentException("Resource Version must be defined");
-            }
-            return c.getMetadata().getResourceVersion();
-        }));
-
-        for (var deployment : deployments) {
+        for (var deployment : controlPlane.getConnectors(agent)) {
             try {
                 provision(agent, deployment);
             } catch (Exception e) {
@@ -129,6 +113,16 @@ public class ConnectorSync {
             connector.getSpec().setClusterId(agent.getSpec().getId());
         }
 
+        //
+        // Set the phase to provisioning so we know that this connector set-up has not yet
+        // deployed
+        //
+        connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioning);
+        connector = kubernetesClient.customResources(Connector.class)
+            .inNamespace(agent.getMetadata().getNamespace())
+            .createOrReplace(connector);
+
+
         if (deployment.getSpec().getStatusExtractors() != null) {
             var extractors = deployment.getSpec().getStatusExtractors().stream().map(se -> {
                 var answer = new StatusExtractor();
@@ -159,6 +153,7 @@ public class ConnectorSync {
             }
         }
 
+        connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioned);
         kubernetesClient.customResources(Connector.class)
                 .inNamespace(agent.getMetadata().getNamespace())
                 .createOrReplace(connector);
