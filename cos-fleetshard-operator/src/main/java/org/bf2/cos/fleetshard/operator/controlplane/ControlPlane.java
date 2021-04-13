@@ -55,14 +55,14 @@ public class ControlPlane {
 
         List<ConnectorDeployment> answer = new ArrayList<>();
 
-        for (int i = 0; i < Integer.MAX_VALUE; i++){
+        for (int i = 0; i < Integer.MAX_VALUE; i++) {
             try {
                 ConnectorDeploymentList list = controlPlane.listClusterAsignedConnectorDeployments(
-                    cluster.getSpec().getId(),
-                    Integer.toString(i),
-                    null,
-                    gv,
-                    false);
+                        cluster.getSpec().getId(),
+                        Integer.toString(i),
+                        null,
+                        gv,
+                        false);
 
                 answer.addAll(list.getItems());
 

@@ -119,9 +119,8 @@ public class ConnectorSync {
         //
         connector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioning);
         connector = kubernetesClient.customResources(Connector.class)
-            .inNamespace(agent.getMetadata().getNamespace())
-            .createOrReplace(connector);
-
+                .inNamespace(agent.getMetadata().getNamespace())
+                .createOrReplace(connector);
 
         if (deployment.getSpec().getStatusExtractors() != null) {
             var extractors = deployment.getSpec().getStatusExtractors().stream().map(se -> {

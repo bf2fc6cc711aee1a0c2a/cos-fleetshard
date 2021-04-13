@@ -73,6 +73,7 @@
                         <generateApiDocumentation>false</generateApiDocumentation>
                         <generateModelDocumentation>false</generateModelDocumentation>
                         <generateModelTests>false</generateModelTests>
+                        <generateApiTests>false</generateApiTests>
                         <generateSupportingFiles>false</generateSupportingFiles>
                         <typeMappings>object=com.fasterxml.jackson.databind.JsonNode</typeMappings>
                         <configOptions>

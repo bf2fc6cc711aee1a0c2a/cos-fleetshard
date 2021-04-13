@@ -77,9 +77,9 @@ public class ControlPlaneMock {
             @QueryParam("gt_version") long resourceVersion) {
 
         List<ConnectorDeployment> deployments = connectors.values().stream()
-            .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
-            .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
-            .collect(Collectors.toList());
+                .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
+                .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
+                .collect(Collectors.toList());
 
         return new ConnectorDeploymentList()
                 .total(deployments.size())
