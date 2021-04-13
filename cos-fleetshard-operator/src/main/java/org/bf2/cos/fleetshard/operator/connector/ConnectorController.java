@@ -54,6 +54,11 @@ public class ConnectorController extends AbstractResourceController<Connector> {
                 connector.getKind(),
                 connector.getMetadata().getName());
 
+        if (connector.getStatus().isInPhase(ConnectorStatus.PhaseType.Provisioning)) {
+            LOGGER.info("Connector is provisioning, skipping ...");
+            return UpdateControl.noUpdate();
+        }
+
         try {
             //
             // Set up watcher for resource types owned by the connectors. We don't

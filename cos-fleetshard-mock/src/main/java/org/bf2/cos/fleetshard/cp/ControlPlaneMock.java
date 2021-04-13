@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.cp;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -75,11 +76,15 @@ public class ControlPlaneMock {
             @PathParam("id") String id,
             @QueryParam("gt_version") long resourceVersion) {
 
+        List<ConnectorDeployment> deployments = connectors.values().stream()
+            .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
+            .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
+            .collect(Collectors.toList());
+
         return new ConnectorDeploymentList()
-                .items(connectors.values().stream()
-                        .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
-                        .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
-                        .collect(Collectors.toList()));
+                .total(deployments.size())
+                .page(0)
+                .items(deployments);
     }
 
     @PUT
