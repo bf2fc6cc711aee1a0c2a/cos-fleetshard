@@ -4,8 +4,8 @@
 ## operator
 
 ```shell
-kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connector/connectorclusters.cos.bf2.org-v1.yml
-kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connector/connectors.cos.bf2.org-v1.yml
+kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connectorclusters.cos.bf2.org-v1.yml
+kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connectors.cos.bf2.org-v1.yml
 
 # build
 ./mvnw install
@@ -15,6 +15,9 @@ kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connector/conne
 
 # run the operator
 ./mvnw -pl cos-fleetshard-operator quarkus:dev
+
+# create the cluster
+kubectl apply -f examples/mt-cluster.yaml
 
 # create a sample connector
 curl -XPOST \
