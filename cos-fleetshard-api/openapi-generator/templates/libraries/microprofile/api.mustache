@@ -20,7 +20,7 @@ import org.apache.cxf.jaxrs.ext.multipart.*;
 }}
 {{/disableMultipart}}
 
-import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
+//import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 {{#appName}}
@@ -36,7 +36,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @ApplicationScoped
 @RegisterRestClient(configKey="{{classVarName}}")
-@RegisterProvider(ApiExceptionMapper.class)
+//@RegisterProvider(ApiExceptionMapper.class)
 @Path("{{#useAnnotatedBasePath}}{{contextPath}}{{/useAnnotatedBasePath}}{{commonPath}}")
 public interface {{classname}}  {
 {{#operations}}
