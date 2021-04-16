@@ -79,6 +79,7 @@
                         <configOptions>
                             <dateLibrary>java8</dateLibrary>
                             <serializationLibrary>jackson</serializationLibrary>
+                            <legacyDiscriminatorBehavior>true</legacyDiscriminatorBehavior>
                         </configOptions>
                     </configuration>
                 </plugin>
