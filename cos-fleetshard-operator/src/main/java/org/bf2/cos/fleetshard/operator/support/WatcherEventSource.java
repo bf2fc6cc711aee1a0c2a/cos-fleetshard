@@ -1,30 +1,42 @@
 package org.bf2.cos.fleetshard.operator.support;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.javaoperatorsdk.operator.processing.event.AbstractEventSource;
-import io.javaoperatorsdk.operator.processing.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class DependantResourceEventSource<T extends HasMetadata> extends AbstractEventSource implements Watcher<T> {
+public abstract class WatcherEventSource<T> extends AbstractEventSource implements Watcher<T> {
     private final KubernetesClient client;
     private final Logger logger;
 
-    protected DependantResourceEventSource(KubernetesClient client) {
+    private Watch watch;
+
+    protected WatcherEventSource(KubernetesClient client) {
         this.client = client;
         this.logger = LoggerFactory.getLogger(getClass());
     }
 
+    protected abstract Watch watch();
+
     @Override
-    public void setEventHandler(EventHandler eventHandler) {
-        super.setEventHandler(eventHandler);
-        watch();
+    public void start() {
+        watch = watch();
     }
 
-    protected abstract void watch();
+    @Override
+    public void close() {
+        if (watch != null) {
+            try {
+                logger.debug("Closing watch {}", watch);
+                watch.close();
+            } catch (Exception e) {
+                logger.warn("Failed to close watch {}", watch, e);
+            }
+        }
+    }
 
     @Override
     public void onClose(WatcherException e) {
@@ -33,6 +45,7 @@ public abstract class DependantResourceEventSource<T extends HasMetadata> extend
         }
         if (e.isHttpGone()) {
             logger.warn("Received error for watch, will try to reconnect.", e);
+            close();
             watch();
         } else {
             // Note that this should not happen normally, since fabric8 client handles reconnect.

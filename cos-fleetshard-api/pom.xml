@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.bf2</groupId>
         <artifactId>cos-fleetshard</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>999-SNAPSHOT</version>
     </parent>
     <artifactId>cos-fleetshard-api</artifactId>
     <dependencies>
@@ -36,14 +36,21 @@
             <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>crd-generator-apt</artifactId>
             <scope>provided</scope>
         </dependency>
+        -->
+        <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>builder-annotations</artifactId>
+            <version>${sundrio.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
-            <artifactId>kubernetes-model-common</artifactId>
+            <artifactId>kubernetes-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -62,13 +69,9 @@
                     <artifactId>openapi-generator-maven-plugin</artifactId>
                     <version>${openapi-generator-maven-plugin.version}</version>
                     <configuration>
-                        <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
                         <generatorName>java</generatorName>
                         <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                         <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
-                        <modelPackage>org.bf2.cos.fleet.manager.api.model</modelPackage>
-                        <apiPackage>org.bf2.cos.fleet.manager.api.client</apiPackage>
-                        <apisToGenerate>ConnectorClustersAgent</apisToGenerate>
                         <generateAliasAsModel>true</generateAliasAsModel>
                         <generateApiDocumentation>false</generateApiDocumentation>
                         <generateModelDocumentation>false</generateModelDocumentation>
@@ -99,53 +102,47 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-resources</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/src/main/generated/resources</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.outputDirectory}/META-INF/fabric8</directory>
-                                    <filtering>true</filtering>
-                                    <includes>
-                                        <include>**/*-v1.yml</include>
-                                        <include>**/*-v1.yaml</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>generate-model</id>
+                        <id>generate-meta-model</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/cos-meta.yaml</inputSpec>
                             <library>resteasy</library>
                             <generateModels>true</generateModels>
                             <generateApis>false</generateApis>
+                            <modelPackage>org.bf2.cos.fleet.manager.api.model.meta</modelPackage>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>generate-api</id>
+                        <id>generate-control-plane-model</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
+                            <library>resteasy</library>
+                            <generateModels>true</generateModels>
+                            <generateApis>false</generateApis>
+                            <modelPackage>org.bf2.cos.fleet.manager.api.model.cp</modelPackage>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-control-plane-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
                             <library>microprofile</library>
+                            <apisToGenerate>ConnectorClustersAgent</apisToGenerate>
+                            <apiPackage>org.bf2.cos.fleet.manager.api.client.cp</apiPackage>
+                            <modelPackage>org.bf2.cos.fleet.manager.api.model.cp</modelPackage>
                             <generateModels>false</generateModels>
                             <generateApis>true</generateApis>
                             <generateSupportingFiles>true</generateSupportingFiles>

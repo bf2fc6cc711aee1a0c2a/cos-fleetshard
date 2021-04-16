@@ -1,104 +1,20 @@
 {
-  "id": "camel-c1",
+  "kind": "ConnectorDeployment",
   "metadata": {
-    "resource_version": 2001,
-    "specChecksum": "csum"
+    "created_at": "2021-04-16T13:49:45.309378Z",
+    "updated_at": "2021-04-16T13:49:45.306429Z"
   },
   "spec": {
-    "connector_id": "my-connector-1",
-    "operatorIds": [],
-    "statusExtractors": [
-      {
-        "apiVersion": "camel.apache.org/v1alpha1",
-        "kind": "KameletBinding",
-        "name": "camel-c1"
-      }
-    ],
-    "resources": [
-      {
-        "apiVersion": "camel.apache.org/v1alpha1",
-        "kind": "Kamelet",
-        "metadata": {
-          "name": "time-source-v1-2001"
-        },
-        "spec": {
-          "flow": {
-            "from": {
-              "uri": "timer:tick",
-              "parameters": {
-                "period": "{{period}}"
-              },
-              "steps": [
-                {
-                  "set-body": {
-                    "constant": "{{message}}"
-                  }
-                },
-                {
-                  "to": "kamelet:sink"
-                }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "apiVersion": "camel.apache.org/v1alpha1",
-        "kind": "Kamelet",
-        "metadata": {
-          "name": "log-sink-v1-2001"
-        },
-        "spec": {
-          "flow": {
-            "from": {
-              "uri": "kamelet:source",
-              "steps": [
-                {
-                  "to": "log:sink"
-                }
-              ]
-            }
-          }
-        }
-      },
-      {
-        "apiVersion": "camel.apache.org/v1alpha1",
-        "kind": "KameletBinding",
-        "metadata": {
-          "name": "camel-c1"
-        },
-        "spec": {
-          "source": {
-            "ref": {
-              "apiVersion": "camel.apache.org/v1alpha1",
-              "kind": "Kamelet",
-              "name": "time-source-v1-2001"
-            },
-            "properties": {
-              "period": "5s",
-              "message": "hello"
-            }
-          },
-          "sink": {
-            "ref": {
-              "apiVersion": "camel.apache.org/v1alpha1",
-              "kind": "Kamelet",
-              "name": "log-sink-v1-2001"
-            }
-          }
-        }
-      },
-      {
-        "apiVersion": "v1",
-        "kind": "Secret",
-        "metadata": {
-          "name": "camel-c1-2001"
-        },
-        "data": {
-          "username": "YWRtaW4=",
-          "password": "MWYyZDFlMmU2N2Rm"
-        }
-      }
-    ]
+    "connector_meta_image": "quay.io/lburgazzoli/cts:native",
+    "connector_id": "connector-1",
+    "kafka_id": "1rFo1KQEdXMsxfldqx9SV6GXs7C",
+    "connector_type_id": "aws-sqs-source-v1alpha1",
+    "connector_spec": {
+      "accessKey": "test",
+      "queueNameOrArn": "test",
+      "region": "east",
+      "secretKey": { "kind": "base64", "value": "dGVzdA==" }
+    },
+    "desired_state": "ready"
   }
 }

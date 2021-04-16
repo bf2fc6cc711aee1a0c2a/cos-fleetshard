@@ -19,9 +19,12 @@ public class Main implements QuarkusApplication {
 
     @Override
     public int run(String... args) throws Exception {
-        operator.start();
-
-        Quarkus.waitForExit();
+        try {
+            operator.start();
+            Quarkus.waitForExit();
+        } finally {
+            operator.close();
+        }
 
         return 0;
     }

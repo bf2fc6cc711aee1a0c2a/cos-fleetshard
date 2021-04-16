@@ -4,6 +4,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -18,11 +20,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleet.manager.api.model.ConnectorCluster;
-import org.bf2.cos.fleet.manager.api.model.ConnectorClusterStatus;
-import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentList;
-import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorCluster;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,70 +52,107 @@ public class ControlPlaneMock {
     }
 
     @GET
-    @Path("/{id}")
+    @Path("/{cluster_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ConnectorCluster getConnectorCluster(
-            @PathParam("id") String id) {
+        @PathParam("id") String clusterId) {
 
         return cluster;
     }
 
     @PUT
-    @Path("/{id}/status")
+    @Path("/{cluster_id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void updateKafkaConnectorClusterStatus(
-            @PathParam("id") String id,
-            ConnectorClusterStatus status) {
+        @PathParam("cluster_id") String clusterId,
+        ConnectorClusterStatus status) {
 
         this.cluster.setStatus(status.getPhase());
     }
 
     @GET
-    @Path("/{id}/deployments")
+    @Path("/{cluster_id}/deployments")
     @Produces(MediaType.APPLICATION_JSON)
     public ConnectorDeploymentList getDeployments(
-            @PathParam("id") String id,
-            @QueryParam("gt_version") long resourceVersion) {
+        @PathParam("cluster_id") String clusterId,
+        @QueryParam("gt_version") long resourceVersion) {
 
         List<ConnectorDeployment> deployments = connectors.values().stream()
-                .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
-                .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
-                .collect(Collectors.toList());
+            .filter(c -> resourceVersion < c.getMetadata().getResourceVersion())
+            .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
+            .collect(Collectors.toList());
 
         return new ConnectorDeploymentList()
-                .total(deployments.size())
-                .page(0)
-                .items(deployments);
+            .total(deployments.size())
+            .page(0)
+            .items(deployments);
+    }
+
+    @GET
+    @Path("/{cluster_id}/connectors")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ConnectorDeploymentList getConnectors(
+        @PathParam("cluster_id") String clusterId) {
+
+        List<ConnectorDeployment> deployments = connectors.values().stream()
+            .sorted(Comparator.comparingLong(c -> c.getMetadata().getResourceVersion()))
+            .collect(Collectors.toList());
+
+        return new ConnectorDeploymentList()
+            .total(deployments.size())
+            .page(0)
+            .items(deployments);
+    }
+
+    @GET
+    @Path("/{id}/deployments/{deployment_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ConnectorDeployment getDeployment(
+        @PathParam("cluster_id") String clusterId,
+        @PathParam("deployment_id") String deploymentId) {
+
+        return connectors.values().stream()
+            .filter(cd -> Objects.equals(deploymentId, cd.getId()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Unknown deployment " + deploymentId));
     }
 
     @PUT
-    @Path("/{id}/deployments/{cid}/status")
+    @Path("/{cluster_id}/deployments/{deployment_id}/status")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void updateConnector(
-            @PathParam("id") String id,
-            @PathParam("cid") String cid,
-            ConnectorDeploymentStatus status) throws JsonProcessingException {
+        @PathParam("cluster_id") String clusterId,
+        @PathParam("deployment_id") String deploymentId,
+        ConnectorDeploymentStatus status) throws JsonProcessingException {
 
-        LOGGER.info("Updating status {}",
-                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(status));
+        LOGGER.info("Updating status {} -> {}",
+            deploymentId,
+            Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(status));
 
-        connectors.computeIfPresent(
-                cid,
-                (k, v) -> {
-                    v.setStatus(status);
-                    return v;
-                });
+        connectors.values().stream()
+            .filter(cd -> Objects.equals(deploymentId, cd.getId()))
+            .findFirst()
+            .ifPresent(v -> v.setStatus(status));
     }
 
     @POST
-    @Path("/{id}/connectors")
+    @Path("/{cluster_id}/connectors")
     @Consumes(MediaType.APPLICATION_JSON)
     public void updateConnector(
-            ConnectorDeployment connector) {
+        ConnectorDeployment connector) throws JsonProcessingException {
 
-        connector.getMetadata().setResourceVersion(counter.incrementAndGet());
-        connectors.put(connector.getId(), connector);
+        String id = connector.getId();
+        long rev = counter.incrementAndGet();
+        connector.setId(UUID.randomUUID().toString());
+        connector.getMetadata().setResourceVersion(rev);
+        connector.getSpec().setConnectorResourceVersion(rev);
+
+        LOGGER.info("Updating deployment {} ->{}",
+            id,
+            Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(connector));
+
+        connectors.put(id, connector);
     }
 }

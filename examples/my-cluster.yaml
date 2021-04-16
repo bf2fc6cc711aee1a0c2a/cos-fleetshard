@@ -1,6 +1,4 @@
 apiVersion: cos.bf2.org/v1alpha1
 kind: ManagedConnectorCluster
 metadata:
-  name: my-cos-agent
-spec:
-  id: "cos"
+  name: my-cos-operator

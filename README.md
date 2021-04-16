@@ -4,8 +4,8 @@
 ## operator
 
 ```shell
-kubectl apply -f cos-fleetshard-api/src/main/generated/resources/managedconnectorclusters.cos.bf2.org-v1.yml
-kubectl apply -f cos-fleetshard-api/src/main/generated/resources/managedconnectors.cos.bf2.org-v1.yml
+kubectl apply -f cos-fleetshard-operator/src/main/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
+kubectl apply -f cos-fleetshard-operator/src/main/kubernetes/managedconnectors.cos.bf2.org-v1.yml
 
 # build
 ./mvnw install
