@@ -686,7 +686,7 @@ paths:
           name: watch
           description: watch for changes to the resources and return them as a stream of watch events. Specify gt_version to specify the starting point.
           schema:
-            type: boolean
+            type: string
 
       responses:
         '200':
@@ -717,7 +717,7 @@ paths:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{connector_id}/status':
+  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -725,8 +725,55 @@ paths:
           type: string
         in: path
         required: true
-      - name: connector_id
-        description: The id of the connector
+      - name: deployment_id
+        description: The id of the deployment
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAsignedConnectorDeployment
+      summary: Returns a list of connector deployments assigned to the cluster.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorDeployment'
+          description: A connector deployment
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: '#/components/examples/401Example'
+          description: Auth token is invalid
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+          description: Unexpected error occurred
+
+  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: deployment_id
+        description: The id of the deployment
         schema:
           type: string
         in: path
@@ -1033,6 +1080,9 @@ components:
                   type: string
                 annotations:
                   type: object
+                  required:
+                    - bf2.org/id
+                    - bf2.org/placementId
                   properties:
                     bf2.org/id:
                       type: string
@@ -1060,6 +1110,8 @@ components:
                     userNameClaim:
                       type: string
                     tlsTrustedCertificate:
+                      type: string
+                    customClaimCheck:
                       type: string
                 endpoint:
                   type: object
@@ -1238,8 +1290,6 @@ components:
                 resource_version:
                   type: integer
                   format: int64
-                spec_checksum:
-                  type: string
             spec:
               $ref: '#/components/schemas/ConnectorDeploymentSpec'
             status:
@@ -1249,31 +1299,21 @@ components:
       description: Holds the deployment specification of a connector
       type: object
       properties:
+        connector_meta_image:
+          type: string
         connector_id:
           type: string
-        operator_ids:
-          type: array
-          items:
-            type: string
-        resources:
-          type: array
-          items:
-            type: object
-        status_extractors:
-          type: array
-          items:
-            type: object
-            properties:
-              apiVersion:
-                type: string
-              kind:
-                type: string
-              name:
-                type: string
-              jsonPath:
-                type: string
-              conditionType:
-                type: string
+        connector_resource_version:
+          type: integer
+          format: int64
+        kafka_id:
+          type: string
+        connector_type_id:
+          type: string
+        connector_spec:
+          type: object
+        desired_state:
+          type: string
 
     ConnectorDeploymentStatus:
       description: The status of connector deployment
@@ -1281,8 +1321,9 @@ components:
       properties:
         phase:
           type: string
-        spec_checksum:
-          type: string
+        resource_version:
+          type: integer
+          format: int64
         conditions:
           type: array
           items:

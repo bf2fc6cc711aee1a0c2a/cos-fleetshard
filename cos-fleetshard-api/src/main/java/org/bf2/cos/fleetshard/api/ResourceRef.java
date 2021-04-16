@@ -1,25 +1,34 @@
 package org.bf2.cos.fleetshard.api;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sundr.builder.annotations.Buildable;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @ToString
-@EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(
+    builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ResourceRef {
+    private String apiVersion;
     private String kind;
     private String name;
-    private String apiVersion;
 
     public ResourceRef() {
     }
 
-    public ResourceRef(String kind, String name, String apiVersion) {
+    public ResourceRef(String apiVersion, String kind, String name) {
+        this.apiVersion = apiVersion;
         this.kind = kind;
         this.name = name;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
         this.apiVersion = apiVersion;
     }
 
@@ -39,12 +48,22 @@ public class ResourceRef {
         this.name = name;
     }
 
-    public String getApiVersion() {
-        return apiVersion;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ResourceRef)) {
+            return false;
+        }
+        ResourceRef ref = (ResourceRef) o;
+        return Objects.equals(getKind(), ref.getKind())
+            && Objects.equals(getName(), ref.getName())
+            && Objects.equals(getApiVersion(), ref.getApiVersion());
     }
 
-    public void setApiVersion(String apiVersion) {
-        this.apiVersion = apiVersion;
+    @Override
+    public int hashCode() {
+        return Objects.hash(getKind(), getName(), getApiVersion());
     }
-
 }

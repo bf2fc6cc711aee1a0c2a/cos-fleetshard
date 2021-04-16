@@ -12,14 +12,14 @@ public class ResourceEvent extends AbstractEvent {
     private final ResourceRef resourceRef;
 
     public ResourceEvent(
-            Watcher.Action action,
-            ResourceRef objectReference,
-            String ownerUid,
-            EventSource eventSource) {
+        Watcher.Action action,
+        ResourceRef objectReference,
+        String ownerUid,
+        EventSource eventSource) {
 
         super(
-                Objects.requireNonNull(ownerUid),
-                Objects.requireNonNull(eventSource));
+            Objects.requireNonNull(ownerUid),
+            Objects.requireNonNull(eventSource));
 
         this.action = action;
         this.resourceRef = objectReference;

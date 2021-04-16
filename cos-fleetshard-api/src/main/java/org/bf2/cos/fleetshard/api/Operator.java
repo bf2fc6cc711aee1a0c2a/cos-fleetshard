@@ -7,19 +7,20 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(
+    builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Operator {
-    private String id;
+    private String type;
     private String version;
     private String namespace;
 
-    public String getId() {
-        return id;
+    public String getType() {
+        return type;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getVersion() {

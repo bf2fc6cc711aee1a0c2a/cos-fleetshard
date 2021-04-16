@@ -8,6 +8,8 @@ spec:
   names:
     kind: ManagedConnectorCluster
     plural: managedconnectorclusters
+    shortNames:
+    - mcc
     singular: managedconnectorcluster
   scope: Namespaced
   versions:
@@ -17,44 +19,37 @@ spec:
         properties:
           status:
             properties:
-              phase:
-                type: string
-              version:
-                type: string
-              conditions:
-                items:
-                  properties:
-                    type:
-                      type: string
-                    reason:
-                      type: string
-                    message:
-                      type: string
-                    status:
-                      type: string
-                    lastTransitionTime:
-                      type: string
-                  type: object
-                type: array
               operators:
                 items:
                   properties:
-                    id:
-                      type: string
                     version:
+                      type: string
+                    id:
                       type: string
                     namespace:
                       type: string
-                    status:
-                      type: string
                   type: object
                 type: array
-            type: object
-          spec:
-            properties:
+              conditions:
+                items:
+                  type: object
+                type: array
               id:
                 type: string
+              phase:
+                enum:
+                - Deleted
+                - Error
+                - Ready
+                - Installing
+                type: string
+              connectorsNamespace:
+                type: string
+            type: object
+          spec:
             type: object
         type: object
     served: true
     storage: true
+    subresources:
+      status: {}

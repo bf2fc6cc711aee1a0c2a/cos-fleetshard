@@ -1,26 +1,26 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ConnectorStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
+import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.bf2.cos.fleetshard.api.StatusExtractor;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
-import org.bf2.cos.fleetshard.common.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,127 +35,201 @@ public class ConnectorSync {
     ControlPlane controlPlane;
     @Inject
     KubernetesClient kubernetesClient;
-    @Inject
-    UnstructuredClient uc;
 
-    @Scheduled(every = "{cos.connectors.sync.interval}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @ConfigProperty(
+        name = "cos.connectors.meta.host",
+        defaultValue = "")
+    String metaServiceHost;
+
+    @ConfigProperty(
+        name = "cos.connectors.meta.mode",
+        defaultValue = "")
+    String metaServiceMode;
+
+    @Timed(
+        value = "cos.connectors.sync.poll",
+        extraTags = { "resource", "ManagedConnectors" },
+        description = "The time spent processing polling calls")
+    @Counted(
+        value = "cos.connectors.sync.poll",
+        extraTags = { "resource", "ManagedConnectors" },
+        description = "The number of polling calls")
+    @Scheduled(
+        every = "{cos.connectors.sync.interval}",
+        concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void sync() {
         LOGGER.debug("Sync connectors");
 
-        String namespace = kubernetesClient.getNamespace();
-        KubernetesResourceList<ManagedConnectorCluster> items = kubernetesClient.customResources(ManagedConnectorCluster.class)
-                .inNamespace(namespace).list();
-
-        if (items.getItems().isEmpty()) {
-            LOGGER.debug("Agent not yet configured");
-            return;
-        }
-        if (items.getItems().size() > 1) {
-            // TODO: report the failure status to the CR and control plane
-            LOGGER.warn("More than one Agent");
-            return;
-        }
-
-        ManagedConnectorCluster agent = items.getItems().get(0);
-        if (agent.getStatus() == null || !Objects.equals(agent.getStatus().getPhase(), "ready")) {
-            LOGGER.debug("Agent not yet configured");
+        ManagedConnectorCluster connectorCluster = lookupManagedConnectorCluster(kubernetesClient.getNamespace());
+        if (connectorCluster == null
+            || connectorCluster.getStatus() == null
+            || !Objects.equals(connectorCluster.getStatus().getPhase(), ManagedConnectorClusterStatus.PhaseType.Ready)) {
+            LOGGER.debug("Operator not yet configured");
             return;
         }
 
         LOGGER.debug("Polling for control plane connectors");
-        for (var deployment : controlPlane.getConnectors(agent)) {
-            try {
-                provision(agent, deployment);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+
+        for (var deployment : controlPlane.getDeployments()) {
+            provision(connectorCluster, deployment);
         }
     }
 
-    private void provision(
-            ManagedConnectorCluster agent,
-            ConnectorDeployment deployment)
-            throws Exception {
+    private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+        final String connectorId = deployment.getSpec().getConnectorId();
+        final String connectorsNs = connectorCluster.getStatus().getConnectorsNamespace();
+        final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
 
-        LOGGER.info("deploying connector {}, {}", deployment.getId(), deployment.getSpec());
+        //
+        // If the meta service mode is "deployment", create a deployment based on the image name
+        //
+        if ("deployment".equals(metaServiceMode) && "".equals(metaServiceHost)) {
+            Service metaService = lookupMetaService(connectorCluster, deployment);
 
-        if (deployment.getMetadata() == null) {
-            throw new IllegalArgumentException("Metadata must be defined");
+            if (metaService == null) {
+                String name = "m" + UUID.randomUUID().toString().replaceAll("-", "");
+
+                // TODO: set-up ssl
+                kubernetesClient.apps().deployments()
+                    .inNamespace(connectorsNs)
+                    .create(ConnectorSupport.createMetaDeployment(
+                        connectorCluster,
+                        connectorsNs,
+                        name,
+                        deployment.getSpec().getConnectorMetaImage()));
+                kubernetesClient.services()
+                    .inNamespace(connectorsNs)
+                    .create(ConnectorSupport.createMetaDeploymentService(
+                        connectorCluster,
+                        connectorsNs,
+                        name,
+                        deployment.getSpec().getConnectorMetaImage()));
+
+                metaServiceHost = name;
+            }
         }
-        if (deployment.getMetadata().getResourceVersion() == null) {
-            throw new IllegalArgumentException("Resource Version must be defined");
-        }
-        if (deployment.getSpec() == null) {
-            throw new IllegalArgumentException("Spec must be defined");
-        }
 
-        ManagedConnector managedConnector = kubernetesClient.customResources(ManagedConnector.class)
-                .inNamespace(agent.getMetadata().getNamespace())
-                .withName(deployment.getId())
-                .get();
+        //
+        //Create or update the connector
+        //
 
-        if (managedConnector != null) {
-            //
-            // If the connector resource version is greater than the resource version of the deployment
-            // request, skip it as we assume nothing has changed.
-            //
-            // TODO: this should not happen as the connector poll procedure should automatically filter
-            //       out any unwanted resources so we may want to remove this once the system is proven
-            //       to be stable enough.
-            //
-            if (managedConnector.getSpec().getConnectorResourceVersion() > deployment.getMetadata().getResourceVersion()) {
+        ManagedConnector connector = lookupManagedConnector(connectorCluster, deployment);
+
+        if (connector == null) {
+            connector = new ManagedConnectorBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(mcId)
+                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
+                    .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
+                    .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
+                    .build())
+                .withSpec(new ConnectorSpecBuilder()
+                    .withClusterId(connectorCluster.getStatus().getId())
+                    .withConnectorId(connectorId)
+                    .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())
+                    .withDeploymentId(deployment.getId())
+                    .build())
+                .build();
+        } else {
+            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
+            final Long drv = deployment.getMetadata().getResourceVersion();
+
+            if (Objects.equals(cdrv, drv)) {
+                LOGGER.info(
+                    "Skipping as deployment resource version has not changed (deployment_id={}, version={})",
+                    deployment.getId(),
+                    deployment.getMetadata().getResourceVersion());
                 return;
             }
-        } else {
-            managedConnector = new ManagedConnector();
-            managedConnector.getMetadata().setName(deployment.getId());
-            managedConnector.getMetadata().setOwnerReferences(List.of(ResourceUtil.asOwnerReference(agent)));
-            managedConnector.getSpec().setClusterId(agent.getSpec().getId());
         }
 
-        //
-        // Set the phase to provisioning so we know that this connector set-up has not yet
-        // deployed
-        //
-        managedConnector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioning);
-        managedConnector = kubernetesClient.customResources(ManagedConnector.class)
-                .inNamespace(agent.getMetadata().getNamespace())
-                .createOrReplace(managedConnector);
+        connector.getSpec().getDeployment().setResourceVersion(deployment.getSpec().getConnectorResourceVersion());
+        connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
+        connector.getSpec().getDeployment().setKafkaId(deployment.getSpec().getKafkaId());
+        connector.getSpec().getDeployment().setMetaImage(deployment.getSpec().getConnectorMetaImage());
+        connector.getSpec().getDeployment().setMetaServiceHost(metaServiceHost);
+        connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
 
-        if (deployment.getSpec().getStatusExtractors() != null) {
-            var extractors = deployment.getSpec().getStatusExtractors().stream().map(se -> {
-                var answer = new StatusExtractor();
-                answer.setApiVersion(se.getApiVersion());
-                answer.setKind(se.getKind());
-                answer.setName(se.getName());
-                answer.setConditionsPath(se.getJsonPath());
-                if (se.getConditionType() != null) {
-                    answer.setConditionTypes(List.of(se.getConditionType()));
-                }
+        LOGGER.info("provisioning connector id={} - {}/{}: {}", mcId, connectorsNs, connectorId, deployment.getSpec());
 
-                return answer;
-            }).collect(Collectors.toList());
-
-            managedConnector.getSpec().setStatusExtractors(extractors);
-        }
-
-        managedConnector.getSpec().setConnectorResourceVersion(deployment.getMetadata().getResourceVersion());
-        managedConnector.getSpec().setResources(new ArrayList<>());
-
-        if (deployment.getSpec().getResources() != null) {
-            for (JsonNode node : deployment.getSpec().getResources()) {
-                Map<String, Object> result = uc.createOrReplace(
-                        agent.getMetadata().getNamespace(),
-                        node);
-
-                managedConnector.getSpec().getResources().add(ResourceUtil.asResourceRef(result));
-            }
-        }
-
-        managedConnector.getStatus().setPhase(ConnectorStatus.PhaseType.Provisioned);
         kubernetesClient.customResources(ManagedConnector.class)
-                .inNamespace(agent.getMetadata().getNamespace())
-                .createOrReplace(managedConnector);
+            .inNamespace(connectorsNs)
+            .createOrReplace(connector);
+    }
 
+    @Timed(
+        value = "cos.connectors.prune",
+        extraTags = { "resource", "ManagedConnectors" },
+        description = "The time spent processing polling calls")
+    @Counted(
+        value = "cos.connectors.prune",
+        extraTags = { "resource", "ManagedConnectorsAgent" },
+        description = "The number of polling calls")
+    @Scheduled(
+        every = "{cos.connectors.prune.interval}",
+        concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    void prune() {
+        LOGGER.debug("Prune (no-op)");
+
+        // TODO: remove deleted connectors
+        // TODO: remove unused meta services
+    }
+
+    // ***********************************************
+    //
+    // Helpers
+    //
+    // ***********************************************
+
+    private ManagedConnectorCluster lookupManagedConnectorCluster(String namespace) {
+        var items = kubernetesClient.customResources(ManagedConnectorCluster.class)
+            .inNamespace(namespace)
+            .list();
+
+        if (items.getItems() != null && items.getItems().size() > 1) {
+            throw new IllegalArgumentException(
+                "Multiple connectors clusters");
+        }
+        if (items.getItems() != null && items.getItems().size() == 1) {
+            return items.getItems().get(0);
+        }
+
+        return null;
+    }
+
+    private ManagedConnector lookupManagedConnector(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+        var items = kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
+            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
+            .list();
+
+        if (items.getItems() != null && items.getItems().size() > 1) {
+            throw new IllegalArgumentException(
+                "Multiple connectors with id " + deployment.getSpec().getConnectorId());
+        }
+        if (items.getItems() != null && items.getItems().size() == 1) {
+            return items.getItems().get(0);
+        }
+
+        return null;
+    }
+
+    private Service lookupMetaService(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+        var items = kubernetesClient.services()
+            .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_META, "true")
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, deployment.getSpec().getConnectorMetaImage())
+            .list();
+
+        if (items.getItems() != null && items.getItems().size() > 1) {
+            throw new IllegalArgumentException(
+                "Multiple meta service for image " + deployment.getSpec().getConnectorMetaImage());
+        }
+        if (items.getItems() != null && items.getItems().size() == 1) {
+            return items.getItems().get(0);
+        }
+
+        return null;
     }
 }

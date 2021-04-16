@@ -7,16 +7,8 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(
+    builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ConnectorClusterSpec {
-    private String id;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+public class ManagedConnectorClusterSpec {
 }
