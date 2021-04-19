@@ -17,7 +17,7 @@ kubectl apply -f cos-fleetshard-api/src/main/generated/resources/connectors.cos.
 ./mvnw -pl cos-fleetshard-operator quarkus:dev
 
 # create the cluster
-kubectl apply -f examples/mt-cluster.yaml
+kubectl apply -f examples/my-cluster.yaml
 
 # create a sample connector
 curl -XPOST \
