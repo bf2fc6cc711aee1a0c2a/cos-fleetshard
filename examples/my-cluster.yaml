@@ -1,5 +1,5 @@
 apiVersion: cos.bf2.org/v1alpha1
-kind: ConnectorCluster
+kind: ManagedConnectorCluster
 metadata:
   name: my-cos-agent
 spec:

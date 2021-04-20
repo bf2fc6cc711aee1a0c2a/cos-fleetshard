@@ -10,13 +10,13 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleet.manager.api.model.ConnectorClusterStatus;
-import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 
 @Controller
-public class ConnectorClusterController extends AbstractResourceController<ConnectorCluster> {
+public class ConnectorClusterController extends AbstractResourceController<ManagedConnectorCluster> {
     @Inject
     ControlPlane controlPlane;
     @Inject
@@ -32,9 +32,9 @@ public class ConnectorClusterController extends AbstractResourceController<Conne
     }
 
     @Override
-    public UpdateControl<ConnectorCluster> createOrUpdateResource(
-            ConnectorCluster cluster,
-            Context<ConnectorCluster> context) {
+    public UpdateControl<ManagedConnectorCluster> createOrUpdateResource(
+            ManagedConnectorCluster cluster,
+            Context<ManagedConnectorCluster> context) {
 
         if (cluster.getStatus() == null) {
             cluster.setStatus(new ConnectorClusterStatus());
