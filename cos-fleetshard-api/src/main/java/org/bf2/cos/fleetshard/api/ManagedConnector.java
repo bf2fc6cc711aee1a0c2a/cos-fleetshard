@@ -11,19 +11,19 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
-@Version(Connector.VERSION)
-@Group(Connector.GROUP)
+@Version(ManagedConnector.VERSION)
+@Group(ManagedConnector.GROUP)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Connector
+public class ManagedConnector
         extends CustomResource<ConnectorSpec, ConnectorStatus>
         implements Namespaced {
 
     public static final String VERSION = "v1alpha1";
     public static final String GROUP = "cos.bf2.org";
 
-    public Connector() {
+    public ManagedConnector() {
         setSpec(new ConnectorSpec());
         setStatus(new ConnectorStatus());
     }

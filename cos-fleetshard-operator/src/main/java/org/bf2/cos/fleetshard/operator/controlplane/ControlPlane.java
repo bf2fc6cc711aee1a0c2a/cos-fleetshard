@@ -13,8 +13,8 @@ import org.bf2.cos.fleet.manager.api.client.ConnectorClustersAgentApi;
 import org.bf2.cos.fleet.manager.api.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.api.model.ConnectorDeploymentStatus;
-import org.bf2.cos.fleetshard.api.Connector;
-import org.bf2.cos.fleetshard.api.ConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.operator.support.ConnectorDeploymentSupport;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
@@ -30,7 +30,7 @@ public class ControlPlane {
     @Inject
     KubernetesClient kubernetesClient;
 
-    public void updateClusterStatus(ConnectorCluster cluster) {
+    public void updateClusterStatus(ManagedConnectorCluster cluster) {
         try {
             controlPlane.updateKafkaConnectorClusterStatus(
                     cluster.getSpec().getId(),
@@ -40,14 +40,14 @@ public class ControlPlane {
         }
     }
 
-    public List<ConnectorDeployment> getConnectors(ConnectorCluster cluster) {
+    public List<ConnectorDeployment> getConnectors(ManagedConnectorCluster cluster) {
         // TODO: check namespaces
         // TODO: check labels
-        final List<Connector> connectors = kubernetesClient.customResources(Connector.class)
+        final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)
                 .inNamespace(cluster.getMetadata().getNamespace())
                 .list().getItems();
 
-        final long gv = connectors.stream()
+        final long gv = managedConnectors.stream()
                 .filter(c -> c.getSpec() != null && c.getSpec().getConnectorResourceVersion() != null)
                 .mapToLong(c -> c.getSpec().getConnectorResourceVersion())
                 .max()

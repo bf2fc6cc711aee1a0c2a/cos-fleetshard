@@ -12,12 +12,12 @@ import lombok.ToString;
 import org.bf2.cos.fleet.manager.api.model.ConnectorClusterStatus;
 
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class), editableEnabled = false)
-@Version(ConnectorCluster.VERSION)
-@Group(ConnectorCluster.GROUP)
+@Version(ManagedConnectorCluster.VERSION)
+@Group(ManagedConnectorCluster.GROUP)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ConnectorCluster
+public class ManagedConnectorCluster
         extends CustomResource<ConnectorClusterSpec, ConnectorClusterStatus>
         implements Namespaced {
 
