@@ -1,7 +1,9 @@
 target
+kubeconfig
 
 *.iml
 
+tests/output/kind-*
 .idea
 .vscode
 .project
