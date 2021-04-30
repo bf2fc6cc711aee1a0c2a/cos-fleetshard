@@ -1,0 +1,12 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: managedconnectors.cos.bf2.org
+status:
+  acceptedNames:
+    kind: ManagedConnector
+    listKind: ManagedConnectorList
+    plural: managedconnectors
+    singular: managedconnector
+  storedVersions:
+    - v1alpha1
