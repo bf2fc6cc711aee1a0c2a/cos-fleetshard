@@ -63,6 +63,23 @@ spec:
                       type: string
                   type: object
                 type: array
+              phase:
+                enum:
+                - EphemeralMeta
+                - Initialization
+                - EphemeralMetaWatch
+                - Monitor
+                - Augmentation
+                type: string
+              operator:
+                properties:
+                  version:
+                    type: string
+                  type:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               conditions:
                 items:
                   properties:
@@ -82,15 +99,6 @@ spec:
                       type: string
                   type: object
                 type: array
-              phase:
-                enum:
-                - Initialization
-                - Provisioning
-                - PersistentMeta
-                - EphemeralMeta
-                - Augmentation
-                - Monitor
-                type: string
               statusExtractor:
                 properties:
                   conditions:

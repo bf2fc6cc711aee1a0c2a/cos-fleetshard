@@ -6,23 +6,24 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.common.ResourceUtil;
+import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
-import org.bf2.cos.fleetshard.api.ConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.bf2.cos.fleetshard.common.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Implements the synchronization protocol for the connectors.
@@ -123,7 +124,7 @@ public class ConnectorSync {
                     .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
                     .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
                     .build())
-                .withSpec(new ConnectorSpecBuilder()
+                .withSpec(new ManagedConnectorSpecBuilder()
                     .withClusterId(connectorCluster.getStatus().getId())
                     .withConnectorId(connectorId)
                     .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())

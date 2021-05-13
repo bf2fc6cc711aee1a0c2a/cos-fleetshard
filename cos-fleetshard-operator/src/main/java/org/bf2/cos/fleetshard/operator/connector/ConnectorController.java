@@ -592,7 +592,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
      * @param resource  the resource to watch
      */
     private synchronized void watchResource(Context<ManagedConnector> context, ManagedConnector connector,
-                                            ResourceRef resource) {
+        ResourceRef resource) {
         if ("Secret".equals(resource.getKind()) && "v1".equals(resource.getApiVersion())) {
             LOGGER.info("Skip registering event source for secret");
             return;

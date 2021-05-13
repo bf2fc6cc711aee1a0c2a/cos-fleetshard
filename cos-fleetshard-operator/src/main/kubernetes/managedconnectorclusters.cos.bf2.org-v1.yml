@@ -24,24 +24,24 @@ spec:
                   properties:
                     version:
                       type: string
-                    id:
+                    type:
                       type: string
                     namespace:
                       type: string
                   type: object
                 type: array
+              phase:
+                enum:
+                - Ready
+                - Deleted
+                - Installing
+                - Error
+                type: string
               conditions:
                 items:
                   type: object
                 type: array
               id:
-                type: string
-              phase:
-                enum:
-                - Deleted
-                - Error
-                - Ready
-                - Installing
                 type: string
               connectorsNamespace:
                 type: string
