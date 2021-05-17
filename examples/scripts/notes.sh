@@ -1,22 +1,24 @@
 
-export BASE=http://localhost:8000/api/managed-services-api/v1
+export BASE=http://localhost:8000/api/connector_mgmt/v1
 
-curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr ${BASE}/kafka-connectors?async=true -d '{
+curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr http://localhost:8000/api/connector_mgmt/v1/kafka-connectors?async=true -d '{
  "kind": "Connector",
     "metadata": {
-        "name": "My Injector",
-        "kafka_id": "1s6Sr7jwJJAl4KkKMadp6QsiO4u"
+        "name": "My Injector 2",
+        "kafka_id": "1sfB6ebiHOjJy4BlruFDRDnqNEo"
     },
     "deployment_location": {
         "kind": "addon",
-        "cluster_id": "1s6St85gmiruUzqARdJGi2lLscz"
+        "cluster_id": "1sfB9loRB3oh5IDUtVm8fHNMqVu"
     },
-    "connector_type_id": "injector-source-v1alpha1",
+    "connector_type_id": "twitter-timeline-source-1.0",
     "connector_spec": {
-        "delay": "15s",
-        "loggerName": "cos",
-        "multiLine": false,
-        "showAll": false
+        "connector.accessToken": "accessToken",
+        "connector.accessTokenSecret": "accessTokenSecret",
+        "connector.apiKey": "apiKey",
+        "connector.apiKeySecret": "apiKeySecret",
+        "connector.user": "user",
+        "kafka.topic": "topic"
     }
 }' | jq
 

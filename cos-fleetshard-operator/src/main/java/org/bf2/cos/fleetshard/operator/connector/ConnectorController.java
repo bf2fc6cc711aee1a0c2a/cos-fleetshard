@@ -22,11 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -43,8 +40,8 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
+import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentSpec;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorReifyRequest;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -156,13 +153,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         // TODO: add helper method to update connector phase
         try {
-            ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-            ds.setPhase("unconnected");
-
             controlPlane.updateConnectorStatus(
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId(),
-                ds);
+                new ConnectorDeploymentStatus().phase("provisioning"));
+
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
             throw new RuntimeException(e);
@@ -177,30 +172,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 break;
             }
             case DESIRED_STATE_READY: {
-                ConnectorDeployment deployment = controlPlane.getDeployment(
-                    connector.getSpec().getClusterId(),
-                    connector.getSpec().getDeploymentId());
-
-                final DeploymentSpec ref = connector.getSpec().getDeployment();
-                final String connectorId = connector.getMetadata().getName();
-                final String secretName = connectorId + "-" + ref.getDeploymentResourceVersion();
-                final Secret secret = new SecretBuilder()
-                    .withMetadata(new ObjectMetaBuilder()
-                        .withName(secretName)
-                        .addToOwnerReferences(ResourceUtil.asOwnerReference(connector))
-                        .addToLabels(ManagedConnector.LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId())
-                        .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId())
-                        .build())
-                    .withImmutable(true)
-                    .withData(ResourceUtil.createSecretDate(deployment.getSpec().getConnectorSpec()))
-                    .build();
-
-                kubernetesClient.secrets()
-                    .inNamespace(connector.getMetadata().getNamespace())
-                    .create(secret);
-
-                connector.getStatus().addResource(secret, ref.getDeploymentResourceVersion());
-
                 if (Strings.isNullOrEmpty(connector.getSpec().getDeployment().getMetaServiceHost())) {
                     connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.EphemeralMeta);
                 } else {
@@ -301,25 +272,29 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final String connectorId = connector.getMetadata().getName();
         final String name = connectorId + "-" + ref.getDeploymentResourceVersion();
 
-        Secret secret = kubernetesClient.secrets()
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(name)
-            .get();
-
         // TODO: we can have a shorter prefix since the service is not exposed anymore to the control plane
         // TODO: requires something like localizer (https://github.com/getoutreach/localizer) for local testing
-        final String fmt = "http://%s/api/managed-services-api/v1/kafka-connector-types/%s/reify/spec";
+        final String fmt = "http://%s/reify";
         final String host = ref.getMetaServiceHost() != null ? ref.getMetaServiceHost() : name;
         final String url = String.format(fmt, host, connector.getSpec().getConnectorTypeId());
 
         LOGGER.info("Connecting to meta service at : {}", url);
 
         try {
-            ConnectorReifyRequest rr = new ConnectorReifyRequest();
-            rr.setDeploymentId(name);
-            rr.setConnectorId(connectorId);
-            rr.setConnectorSpec(Serialization.jsonMapper().valueToTree(secret.getData()));
-            rr.setResourceVersion(ref.getDeploymentResourceVersion());
+            ConnectorDeployment deployment = controlPlane.getDeployment(
+                connector.getSpec().getClusterId(),
+                connector.getSpec().getDeploymentId());
+
+            ConnectorDeploymentReifyRequest rr = new ConnectorDeploymentReifyRequest();
+            rr.setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
+            rr.setDeploymentResourceVersion(ref.getDeploymentResourceVersion());
+            rr.setManagedConnectorId(connectorId);
+            rr.setDeploymentId(connector.getSpec().getDeploymentId());
+            rr.setConnectorId(deployment.getSpec().getConnectorId());
+            rr.setConnectorId(deployment.getSpec().getConnectorTypeId());
+            rr.setConnectorSpec(deployment.getSpec().getConnectorSpec());
+            rr.setShardMetadata(deployment.getSpec().getShardMetadata());
+
             //rr.setKafkaId(ref.getKafkaId());
 
             // TODO: replace with a proper client
@@ -382,7 +357,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             return UpdateControl.updateStatusSubResource(connector);
         } catch (ConnectException e) {
-            LOGGER.warn("Error connecting to meta service " + name + ", retrying");
+            LOGGER.warn("Error connecting to meta service " + url + ", retrying");
             // TODO: remove once the SDK support re-scheduling
             //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
             // TODO: add back-off

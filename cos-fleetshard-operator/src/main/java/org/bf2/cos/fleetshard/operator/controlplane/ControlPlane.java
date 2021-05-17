@@ -64,7 +64,7 @@ public class ControlPlane {
 
     public ConnectorDeployment getDeployment(String clusterId, String deploymentId) {
         try {
-            return controlPlane.getClusterAsignedConnectorDeployment(clusterId, deploymentId);
+            return controlPlane.getClusterAsignedConnectorDeployments(clusterId, deploymentId);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }

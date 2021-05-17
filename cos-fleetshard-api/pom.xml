@@ -71,7 +71,6 @@
                     <configuration>
                         <generatorName>java</generatorName>
                         <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
-                        <importMappings>AddonParameterList=org.bf2.cos.fleet.manager.api.model.AddonParameterList</importMappings>
                         <generateAliasAsModel>true</generateAliasAsModel>
                         <generateApiDocumentation>false</generateApiDocumentation>
                         <generateModelDocumentation>false</generateModelDocumentation>

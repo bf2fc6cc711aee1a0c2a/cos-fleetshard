@@ -1,11 +1,13 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
@@ -77,9 +79,23 @@ public class ConnectorSync {
     }
 
     private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+
+        try {
+            LOGGER.debug(
+                "Polling for control plane connectors {}",
+                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(deployment));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        if (deployment.getSpec().getShardMetadata() == null) {
+            LOGGER.warn("ShardMetadata is empty !!!");
+        }
+
         final String connectorId = deployment.getSpec().getConnectorId();
         final String connectorsNs = connectorCluster.getStatus().getConnectorsNamespace();
         final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
+        final String image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
 
         //
         // If the meta service mode is "deployment", create a deployment based on the image name
@@ -97,14 +113,14 @@ public class ConnectorSync {
                         connectorCluster,
                         connectorsNs,
                         name,
-                        deployment.getSpec().getConnectorMetaImage()));
+                        image));
                 kubernetesClient.services()
                     .inNamespace(connectorsNs)
                     .create(ConnectorSupport.createMetaDeploymentService(
                         connectorCluster,
                         connectorsNs,
                         name,
-                        deployment.getSpec().getConnectorMetaImage()));
+                        image));
 
                 metaServiceHost = name;
             }
@@ -147,7 +163,7 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setResourceVersion(deployment.getSpec().getConnectorResourceVersion());
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setKafkaId(deployment.getSpec().getKafkaId());
-        connector.getSpec().getDeployment().setMetaImage(deployment.getSpec().getConnectorMetaImage());
+        connector.getSpec().getDeployment().setMetaImage(image);
         connector.getSpec().getDeployment().setMetaServiceHost(metaServiceHost);
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
 
@@ -217,15 +233,17 @@ public class ConnectorSync {
     }
 
     private Service lookupMetaService(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+        var image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
+
         var items = kubernetesClient.services()
             .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())
             .withLabel(ManagedConnector.LABEL_CONNECTOR_META, "true")
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, deployment.getSpec().getConnectorMetaImage())
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, image)
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {
             throw new IllegalArgumentException(
-                "Multiple meta service for image " + deployment.getSpec().getConnectorMetaImage());
+                "Multiple meta service for image " + image);
         }
         if (items.getItems() != null && items.getItems().size() == 1) {
             return items.getItems().get(0);
