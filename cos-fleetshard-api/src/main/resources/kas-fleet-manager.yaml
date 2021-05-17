@@ -43,10 +43,10 @@ paths:
                 $ref: '#/components/schemas/Error'
               examples:
                 500Example:
-                  $ref: '#/components/examples/500Example'
+                  $ref: '#/components/examples/500Example'  
       summary: Retrieves the status of resources e.g whether we have reached maximum service capacity
       security:
-        - Bearer: []
+        - Bearer: []    
   /api/managed-services-api/v1/kafkas/{id}:
     get:
       operationId: getKafkaById
@@ -760,7 +760,7 @@ components:
             collections:
               - id: "kafkas"
                 href: "/api/managed-services-api/v1/kafkas"
-                kind: "KafkaList"
+                kind: "KafkaList" 
           properties:
             collections:
               type: array
@@ -777,10 +777,10 @@ components:
         kafkas:
           description: The kafka resource api status
           type: object
-          required:
+          required: 
             - max_capacity_reached
-          properties:
-            max_capacity_reached:
+          properties: 
+            max_capacity_reached: 
               description: Indicates whether we have reached kafka maximum capacity
               type: boolean
     KafkaRequestPayload:
