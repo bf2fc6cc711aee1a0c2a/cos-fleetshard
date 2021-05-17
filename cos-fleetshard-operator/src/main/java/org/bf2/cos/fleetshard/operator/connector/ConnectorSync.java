@@ -2,12 +2,12 @@ package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.quarkus.scheduler.Scheduled;
@@ -40,13 +41,12 @@ public class ConnectorSync {
     KubernetesClient kubernetesClient;
 
     @ConfigProperty(
-        name = "cos.connectors.meta.host",
-        defaultValue = "")
-    String metaServiceHost;
+        name = "cos.connectors.meta.host")
+    Optional<String> metaServiceHost;
 
     @ConfigProperty(
         name = "cos.connectors.meta.mode",
-        defaultValue = "")
+        defaultValue = "ephemeral")
     String metaServiceMode;
 
     @Timed(
@@ -97,10 +97,12 @@ public class ConnectorSync {
         final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
         final String image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
 
+        String metaHost = metaServiceHost.orElse(null);
+
         //
         // If the meta service mode is "deployment", create a deployment based on the image name
         //
-        if ("deployment".equals(metaServiceMode) && "".equals(metaServiceHost)) {
+        if ("deployment".equals(metaServiceMode)) {
             Service metaService = lookupMetaService(connectorCluster, deployment);
 
             if (metaService == null) {
@@ -122,7 +124,9 @@ public class ConnectorSync {
                         name,
                         image));
 
-                metaServiceHost = name;
+                metaHost = name;
+            } else {
+                metaHost = metaService.getMetadata().getName();
             }
         }
 
@@ -164,7 +168,7 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setKafkaId(deployment.getSpec().getKafkaId());
         connector.getSpec().getDeployment().setMetaImage(image);
-        connector.getSpec().getDeployment().setMetaServiceHost(metaServiceHost);
+        connector.getSpec().getDeployment().setMetaServiceHost(metaHost);
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
 
         LOGGER.info("provisioning connector id={} - {}/{}: {}", mcId, connectorsNs, connectorId, deployment.getSpec());

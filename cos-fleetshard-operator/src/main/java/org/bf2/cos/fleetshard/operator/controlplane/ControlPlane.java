@@ -16,6 +16,7 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.eclipse.microprofile.config.Config;
@@ -58,6 +59,9 @@ public class ControlPlane {
 
             controlPlane.updateKafkaConnectorClusterStatus(clusterId, status);
         } catch (ApiException e) {
+            throw new RuntimeException(e);
+        } catch (javax.ws.rs.WebApplicationException e) {
+            LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
             throw new RuntimeException(e);
         }
     }
@@ -106,6 +110,9 @@ public class ControlPlane {
                     break;
                 }
             } catch (ApiException e) {
+                throw new RuntimeException(e);
+            } catch (javax.ws.rs.WebApplicationException e) {
+                LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
                 throw new RuntimeException(e);
             }
         }
