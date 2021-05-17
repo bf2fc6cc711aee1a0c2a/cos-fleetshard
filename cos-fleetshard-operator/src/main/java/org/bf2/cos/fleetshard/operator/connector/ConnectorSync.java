@@ -8,6 +8,14 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
+import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
@@ -19,14 +27,6 @@ import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
-import io.quarkus.scheduler.Scheduled;
 
 /**
  * Implements the synchronization protocol for the connectors.
@@ -108,21 +108,31 @@ public class ConnectorSync {
             if (metaService == null) {
                 String name = "m" + UUID.randomUUID().toString().replaceAll("-", "");
 
+                var md = ConnectorSupport.createMetaDeployment(
+                    connectorCluster,
+                    connectorsNs,
+                    name,
+                    image);
+                var ms = ConnectorSupport.createMetaDeploymentService(
+                    connectorCluster,
+                    connectorsNs,
+                    name,
+                    image);
+
+                try {
+                    LOGGER.info("md: {}", Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(md));
+                    LOGGER.info("ms: {}", Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(ms));
+                } catch (Exception e) {
+                    // ignore
+                }
+
                 // TODO: set-up ssl
                 kubernetesClient.apps().deployments()
                     .inNamespace(connectorsNs)
-                    .create(ConnectorSupport.createMetaDeployment(
-                        connectorCluster,
-                        connectorsNs,
-                        name,
-                        image));
+                    .create(md);
                 kubernetesClient.services()
                     .inNamespace(connectorsNs)
-                    .create(ConnectorSupport.createMetaDeploymentService(
-                        connectorCluster,
-                        connectorsNs,
-                        name,
-                        image));
+                    .create(ms);
 
                 metaHost = name;
             } else {
@@ -238,6 +248,7 @@ public class ConnectorSync {
 
     private Service lookupMetaService(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
         var image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
+        image = KubernetesResourceUtil.sanitizeName(image);
 
         var items = kubernetesClient.services()
             .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())

@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.operator.connector;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.HTTPGetActionBuilder;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
@@ -17,6 +18,7 @@ import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpecBuilder;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
@@ -26,6 +28,8 @@ public final class ConnectorSupport {
     }
 
     public static Deployment createMetaDeployment(ManagedConnectorCluster owner, String ns, String name, String image) {
+        var metaImageName = KubernetesResourceUtil.sanitizeName(image);
+
         return new DeploymentBuilder()
             .withMetadata(
                 new ObjectMetaBuilder()
@@ -33,11 +37,17 @@ public final class ConnectorSupport {
                     .withNamespace(ns)
                     .withOwnerReferences(ResourceUtil.asOwnerReference(owner))
                     .addToLabels(ManagedConnector.LABEL_CONNECTOR_META, "true")
-                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, image)
+                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, metaImageName)
                     .build())
             .withSpec(new DeploymentSpecBuilder()
+                .withSelector(new LabelSelectorBuilder()
+                    .addToMatchLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, metaImageName)
+                    .build())
                 .withTemplate(
                     new PodTemplateSpecBuilder()
+                        .withMetadata(new ObjectMetaBuilder()
+                            .addToLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, metaImageName)
+                            .build())
                         .withSpec(createMetaPodSpec(image))
                         .build())
                 .build())
@@ -45,6 +55,8 @@ public final class ConnectorSupport {
     }
 
     public static Service createMetaDeploymentService(ManagedConnectorCluster owner, String ns, String name, String image) {
+        var metaImageName = KubernetesResourceUtil.sanitizeName(image);
+
         return new ServiceBuilder()
             .withMetadata(
                 new ObjectMetaBuilder()
@@ -52,16 +64,16 @@ public final class ConnectorSupport {
                     .withNamespace(ns)
                     .withOwnerReferences(ResourceUtil.asOwnerReference(owner))
                     .addToLabels(ManagedConnector.LABEL_CONNECTOR_META, "true")
-                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, image)
+                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, metaImageName)
                     .build())
             .withSpec(new ServiceSpecBuilder()
                 .addToSelector(ManagedConnector.LABEL_CONNECTOR_META, "true")
-                .addToSelector(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, image)
+                .addToSelector(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, metaImageName)
                 .addToPorts(new ServicePortBuilder()
                     .withPort(80)
                     .withName("http")
                     .withProtocol("TCP")
-                    .withNewTargetPort("http")
+                    .withNewTargetPort(8080)
                     .build())
                 .build())
             .build();

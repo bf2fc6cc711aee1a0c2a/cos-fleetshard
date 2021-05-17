@@ -5,11 +5,11 @@ curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr http://localhost:8000/api
  "kind": "Connector",
     "metadata": {
         "name": "My Injector 2",
-        "kafka_id": "1sfB6ebiHOjJy4BlruFDRDnqNEo"
+        "kafka_id": "1sfmgQhgne0YlEfjqHdw55fW6V7"
     },
     "deployment_location": {
         "kind": "addon",
-        "cluster_id": "1sfB9loRB3oh5IDUtVm8fHNMqVu"
+        "cluster_id": "1sfmftvU89uP3GbcKhvVpbkh3s3"
     },
     "connector_type_id": "twitter-timeline-source-1.0",
     "connector_spec": {

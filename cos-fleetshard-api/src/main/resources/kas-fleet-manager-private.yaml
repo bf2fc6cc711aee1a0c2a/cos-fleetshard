@@ -23,7 +23,7 @@ tags:
     description: ""
 
 paths:
-  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/status':
+  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -68,7 +68,7 @@ paths:
           # This is deliberate to hide the endpoints for unauthorised users
           description: Auth token is not valid.
 
-  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments':
+  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -127,7 +127,7 @@ paths:
                   $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}':
+  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -174,7 +174,7 @@ paths:
                   $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/managed-services-api/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
+  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
