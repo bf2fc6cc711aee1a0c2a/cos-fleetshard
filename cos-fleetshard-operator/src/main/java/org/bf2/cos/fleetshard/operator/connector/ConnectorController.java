@@ -302,7 +302,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 final String[] hp = mhost.split(":");
                 final String host = hp[0];
-                final Integer port = hp.length == 2 ? Integer.parseInt(hp[1]);
+                final int port = hp.length == 2 ? Integer.parseInt(hp[1]) : 80;
 
                 // TODO: set-up ssl/tls
                 cdspec = client.post(port, host, "/reify")
