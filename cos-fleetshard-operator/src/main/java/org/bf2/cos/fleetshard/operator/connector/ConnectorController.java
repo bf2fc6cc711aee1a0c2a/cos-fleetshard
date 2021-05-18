@@ -2,10 +2,7 @@ package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +33,8 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import io.javaoperatorsdk.operator.processing.event.internal.TimerEventSource;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.WebClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
@@ -70,6 +69,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     private final Set<String> events;
     private final TimerEventSource retryTimer;
+    private final Vertx vertx;
 
     @Inject
     KubernetesClient kubernetesClient;
@@ -78,9 +78,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @Inject
     ControlPlane controlPlane;
 
-    public ConnectorController() {
+    public ConnectorController(io.vertx.core.Vertx vertx) {
         this.events = new HashSet<>();
         this.retryTimer = new TimerEventSource();
+        this.vertx = new Vertx(vertx);
     }
 
     @Override
@@ -271,14 +272,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final DeploymentSpec ref = connector.getSpec().getDeployment();
         final String connectorId = connector.getMetadata().getName();
         final String name = connectorId + "-" + ref.getDeploymentResourceVersion();
+        final String mhost = ref.getMetaServiceHost() != null ? ref.getMetaServiceHost() : name;
 
         // TODO: we can have a shorter prefix since the service is not exposed anymore to the control plane
         // TODO: requires something like localizer (https://github.com/getoutreach/localizer) for local testing
-        final String fmt = "http://%s/reify";
-        final String host = ref.getMetaServiceHost() != null ? ref.getMetaServiceHost() : name;
-        final String url = String.format(fmt, host, connector.getSpec().getConnectorTypeId());
-
-        LOGGER.info("Connecting to meta service at : {}", url);
 
         try {
             ConnectorDeployment deployment = controlPlane.getDeployment(
@@ -297,20 +294,28 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             //rr.setKafkaId(ref.getKafkaId());
 
-            // TODO: replace with a proper client
-            // TODO: set-up ssl
-            var request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(Serialization.asJson(rr)))
-                .build();
+            ConnectorDeploymentSpec cdspec;
+            WebClient client = WebClient.create(vertx);
 
-            final var ns = connector.getMetadata().getNamespace();
-            final var response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-            final var cds = Serialization.unmarshal(response.body(), ConnectorDeploymentSpec.class);
+            try {
+                LOGGER.info("Connecting to meta service at : {}", mhost);
 
-            if (cds.getResources() != null) {
-                for (JsonNode node : cds.getResources()) {
+                final String[] hp = mhost.split(":");
+                final String host = hp[0];
+                final Integer port = hp.length == 2 ? Integer.parseInt(hp[1]);
+
+                // TODO: set-up ssl/tls
+                cdspec = client.post(port, host, "/reify")
+                    .sendJson(rr)
+                    .await()
+                    .atMost(Duration.ofSeconds(30))
+                    .bodyAsJson(ConnectorDeploymentSpec.class);
+            } finally {
+                client.close();
+            }
+
+            if (cdspec.getResources() != null) {
+                for (JsonNode node : cdspec.getResources()) {
                     LOGGER.info("Got {}", Serialization.asJson(node));
 
                     ObjectNode on = (ObjectNode) node;
@@ -323,7 +328,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put("name", connector.getMetadata().getName())
                         .put("uid", connector.getMetadata().getUid());
 
-                    final var resource = uc.createOrReplace(ns, node);
+                    final var resource = uc.createOrReplace(connector.getMetadata().getNamespace(), node);
                     final var meta = (Map<String, Object>) resource.getOrDefault("metadata", Map.of());
                     final var annotations = (Map<String, String>) meta.get("annotations");
                     final var rApiVersion = (String) resource.get("apiVersion");
@@ -351,13 +356,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             }
 
-            connector.getStatus().setStatusExtractor(cds.getStatusExtractor());
+            connector.getStatus().setStatusExtractor(cdspec.getStatusExtractor());
             connector.getStatus().setDeployment(connector.getSpec().getDeployment());
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Monitor);
 
             return UpdateControl.updateStatusSubResource(connector);
         } catch (ConnectException e) {
-            LOGGER.warn("Error connecting to meta service " + url + ", retrying");
+            LOGGER.warn("Error connecting to meta service " + mhost + ", retrying");
             // TODO: remove once the SDK support re-scheduling
             //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
             // TODO: add back-off

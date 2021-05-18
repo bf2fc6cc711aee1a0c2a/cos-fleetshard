@@ -4,12 +4,12 @@ export BASE=http://localhost:8000/api/connector_mgmt/v1
 curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr http://localhost:8000/api/connector_mgmt/v1/kafka-connectors?async=true -d '{
  "kind": "Connector",
     "metadata": {
-        "name": "My Injector 2",
-        "kafka_id": "1sfmgQhgne0YlEfjqHdw55fW6V7"
+        "name": "My Example",
+        "kafka_id": "1shjiWd1b8zwrWN7YFwPj439Gr8"
     },
     "deployment_location": {
         "kind": "addon",
-        "cluster_id": "1sfmftvU89uP3GbcKhvVpbkh3s3"
+        "cluster_id": "1shjjbRNO2abHX1nXprlHwMdCS5"
     },
     "connector_type_id": "twitter-timeline-source-1.0",
     "connector_spec": {
