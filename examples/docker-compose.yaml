@@ -16,4 +16,3 @@ services:
     image: "quay.io/lburgazzoli/cms:latest"
     environment:
       QUARKUS_LOG_CONSOLE_JSON: "false"
-q
