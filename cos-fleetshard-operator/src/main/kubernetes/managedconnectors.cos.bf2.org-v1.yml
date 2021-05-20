@@ -14,20 +14,20 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.connectorTypeId
-      name: CONNECTORTYPEID
-      type: string
-    - jsonPath: .spec.operatorId
-      name: OPERATORID
-      type: string
     - jsonPath: .status.phase
       name: PHASE
+      type: string
+    - jsonPath: .spec.deploymentId
+      name: DEPLOYMENTID
       type: string
     - jsonPath: .spec.connectorId
       name: CONNECTORID
       type: string
-    - jsonPath: .spec.deploymentId
-      name: DEPLOYMENTID
+    - jsonPath: .spec.operatorId
+      name: OPERATORID
+      type: string
+    - jsonPath: .spec.connectorTypeId
+      name: CONNECTORTYPEID
       type: string
     name: v1alpha1
     schema:
