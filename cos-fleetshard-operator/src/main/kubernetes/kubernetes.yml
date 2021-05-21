@@ -5,6 +5,22 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
+    app.quarkus.io/commit-id: e9ed22ac47ad87e17dba8862232ad81feabd7dcf
+    app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
+    app.quarkus.io/build-timestamp: 2021-05-21 - 11:04:21 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+  labels:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: e9ed22a
+  name: cos-fleetshard
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
     app.quarkus.io/commit-id: 6bda2d2e6eb6a3abb58e5f8c7460ce9f8f9532f0
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
     app.quarkus.io/build-timestamp: 2021-05-21 - 10:35:15 +0000
@@ -14,6 +30,31 @@ metadata:
     app.kubernetes.io/name: cos-fleetshard-operator
     app.kubernetes.io/version: 999-SNAPSHOT
   name: cos-fleetshard-operator
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+    app.quarkus.io/commit-id: e9ed22ac47ad87e17dba8862232ad81feabd7dcf
+    app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
+    app.quarkus.io/build-timestamp: 2021-05-21 - 11:04:21 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+  labels:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: e9ed22a
+  name: cos-fleetshard
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: e9ed22a
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -75,6 +116,106 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: 999-SNAPSHOT
+  name: cos-fleetshard-view
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: view
+subjects:
+- kind: ServiceAccount
+  name: cos-fleetshard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: 999-SNAPSHOT
+  name: cos-fleetshard-view-secrets
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: view-secrets
+subjects:
+- kind: ServiceAccount
+  name: cos-fleetshard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+    app.quarkus.io/commit-id: e9ed22ac47ad87e17dba8862232ad81feabd7dcf
+    app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
+    app.quarkus.io/build-timestamp: 2021-05-21 - 11:04:21 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+  labels:
+    app.kubernetes.io/name: cos-fleetshard
+    app.kubernetes.io/version: e9ed22a
+  name: cos-fleetshard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cos-fleetshard
+      app.kubernetes.io/version: e9ed22a
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/scheme: http
+        app.quarkus.io/commit-id: e9ed22ac47ad87e17dba8862232ad81feabd7dcf
+        app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
+        app.quarkus.io/build-timestamp: 2021-05-21 - 11:04:21 +0000
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /q/metrics
+      labels:
+        app.kubernetes.io/name: cos-fleetshard
+        app.kubernetes.io/version: e9ed22a
+    spec:
+      containers:
+      - env:
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        image: quay.io/mcs_dev/cos-fleetshard:e9ed22a
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /q/health/live
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: cos-fleetshard
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+      serviceAccount: cos-fleetshard
 ---
 apiVersion: apps/v1
 kind: Deployment

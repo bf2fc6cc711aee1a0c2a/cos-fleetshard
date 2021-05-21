@@ -28,16 +28,10 @@
 # The machines that run this script need to have access to internet, so that
 # the built images can be pushed to quay.io.
 
-QUAY_ORG="${QUAY_ORG:-lgarciaac}"
-
-if [ -z "${VERSION}" ]; then
+if [ -z "${CONTAINER_VERSION}" ]; then
   # The version should be the short hash from git. This is what the deployment
   # process expects.
-  VERSION="$(git log --pretty=format:'%h' -n 1)"
-fi
-
-if [ -z "${IMAGE}" ]; then
-  IMAGE="quay.io/${QUAY_ORG}/cos-fleetshard-operator:${VERSION}"
+  CONTAINER_VERSION="$(git log --pretty=format:'%h' -n 1)"
 fi
 
 # Set the directory for docker configuration:
@@ -58,10 +52,8 @@ fi
 # Set up the docker config directory
 mkdir -p "${DOCKER_CONFIG}"
 
-export CONTAINER_REGISTRY=quay.io
 export CONTAINER_REGISTRY_USR="${QUAY_USER}"
 export CONTAINER_REGISTRY_PWD="${QUAY_TOKEN}"
-export CONTAINER_IMAGE="${IMAGE}"
 
 ./mvnw clean install
-./mvnw clean package -Pcontainer-push -pl :cos-fleetshard-operator
+./mvnw clean package -Dquarkus.container-image.tag=${CONTAINER_VERSION} -Pcontainer-push -pl :cos-fleetshard-operator

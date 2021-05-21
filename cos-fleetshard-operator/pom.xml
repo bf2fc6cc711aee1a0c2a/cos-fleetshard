@@ -16,8 +16,9 @@
 
     <properties>
         <quarkus.container-image.build>false</quarkus.container-image.build>
-        <quarkus.container-image.group>${project.groupId}</quarkus.container-image.group>
-        <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
+        <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
+        <quarkus.container-image.group>mcs_dev</quarkus.container-image.group>
+        <quarkus.container-image.name>cos-fleetshard</quarkus.container-image.name>
         <quarkus.container-image.tag>${project.version}</quarkus.container-image.tag>
     </properties>
 
@@ -170,7 +171,6 @@
             <properties>
                 <quarkus.container-image.push>false</quarkus.container-image.push>
                 <quarkus.container-image.build>true</quarkus.container-image.build>
-                <quarkus.container-image.image>${env.CONTAINER_IMAGE}</quarkus.container-image.image>
             </properties>
         </profile>
         <profile>
@@ -181,10 +181,6 @@
             <properties>
                 <quarkus.container-image.push>true</quarkus.container-image.push>
                 <quarkus.container-image.build>true</quarkus.container-image.build>
-                <quarkus.container-image.registry>${env.CONTAINER_REGISTRY}</quarkus.container-image.registry>
-                <quarkus.container-image.username>${env.CONTAINER_REGISTRY_USR}</quarkus.container-image.username>
-                <quarkus.container-image.password>${env.CONTAINER_REGISTRY_PWD}</quarkus.container-image.password>
-                <quarkus.container-image.image>${env.CONTAINER_IMAGE}</quarkus.container-image.image>
             </properties>
         </profile>
         <profile>

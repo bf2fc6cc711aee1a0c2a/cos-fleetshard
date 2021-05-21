@@ -117,64 +117,6 @@
         </repository>
     </repositories>
 
-    <profiles>
-        <profile>
-            <id>native</id>
-            <properties>
-                <quarkus.package.type>native</quarkus.package.type>
-            </properties>
-        </profile>
-        <profile>
-            <id>docker</id>
-            <activation>
-                <property>
-                    <name>docker</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.native.container-build>true</quarkus.native.container-build>
-                <quarkus.native.container-runtime>docker</quarkus.native.container-runtime>
-            </properties>
-        </profile>
-        <profile>
-            <id>podman</id>
-            <activation>
-                <property>
-                    <name>podman</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.native.container-build>true</quarkus.native.container-build>
-                <quarkus.native.container-runtime>podman</quarkus.native.container-runtime>
-            </properties>
-        </profile>
-        <profile>
-            <id>container-build</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <quarkus.container-image.push>false</quarkus.container-image.push>
-                <quarkus.container-image.build>true</quarkus.container-image.build>
-                <quarkus.container-image.image>${env.CONTAINER_IMAGE}</quarkus.container-image.image>
-            </properties>
-        </profile>
-        <profile>
-            <id>container-push</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <quarkus.container-image.push>true</quarkus.container-image.push>
-                <quarkus.container-image.build>true</quarkus.container-image.build>
-                <quarkus.container-image.registry>${env.CONTAINER_REGISTRY}</quarkus.container-image.registry>
-                <quarkus.container-image.username>${env.CONTAINER_REGISTRY_USR}</quarkus.container-image.username>
-                <quarkus.container-image.password>${env.CONTAINER_REGISTRY_PWD}</quarkus.container-image.password>
-                <quarkus.container-image.image>${env.CONTAINER_IMAGE}</quarkus.container-image.image>
-            </properties>
-        </profile>
-    </profiles>
-
     <build>
         <pluginManagement>
             <plugins>
