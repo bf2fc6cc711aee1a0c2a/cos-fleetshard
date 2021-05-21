@@ -14,63 +14,67 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .status.phase
-      name: PHASE
+    - jsonPath: .spec.connectorId
+      name: CONNECTORID
+      type: string
+    - jsonPath: .spec.connectorTypeId
+      name: CONNECTORTYPEID
       type: string
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
       type: string
-    - jsonPath: .spec.connectorId
-      name: CONNECTORID
-      type: string
     - jsonPath: .spec.operatorId
       name: OPERATORID
       type: string
-    - jsonPath: .spec.connectorTypeId
-      name: CONNECTORTYPEID
+    - jsonPath: .status.phase
+      name: PHASE
       type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
-          status:
+          spec:
             properties:
               deployment:
                 properties:
+                  ? ""
+                  : type: string
                   deploymentResourceVersion:
                     type: number
-                  desiredState:
-                    type: string
-                  metaImage:
-                    type: string
-                  kafkaId:
-                    type: string
-                  metaServiceHost:
-                    type: string
-                  resourceVersion:
-                    type: number
                 type: object
-              resources:
-                items:
+              operatorSelector:
+                properties:
+                  version:
+                    type: string
+                  type:
+                    type: string
+                type: object
+              operatorId:
+                type: string
+              connectorTypeId:
+                type: string
+              clusterId:
+                type: string
+              connectorId:
+                type: string
+              deploymentId:
+                type: string
+            type: object
+          status:
+            properties:
+              ? ""
+              : items:
                   properties:
-                    deploymentRevision:
-                      type: number
-                    kind:
-                      type: string
+                    ? ""
+                    : type: number
                     apiVersion:
                       type: string
                     name:
                       type: string
+                    kind:
+                      type: string
                   type: object
                 type: array
-              phase:
-                enum:
-                - EphemeralMeta
-                - Initialization
-                - EphemeralMetaWatch
-                - Monitor
-                - Augmentation
-                type: string
               operator:
                 properties:
                   version:
@@ -80,88 +84,6 @@ spec:
                   namespace:
                     type: string
                 type: object
-              conditions:
-                items:
-                  properties:
-                    additionalProperties:
-                      type: object
-                    lastTransitionTime:
-                      type: string
-                    status:
-                      type: string
-                    type:
-                      type: string
-                    message:
-                      type: string
-                    observedGeneration:
-                      type: number
-                    reason:
-                      type: string
-                  type: object
-                type: array
-              statusExtractor:
-                properties:
-                  conditions:
-                    properties:
-                      types:
-                        items:
-                          type: string
-                        type: array
-                      path:
-                        type: string
-                    type: object
-                  phase:
-                    properties:
-                      mapping:
-                        items:
-                          properties:
-                            connector:
-                              type: string
-                            resource:
-                              type: string
-                          type: object
-                        type: array
-                      path:
-                        type: string
-                    type: object
-                  ref:
-                    properties:
-                      kind:
-                        type: string
-                      apiVersion:
-                        type: string
-                      name:
-                        type: string
-                    type: object
-                type: object
-            type: object
-          spec:
-            properties:
-              clusterId:
-                type: string
-              deployment:
-                properties:
-                  deploymentResourceVersion:
-                    type: number
-                  desiredState:
-                    type: string
-                  metaImage:
-                    type: string
-                  kafkaId:
-                    type: string
-                  metaServiceHost:
-                    type: string
-                  resourceVersion:
-                    type: number
-                type: object
-              operatorId:
-                type: string
-              connectorId:
-                type: string
-              deploymentId:
-                type: string
-              connectorTypeId:
-                type: string
             type: object
         type: object
     served: true

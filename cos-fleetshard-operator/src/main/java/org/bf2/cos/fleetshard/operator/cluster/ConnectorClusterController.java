@@ -4,11 +4,13 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
-import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -16,6 +18,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @Controller(
     name = "connector-cluster")
 public class ConnectorClusterController extends AbstractResourceController<ManagedConnectorCluster> {
+    @Inject
+    KubernetesClient kubernetesClient;
     @Inject
     ControlPlane controlPlane;
 
@@ -49,6 +53,14 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
         }
 
         controlPlane.updateClusterStatus(cluster);
+
+        var connectors = kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(cluster.getStatus().getConnectorsNamespace())
+            .list();
+
+        for (var connector : connectors.getItems()) {
+            //TODO: check connectors that can be moved to a newer operator
+        }
 
         return update
             ? UpdateControl.updateStatusSubResource(cluster)

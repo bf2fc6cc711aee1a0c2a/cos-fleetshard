@@ -21,17 +21,17 @@ public class ConnectorClusterSync {
     ControlPlane controlPlane;
 
     @Timed(
-        value = "cos.agent.sync.poll",
+        value = "cos.cluster.sync.poll",
         extraTags = { "resource", "ManagedConnectorsAgent" },
         description = "The time spent processing polling calls")
     @Counted(
-        value = "cos.agent.sync.poll",
+        value = "cos.cluster.sync.poll",
         extraTags = { "resource", "ManagedConnectorsAgent" },
         description = "The number of polling calls")
     @Scheduled(
-        every = "{cos.agent.sync.interval}",
+        every = "{cos.cluster.sync.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void sync() {
-        LOGGER.info("Sync agent (noop)");
+        LOGGER.info("Sync cluster (noop)");
     }
 }

@@ -130,12 +130,10 @@ public class ManagedConnectorStatus {
         return answer;
     }
 
-    @JsonProperty
     public Operator getOperator() {
         return operator;
     }
 
-    @JsonProperty
     public void setOperator(Operator operator) {
         this.operator = operator;
     }

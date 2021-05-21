@@ -147,6 +147,7 @@ public class ConnectorSync {
         ManagedConnector connector = lookupManagedConnector(connectorCluster, deployment);
 
         if (connector == null) {
+            // TODO: find suitable operator and label according
             connector = new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(mcId)
