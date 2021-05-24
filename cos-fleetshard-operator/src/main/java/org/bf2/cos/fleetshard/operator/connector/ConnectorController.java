@@ -48,7 +48,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
 import org.bf2.cos.fleetshard.common.UnstructuredClient;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.fleet.FleetManager;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.support.PodEventSource;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
@@ -76,7 +76,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @Inject
     UnstructuredClient uc;
     @Inject
-    ControlPlane controlPlane;
+    FleetManager controlPlane;
 
     public ConnectorController(io.vertx.core.Vertx vertx) {
         this.events = new HashSet<>();

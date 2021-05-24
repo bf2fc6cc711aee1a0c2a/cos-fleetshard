@@ -18,32 +18,10 @@ import lombok.ToString;
     builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorClusterStatus {
-    private String id;
-    private String connectorsNamespace;
     private PhaseType phase;
     private List<Condition> conditions;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Operator> operators = new ArrayList<>();
-
-    @JsonProperty
-    public String getId() {
-        return id;
-    }
-
-    @JsonProperty
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @JsonProperty
-    public String getConnectorsNamespace() {
-        return connectorsNamespace;
-    }
-
-    @JsonProperty
-    public void setConnectorsNamespace(String connectorsNamespace) {
-        this.connectorsNamespace = connectorsNamespace;
-    }
 
     @JsonProperty
     public PhaseType getPhase() {
@@ -80,6 +58,7 @@ public class ManagedConnectorClusterStatus {
 
     public enum PhaseType {
         Installing,
+        Disconnected,
         Ready,
         Deleted,
         Error;

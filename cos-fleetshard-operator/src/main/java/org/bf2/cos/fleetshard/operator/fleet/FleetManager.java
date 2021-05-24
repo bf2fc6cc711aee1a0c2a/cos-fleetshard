@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.controlplane;
+package org.bf2.cos.fleetshard.operator.fleet;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,45 +19,34 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
-public class ControlPlane {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ControlPlane.class);
-
-    @ConfigProperty(
-        name = "cos.cluster.id")
-    String clusterId;
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String namespace;
+public class FleetManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManager.class);
 
     @Inject
     @RestClient
     ConnectorClustersAgentApi controlPlane;
     @Inject
     KubernetesClient kubernetesClient;
-    @Inject
-    Config cfg;
 
     public void updateClusterStatus(ManagedConnectorCluster cluster) {
         try {
+            var phase = cluster.getStatus().getPhase();
+            if (phase == null) {
+                phase = ManagedConnectorClusterStatus.PhaseType.Disconnected;
+            }
+
             var status = new ConnectorClusterStatus();
-            status.setPhase(cluster.getStatus().getPhase().name().toLowerCase(Locale.US));
+            status.setPhase(phase.name().toLowerCase(Locale.US));
 
             LOGGER.info("Update Cluster Status {}", status);
 
-            for (String name : cfg.getPropertyNames()) {
-                if (name.startsWith("cos.") || name.startsWith("rh.")) {
-                    LOGGER.debug("cfg> {} = {}", name, cfg.getOptionalValue(name, String.class).orElse(""));
-                }
-            }
-
-            controlPlane.updateKafkaConnectorClusterStatus(clusterId, status);
+            controlPlane.updateKafkaConnectorClusterStatus(cluster.getSpec().getId(), status);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         } catch (javax.ws.rs.WebApplicationException e) {
@@ -74,7 +63,7 @@ public class ControlPlane {
         }
     }
 
-    public List<ConnectorDeployment> getDeployments() {
+    public List<ConnectorDeployment> getDeployments(String clusterId, String namespace) {
         // TODO: check namespaces
         // TODO: check labels
         final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)

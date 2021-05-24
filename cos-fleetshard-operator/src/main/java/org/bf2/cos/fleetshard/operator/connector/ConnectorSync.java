@@ -11,7 +11,6 @@ import javax.inject.Inject;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
@@ -23,7 +22,8 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.common.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.fleet.FleetManager;
+import org.bf2.cos.fleetshard.operator.fleet.FleetShard;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,9 @@ public class ConnectorSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSync.class);
 
     @Inject
-    ControlPlane controlPlane;
+    FleetManager controlPlane;
+    @Inject
+    FleetShard fleetShard;
     @Inject
     KubernetesClient kubernetesClient;
 
@@ -63,23 +65,23 @@ public class ConnectorSync {
     void sync() {
         LOGGER.debug("Sync connectors");
 
-        ManagedConnectorCluster connectorCluster = lookupManagedConnectorCluster(kubernetesClient.getNamespace());
-        if (connectorCluster == null
-            || connectorCluster.getStatus() == null
-            || !Objects.equals(connectorCluster.getStatus().getPhase(), ManagedConnectorClusterStatus.PhaseType.Ready)) {
+        ManagedConnectorCluster cluster = fleetShard.lookupManagedConnectorCluster(kubernetesClient.getNamespace());
+        if (cluster == null
+            || cluster.getStatus() == null
+            || !Objects.equals(cluster.getStatus().getPhase(), ManagedConnectorClusterStatus.PhaseType.Ready)) {
             LOGGER.debug("Operator not yet configured");
             return;
         }
 
         LOGGER.debug("Polling for control plane connectors");
 
-        for (var deployment : controlPlane.getDeployments()) {
-            provision(connectorCluster, deployment);
+        for (var deployment : controlPlane.getDeployments(cluster.getSpec().getId(),
+            cluster.getSpec().getConnectorsNamespace())) {
+            provision(cluster, deployment);
         }
     }
 
     private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
-
         try {
             LOGGER.debug(
                 "Polling for control plane connectors {}",
@@ -93,7 +95,7 @@ public class ConnectorSync {
         }
 
         final String connectorId = deployment.getSpec().getConnectorId();
-        final String connectorsNs = connectorCluster.getStatus().getConnectorsNamespace();
+        final String connectorsNs = connectorCluster.getSpec().getConnectorsNamespace();
         final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
         final String image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
 
@@ -103,7 +105,7 @@ public class ConnectorSync {
         // If the meta service mode is "deployment", create a deployment based on the image name
         //
         if ("deployment".equals(metaServiceMode)) {
-            Service metaService = lookupMetaService(connectorCluster, deployment);
+            Service metaService = fleetShard.lookupMetaService(connectorCluster, deployment);
 
             if (metaService == null) {
                 String name = "m" + UUID.randomUUID().toString().replaceAll("-", "");
@@ -144,7 +146,7 @@ public class ConnectorSync {
         //Create or update the connector
         //
 
-        ManagedConnector connector = lookupManagedConnector(connectorCluster, deployment);
+        ManagedConnector connector = fleetShard.lookupManagedConnector(connectorCluster, deployment);
 
         if (connector == null) {
             // TODO: find suitable operator and label according
@@ -156,7 +158,7 @@ public class ConnectorSync {
                     .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
                     .build())
                 .withSpec(new ManagedConnectorSpecBuilder()
-                    .withClusterId(connectorCluster.getStatus().getId())
+                    .withClusterId(connectorCluster.getSpec().getId())
                     .withConnectorId(connectorId)
                     .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())
                     .withDeploymentId(deployment.getId())
@@ -205,66 +207,5 @@ public class ConnectorSync {
 
         // TODO: remove deleted connectors
         // TODO: remove unused meta services
-    }
-
-    // ***********************************************
-    //
-    // Helpers
-    //
-    // ***********************************************
-
-    private ManagedConnectorCluster lookupManagedConnectorCluster(String namespace) {
-        var items = kubernetesClient.customResources(ManagedConnectorCluster.class)
-            .inNamespace(namespace)
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple connectors clusters");
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return items.getItems().get(0);
-        }
-
-        return null;
-    }
-
-    private ManagedConnector lookupManagedConnector(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
-        var items = kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple connectors with id " + deployment.getSpec().getConnectorId());
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return items.getItems().get(0);
-        }
-
-        return null;
-    }
-
-    private Service lookupMetaService(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
-        var image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
-        image = KubernetesResourceUtil.sanitizeName(image);
-
-        var items = kubernetesClient.services()
-            .inNamespace(connectorCluster.getStatus().getConnectorsNamespace())
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_META, "true")
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_META_IMAGE, image)
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple meta service for image " + image);
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return items.getItems().get(0);
-        }
-
-        return null;
     }
 }

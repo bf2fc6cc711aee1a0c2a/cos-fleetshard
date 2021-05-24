@@ -5,7 +5,7 @@ import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.fleet.FleetManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ public class ConnectorClusterMonitor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorClusterMonitor.class);
 
     @Inject
-    ControlPlane controlPlane;
+    FleetManager controlPlane;
     @Inject
     KubernetesClient kubernetesClient;
 

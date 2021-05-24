@@ -11,9 +11,8 @@ import io.javaoperatorsdk.operator.api.UpdateControl;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
-import org.bf2.cos.fleetshard.operator.controlplane.ControlPlane;
+import org.bf2.cos.fleetshard.operator.fleet.FleetManager;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Controller(
     name = "connector-cluster")
@@ -21,41 +20,23 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
-    ControlPlane controlPlane;
-
-    @ConfigProperty(
-        name = "cos.cluster.id")
-    String clusterId;
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String namespace;
+    FleetManager controlPlane;
 
     @Override
     public UpdateControl<ManagedConnectorCluster> createOrUpdateResource(
         ManagedConnectorCluster cluster,
         Context<ManagedConnectorCluster> context) {
 
-        final var id = cluster.getStatus().getId();
-        final var ns = cluster.getStatus().getConnectorsNamespace();
-        final var ph = cluster.getStatus().getPhase();
-
         boolean update = false;
-
-        if (!Objects.equals(ph, ManagedConnectorClusterStatus.PhaseType.Ready)
-            || !Objects.equals(id, clusterId)
-            || Objects.equals(ns, namespace)) {
-
+        if (!Objects.equals(cluster.getStatus().getPhase(), ManagedConnectorClusterStatus.PhaseType.Ready)) {
             cluster.getStatus().setPhase(ManagedConnectorClusterStatus.PhaseType.Ready);
-            cluster.getStatus().setId(clusterId);
-            cluster.getStatus().setConnectorsNamespace(namespace);
-
             update = true;
         }
 
         controlPlane.updateClusterStatus(cluster);
 
         var connectors = kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(cluster.getStatus().getConnectorsNamespace())
+            .inNamespace(cluster.getSpec().getConnectorsNamespace())
             .list();
 
         for (var connector : connectors.getItems()) {
