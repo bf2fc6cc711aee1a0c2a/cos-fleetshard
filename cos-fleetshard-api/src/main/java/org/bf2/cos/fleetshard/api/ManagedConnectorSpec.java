@@ -14,8 +14,6 @@ import lombok.ToString;
 public class ManagedConnectorSpec {
     private String clusterId;
     @PrinterColumn
-    private String operatorId;
-    @PrinterColumn
     private String connectorId;
     @PrinterColumn
     private String connectorTypeId;
@@ -30,14 +28,6 @@ public class ManagedConnectorSpec {
 
     public void setClusterId(String clusterId) {
         this.clusterId = clusterId;
-    }
-
-    public String getOperatorId() {
-        return operatorId;
-    }
-
-    public void setOperatorId(String operatorId) {
-        this.operatorId = operatorId;
     }
 
     public String getConnectorId() {

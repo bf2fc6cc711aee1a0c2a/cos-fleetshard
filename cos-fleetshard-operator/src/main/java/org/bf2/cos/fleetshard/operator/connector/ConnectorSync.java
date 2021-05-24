@@ -158,7 +158,6 @@ public class ConnectorSync {
                     .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
                     .build())
                 .withSpec(new ManagedConnectorSpecBuilder()
-                    .withClusterId(connectorCluster.getSpec().getId())
                     .withConnectorId(connectorId)
                     .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())
                     .withDeploymentId(deployment.getId())

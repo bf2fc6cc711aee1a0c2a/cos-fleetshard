@@ -23,9 +23,6 @@ spec:
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
       type: string
-    - jsonPath: .spec.operatorId
-      name: OPERATORID
-      type: string
     - jsonPath: .status.phase
       name: PHASE
       type: string
@@ -49,8 +46,6 @@ spec:
                   type:
                     type: string
                 type: object
-              operatorId:
-                type: string
               connectorTypeId:
                 type: string
               clusterId:
