@@ -140,8 +140,6 @@ public class ManagedConnectorStatus {
 
     public enum PhaseType {
         Initialization,
-        EphemeralMeta,
-        EphemeralMetaWatch,
         Augmentation,
         Monitor,
     }

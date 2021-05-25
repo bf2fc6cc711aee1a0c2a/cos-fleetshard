@@ -53,30 +53,30 @@ components:
       description: Holds the deployment specification of a connector to be reified
       type: object
       properties:
-        shard_metadata:
-          type: object
         managed_connector_id:
           type: string
-        connector_id:
-          type: string
+        shard_metadata:
+          type: object
         deployment_id:
           type: string
-        allow_upgrade:
-          type: boolean
         deployment_resource_version:
           type: integer
           format: int64
-        connector_resource_version:
-          type: integer
-          format: int64
-        kafka_id:
+        kafka_spec:
+          $ref: '#/components/schemas/KafkaSpec'
+        connector_id:
           type: string
         connector_type_id:
           type: string
         connector_spec:
           type: object
+        connector_resource_version:
+          type: integer
+          format: int64
         desired_state:
           type: string
+        allow_upgrade:
+          type: boolean
         operator:
           $ref: '#/components/schemas/Operator'
 
@@ -90,6 +90,17 @@ components:
             type: object
         status_extractor:
           $ref: '#/components/schemas/StatusExtractor'
+
+    KafkaSpec:
+      properties:
+        id:
+          type: string
+        bootstrap_server:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
 
     StatusExtractor:
       description: Status eextractor.

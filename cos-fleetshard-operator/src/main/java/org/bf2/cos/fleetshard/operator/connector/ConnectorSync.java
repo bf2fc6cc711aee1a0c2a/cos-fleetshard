@@ -2,14 +2,12 @@ package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.micrometer.core.annotation.Counted;
@@ -42,14 +40,11 @@ public class ConnectorSync {
     @Inject
     KubernetesClient kubernetesClient;
 
+    //TODO: used for testing purpose
+    //      needs to be determined from the assigned operator
     @ConfigProperty(
         name = "cos.connectors.meta.host")
-    Optional<String> metaServiceHost;
-
-    @ConfigProperty(
-        name = "cos.connectors.meta.mode",
-        defaultValue = "ephemeral")
-    String metaServiceMode;
+    String metaServiceHost;
 
     @Timed(
         value = "cos.connectors.sync.poll",
@@ -99,49 +94,6 @@ public class ConnectorSync {
         final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
         final String image = deployment.getSpec().getShardMetadata().requiredAt("/meta_image").asText();
 
-        String metaHost = metaServiceHost.orElse(null);
-
-        //
-        // If the meta service mode is "deployment", create a deployment based on the image name
-        //
-        if ("deployment".equals(metaServiceMode)) {
-            Service metaService = fleetShard.lookupMetaService(connectorCluster, deployment);
-
-            if (metaService == null) {
-                String name = "m" + UUID.randomUUID().toString().replaceAll("-", "");
-
-                var md = ConnectorSupport.createMetaDeployment(
-                    connectorCluster,
-                    connectorsNs,
-                    name,
-                    image);
-                var ms = ConnectorSupport.createMetaDeploymentService(
-                    connectorCluster,
-                    connectorsNs,
-                    name,
-                    image);
-
-                try {
-                    LOGGER.info("md: {}", Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(md));
-                    LOGGER.info("ms: {}", Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(ms));
-                } catch (Exception e) {
-                    // ignore
-                }
-
-                // TODO: set-up ssl
-                kubernetesClient.apps().deployments()
-                    .inNamespace(connectorsNs)
-                    .create(md);
-                kubernetesClient.services()
-                    .inNamespace(connectorsNs)
-                    .create(ms);
-
-                metaHost = name;
-            } else {
-                metaHost = metaService.getMetadata().getName();
-            }
-        }
-
         //
         //Create or update the connector
         //
@@ -180,7 +132,7 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setKafkaId(deployment.getSpec().getKafkaId());
         connector.getSpec().getDeployment().setMetaImage(image);
-        connector.getSpec().getDeployment().setMetaServiceHost(metaHost);
+        connector.getSpec().getDeployment().setMetaServiceHost(metaServiceHost);
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
 
         LOGGER.info("provisioning connector id={} - {}/{}: {}", mcId, connectorsNs, connectorId, deployment.getSpec());

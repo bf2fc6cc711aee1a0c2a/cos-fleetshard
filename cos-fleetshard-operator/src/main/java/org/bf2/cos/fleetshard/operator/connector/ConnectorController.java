@@ -20,14 +20,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
-import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
@@ -41,6 +38,7 @@ import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentSpec;
+import org.bf2.cos.fleet.manager.api.model.meta.KafkaSpec;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -126,10 +124,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         switch (connector.getStatus().getPhase()) {
             case Initialization:
                 return handleInitialization(context, connector);
-            case EphemeralMeta:
-                return handleEphemeralMeta(context, connector);
-            case EphemeralMetaWatch:
-                return handleEphemeralMetaWatch(context, connector);
             case Augmentation:
                 return handleAugmentation(context, connector);
             case Monitor:
@@ -153,18 +147,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector) {
 
         // TODO: add helper method to update connector phase
-        try {
-            controlPlane.updateConnectorStatus(
-                connector.getSpec().getClusterId(),
-                connector.getSpec().getDeploymentId(),
-                new ConnectorDeploymentStatus().phase("provisioning"));
-
-        } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        controlPlane.updateConnectorStatus(
+            connector.getSpec().getClusterId(),
+            connector.getSpec().getDeploymentId(),
+            new ConnectorDeploymentStatus().phase("provisioning"));
 
         switch (connector.getSpec().getDeployment().getDesiredState()) {
             case DESIRED_STATE_DELETED: {
@@ -173,11 +159,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 break;
             }
             case DESIRED_STATE_READY: {
-                if (Strings.isNullOrEmpty(connector.getSpec().getDeployment().getMetaServiceHost())) {
-                    connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.EphemeralMeta);
-                } else {
-                    connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
-                }
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
                 break;
             }
             default:
@@ -186,78 +168,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         }
 
         return UpdateControl.updateStatusSubResource(connector);
-    }
-
-    /*
-     * This phase is about creating the ephemeral meta pod.
-     */
-    private UpdateControl<ManagedConnector> handleEphemeralMeta(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
-
-        LOGGER.info("Spinning up Meta Service");
-
-        final Pod pod = ConnectorSupport.createMetaPod(connector);
-        final Service service = ConnectorSupport.createMetaPodService(connector);
-
-        kubernetesClient.pods()
-            .inNamespace(connector.getMetadata().getNamespace())
-            .create(pod);
-        kubernetesClient.services()
-            .inNamespace(connector.getMetadata().getNamespace())
-            .create(service);
-
-        connector.getStatus().addCondition(
-            ManagedConnectorStatus.ConditionType.MetaPodCreated,
-            ManagedConnectorStatus.ConditionStatus.True,
-            "Pod " + pod.getMetadata().getName() + " created");
-        connector.getStatus().addCondition(
-            ManagedConnectorStatus.ConditionType.MetaPodServiceCreated,
-            ManagedConnectorStatus.ConditionStatus.True,
-            "Service " + service.getMetadata().getName() + " created");
-
-        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.EphemeralMetaWatch);
-        connector.getStatus().addResource(pod);
-        connector.getStatus().addResource(service);
-
-        return UpdateControl.updateStatusSubResource(connector);
-    }
-
-    /*
-     * This phase is about waiting for the ephemeral meta pod to be ready.
-     */
-    private UpdateControl<ManagedConnector> handleEphemeralMetaWatch(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
-
-        final DeploymentSpec ref = connector.getSpec().getDeployment();
-        final String connectorId = connector.getMetadata().getName();
-        final String name = connectorId + "-" + ref.getDeploymentResourceVersion();
-
-        Pod pod = kubernetesClient.pods()
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(name)
-            .get();
-
-        if (pod == null) {
-            throw new IllegalStateException("Pod " + name + " does not exists");
-        }
-
-        switch (pod.getStatus().getPhase()) {
-            case "Pending": {
-                LOGGER.info("Meta Pod creation pending");
-                return UpdateControl.noUpdate();
-            }
-            case "Running": {
-                LOGGER.info("Meta Pod ready");
-                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
-                return UpdateControl.updateStatusSubResource(connector);
-            }
-            default: {
-                LOGGER.warn("Meta Pod {}", pod.getStatus().getReason());
-                return UpdateControl.noUpdate();
-            }
-        }
     }
 
     /*
@@ -282,18 +192,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId());
 
-            ConnectorDeploymentReifyRequest rr = new ConnectorDeploymentReifyRequest();
-            rr.setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
-            rr.setDeploymentResourceVersion(ref.getDeploymentResourceVersion());
-            rr.setManagedConnectorId(connectorId);
-            rr.setDeploymentId(connector.getSpec().getDeploymentId());
-            rr.setConnectorId(deployment.getSpec().getConnectorId());
-            rr.setConnectorId(deployment.getSpec().getConnectorTypeId());
-            rr.setConnectorSpec(deployment.getSpec().getConnectorSpec());
-            rr.setShardMetadata(deployment.getSpec().getShardMetadata());
-
-            //rr.setKafkaId(ref.getKafkaId());
-
             ConnectorDeploymentSpec cdspec;
             WebClient client = WebClient.create(vertx);
 
@@ -303,6 +201,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 final String[] hp = mhost.split(":");
                 final String host = hp[0];
                 final int port = hp.length == 2 ? Integer.parseInt(hp[1]) : 80;
+
+                KafkaSpec ks = new KafkaSpec()
+                    .id(deployment.getSpec().getKafkaId())
+                    .clientId(deployment.getSpec().getKafka().getClientId())
+                    .clientSecret(deployment.getSpec().getKafka().getClientSecret())
+                    .bootstrapServer(deployment.getSpec().getKafka().getBootstrapServer());
+
+                ConnectorDeploymentReifyRequest rr = new ConnectorDeploymentReifyRequest()
+                    .connectorResourceVersion(deployment.getSpec().getConnectorResourceVersion())
+                    .deploymentResourceVersion(ref.getDeploymentResourceVersion())
+                    .managedConnectorId(connectorId)
+                    .deploymentId(connector.getSpec().getDeploymentId())
+                    .connectorId(deployment.getSpec().getConnectorId())
+                    .connectorId(deployment.getSpec().getConnectorTypeId())
+                    .connectorSpec(deployment.getSpec().getConnectorSpec())
+                    .shardMetadata(deployment.getSpec().getShardMetadata())
+                    .kafkaSpec(ks);
 
                 // TODO: set-up ssl/tls
                 cdspec = client.post(port, host, "/reify")

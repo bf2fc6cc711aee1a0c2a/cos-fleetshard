@@ -1,8 +1,5 @@
 openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an openapi document.
-# Warning: This file should only be used if the endpoints are not yet ready to be public, or not suitable for public consumption (like the data plane endpoints).
-# In most cases, you shouldn't need to add the endpoints here.
-# Only add endpoints here when it is an explicit requirement, or if you know what you are doing.
-# There should be no duplicated endpoints or schemas in these 2 files. They should only defined in one of them.
+# All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "kas-fleet-manager-private.yaml" file
 info:
   title: Connector Service Fleet Manager
   version: 0.0.1
@@ -702,6 +699,8 @@ components:
                   format: int64
             deployment_location:
               $ref: '#/components/schemas/ClusterTarget'
+            kafka:
+              $ref: '#/components/schemas/KafkaConnectionSettings'
             connector_type_id:
               type: string
             connector_spec:
@@ -797,6 +796,16 @@ components:
               items:
                 allOf:
                   - $ref: '#/components/schemas/ConnectorCluster'
+
+    KafkaConnectionSettings:
+      properties:
+        bootstrap_server:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
 
   securitySchemes:
     Bearer:

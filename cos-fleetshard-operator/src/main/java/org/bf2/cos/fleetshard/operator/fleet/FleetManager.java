@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.WebApplicationException;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -47,10 +48,10 @@ public class FleetManager {
             LOGGER.info("Update Cluster Status {}", status);
 
             controlPlane.updateKafkaConnectorClusterStatus(cluster.getSpec().getId(), status);
-        } catch (ApiException e) {
-            throw new RuntimeException(e);
         } catch (javax.ws.rs.WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
+            throw new RuntimeException(e);
+        } catch (ApiException e) {
             throw new RuntimeException(e);
         }
     }
@@ -58,6 +59,9 @@ public class FleetManager {
     public ConnectorDeployment getDeployment(String clusterId, String deploymentId) {
         try {
             return controlPlane.getClusterAsignedConnectorDeployments(clusterId, deploymentId);
+        } catch (javax.ws.rs.WebApplicationException e) {
+            LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
+            throw new RuntimeException(e);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
@@ -98,10 +102,10 @@ public class FleetManager {
                 if (list.getItems().isEmpty() || answer.size() == list.getTotal()) {
                     break;
                 }
-            } catch (ApiException e) {
-                throw new RuntimeException(e);
             } catch (javax.ws.rs.WebApplicationException e) {
                 LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
+                throw new RuntimeException(e);
+            } catch (ApiException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -118,6 +122,9 @@ public class FleetManager {
         try {
             LOGGER.info("Connector clusterId={}, id={}, status={}", clusterId, connectorId, Serialization.asJson(status));
             controlPlane.updateConnectorDeploymentStatus(clusterId, connectorId, status);
+        } catch (WebApplicationException e) {
+            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
+            throw new RuntimeException(e);
         } catch (ApiException e) {
             throw new RuntimeException(e);
         }
