@@ -23,6 +23,18 @@ spec:
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
       type: string
+    - jsonPath: .status.operator.metaService
+      name: METASERVICE
+      type: string
+    - jsonPath: .status.operator.namespace
+      name: NAMESPACE
+      type: string
+    - jsonPath: .status.operator.type
+      name: TYPE
+      type: string
+    - jsonPath: .status.operator.version
+      name: VERSION
+      type: string
     - jsonPath: .status.phase
       name: PHASE
       type: string
@@ -34,16 +46,18 @@ spec:
             properties:
               deployment:
                 properties:
-                  ? ""
-                  : type: string
+                  operatorSelector:
+                    properties:
+                      version:
+                        type: string
+                      type:
+                        type: string
+                    type: object
                   deploymentResourceVersion:
                     type: number
-                type: object
-              operatorSelector:
-                properties:
-                  version:
-                    type: string
-                  type:
+                  resourceVersion:
+                    type: number
+                  desiredState:
                     type: string
                 type: object
               connectorTypeId:
@@ -57,11 +71,90 @@ spec:
             type: object
           status:
             properties:
-              ? ""
-              : items:
+              deployment:
+                properties:
+                  operatorSelector:
+                    properties:
+                      version:
+                        type: string
+                      type:
+                        type: string
+                    type: object
+                  deploymentResourceVersion:
+                    type: number
+                  resourceVersion:
+                    type: number
+                  desiredState:
+                    type: string
+                type: object
+              statusExtractor:
+                properties:
+                  phase:
+                    properties:
+                      path:
+                        type: string
+                      mapping:
+                        items:
+                          properties:
+                            connector:
+                              type: string
+                            resource:
+                              type: string
+                          type: object
+                        type: array
+                    type: object
+                  conditions:
+                    properties:
+                      path:
+                        type: string
+                      types:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  ref:
+                    properties:
+                      apiVersion:
+                        type: string
+                      name:
+                        type: string
+                      kind:
+                        type: string
+                    type: object
+                type: object
+              phase:
+                enum:
+                - Delete
+                - Initialization
+                - Augmentation
+                - Monitor
+                type: string
+              conditions:
+                items:
                   properties:
-                    ? ""
-                    : type: number
+                    status:
+                      type: string
+                    reason:
+                      type: string
+                    lastTransitionTime:
+                      type: string
+                    observedGeneration:
+                      type: number
+                    type:
+                      type: string
+                    additionalProperties:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    message:
+                      type: string
+                  type: object
+                type: array
+              resources:
+                items:
+                  properties:
+                    deploymentRevision:
+                      type: number
                     apiVersion:
                       type: string
                     name:
@@ -73,6 +166,8 @@ spec:
               operator:
                 properties:
                   version:
+                    type: string
+                  metaService:
                     type: string
                   type:
                     type: string

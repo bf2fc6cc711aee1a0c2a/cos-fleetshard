@@ -19,8 +19,8 @@ public class ManagedConnectorSpec {
     private String connectorTypeId;
     @PrinterColumn
     private String deploymentId;
+
     private DeploymentSpec deployment = new DeploymentSpec();
-    private OperatorSelector operatorSelector;
 
     public String getClusterId() {
         return clusterId;
@@ -60,13 +60,5 @@ public class ManagedConnectorSpec {
 
     public void setDeployment(DeploymentSpec deployment) {
         this.deployment = deployment;
-    }
-
-    public OperatorSelector getOperatorSelector() {
-        return operatorSelector;
-    }
-
-    public void setOperatorSelector(OperatorSelector operatorSelector) {
-        this.operatorSelector = operatorSelector;
     }
 }

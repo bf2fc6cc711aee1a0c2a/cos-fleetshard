@@ -4,24 +4,17 @@
 ## operator
 
 ```shell
+kubectl apply -f cos-fleetshard-operator/src/main/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
 kubectl apply -f cos-fleetshard-operator/src/main/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
 kubectl apply -f cos-fleetshard-operator/src/main/kubernetes/managedconnectors.cos.bf2.org-v1.yml
+
+
+kubectl apply -f etc/examples/camel-connector-operator.yaml
 
 # build
 ./mvnw install
 
-# run the control plane mock
-./mvnw -pl cos-fleetshard-mock quarkus:dev
-
 # run the operator
 ./mvnw -pl cos-fleetshard-operator quarkus:dev
 
-# create the cluster
-kubectl apply -f examples/my-cluster.yaml
-
-# create a sample connector
-curl -XPOST \
-  -H "Content-Type: application/json" \
-  http://localhost:9090/api/managed-services-api/v1/kafka-connector-clusters/test/connectors \
-  -d @examples/my-connector-1.json
 ```

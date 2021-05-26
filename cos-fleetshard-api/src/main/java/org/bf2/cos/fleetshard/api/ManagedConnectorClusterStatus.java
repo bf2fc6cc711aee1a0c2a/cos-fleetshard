@@ -38,6 +38,11 @@ public class ManagedConnectorClusterStatus {
         return Objects.equals(getPhase(), type);
     }
 
+    @JsonIgnore
+    public boolean isReady() {
+        return isInPhase(PhaseType.Ready);
+    }
+
     @JsonProperty
     public List<Condition> getConditions() {
         return conditions;
@@ -48,10 +53,12 @@ public class ManagedConnectorClusterStatus {
         this.conditions = conditions;
     }
 
+    @JsonProperty
     public List<Operator> getOperators() {
         return operators;
     }
 
+    @JsonProperty
     public void setOperators(List<Operator> operators) {
         this.operators = operators;
     }

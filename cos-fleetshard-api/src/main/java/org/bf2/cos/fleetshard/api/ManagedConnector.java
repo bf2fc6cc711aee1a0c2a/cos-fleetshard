@@ -32,7 +32,8 @@ public class ManagedConnector
     public static final String LABEL_CONNECTOR_ID = "cos.bf2.org/connector.id";
     public static final String LABEL_CONNECTOR_NAME = "cos.bf2.org/connector.name";
     public static final String LABEL_CONNECTOR_META = "cos.bf2.org/connector.meta";
-    public static final String LABEL_CONNECTOR_META_IMAGE = "cos.bf2.org/connector.meta.image";
+    public static final String LABEL_CONNECTOR_META_GENERATED = "cos.bf2.org/connector.meta.generated";
+    public static final String LABEL_CONNECTOR_OPERATOR = "cos.bf2.org/connector.operator";
     public static final String DELETION_MODE_ANNOTATION = "cos.bf2.org/resource.deletion.mode";
     public static final String DELETION_MODE_CONNECTOR = "connector";
     public static final String DELETION_MODE_DEPLOYMENT = "deployment";

@@ -21,7 +21,7 @@
         <jandex.version>2.2.3.Final</jandex.version>
         <josdk.version>1.8.4</josdk.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <kubernetes-client.version>5.4.0</kubernetes-client.version>
+        <kubernetes-client.version>5.4.1</kubernetes-client.version>
         <lombok.version>1.18.18</lombok.version>
         <quarkus.version>1.13.4.Final</quarkus.version>
         <quarkus-operator-sdk.version>1.8.4</quarkus-operator-sdk.version>
@@ -41,10 +41,10 @@
 
     <modules>
         <module>cos-fleetshard-api</module>
-        <module>cos-fleetshard-common</module>
         <module>cos-fleetshard-quarkus</module>
+        <module>cos-fleetshard-operator-core</module>
         <module>cos-fleetshard-operator</module>
-        <module>cos-fleetshard-mock</module>
+        <module>cos-fleetshard-operator-it</module>
     </modules>
 
     <dependencyManagement>
@@ -95,12 +95,17 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-common</artifactId>
+                <artifactId>cos-fleetshard-operator-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-operator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-it</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
