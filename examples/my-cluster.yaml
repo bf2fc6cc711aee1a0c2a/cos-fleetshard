@@ -1,4 +1,0 @@
-apiVersion: cos.bf2.org/v1alpha1
-kind: ManagedConnectorCluster
-metadata:
-  name: my-cos-operator

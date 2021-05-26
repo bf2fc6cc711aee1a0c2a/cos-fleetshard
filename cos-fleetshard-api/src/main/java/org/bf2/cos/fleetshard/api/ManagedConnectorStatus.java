@@ -26,7 +26,6 @@ import lombok.ToString;
     builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorStatus {
-    private DeploymentSpec deployment = new DeploymentSpec();
     @PrinterColumn
     private PhaseType phase = PhaseType.Initialization;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -35,6 +34,8 @@ public class ManagedConnectorStatus {
     private List<DeployedResource> resources = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private StatusExtractor statusExtractor = new StatusExtractor();
+
+    private DeploymentSpec deployment = new DeploymentSpec();
     private Operator operator;
 
     @JsonProperty
@@ -142,6 +143,7 @@ public class ManagedConnectorStatus {
         Initialization,
         Augmentation,
         Monitor,
+        Delete,
     }
 
     public enum ConditionType {

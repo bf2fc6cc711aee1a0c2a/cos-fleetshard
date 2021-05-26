@@ -13,30 +13,49 @@ spec:
     singular: managedconnectorcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.connectorsNamespace
+      name: CONNECTORSNAMESPACE
+      type: string
+    - jsonPath: .spec.id
+      name: ID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
           spec:
             properties:
-              ? ""
-              : type: string
+              id:
+                type: string
+              connectorsNamespace:
+                type: string
             type: object
           status:
             properties:
-              ? ""
-              : items:
-                  type: object
-                type: array
+              phase:
+                enum:
+                - Disconnected
+                - Error
+                - Ready
+                - Installing
+                - Deleted
+                type: string
               operators:
                 items:
                   properties:
                     version:
                       type: string
+                    metaService:
+                      type: string
                     type:
                       type: string
                     namespace:
                       type: string
+                  type: object
+                type: array
+              conditions:
+                items:
                   type: object
                 type: array
             type: object

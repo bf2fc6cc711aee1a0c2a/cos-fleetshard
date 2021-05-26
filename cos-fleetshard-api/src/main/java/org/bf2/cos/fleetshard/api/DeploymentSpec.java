@@ -11,12 +11,10 @@ import io.sundr.builder.annotations.Buildable;
 @Buildable(
     builderPackage = "io.fabric8.kubernetes.api.builder")
 public class DeploymentSpec {
-    private String kafkaId;
     private Long resourceVersion;
     private Long deploymentResourceVersion;
-    private String metaImage;
-    private String metaServiceHost;
     private String desiredState;
+    private OperatorSelector operatorSelector;
 
     public Long getDeploymentResourceVersion() {
         return deploymentResourceVersion;
@@ -27,16 +25,6 @@ public class DeploymentSpec {
     }
 
     @JsonProperty
-    public String getKafkaId() {
-        return kafkaId;
-    }
-
-    @JsonProperty
-    public void setKafkaId(String kafkaId) {
-        this.kafkaId = kafkaId;
-    }
-
-    @JsonProperty
     public Long getResourceVersion() {
         return resourceVersion;
     }
@@ -44,16 +32,6 @@ public class DeploymentSpec {
     @JsonProperty
     public void setResourceVersion(Long resourceVersion) {
         this.resourceVersion = resourceVersion;
-    }
-
-    @JsonProperty
-    public String getMetaImage() {
-        return metaImage;
-    }
-
-    @JsonProperty
-    public void setMetaImage(String metaImage) {
-        this.metaImage = metaImage;
     }
 
     @JsonProperty
@@ -73,13 +51,13 @@ public class DeploymentSpec {
     }
 
     @JsonProperty
-    public String getMetaServiceHost() {
-        return metaServiceHost;
+    public OperatorSelector getOperatorSelector() {
+        return operatorSelector;
     }
 
     @JsonProperty
-    public void setMetaServiceHost(String metaServiceHost) {
-        this.metaServiceHost = metaServiceHost;
+    public void setOperatorSelector(OperatorSelector operatorSelector) {
+        this.operatorSelector = operatorSelector;
     }
 
     @Override
@@ -90,35 +68,29 @@ public class DeploymentSpec {
         if (!(o instanceof DeploymentSpec)) {
             return false;
         }
-        DeploymentSpec ref = (DeploymentSpec) o;
-        return Objects.equals(getKafkaId(), ref.getKafkaId())
-            && Objects.equals(getResourceVersion(), ref.getResourceVersion())
-            && Objects.equals(getDeploymentResourceVersion(), ref.getDeploymentResourceVersion())
-            && Objects.equals(getMetaImage(), ref.getMetaImage())
-            && Objects.equals(getMetaServiceHost(), ref.getMetaServiceHost())
-            && Objects.equals(getDesiredState(), ref.getDesiredState());
+        DeploymentSpec spec = (DeploymentSpec) o;
+        return Objects.equals(getResourceVersion(), spec.getResourceVersion())
+            && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
+            && Objects.equals(getDesiredState(), spec.getDesiredState())
+            && Objects.equals(getOperatorSelector(), spec.getOperatorSelector());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-            getKafkaId(),
             getResourceVersion(),
             getDeploymentResourceVersion(),
-            getMetaImage(),
-            getMetaServiceHost(),
-            getDesiredState());
+            getDesiredState(),
+            getOperatorSelector());
     }
 
     @Override
     public String toString() {
-        return "ConnectorRef{" +
-            "kafkaId='" + kafkaId + '\'' +
-            ", resourceVersion=" + resourceVersion +
+        return "DeploymentSpec{" +
+            "resourceVersion=" + resourceVersion +
             ", deploymentResourceVersion=" + deploymentResourceVersion +
-            ", metaImage='" + metaImage + '\'' +
-            ", metaServiceHost='" + metaServiceHost + '\'' +
             ", desiredState='" + desiredState + '\'' +
+            ", operatorSelector=" + operatorSelector +
             '}';
     }
 }
