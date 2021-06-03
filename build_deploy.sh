@@ -19,10 +19,10 @@
 # work, it needs the following variables defined in the CI/CD configuration of
 # the project:
 #
-# QUAY_USER - The name of the robot account used to push images to
+# IMAGE_REPO_USERNAME - The name of the robot account used to push images to
 # 'quay.io', for example 'openshift-unified-hybrid-cloud+jenkins'.
 #
-# QUAY_TOKEN - The token of the robot account used to push images to
+# IMAGE_REPO_PASSWORD - The token of the robot account used to push images to
 # 'quay.io'.
 #
 # The machines that run this script need to have access to internet, so that
@@ -38,22 +38,41 @@ fi
 export DOCKER_CONFIG="${PWD}/.docker"
 
 # Log in to the image registry:
-if [ -z "${QUAY_USER}" ]; then
+if [ -z "${IMAGE_REPO_USERNAME}" ]; then
   echo "The quay.io push user name hasn't been provided."
-  echo "Make sure to set the QUAY_USER environment variable."
+  echo "Make sure to set the IMAGE_REPO_USERNAME environment variable."
   exit 1
 fi
-if [ -z "${QUAY_TOKEN}" ]; then
+if [ -z "${IMAGE_REPO_PASSWORD}" ]; then
   echo "The quay.io push token hasn't been provided."
-  echo "Make sure to set the QUAY_TOKEN environment variable."
+  echo "Make sure to set the IMAGE_REPO_PASSWORD environment variable."
+  exit 1
+fi
+
+if [ -z "${IMAGE_REPO_NAMESPACE}" ]; then
+  echo "The quay.io org hasn't been provided."
+  echo "Make sure to set the IMAGE_REPO_NAMESPACE environment variable."
   exit 1
 fi
 
 # Set up the docker config directory
 mkdir -p "${DOCKER_CONFIG}"
 
-export CONTAINER_REGISTRY_USR="${QUAY_USER}"
-export CONTAINER_REGISTRY_PWD="${QUAY_TOKEN}"
+export CONTAINER_REGISTRY_USR="${IMAGE_REPO_USERNAME}"
+export CONTAINER_REGISTRY_PWD="${IMAGE_REPO_PASSWORD}"
 
 ./mvnw clean install
-./mvnw clean package -Dquarkus.container-image.tag=${CONTAINER_VERSION} -Pcontainer-push -pl :cos-fleetshard-operator
+
+# CONTAINER_VERSION can be set to the release tag so an extra image is pushed
+# for the current build. When in CI, we also want a separate image for each commit
+[ -z "${CI}" ] || ADDITIONAL_TAGS="$(git log --pretty=format:'%h' -n 1)"
+
+if [ ! -z "${CONTAINER_VERSION}" ]; then
+  [ -z "${ADDITIONAL_TAGS}" ] && ADDITIONAL_TAGS="${CONTAINER_VERSION}" \
+    || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
+fi
+
+./mvnw clean package -Dquarkus.container-image.tag=latest \
+  -Dquarkus.container-image.additional-tags="${ADDITIONAL_TAGS}" \
+  -Dquarkus.container-image.group=${IMAGE_REPO_NAMESPACE} -Pcontainer-push \
+  -pl :cos-fleetshard-operator
