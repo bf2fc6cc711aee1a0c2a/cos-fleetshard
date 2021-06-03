@@ -48,13 +48,14 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
 import org.bf2.cos.fleetshard.operator.fleet.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
-import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.support.UnstructuredClient;
-import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
+import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.it.support.ResourceEvent;
+import org.bf2.cos.fleetshard.operator.it.support.ResourceUtil;
+import org.bf2.cos.fleetshard.operator.it.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +95,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         eventSourceManager.registerEventSource(
             "_connector-retry-timer",
             retryTimer);
+        eventSourceManager.registerEventSource(
+            "_connector-operator",
+            new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getConnectorsNamespace()));
     }
 
     @Override
@@ -123,9 +127,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             default:
                 throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
         }
-
-        // TODO:
-        //   delete orphaned resources when done (including the secret create by the sink)
     }
 
     // **************************************************
@@ -152,13 +153,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 final OperatorSelector selector = connector.getSpec().getDeployment().getOperatorSelector();
                 final List<Operator> operators = fleetShard.lookupOperators();
 
-                LOGGER.info("*******************************************");
-                LOGGER.info("selector : {}", selector);
-                LOGGER.info("operators: {}", operators.size());
-                LOGGER.info("*******************************************");
-
                 selector.select(operators).ifPresentOrElse(
                     operator -> {
+                        LOGGER.info("deployment (init): {} -> operator: {}",
+                            connector.getSpec().getDeployment(),
+                            operator);
+
                         connector.getStatus().setOperator(operator);
                     },
                     () -> {
@@ -262,15 +262,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         res.setDeploymentRevision(ref.getDeploymentResourceVersion());
                         connector.getStatus().getResources().add(res);
                     }
-
-                    //
-                    // Set up watcher for resource types owned by the connectors. We don't
-                    // create a watch for each resource the connector owns to avoid creating
-                    // loads of watchers, instead we create a resource per type which will
-                    // triggers connectors based on the UUID of the owner (see the 'monitor'
-                    // method for more info)
-                    //
-                    watchResource(context, connector, res);
                 }
             }
 
@@ -318,6 +309,17 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             extractStatus(connector, ds);
             checkForAvailableUpdates(connector, ds);
+
+            //
+            // Set up watcher for resource types owned by the connectors. We don't
+            // create a watch for each resource the connector owns to avoid creating
+            // loads of watchers, instead we create a resource per type which will
+            // triggers connectors based on the UUID of the owner (see the 'monitor'
+            // method for more info)
+            //
+            for (var res : connector.getStatus().getResources()) {
+                watchResource(context, connector, res);
+            }
 
             controlPlane.updateConnectorStatus(connector, ds);
         } catch (WebApplicationException e) {
@@ -595,10 +597,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         if (operators.isEmpty()) {
             throw new IllegalArgumentException("No operators have been found !");
         }
-
         connector.getStatus().getDeployment().getOperatorSelector().select(operators).ifPresentOrElse(
             operator -> {
                 if (!Objects.equals(operator, connector.getStatus().getOperator())) {
+                    LOGGER.info("deployment (upd): {} -> operator: {}",
+                        connector.getSpec().getDeployment(),
+                        operator);
+
                     deploymentStatus.setAvailableUpgrades("true");
                 }
             },

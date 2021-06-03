@@ -30,6 +30,14 @@ public class FleetShardClient {
         this.kubernetesClient = kubernetesClient;
     }
 
+    public String getConnectorsNamespace() {
+        return connectorsNamespace;
+    }
+
+    public String getClusterId() {
+        return clusterId;
+    }
+
     public Optional<ManagedConnectorCluster> lookupManagedConnectorCluster() {
         return lookupManagedConnectorCluster(
             kubernetesClient.getNamespace(),

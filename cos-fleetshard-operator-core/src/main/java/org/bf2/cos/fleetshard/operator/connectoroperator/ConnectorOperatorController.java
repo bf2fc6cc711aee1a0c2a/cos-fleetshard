@@ -4,7 +4,7 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

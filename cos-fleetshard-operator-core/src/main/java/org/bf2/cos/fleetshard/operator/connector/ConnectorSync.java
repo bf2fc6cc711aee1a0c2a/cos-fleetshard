@@ -18,7 +18,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.fleet.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
+import org.bf2.cos.fleetshard.operator.it.support.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

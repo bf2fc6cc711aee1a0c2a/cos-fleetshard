@@ -8,7 +8,7 @@ import io.javaoperatorsdk.operator.api.UpdateControl;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.operator.fleet.FleetManagerClient;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
 
 @Controller(
     name = "connector-cluster")
