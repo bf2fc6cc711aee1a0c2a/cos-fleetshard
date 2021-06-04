@@ -2,7 +2,7 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "managed-services-api-private.yaml" file
 info:
   title: Kafka Service Fleet Manager
-  version: 1.0.0
+  version: 1.1.0
   description: Kafka Service Fleet Manager is a Rest API to manage kafka instances and connectors.
 servers:
   - url: https://api.openshift.com
@@ -16,7 +16,7 @@ servers:
 paths:
   /api/kafkas_mgmt/v1:
     get:
-      operationId: versionMetadata
+      operationId: getVersionMetadata
       responses:
         "200":
           content:
@@ -27,7 +27,7 @@ paths:
       summary: Retrieves the version metadata
   /api/kafkas_mgmt/v1/status:
     get:
-      operationId: serviceStatus
+      operationId: getServiceStatus
       responses:
         "200":
           content:
@@ -262,7 +262,7 @@ paths:
       summary: Create a new kafka Request
     get:
       summary: Returns a list of Kafka requests
-      operationId: listKafkas
+      operationId: getKafkas
       security:
         - Bearer: []
       responses:
@@ -316,7 +316,7 @@ paths:
   /api/kafkas_mgmt/v1/cloud_providers:
     get:
       summary: Retrieves the list of supported cloud providers.
-      operationId: listCloudProviders
+      operationId: getCloudProviders
       security:
         - Bearer: []
       responses:
@@ -350,7 +350,7 @@ paths:
   /api/kafkas_mgmt/v1/cloud_providers/{id}/regions:
     get:
       summary: Retrieves the list of supported regions of the supported cloud provider.
-      operationId: listCloudProviderRegions
+      operationId: getCloudProviderRegions
       security:
         - Bearer: []
       responses:
@@ -382,7 +382,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/size'
-  /api/kafkas_mgmt/v1/serviceaccounts:
+  /api/kafkas_mgmt/v1/service_accounts:
     get:
       responses:
         '200':
@@ -420,7 +420,9 @@ paths:
           description: Unexpected error occurred
       security:
         - Bearer: []
-      operationId: listServiceAccounts
+      tags:
+        - security
+      operationId: getServiceAccounts
       summary: List service accounts
     post:
       requestBody:
@@ -473,8 +475,10 @@ paths:
       security:
         - Bearer: []
       operationId: createServiceAccount
+      tags:
+        - security
       summary: Create a service account
-  '/api/kafkas_mgmt/v1/serviceaccounts/{id}':
+  '/api/kafkas_mgmt/v1/service_accounts/{id}':
     get:
       parameters:
         - $ref: "#/components/parameters/id"
@@ -491,6 +495,8 @@ paths:
       security:
         - Bearer: []
       operationId: getServiceAccountById
+      tags:
+        - security
       summary: get service account by id
     summary: Get service account by id
     description: Get the service account with the given id
@@ -532,9 +538,11 @@ paths:
           description: Unexpected error occurred
       security:
         - Bearer: []
-      operationId: deleteServiceAccount
+      operationId: deleteServiceAccountById
+      tags:
+        - security
       summary: Delete service account
-  '/api/kafkas_mgmt/v1/serviceaccounts/{id}/reset-credentials':
+  '/api/kafkas_mgmt/v1/service_accounts/{id}/reset_credentials':
     post:
       parameters:
         - $ref: "#/components/parameters/id"
@@ -577,6 +585,8 @@ paths:
       security:
         - Bearer: []
       operationId: resetServiceAccountCreds
+      tags:
+        - security
       summary: reset credentials for the service account
   #
   # These are the user-facing related endpoints
@@ -584,7 +594,7 @@ paths:
   /api/kafkas_mgmt/v1/kafkas/{id}/metrics/query_range:
     get:
       summary: Get metrics with timeseries range query by kafka id.
-      operationId: GetMetricsByRangeQuery
+      operationId: getMetricsByRangeQuery
       security:
         - Bearer: []
       responses:
@@ -620,7 +630,7 @@ paths:
   /api/kafkas_mgmt/v1/kafkas/{id}/metrics/query:
     get:
       summary: Get metrics with instant query by kafka id.
-      operationId: GetMetricsByInstantQuery
+      operationId: getMetricsByInstantQuery
       security:
         - Bearer: []
       responses:
@@ -719,6 +729,9 @@ components:
             name:
               type: string
             bootstrapServerHost:
+              type: string
+              deprecated: true
+            bootstrap_server_host:
               type: string
             created_at:
               format: date-time
@@ -890,7 +903,13 @@ components:
               type: string
             clientID:
               type: string
+              deprecated: true
+            client_id:
+              type: string
             clientSecret:
+              type: string
+              deprecated: true
+            client_secret:
               type: string
             owner:
               type: string
@@ -923,6 +942,10 @@ components:
               description: 'server generated unique id of the service account'
               type: string
             clientID:
+              description: 'client id of the service account'
+              type: string
+              deprecated: true
+            client_id:
               description: 'client id of the service account'
               type: string
             name:
@@ -992,11 +1015,19 @@ components:
         Timestamp:
           type: integer
           format: int64
+          deprecated: true
+        timestamp:
+          type: integer
+          format: int64
         Value:
           type: number
           format: double
+          deprecated: true
+        value:
+          type: number
+          format: double
       required:
-        - Value
+        - value
     MetricsInstantQueryList:
       allOf:
         - type: object
@@ -1025,11 +1056,19 @@ components:
         Timestamp:
           type: integer
           format: int64
+          deprecated: true
+        timestamp:
+          type: integer
+          format: int64
         Value:
           type: number
           format: double
+          deprecated: true
+        value:
+          type: number
+          format: double
       required:
-        - Value
+        - value
 
 
   parameters:
@@ -1189,7 +1228,7 @@ components:
         region: "us-east-1"
         owner:  "api_kafka_service"
         name: "serviceapi"
-        bootstrapServerHost: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
+        bootstrap_server_host: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
         created_at: "2020-10-05T12:51:24.053142Z"
         updated_at: "2020-10-05T12:56:36.362208Z"
         version: "2.6.0"
@@ -1204,7 +1243,7 @@ components:
         region: "us-east-1"
         owner:  "api_kafka_service"
         name: "serviceapi"
-        bootstrapServerHost: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
+        bootstrap_server_host: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
         created_at: "2020-10-05T12:51:24.053142Z"
         updated_at: "2020-10-05T12:56:36.362208Z"
         failed_reason: "a reason the kafka request creation failed"
@@ -1232,8 +1271,8 @@ components:
         href: "/api/kafkas_mgmt/v1/serviceaccounts/1"
         name: "my-app-sa"
         description: "service account for my app"
-        clientID: "SA-121212"
-        clientSecret: "secret"
+        client_id: "SA-121212"
+        client_secret: "secret"
         owner: "test-user"
         created_at: "2021-04-07T16:24:01+05:30"
     ServiceAccountByIdExample:
@@ -1243,7 +1282,7 @@ components:
         href: "/api/kafkas_mgmt/v1/serviceaccounts/1"
         name: "my-app-sa"
         description: "service account for my app"
-        clientID: "SA-121212"
+        client_id: "SA-121212"
         owner: "test-user"
         created_at: "2021-04-07T16:24:01+05:30"
     ServiceAccountListItemExample:
@@ -1253,7 +1292,7 @@ components:
         href: "/api/kafkas_mgmt/v1/serviceaccounts/1"
         name: "my-app-sa"
         description: "service account for my app"
-        clientID: "SA-121212"
+        client_id: "SA-121212"
         owner: "test-user"
         created_at: "2021-04-07T16:24:01+05:30"
     MetricsRangeQueryExample:
@@ -1263,20 +1302,20 @@ components:
           strimzi_io_cluster: kafka-service
           topic: __consumer_offsets
         values:
-          - Timestamp: 1611670230000
-            Value: 84154
-          - Timestamp: 1611670260000
-            Value: 85888
-          - Timestamp: 1611670290000
-            Value: 87622
+          - timestamp: 1611670230000
+            value: 84154
+          - timestamp: 1611670260000
+            value: 85888
+          - timestamp: 1611670290000
+            value: 87622
     MetricsInstantQueryExample:
       value:
         metric:
           __name__: kafka_server_brokertopicmetrics_bytes_in_total
           strimzi_io_cluster: kafka-service
           topic: __consumer_offsets
-        Timestamp: 1611670230000
-        Value: 84154
+        timestamp: 1611670230000
+        value: 84154
     400DeletionExample:
       value:
         id: "103"

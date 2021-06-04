@@ -23,18 +23,6 @@ spec:
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
       type: string
-    - jsonPath: .status.operator.metaService
-      name: METASERVICE
-      type: string
-    - jsonPath: .status.operator.namespace
-      name: NAMESPACE
-      type: string
-    - jsonPath: .status.operator.type
-      name: TYPE
-      type: string
-    - jsonPath: .status.operator.version
-      name: VERSION
-      type: string
     - jsonPath: .status.phase
       name: PHASE
       type: string
@@ -165,6 +153,8 @@ spec:
                 type: array
               operator:
                 properties:
+                  id:
+                    type: string
                   version:
                     type: string
                   metaService:

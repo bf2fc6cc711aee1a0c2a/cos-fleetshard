@@ -44,6 +44,8 @@ spec:
               operators:
                 items:
                   properties:
+                    id:
+                      type: string
                     version:
                       type: string
                     metaService:

@@ -46,11 +46,11 @@
     </dependencyManagement>
 
     <modules>
-        <module>cos-fleetshard-operator-it-test-operator</module>
-        <module>cos-fleetshard-operator-it-test-support</module>
-        <module>cos-fleetshard-operator-it-cluster</module>
-        <module>cos-fleetshard-operator-it-reify</module>
-        <module>cos-fleetshard-operator-it-upgrade</module>
+        <module>test-operator</module>
+        <module>test-support</module>
+        <module>cluster</module>
+        <module>reify</module>
+        <module>upgrade</module>
     </modules>
 
 </project>

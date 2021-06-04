@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
@@ -43,7 +42,6 @@ import org.bf2.cos.fleet.manager.api.model.meta.KafkaSpec;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
@@ -59,11 +57,11 @@ import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_ANNOTATION;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_META_GENERATED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_GENERATED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
 
 @Controller(
@@ -235,8 +233,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     ObjectNode on = (ObjectNode) node;
                     on.with("metadata")
                         .with("labels")
-                        .put(LABEL_CONNECTOR_META_GENERATED, "true")
-                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getOperator().id());
+                        .put(LABEL_CONNECTOR_GENERATED, "true")
+                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getOperator().getId());
                     on.with("metadata")
                         .withArray("ownerReferences")
                         .addObject()
@@ -254,7 +252,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     final var rName = (String) meta.get("name");
                     final var res = new DeployedResource(rApiVersion, rKind, rName);
 
-                    if (DELETION_MODE_CONNECTOR.equals(annotations.get(DELETION_MODE_ANNOTATION))) {
+                    if (DELETION_MODE_CONNECTOR.equals(annotations.get(ANNOTATION_DELETION_MODE))) {
                         if (!connector.getStatus().getResources().contains(res)) {
                             connector.getStatus().getResources().add(res);
                         }
@@ -491,7 +489,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                             resource.getApiVersion(),
                             resource.getKind(),
                             null),
-                        Map.of(LABEL_CONNECTOR_META_GENERATED, "true"),
+                        Map.of(LABEL_CONNECTOR_GENERATED, "true"),
                         this);
                 }
             });
@@ -590,14 +588,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private void checkForAvailableUpdates(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        List<Operator> operators = fleetShard.lookupManagedConnectorOperators().stream()
-            .map(ManagedConnectorOperator::getSpec)
-            .collect(Collectors.toList());
+        final List<Operator> operators = fleetShard.lookupOperators();
+        final OperatorSelector selector = connector.getStatus().getDeployment().getOperatorSelector();
 
-        if (operators.isEmpty()) {
-            throw new IllegalArgumentException("No operators have been found !");
-        }
-        connector.getStatus().getDeployment().getOperatorSelector().select(operators).ifPresentOrElse(
+        selector.select(operators).ifPresentOrElse(
             operator -> {
                 if (!Objects.equals(operator, connector.getStatus().getOperator())) {
                     LOGGER.info("deployment (upd): {} -> operator: {}",
