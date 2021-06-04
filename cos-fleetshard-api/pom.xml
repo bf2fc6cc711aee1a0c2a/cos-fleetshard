@@ -82,7 +82,9 @@
                         <generateApiTests>false</generateApiTests>
                         <generateSupportingFiles>false</generateSupportingFiles>
                         <typeMappings>object=com.fasterxml.jackson.databind.JsonNode</typeMappings>
+                        <ensureUniqueParams>true</ensureUniqueParams>
                         <configOptions>
+                            <ensureUniqueParams>false</ensureUniqueParams>
                             <dateLibrary>java8</dateLibrary>
                             <serializationLibrary>jackson</serializationLibrary>
                             <legacyDiscriminatorBehavior>true</legacyDiscriminatorBehavior>
@@ -120,6 +122,9 @@
                             <generateModels>true</generateModels>
                             <generateApis>false</generateApis>
                             <modelPackage>org.bf2.cos.fleet.manager.api.model.meta</modelPackage>
+                            <configOptions>
+                                <ensureUniqueParams>false</ensureUniqueParams>
+                            </configOptions>
                         </configuration>
                     </execution>
                     <execution>
@@ -133,6 +138,9 @@
                             <generateModels>true</generateModels>
                             <generateApis>false</generateApis>
                             <modelPackage>org.bf2.cos.fleet.manager.api.model.cp</modelPackage>
+                            <configOptions>
+                                <ensureUniqueParams>false</ensureUniqueParams>
+                            </configOptions>
                         </configuration>
                     </execution>
                     <execution>
@@ -150,6 +158,9 @@
                             <generateApis>true</generateApis>
                             <generateSupportingFiles>true</generateSupportingFiles>
                             <templateDirectory>${project.basedir}/openapi-generator/templates</templateDirectory>
+                            <configOptions>
+                                <ensureUniqueParams>false</ensureUniqueParams>
+                            </configOptions>
                         </configuration>
                     </execution>
                 </executions>

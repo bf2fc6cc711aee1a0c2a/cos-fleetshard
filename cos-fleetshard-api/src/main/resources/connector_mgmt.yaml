@@ -2,7 +2,7 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "kas-fleet-manager-private.yaml" file
 info:
   title: Connector Service Fleet Manager
-  version: 0.0.1
+  version: 0.0.2
   description: Connector Service Fleet Manager is a Rest API to manage connectors.
 servers:
   - url: https://api.openshift.com
@@ -25,7 +25,7 @@ paths:
   #
   # These are the connector related APIs
   #
-  '/api/connector_mgmt/v1/kafka-connector-types/{connector_type_id}':
+  '/api/connector_mgmt/v1/kafka_connector_types/{connector_type_id}':
     parameters:
       - name: connector_type_id
         description: The id of the connector type
@@ -75,7 +75,7 @@ paths:
       operationId: getConnectorTypeByID
       summary: Get a connector type by id
 
-  /api/connector_mgmt/v1/kafka-connector-types:
+  /api/connector_mgmt/v1/kafka_connector_types:
     get:
       tags:
         - Connector Types
@@ -111,7 +111,7 @@ paths:
                 500Example:
                   $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
           description: Unexpected error occurred
-  /api/connector_mgmt/v1/kafka-connectors:
+  /api/connector_mgmt/v1/kafka_connectors:
     post:
       tags:
         - Connectors
@@ -216,7 +216,7 @@ paths:
         - Bearer: [ ]
       operationId: listConnectors
       summary: Returns a list of connector types
-  '/api/connector_mgmt/v1/kafkas-connectors/{connector_id}':
+  '/api/connector_mgmt/v1/kafkas_connectors/{connector_id}':
     parameters:
       - in: query
         name: kafka_id
@@ -366,7 +366,7 @@ paths:
         required: true
 
   # Endpoints for managing connector clusters and connector agent sync
-  /api/connector_mgmt/v1/kafka-connector-clusters:
+  /api/connector_mgmt/v1/kafka_connector_clusters:
     post:
       tags:
         - Connector Clusters
@@ -466,7 +466,7 @@ paths:
         - Bearer: [ ]
       operationId: listConnectorClusters
       summary: Returns a list of connector clusters
-  /api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}:
+  /api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}:
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -556,7 +556,7 @@ paths:
         - Bearer: [ ]
       operationId: deleteConnectorCluster
       summary: Delete a connector cluster
-  /api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/addon-parameters:
+  /api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/addon_parameters:
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster

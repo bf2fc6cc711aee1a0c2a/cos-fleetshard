@@ -5,7 +5,7 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # There should be no duplicated endpoints or schemas in these 2 files. They should only defined in one of them.
 info:
   title: Kafka Service Fleet Manager
-  version: 1.0.0
+  version: 1.1.0
   description: Kafka Service Fleet Manager is a Rest API to manage kafka instances and connectors.
 servers:
   - url: https://api.openshift.com
@@ -23,7 +23,7 @@ tags:
     description: ""
 
 paths:
-  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/status':
+  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -68,7 +68,7 @@ paths:
           # This is deliberate to hide the endpoints for unauthorised users
           description: Auth token is not valid.
 
-  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments':
+  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -81,7 +81,7 @@ paths:
         - Connector Clusters Agent
       security:
         - Bearer: [ ]
-      operationId: listClusterAsignedConnectorDeployments
+      operationId: getClusterAsignedConnectorDeployments
       summary: Returns a list of connector deployments assigned to the cluster.
       parameters:
         - $ref: 'kas-fleet-manager.yaml#/components/parameters/page'
@@ -127,7 +127,7 @@ paths:
                   $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}':
+  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -146,7 +146,7 @@ paths:
         - Connector Clusters Agent
       security:
         - Bearer: [ ]
-      operationId: getClusterAsignedConnectorDeployments
+      operationId: getClusterAsignedConnectorDeploymentById
       summary: Returns a list of connector deployments assigned to the cluster.
       responses:
         '200':
@@ -174,7 +174,7 @@ paths:
                   $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
+  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -225,7 +225,7 @@ paths:
           description: Auth token is not valid.
 
   # Endpoints for data plane communications
-  '/api/kafkas_mgmt/v1/agent-clusters/{id}/status':
+  '/api/kafkas_mgmt/v1/agent_clusters/{id}/status':
     put:
       tags:
         - Agent Clusters
@@ -265,7 +265,7 @@ paths:
       operationId: updateAgentClusterStatus
       summary: Update the status of an agent cluster
 
-  '/api/kafkas_mgmt/v1/agent-clusters/{id}/kafkas/status':
+  '/api/kafkas_mgmt/v1/agent_clusters/{id}/kafkas/status':
     put:
       tags:
         - Agent Clusters
@@ -305,7 +305,7 @@ paths:
       operationId: updateKafkaClusterStatus
       summary: Update the status of Kafka clusters on an agent cluster
 
-  '/api/kafkas_mgmt/v1/agent-clusters/{id}/kafkas':
+  '/api/kafkas_mgmt/v1/agent_clusters/{id}/kafkas':
     get:
       tags:
         - Agent Clusters
@@ -342,7 +342,7 @@ paths:
       operationId: getKafkas
       summary: Get the list of ManagedaKafkas for the specified agent cluster
 
-  '/api/kafkas_mgmt/v1/agent-clusters/{id}':
+  '/api/kafkas_mgmt/v1/agent_clusters/{id}':
     get:
       tags:
         - Agent Clusters
@@ -410,7 +410,7 @@ components:
           type: string
         status:
           type: string
-        lastTransitionTime:
+        last_transition_time:
           type: string
           #format: date-time # enable this?? or just set it as pure plain string?
 
@@ -419,17 +419,38 @@ components:
       properties:
         ingressEgressThroughputPerSec:
           type: string
+          deprecated: true
         totalMaxConnections:
           type: integer
           format: int
+          deprecated: true
         maxDataRetentionSize:
           type: string
+          deprecated: true
         maxPartitions:
           type: integer
           format: int
+          deprecated: true
         maxDataRetentionPeriod:
           type: string
+          deprecated: true
         maxConnectionAttemptsPerSec:
+          type: integer
+          format: int
+          deprecated: true
+        ingress_egress_throughput_per_sec:
+          type: string
+        total_max_connections:
+          type: integer
+          format: int
+        max_data_retention_size:
+          type: string
+        max_partitions:
+          type: integer
+          format: int
+        max_data_retention_period:
+          type: string
+        max_connection_attempts_per_sec:
           type: integer
           format: int
 
@@ -456,13 +477,20 @@ components:
                 annotations:
                   type: object
                   required:
-                    - bf2.org/id
-                    - bf2.org/placementId
+                    - id
+                    - placement_id
                   properties:
                     bf2.org/id:
                       type: string
+                      deprecated: true
                     bf2.org/placementId:
                       type: string
+                      deprecated: true
+                    id:
+                      type: string
+                    placement_id:
+                      type: string
+
 
             spec:
               type: object
@@ -474,24 +502,51 @@ components:
                   properties:
                     clientId:
                       type: string
+                      deprecated: true
                     clientSecret:
                       type: string
+                      deprecated: true
                     tokenEndpointURI:
                       type: string
+                      deprecated: true
                     jwksEndpointURI:
                       type: string
+                      deprecated: true
                     validIssuerEndpointURI:
                       type: string
+                      deprecated: true
                     userNameClaim:
                       type: string
+                      deprecated: true
                     tlsTrustedCertificate:
                       type: string
+                      deprecated: true
                     customClaimCheck:
+                      type: string
+                      deprecated: true
+                    client_id:
+                      type: string
+                    client_secret:
+                      type: string
+                    token_endpoint_uri:
+                      type: string
+                    jwks_endpoint_uri:
+                      type: string
+                    valid_issuer_endpoint_uri:
+                      type: string
+                    user_name_claim:
+                      type: string
+                    tls_trusted_certificate:
+                      type: string
+                    custom_claim_check:
                       type: string
                 endpoint:
                   type: object
                   properties:
                     bootstrapServerHost:
+                      type: string
+                      deprecated: true
+                    bootstrap_server_host:
                       type: string
                     tls:
                       type: object
@@ -533,7 +588,7 @@ components:
           type: string
         error:
           nullable: true
-          $ref: "#/components/schemas/Error"
+          $ref: "kas-fleet-manager.yaml#/components/schemas/Error"
         object:
           type: object
           nullable: true
@@ -652,6 +707,52 @@ components:
                 description: the status of the operator
                 type: string
 
+    DatePlaneClusterUpdateStatusRequestDeprecatedNodeInfo:
+      type: object
+      deprecated: true
+      nullable: true
+      properties:
+        ceiling:
+          type: integer
+          nullable: true
+        floor:
+          type: integer
+          nullable: true
+        current:
+          type: integer
+          nullable: true
+        currentWorkLoadMinimum:
+          type: integer
+          nullable: true
+          deprecated: true
+
+    DatePlaneClusterUpdateStatusRequestDeprecatedResizeInfo:
+      type: object
+      deprecated: true
+      nullable: true
+      properties:
+        nodeDelta:
+          type: integer
+          nullable: true
+          deprecated: true
+        delta:
+          type: object
+          nullable: true
+          properties:
+            ingressEgressThroughputPerSec:
+              type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
+              nullable: true
+              deprecated: true
+            connections:
+              type: integer # an example is 10000. Should we have some special format at openapi level? this example also happens on other fields
+              nullable: true
+            dataRetentionSize:
+              type: string
+              nullable: true
+              deprecated: true
+            partitions:
+              type: integer
+              nullable: true
 
     DataPlaneClusterUpdateStatusRequest:
       # TODO are there any fields that should be required?
@@ -673,19 +774,24 @@ components:
                 type: string
               status:
                 type: string
-              lastTransitionTime:
-                type: string
-                #format: date-time # enable this?? or just set it as pure plain string?
         total:
           type: object
           properties:
             ingressEgressThroughputPerSec:
               type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
               nullable: true
+              deprecated: true
+            ingress_egress_throughput_per_sec:
+              type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
+              nullable: true
             connections:
               type: integer # an example is 10000. Should we have some special format at openapi level? this example also happens on other fields
               nullable: true
             dataRetentionSize:
+              type: string
+              nullable: true
+              deprecated: true
+            data_retention_size:
               type: string
               nullable: true
             partitions:
@@ -698,17 +804,28 @@ components:
             ingressEgressThroughputPerSec:
               type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
               nullable: true
+              deprecated: true
+            ingress_egress_throughput_per_sec:
+              type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
+              nullable: true
             connections:
               type: integer # an example is 10000. Should we have some special format at openapi level? this example also happens on other fields
               nullable: true
             dataRetentionSize:
               type: string
               nullable: true
+              deprecated: true
+            data_retention_size:
+              type: string
+              nullable: true
             partitions:
               type: integer
               nullable: true
         nodeInfo:
+          $ref: '#/components/schemas/DatePlaneClusterUpdateStatusRequestDeprecatedNodeInfo'
+        node_info:
           type: object
+          nullable: true
           properties:
             ceiling:
               type: integer
@@ -719,26 +836,29 @@ components:
             current:
               type: integer
               nullable: true
-            currentWorkLoadMinimum:
+            current_work_load_minimum:
               type: integer
               nullable: true
         resizeInfo:
+          $ref: '#/components/schemas/DatePlaneClusterUpdateStatusRequestDeprecatedResizeInfo'
+        resize_info:
           type: object
+          nullable: true
           properties:
-            nodeDelta:
+            node_delta:
               type: integer
               nullable: true
             delta:
               type: object
               nullable: true
               properties:
-                ingressEgressThroughputPerSec:
+                ingress_egress_throughput_per_sec:
                   type: string #an example is "40Gi", a k8s quantity. Should we have some special format at openapi level?" this example also happens on other fields
                   nullable: true
                 connections:
                   type: integer # an example is 10000. Should we have some special format at openapi level? this example also happens on other fields
                   nullable: true
-                dataRetentionSize:
+                data_retention_size:
                   type: string
                   nullable: true
                 partitions:
@@ -763,25 +883,52 @@ components:
                 type: string
               status:
                 type: string
-              lastTransitionTime:
-                type: string
-        # do we need this for now?
         capacity:
           description: "Capacity information of the data plane cluster"
           type: object
           properties:
             ingressEgressThroughputPerSec:
               type: string #example: 4Mi
+              deprecated: true
+              nullable: true
             totalMaxConnections:
               type: integer #example: 500
+              deprecated: true
+              nullable: true
             maxDataRetentionSize:
               type: string #example: 100Gi
+              deprecated: true
+              nullable: true
             maxPartitions:
               type: integer #example: 100
+              deprecated: true
+              nullable: true
             maxDataRetentionPeriod:
               type: string #example: P14D
+              deprecated: true
+              nullable: true
             maxConnectionAttemptsPerSec:
               type: integer #example: 100
+              deprecated: true
+              nullable: true
+            ingress_egress_throughput_per_sec:
+              type: string #example: 4Mi
+              nullable: true
+            total_max_connections:
+              type: integer #example: 500
+              nullable: true
+            max_data_retention_size:
+              type: string #example: 100Gi
+              nullable: true
+            max_partitions:
+              type: integer #example: 100
+              nullable: true
+            max_data_retention_period:
+              type: string #example: P14D
+              nullable: true
+            max_connection_attempts_per_sec:
+              type: integer #example: 100
+              nullable: true
         versions:
           description: "Version information related to a Kafka cluster"
           type: object
@@ -813,6 +960,11 @@ components:
               properties:
                 accessToken:
                   type: string
+                  deprecated: true
+                  nullable: true
+                access_token:
+                  type: string
+                  nullable: true
                 channel:
                   type: string
                 repository:
@@ -834,27 +986,27 @@ components:
           name: "example-kafka"
           namespace: "example-kafka-1rfpsqbvq1em2u9u0z54ymjcwac"
           annotations:
-            bf2.org/id: "1rfpsqbvq1em2u9u0z54ymjcwac"
-            bf2.org/placementId: ""
+            id: "1rfpsqbvq1em2u9u0z54ymjcwac"
+            placement_id: ""
         spec:
           capacity:
-            ingressEgressThroughputPerSec: 4Mi
-            totalMaxConnections: 500
-            maxDataRetentionSize: 100Gi
-            maxPartitions: 100
-            maxDataRetentionPeriod: P14D
-            maxConnectionAttemptsPerSec: 100
+            ingress_egress_throughput_per_sec: 4Mi
+            total_max_connections: 500
+            max_data_retention_size: 100Gi
+            max_partitions: 100
+            max_data_retention_period: P14D
+            max_connection_attempts_per_sec: 100
           oauth:
-            clientId: "kafka-1rfpsqbvq1em2u9u0z54ymjcwac"
-            clientSecret: "example-client-secret"
-            tokenEndpointURI: "https://example-token-endpoint-uri.com/token"
-            jwksEndpointURI: "https://example-jwks-endpoint-uri.com/certs"
-            validIssuerEndpointURI: "https://issuer-endpoint-uri.com"
-            userNameClaim: "username"
-            tlsTrustedCertificate: ""
-            customClaimCheck: ""
+            client_id: "kafka-1rfpsqbvq1em2u9u0z54ymjcwac"
+            client_secret: "example-client-secret"
+            token_endpoint_uri: "https://example-token-endpoint-uri.com/token"
+            jwks_endpoint_uri: "https://example-jwks-endpoint-uri.com/certs"
+            valid_issuer_endpoint_uri: "https://issuer-endpoint-uri.com"
+            user_name_claim: "username"
+            tls_trusted_certificate: ""
+            custom_claim_check: ""
           endpoint:
-            bootstrapServerHost: "example-kafka--rfpsqbvq-em-u-u-z--ymjcwac.kafka.devshift.org"
+            bootstrap_server_host: "example-kafka--rfpsqbvq-em-u-u-z--ymjcwac.kafka.devshift.org"
             tls:
               cert: ""
               key: ""
@@ -869,14 +1021,14 @@ components:
             reason: KafkaInstanceReady
             message: installing
             status: "False"
-            lastTransitionTime: "2018-01-01T00:00:00Z"
+            last_transition_time: "2018-01-01T00:00:00Z"
         capacity:
-          ingressEgressThroughputPerSec: 4Mi
-          totalMaxConnections: 500
-          maxDataRetentionSize: 100Gi
-          maxPartitions: 100
-          maxDataRetentionPeriod: P14D
-          maxConnectionAttemptsPerSec: 100
+          ingress_egress_throughput_per_sec: 4Mi
+          total_maxConnections: 500
+          max_data_retention_size: 100Gi
+          max_partitions: 100
+          max_data_retention_period: P14D
+          max_connection_attempts_per_sec: 100
         versions:
           kafka: 2.4.1
           strimzi: 0.21.2

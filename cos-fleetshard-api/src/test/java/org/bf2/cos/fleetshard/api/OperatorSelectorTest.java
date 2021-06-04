@@ -11,12 +11,12 @@ public class OperatorSelectorTest {
     @Test
     void selectVersion() {
         var operators = List.of(
-            new Operator("camel", "1.0.0"),
-            new Operator("camel", "1.1.0"),
-            new Operator("camel", "1.9.0"),
-            new Operator("camel", "2.0.0"),
-            new Operator("strimzi", "1.9.0"),
-            new Operator("strimzi", "2.0.0"));
+            new Operator("1", "camel", "1.0.0"),
+            new Operator("2", "camel", "1.1.0"),
+            new Operator("3", "camel", "1.9.0"),
+            new Operator("4", "camel", "2.0.0"),
+            new Operator("5", "strimzi", "1.9.0"),
+            new Operator("6", "strimzi", "2.0.0"));
 
         assertThat(new OperatorSelector("strimzi", "[1.0.0,2.0.0)").select(operators))
             .isPresent()

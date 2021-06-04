@@ -34,7 +34,7 @@
         <jandex-maven-plugin.version>1.0.8</jandex-maven-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <openapi-generator-maven-plugin.version>5.1.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>5.1.1</openapi-generator-maven-plugin.version>
         <meven-resources-plugin.version>3.2.0</meven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <bouncycastle.version>1.68</bouncycastle.version>

@@ -58,7 +58,7 @@ public class FleetManagerClient {
 
     public ConnectorDeployment getDeployment(String clusterId, String deploymentId) {
         try {
-            return controlPlane.getClusterAsignedConnectorDeployments(clusterId, deploymentId);
+            return controlPlane.getClusterAsignedConnectorDeploymentById(clusterId, deploymentId);
         } catch (javax.ws.rs.WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
             throw new RuntimeException(e);
@@ -85,7 +85,7 @@ public class FleetManagerClient {
 
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
             try {
-                ConnectorDeploymentList list = controlPlane.listClusterAsignedConnectorDeployments(
+                ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
                     clusterId,
                     Integer.toString(i),
                     null,

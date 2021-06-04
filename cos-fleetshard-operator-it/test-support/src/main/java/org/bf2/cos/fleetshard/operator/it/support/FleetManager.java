@@ -22,7 +22,7 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 
 @ApplicationScoped
-@Path("/api/connector_mgmt/v1/kafka-connector-clusters/{connector_cluster_id}")
+@Path("/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}")
 public class FleetManager {
     private final Map<String, ConnectorCluster> clusters;
 

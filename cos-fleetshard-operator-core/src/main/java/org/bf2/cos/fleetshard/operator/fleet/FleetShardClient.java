@@ -112,7 +112,12 @@ public class FleetShardClient {
             .list()
             .getItems()
             .stream()
-            .map(ManagedConnectorOperator::getSpec)
+            .map(mco -> new Operator(
+                mco.getMetadata().getName(),
+                mco.getSpec().getNamespace(),
+                mco.getSpec().getType(),
+                mco.getSpec().getVersion(),
+                mco.getSpec().getMetaService()))
             .collect(Collectors.toList());
     }
 }
