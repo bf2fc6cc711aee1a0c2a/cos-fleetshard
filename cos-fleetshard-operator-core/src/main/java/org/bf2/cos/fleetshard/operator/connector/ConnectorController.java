@@ -73,6 +73,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     private final TimerEventSource retryTimer;
     private final Vertx vertx;
 
+    private EventSourceManager eventSourceManager;
+
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -90,10 +92,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
-        eventSourceManager.registerEventSource(
+        this.eventSourceManager = eventSourceManager;
+        this.eventSourceManager.registerEventSource(
             "_connector-retry-timer",
             retryTimer);
-        eventSourceManager.registerEventSource(
+        this.eventSourceManager.registerEventSource(
             "_connector-operator",
             new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getConnectorsNamespace()));
     }
@@ -110,18 +113,18 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getPhase());
 
         if (connector.getStatus().getPhase() == null) {
-            return handleInitialization(context, connector);
+            return handleInitialization(connector);
         }
 
         switch (connector.getStatus().getPhase()) {
             case Initialization:
-                return handleInitialization(context, connector);
+                return handleInitialization(connector);
             case Augmentation:
-                return handleAugmentation(context, connector);
+                return handleAugmentation(connector);
             case Monitor:
-                return handleMonitor(context, connector);
+                return handleMonitor(connector);
             case Delete:
-                return handleDelete(context, connector);
+                return handleDelete(connector);
             default:
                 throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
         }
@@ -133,9 +136,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     //
     // **************************************************
 
-    private UpdateControl<ManagedConnector> handleInitialization(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
+    private UpdateControl<ManagedConnector> handleInitialization(ManagedConnector connector) {
 
         controlPlane.updateConnectorStatus(
             connector,
@@ -176,9 +177,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     @SuppressWarnings("unchecked")
-    private UpdateControl<ManagedConnector> handleAugmentation(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
+    private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
 
         final DeploymentSpec ref = connector.getSpec().getDeployment();
         final String connectorId = connector.getMetadata().getName();
@@ -282,9 +281,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate();
     }
 
-    private UpdateControl<ManagedConnector> handleMonitor(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
+    private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
 
         boolean updated = !Objects.equals(
             connector.getSpec().getDeployment(),
@@ -316,7 +313,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             // method for more info)
             //
             for (var res : connector.getStatus().getResources()) {
-                watchResource(context, connector, res);
+                watchResource(connector, res);
             }
 
             controlPlane.updateConnectorStatus(connector, ds);
@@ -349,10 +346,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             : UpdateControl.noUpdate();
     }
 
-    private UpdateControl<ManagedConnector> handleDelete(
-        Context<ManagedConnector> context,
-        ManagedConnector connector) {
-
+    private UpdateControl<ManagedConnector> handleDelete(ManagedConnector connector) {
         boolean updated = false;
 
         try {
@@ -442,17 +436,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
      * @param resource  the resource to watch
      */
     private synchronized void watchResource(
-        Context<ManagedConnector> context,
         ManagedConnector connector,
         ResourceRef resource) {
 
-        final EventSourceManager manager = context.getEventSourceManager();
         final String key = resource.getApiVersion() + ":" + resource.getKind();
 
         if (this.events.add(key)) {
             LOGGER.info("Registering an event for: {}", key);
 
-            manager.registerEventSource(key, new WatcherEventSource<String>(kubernetesClient) {
+            this.eventSourceManager.registerEventSource(key, new WatcherEventSource<String>(kubernetesClient) {
                 @SuppressWarnings("unchecked")
                 @Override
                 public void eventReceived(Action action, String resource) {
