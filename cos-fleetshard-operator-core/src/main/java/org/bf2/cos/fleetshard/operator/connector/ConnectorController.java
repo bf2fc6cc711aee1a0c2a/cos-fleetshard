@@ -34,6 +34,8 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorOperator;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
@@ -72,9 +74,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     private final Set<String> events;
     private final TimerEventSource retryTimer;
     private final Vertx vertx;
-
-    private EventSourceManager eventSourceManager;
-
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -83,6 +82,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     FleetManagerClient controlPlane;
     @Inject
     FleetShardClient fleetShard;
+    private EventSourceManager eventSourceManager;
 
     public ConnectorController(io.vertx.core.Vertx vertx) {
         this.events = new HashSet<>();
@@ -152,7 +152,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 final OperatorSelector selector = connector.getSpec().getDeployment().getOperatorSelector();
                 final List<Operator> operators = fleetShard.lookupOperators();
 
-                selector.select(operators).ifPresentOrElse(
+                selector.assign(operators).ifPresentOrElse(
                     operator -> {
                         LOGGER.info("deployment (init): {} -> operator: {}",
                             connector.getSpec().getDeployment(),
@@ -431,7 +431,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
      * As we do not know what resources we have to deal with so we can create a watcher per
      * for each kind + apiVersion combination.
      *
-     * @param context   the context
      * @param connector the connector that holds the resources
      * @param resource  the resource to watch
      */
@@ -583,14 +582,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final List<Operator> operators = fleetShard.lookupOperators();
         final OperatorSelector selector = connector.getStatus().getDeployment().getOperatorSelector();
 
-        selector.select(operators).ifPresentOrElse(
+        selector.available(operators).ifPresentOrElse(
             operator -> {
                 if (!Objects.equals(operator, connector.getStatus().getOperator())) {
                     LOGGER.info("deployment (upd): {} -> operator: {}",
                         connector.getSpec().getDeployment(),
                         operator);
 
-                    deploymentStatus.setAvailableUpgrades("true");
+                    deploymentStatus.setOperators(
+                        new ConnectorDeploymentStatusOperators()
+                            .assigned(new ConnectorOperator()
+                                .id(connector.getStatus().getOperator().getId())
+                                .type(connector.getStatus().getOperator().getType())
+                                .version(connector.getStatus().getOperator().getVersion()))
+                            .available(new ConnectorOperator()
+                                .id(operator.getId())
+                                .type(operator.getType())
+                                .version(operator.getVersion())));
                 }
             },
             () -> {

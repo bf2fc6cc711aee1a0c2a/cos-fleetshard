@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -150,11 +151,19 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
             30,
             TimeUnit.SECONDS,
             () -> {
-                return fm.getCluster(clusterId)
+                var operators = fm.getCluster(clusterId)
                     .orElseThrow(() -> new IllegalStateException(""))
                     .getConnector(deploymentId)
                     .getStatus()
-                    .getAvailableUpgrades() != null;
+                    .getOperators();
+
+                return operators != null
+                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
+                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
+                    && Objects.equals("cm-1", operators.getAssigned().getId())
+                    && Objects.equals("camel-connector-operator", operators.getAvailable().getType())
+                    && Objects.equals("1.2.0", operators.getAvailable().getVersion())
+                    && Objects.equals("cm-2", operators.getAvailable().getId());
             });
     }
 }
