@@ -479,6 +479,8 @@ components:
                   required:
                     - id
                     - placement_id
+                    - bf2.org/placementId
+                    - bf2.org/id
                   properties:
                     bf2.org/id:
                       type: string
@@ -627,6 +629,10 @@ components:
         allow_upgrade:
           description: allow the connector to upgrade to a new operator
           type: boolean
+          deprecated: true
+        operator_id:
+          description: an optional operator id that the connector should be run under.
+          type: string
         connector_resource_version:
           type: integer
           format: int64
@@ -652,6 +658,14 @@ components:
           format: int64
         available_upgrades:
           type: string
+          deprecated: true
+        operators:
+          type: object
+          properties:
+            assigned:
+              $ref: '#/components/schemas/ConnectorOperator'
+            available:
+              $ref: '#/components/schemas/ConnectorOperator'
         conditions:
           type: array
           items:
@@ -676,6 +690,19 @@ components:
             object:
               $ref: '#/components/schemas/ConnectorDeployment'
 
+    ConnectorOperator:
+      description: identifies an operator that runs on the fleet shards used to manage connectors.
+      properties:
+        id:
+          description: the id of the operator
+          type: string
+        type:
+          description: the type of the operator
+          type: string
+        version:
+          description: the version of the operator
+          type: string
+
     ConnectorClusterStatus:
       description: "Schema for the request to update a data plane cluster's status"
       type: object
@@ -694,12 +721,8 @@ components:
           items:
             type: object
             properties:
-              id:
-                description: the id of the operator
-                type: string
-              version:
-                description: the version of the operator
-                type: string
+              operator:
+                $ref: '#/components/schemas/ConnectorOperator'
               namespace:
                 description: the namespace to which the operator has been installed
                 type: string

@@ -15,6 +15,7 @@ public final class ConnectorSupport {
         }
 
         return new OperatorSelector(
+            deployment.getSpec().getOperatorId(),
             operatorsMeta.get(0).requiredAt("/type").asText(),
             operatorsMeta.get(0).requiredAt("/version").asText());
     }
