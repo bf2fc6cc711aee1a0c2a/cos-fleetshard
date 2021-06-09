@@ -582,7 +582,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final List<Operator> operators = fleetShard.lookupOperators();
         final OperatorSelector selector = connector.getStatus().getDeployment().getOperatorSelector();
 
-        selector.available(operators).ifPresentOrElse(
+        selector.available(operators).ifPresent(
             operator -> {
                 if (!Objects.equals(operator, connector.getStatus().getOperator())) {
                     LOGGER.info("deployment (upd): {} -> operator: {}",
@@ -599,11 +599,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                                 .id(operator.getId())
                                 .type(operator.getType())
                                 .version(operator.getVersion())));
+                } else {
+                    deploymentStatus.setOperators(
+                        new ConnectorDeploymentStatusOperators()
+                            .assigned(new ConnectorOperator()
+                                .id(connector.getStatus().getOperator().getId())
+                                .type(connector.getStatus().getOperator().getType())
+                                .version(connector.getStatus().getOperator().getVersion()))
+                            .available(null));
                 }
-            },
-            () -> {
-                throw new IllegalArgumentException(
-                    "Unable to determine operator for deployment: " + connector.getStatus().getDeployment());
             });
     }
 }
