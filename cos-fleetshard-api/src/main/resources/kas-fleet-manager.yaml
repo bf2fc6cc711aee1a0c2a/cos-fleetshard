@@ -2,8 +2,8 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "managed-services-api-private.yaml" file
 info:
   title: Kafka Service Fleet Manager
-  version: 1.1.0
-  description: Kafka Service Fleet Manager is a Rest API to manage kafka instances and connectors.
+  version: 1.1.1
+  description: Kafka Service Fleet Manager is a Rest API to manage Kafka instances and connectors.
 servers:
   - url: https://api.openshift.com
     description: Main (production) server
@@ -24,7 +24,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VersionMetadata'
           description: Version metadata
-      summary: Retrieves the version metadata
+      summary: Returns the version metadata
   /api/kafkas_mgmt/v1/status:
     get:
       operationId: getServiceStatus
@@ -43,10 +43,10 @@ paths:
                 $ref: '#/components/schemas/Error'
               examples:
                 500Example:
-                  $ref: '#/components/examples/500Example'  
-      summary: Retrieves the status of resources e.g whether we have reached maximum service capacity
+                  $ref: '#/components/examples/500Example'
+      summary: Returns the status of resources, such as whether maximum service capacity has been reached
       security:
-        - Bearer: []    
+        - Bearer: []
   /api/kafkas_mgmt/v1/kafkas/{id}:
     get:
       operationId: getKafkaById
@@ -61,7 +61,7 @@ paths:
                   $ref: '#/components/examples/KafkaRequestExample'
                 KafkaRequestGetResponseWithFailedCreationStatusExample:
                   $ref: '#/components/examples/KafkaRequestFailedCreationStatusExample'
-          description: Kafka request found by id
+          description: Kafka request found by ID
         "401":
           content:
             application/json:
@@ -79,7 +79,7 @@ paths:
               examples:
                 403Example:
                   $ref: '#/components/examples/403Example'
-          description: User not authorized to access the service.
+          description: User not authorized to access the service
         "404":
           content:
             application/json:
@@ -88,7 +88,7 @@ paths:
               examples:
                 404Example:
                   $ref: '#/components/examples/404Example'
-          description: No kafka request with specified id exists
+          description: No Kafka request with specified ID exists
         "500":
           content:
             application/json:
@@ -100,7 +100,7 @@ paths:
           description: Unexpected error occurred
       security:
         - Bearer: []
-      summary: Get a kafka request by id
+      summary: Returns a Kafka request by ID
     delete:
       operationId: deleteKafkaById
       parameters:
@@ -145,7 +145,7 @@ paths:
               examples:
                 403Example:
                   $ref: '#/components/examples/403Example'
-          description: User not authorized to access the service.
+          description: User not authorized to access the service
         "404":
           content:
             application/json:
@@ -154,7 +154,7 @@ paths:
               examples:
                 404DeleteExample:
                   $ref: '#/components/examples/404DeleteExample'
-          description: No kafka request with specified id exists
+          description: No Kafka request with specified ID exists
         "500":
           content:
             application/json:
@@ -164,7 +164,7 @@ paths:
                 500DeleteExample:
                   $ref: '#/components/examples/500DeleteExample'
           description: Unexpected error occurred
-      summary: Delete a kafka request by id
+      summary: Deletes a Kafka request by ID
       security:
         - Bearer: []
     parameters:
@@ -256,10 +256,10 @@ paths:
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
-          description: An unexpected error occurred creating the Kafka Request
+          description: An unexpected error occurred while creating the Kafka request
       security:
         - Bearer: []
-      summary: Create a new kafka Request
+      summary: Creates a Kafka request
     get:
       summary: Returns a list of Kafka requests
       operationId: getKafkas
@@ -298,7 +298,7 @@ paths:
               examples:
                 403Example:
                   $ref: '#/components/examples/403Example'
-          description: User not authorized to access the service.
+          description: User not authorized to access the service
         "500":
           description: Unexpected error occurred
           content:
@@ -315,13 +315,13 @@ paths:
         - $ref: '#/components/parameters/search'
   /api/kafkas_mgmt/v1/cloud_providers:
     get:
-      summary: Retrieves the list of supported cloud providers.
+      summary: Returns the list of supported cloud providers
       operationId: getCloudProviders
       security:
         - Bearer: []
       responses:
         '200':
-          description: Retrieved list of supported cloud providers
+          description: Returned list of supported cloud providers
           content:
             application/json:
               schema:
@@ -349,13 +349,13 @@ paths:
         - $ref: '#/components/parameters/size'
   /api/kafkas_mgmt/v1/cloud_providers/{id}/regions:
     get:
-      summary: Retrieves the list of supported regions of the supported cloud provider.
+      summary: Returns the list of supported regions of the supported cloud provider
       operationId: getCloudProviderRegions
       security:
         - Bearer: []
       responses:
         '200':
-          description: Retrieved list of supported cloud providers regions
+          description: Returned list of supported cloud provider regions
           content:
             application/json:
               schema:
@@ -390,7 +390,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceAccountList'
-          description: List of service accounts
+          description: Returned list of service accounts
         '401':
           content:
             application/json:
@@ -423,10 +423,10 @@ paths:
       tags:
         - security
       operationId: getServiceAccounts
-      summary: List service accounts
+      summary: Returns a list of service accounts
     post:
       requestBody:
-        description: service account request
+        description: Service account request
         content:
           application/json:
             schema:
@@ -444,7 +444,7 @@ paths:
               examples:
                 serviceaccount:
                   $ref: '#/components/examples/ServiceAccountExample'
-          description: service account created
+          description: Service account created
         '401':
           content:
             application/json:
@@ -462,7 +462,7 @@ paths:
               examples:
                 403Example:
                   $ref: '#/components/examples/403Example'
-          description: list of service account
+          description: List of service accounts
         '500':
           content:
             application/json:
@@ -477,7 +477,7 @@ paths:
       operationId: createServiceAccount
       tags:
         - security
-      summary: Create a service account
+      summary: Creates a service account
   '/api/kafkas_mgmt/v1/service_accounts/{id}':
     get:
       parameters:
@@ -491,13 +491,13 @@ paths:
               examples:
                 sa:
                   $ref: '#/components/examples/ServiceAccountByIdExample'
-          description: get service account by id
+          description: Returns a service account by ID
       security:
         - Bearer: []
       operationId: getServiceAccountById
       tags:
         - security
-      summary: get service account by id
+      summary: Returned service account by ID
     summary: Get service account by id
     description: Get the service account with the given id
     delete:
@@ -509,7 +509,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-          description: deleted
+          description: Deleted
         '401':
           content:
             application/json:
@@ -518,7 +518,7 @@ paths:
               examples:
                 401Example:
                   $ref: '#/components/examples/401Example'
-          description: auth token is invalid
+          description: Auth token is invalid
         '403':
           content:
             application/json:
@@ -541,7 +541,7 @@ paths:
       operationId: deleteServiceAccountById
       tags:
         - security
-      summary: Delete service account
+      summary: Deletes a service account by ID
   '/api/kafkas_mgmt/v1/service_accounts/{id}/reset_credentials':
     post:
       parameters:
@@ -555,7 +555,7 @@ paths:
               examples:
                 sa-reset:
                   $ref: '#/components/examples/ServiceAccountExample'
-          description: reset credentials
+          description: Reset credentials
         '401':
           content:
             application/json:
@@ -564,7 +564,7 @@ paths:
               examples:
                 401Example:
                   $ref: '#/components/examples/401Example'
-          description: auth token is invalid
+          description: Auth token is invalid
         '403':
           content:
             application/json:
@@ -587,19 +587,19 @@ paths:
       operationId: resetServiceAccountCreds
       tags:
         - security
-      summary: reset credentials for the service account
+      summary: Resets the credentials for a service account by ID
   #
   # These are the user-facing related endpoints
   #
   /api/kafkas_mgmt/v1/kafkas/{id}/metrics/query_range:
     get:
-      summary: Get metrics with timeseries range query by kafka id.
+      summary: Returns metrics with timeseries range query by Kafka ID
       operationId: getMetricsByRangeQuery
       security:
         - Bearer: []
       responses:
         '200':
-          description: A JSON array of prometheus metrics objects from observatorium
+          description: Returned JSON array of Prometheus metrics objects from observatorium
           content:
             application/json:
               schema:
@@ -629,13 +629,13 @@ paths:
         - $ref: "#/components/parameters/filters"
   /api/kafkas_mgmt/v1/kafkas/{id}/metrics/query:
     get:
-      summary: Get metrics with instant query by kafka id.
+      summary: Returns metrics with instant query by Kafka ID
       operationId: getMetricsByInstantQuery
       security:
         - Bearer: []
       responses:
         '200':
-          description: A JSON array of prometheus metrics objects from observatorium
+          description: Returned JSON array of Prometheus metrics objects from observatorium
           content:
             application/json:
               schema:
@@ -773,7 +773,7 @@ components:
             collections:
               - id: "kafkas"
                 href: "/api/kafkas_mgmt/v1/kafkas"
-                kind: "KafkaList" 
+                kind: "KafkaList"
           properties:
             collections:
               type: array
@@ -788,13 +788,13 @@ components:
       type: object
       properties:
         kafkas:
-          description: The kafka resource api status
+          description: The Kafka resource api status
           type: object
-          required: 
+          required:
             - max_capacity_reached
-          properties: 
-            max_capacity_reached: 
-              description: Indicates whether we have reached kafka maximum capacity
+          properties:
+            max_capacity_reached:
+              description: Indicates whether we have reached Kafka maximum capacity
               type: boolean
     KafkaRequestPayload:
       description: Schema for the request body sent to /kafkas POST
@@ -1074,7 +1074,7 @@ components:
   parameters:
     id:
       name: id
-      description: The id of record
+      description: The ID of record
       schema:
         type: string
       in: path
@@ -1082,7 +1082,7 @@ components:
     duration:
       name: duration
       in: query
-      description:  The length of time in minutes over which to return the metrics.
+      description:  The length of time in minutes for which to return the metrics
       required: true
       schema:
         type: integer
@@ -1096,7 +1096,7 @@ components:
     interval:
       name: interval
       in: query
-      description: The interval in seconds between data points.
+      description: The interval in seconds between data points
       required: true
       schema:
         type: integer
@@ -1110,7 +1110,7 @@ components:
     filters:
       name: filters
       in: query
-      description: List of metrics to fetch. Fetch all metrics when empty. List entries are kafka internal metric names.
+      description: List of metrics to fetch. Fetch all metrics when empty. List entries are Kafka internal metric names.
       schema:
         type: array
         items:
@@ -1139,22 +1139,22 @@ components:
     orderBy:
       description: |-
         Specifies the order by criteria. The syntax of this parameter is
-        similar to the syntax of the _order by_ clause of an SQL statement.
-        Each query can be ordered by any of the kafkaRequests fields.
-        For example, in order to retrieve all kafkas ordered by their name:
+        similar to the syntax of the `order by` clause of an SQL statement.
+        Each query can be ordered by any of the `kafkaRequests` fields.
+        For example, to return all Kafka instances ordered by their name, use the following syntax:
 
         ```sql
         name asc
         ```
 
-        Or in order to retrieve all kafkas ordered by their name _and_ created date:
+        To return all Kafka instances ordered by their name _and_ created date, use the following syntax:
 
         ```sql
         name asc, created_at asc
         ```
 
         If the parameter isn't provided, or if the value is empty, then
-        the results will be ordered by name.
+        the results are ordered by name.
       explode: true
       examples:
         orderBy:
@@ -1169,28 +1169,28 @@ components:
       description: |
         Search criteria.
 
-        The syntax of this parameter is similar to the syntax of the _where_ clause of an
-        SQL statement. Allowed fields in the search are: cloud_provider, name, owner, region and status. Allowed comparators are `<>`, `=` or `LIKE`.
-        Allowed joins are `AND` and `OR`, however there is a limit of max 10 joins in the search query.
+        The syntax of this parameter is similar to the syntax of the `where` clause of an
+        SQL statement. Allowed fields in the search are `cloud_provider`, `name`, `owner`, `region`, and `status`. Allowed comparators are `<>`, `=`, or `LIKE`.
+        Allowed joins are `AND` and `OR`. However, you can use a maximum of 10 joins in a search query.
 
         Examples:
 
-        To retrieve kafka request with name equal `my-kafka` and region equal `aws`, the value should be:
+        To return a Kafka instance with the name `my-kafka` and the region `aws`, use the following syntax:
 
         ```
         name = my-kafka and cloud_provider = aws
-        ```
+        ```[p-]
 
-        To retrieve kafka request with its name starting with `my`, the value should be:
+        To return a Kafka instance with a name that starts with `my`, use the following syntax:
 
         ```
         name like my%25
         ```
 
-        If the parameter isn't provided, or if the value is empty, then all the kafkas
-        that the user has permission to see will be returned.
+        If the parameter isn't provided, or if the value is empty, then all the Kafka instances
+        that the user has permission to see are returned.
 
-        Note. If the query is invalid, an error will be returned
+        Note. If the query is invalid, an error is returned.
       explode: true
       name: search
       in: query
@@ -1246,7 +1246,7 @@ components:
         bootstrap_server_host: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
         created_at: "2020-10-05T12:51:24.053142Z"
         updated_at: "2020-10-05T12:56:36.362208Z"
-        failed_reason: "a reason the kafka request creation failed"
+        failed_reason: "a reason the Kafka request creation failed"
     CloudProviderExample:
       value:
         kind: "CloudProvider"
@@ -1338,7 +1338,7 @@ components:
         kind: "Error"
         href: "/api/kafkas_mgmt/v1/errors/23"
         code: "KAFKAS-MGMT-23"
-        reason: "Failed to parse search query: Unable to list kafka requests for api_kafka_service: KAFKAS-MGMT-23: Failed to parse search query: Unsupported column name for search: 'id'. Supported column names are: region, name, cloud_provider, name, status. Query invalid: id = 123"
+        reason: "Failed to parse search query: Unable to list Kafka requests for api_kafka_service: KAFKAS-MGMT-23: Failed to parse search query: Unsupported column name for search: 'id'. Supported column names are: region, name, cloud_provider, name, status. Query invalid: id = 123"
         operation_id: "1lWDGuybIrEnxrAem724gqkkiDv"
     404Example:
       value:
