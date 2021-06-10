@@ -132,6 +132,23 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
                 return result.getItems() != null && result.getItems().size() == 1;
             });
 
+        TestSupport.await(
+            30,
+            TimeUnit.SECONDS,
+            () -> {
+                var operators = fm.getCluster(clusterId)
+                    .orElseThrow(() -> new IllegalStateException(""))
+                    .getConnector(deploymentId)
+                    .getStatus()
+                    .getOperators();
+
+                return operators != null
+                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
+                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
+                    && Objects.equals("cm-1", operators.getAssigned().getId())
+                    && operators.getAvailable() == null;
+            });
+
         mco = new ManagedConnectorOperator();
         mco.setMetadata(new ObjectMeta());
         mco.getMetadata().setName("cm-2");
