@@ -119,4 +119,26 @@ public class OperatorSelector {
             .filter(o -> range.includes(new Version(o.getVersion())))
             .max(cmp);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof OperatorSelector)) {
+            return false;
+        }
+        OperatorSelector selector = (OperatorSelector) o;
+        return Objects.equals(getId(), selector.getId())
+            && Objects.equals(getType(), selector.getType())
+            && Objects.equals(getVersion(), selector.getVersion());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            getId(),
+            getType(),
+            getVersion());
+    }
 }

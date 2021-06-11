@@ -1,0 +1,9 @@
+apiVersion: cos.bf2.org/v1alpha1
+kind: ManagedConnectorOperator
+metadata:
+  name: dco-1
+spec:
+  type: "debezium-connector-operator"
+  version: "1.1.0"
+  namespace: "default"
+  metaService: "localhost:9093"

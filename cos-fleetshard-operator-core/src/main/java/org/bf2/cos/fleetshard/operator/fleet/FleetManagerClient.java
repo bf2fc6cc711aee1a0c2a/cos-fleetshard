@@ -39,7 +39,7 @@ public class FleetManagerClient {
         try {
             var phase = cluster.getStatus().getPhase();
             if (phase == null) {
-                phase = ManagedConnectorClusterStatus.PhaseType.Disconnected;
+                phase = ManagedConnectorClusterStatus.PhaseType.Unconnected;
             }
 
             var status = new ConnectorClusterStatus();
@@ -122,7 +122,7 @@ public class FleetManagerClient {
             LOGGER.info("Connector clusterId={}, id={}, status={}",
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId(),
-                Serialization.asJson(status));
+                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(status));
 
             controlPlane.updateConnectorDeploymentStatus(
                 connector.getSpec().getClusterId(),
@@ -131,7 +131,7 @@ public class FleetManagerClient {
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
             throw new RuntimeException(e);
-        } catch (ApiException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

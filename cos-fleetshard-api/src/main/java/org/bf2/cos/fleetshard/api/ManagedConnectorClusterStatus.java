@@ -65,7 +65,7 @@ public class ManagedConnectorClusterStatus {
 
     public enum PhaseType {
         Installing,
-        Disconnected,
+        Unconnected,
         Ready,
         Deleted,
         Error;

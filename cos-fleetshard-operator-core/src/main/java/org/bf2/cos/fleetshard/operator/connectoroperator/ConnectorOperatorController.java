@@ -9,7 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Controller(
-    name = "connector-operator")
+    name = "connector-operator",
+    finalizerName = Controller.NO_FINALIZER)
 public class ConnectorOperatorController extends AbstractResourceController<ManagedConnectorOperator> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorController.class);
 

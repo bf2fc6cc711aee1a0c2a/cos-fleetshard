@@ -35,7 +35,7 @@ spec:
             properties:
               phase:
                 enum:
-                - Disconnected
+                - Unconnected
                 - Error
                 - Ready
                 - Installing

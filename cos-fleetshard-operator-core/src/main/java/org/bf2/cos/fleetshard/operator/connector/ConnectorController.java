@@ -67,7 +67,8 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_GENERA
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
 
 @Controller(
-    name = "connector")
+    name = "connector",
+    finalizerName = Controller.NO_FINALIZER)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
@@ -152,6 +153,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 final OperatorSelector selector = connector.getSpec().getDeployment().getOperatorSelector();
                 final List<Operator> operators = fleetShard.lookupOperators();
 
+                LOGGER.info("operator (init): {}", operators);
+
                 selector.assign(operators).ifPresentOrElse(
                     operator -> {
                         LOGGER.info("deployment (init): {} -> operator: {}",
@@ -162,7 +165,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     },
                     () -> {
                         throw new IllegalArgumentException(
-                            "Unable to determine operator for deployment: " + connector.getStatus().getDeployment());
+                            "Unable to determine operator for deployment: " + connector.getSpec().getDeployment());
                     });
 
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
@@ -560,6 +563,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     }
 
                 } else {
+                    deploymentStatus.setPhase("provisioning");
+
                     LOGGER.info("Resource {}/{}/{} does not have phase",
                         extractor.getRef().getApiVersion(),
                         extractor.getRef().getKind(),
