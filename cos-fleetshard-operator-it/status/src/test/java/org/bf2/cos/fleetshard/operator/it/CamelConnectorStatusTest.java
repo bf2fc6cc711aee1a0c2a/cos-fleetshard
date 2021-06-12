@@ -20,12 +20,14 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
 import org.bf2.cos.fleetshard.operator.it.support.FleetManager;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
+import org.bf2.cos.fleetshard.operator.it.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +35,7 @@ import org.junit.jupiter.api.Test;
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
-public class CamelConnectorUpgradeTest extends CamelTestSupport {
+public class CamelConnectorStatusTest extends CamelTestSupport {
     @KubernetesTestServer
     KubernetesServer ksrv;
     @Inject
@@ -52,7 +54,7 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
     String connectorsMeta;
 
     @Test
-    void execute() {
+    void managedCamelConnectorIsReified() throws Exception {
         ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
             .inNamespace(connectorsNamespace)
@@ -64,6 +66,7 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
         final String kcidB64 = Base64.getEncoder()
             .encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
 
+        final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
         final String deploymentId = UUID.randomUUID().toString();
         final String connectorId = "cid";
         final String connectorTypeId = "ctid";
@@ -125,44 +128,73 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
             30,
             TimeUnit.SECONDS,
             () -> {
-                var operators = fm.getCluster(clusterId)
-                    .orElseThrow(() -> new IllegalStateException(""))
-                    .getConnector(deploymentId)
-                    .getStatus()
-                    .getOperators();
+                var connector = ksrv.getClient()
+                    .customResources(ManagedConnector.class)
+                    .inNamespace(connectorsNamespace)
+                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
+                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
+                    .list()
+                    .getItems()
+                    .get(0);
 
-                return operators != null
-                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
-                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
-                    && Objects.equals("cm-1", operators.getAssigned().getId())
-                    && operators.getAvailable() == null;
+                var secret = uc.getAsNode(
+                    connectorsNamespace,
+                    new ResourceRef(
+                        "v1",
+                        "Secret",
+                        connector.getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion()));
+
+                var binding = uc.getAsNode(
+                    connectorsNamespace,
+                    new ResourceRef(
+                        "camel.apache.org/v1alpha1",
+                        "KameletBinding",
+                        connector.getMetadata().getName()));
+
+                return secret != null && binding != null;
             });
 
-        ksrv.getClient()
-            .customResources(ManagedConnectorOperator.class)
+        var connector = ksrv.getClient()
+            .customResources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .createOrReplace(
-                newConnectorOperator("test", "cm-2", "1.2.0", connectorsMeta));
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
+            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
+            .list()
+            .getItems()
+            .get(0);
+
+        var binding = (ObjectNode) uc.getAsNode(
+            connectorsNamespace,
+            new ResourceRef(
+                "camel.apache.org/v1alpha1",
+                "KameletBinding",
+                connector.getMetadata().getName()));
+
+        binding.with("status").put("phase", "Ready");
+        binding.with("status").withArray("conditions")
+            .addObject()
+            .put("message", "a message")
+            .put("reason", "a reason")
+            .put("status", "the status")
+            .put("type", "the type")
+            .put("lastTransitionTime", "2021-06-12T12:35:09+02:00");
+
+        new UnstructuredClient(ksrv.getClient())
+            .createOrReplace(connectorsNamespace, binding);
 
         TestSupport.await(
             30,
             TimeUnit.SECONDS,
             () -> {
-                var operators = fm.getCluster(clusterId)
+                var status = fm.getCluster(clusterId)
                     .orElseThrow(() -> new IllegalStateException(""))
                     .getConnector(deploymentId)
-                    .getStatus()
-                    .getOperators();
+                    .getStatus();
 
-                return operators != null
-                    && operators.getAssigned() != null
-                    && operators.getAvailable() != null
-                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
-                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
-                    && Objects.equals("cm-1", operators.getAssigned().getId())
-                    && Objects.equals("camel-connector-operator", operators.getAvailable().getType())
-                    && Objects.equals("1.2.0", operators.getAvailable().getVersion())
-                    && Objects.equals("cm-2", operators.getAvailable().getId());
+                // TODO: unstructured update event seems not propagated
+                return status != null
+                    && Objects.equals("provisioning", status.getPhase());
             });
+
     }
 }

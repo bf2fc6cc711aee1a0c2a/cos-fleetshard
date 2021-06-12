@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.api.client.cp.ApiException;
 import org.bf2.cos.fleet.manager.api.client.cp.ConnectorClustersAgentApi;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
@@ -44,8 +43,6 @@ public class FleetManagerClient {
 
             var status = new ConnectorClusterStatus();
             status.setPhase(phase.name().toLowerCase(Locale.US));
-
-            LOGGER.info("Update Cluster Status {}", status);
 
             controlPlane.updateKafkaConnectorClusterStatus(cluster.getSpec().getId(), status);
         } catch (javax.ws.rs.WebApplicationException e) {
@@ -81,7 +78,7 @@ public class FleetManagerClient {
 
         List<ConnectorDeployment> answer = new ArrayList<>();
 
-        LOGGER.debug("gv {}", gv);
+        LOGGER.debug("polling with gv: {}", gv);
 
         for (int i = 0; i < Integer.MAX_VALUE; i++) {
             try {
@@ -119,11 +116,6 @@ public class FleetManagerClient {
 
     public void updateConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus status) {
         try {
-            LOGGER.info("Connector clusterId={}, id={}, status={}",
-                connector.getSpec().getClusterId(),
-                connector.getSpec().getDeploymentId(),
-                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(status));
-
             controlPlane.updateConnectorDeploymentStatus(
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId(),

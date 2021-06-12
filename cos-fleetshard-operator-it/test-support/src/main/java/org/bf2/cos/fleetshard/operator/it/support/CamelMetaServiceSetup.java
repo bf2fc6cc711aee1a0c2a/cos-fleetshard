@@ -12,7 +12,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class CamelMetaServiceSetup implements QuarkusTestResourceLifecycleManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMetaServiceSetup.class);
 
-    private static final String META_IMAGE = "quay.io/lburgazzoli/cms:latest";
+    private static final String META_IMAGE = "quay.io/lburgazzoli/cms:native";
     private static final int META_PORT = 8080;
 
     private GenericContainer<?> container;

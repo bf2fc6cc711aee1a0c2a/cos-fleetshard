@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.connector;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,7 +16,6 @@ import javax.ws.rs.WebApplicationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -30,16 +28,10 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import io.javaoperatorsdk.operator.processing.event.internal.TimerEventSource;
-import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.client.WebClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorOperator;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
-import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.meta.KafkaSpec;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
@@ -51,6 +43,7 @@ import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
 import org.bf2.cos.fleetshard.operator.fleet.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
+import org.bf2.cos.fleetshard.operator.fleet.FleetShardMetaClient;
 import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.it.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.it.support.ResourceUtil;
@@ -74,7 +67,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     private final Set<String> events;
     private final TimerEventSource retryTimer;
-    private final Vertx vertx;
+
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -83,12 +76,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     FleetManagerClient controlPlane;
     @Inject
     FleetShardClient fleetShard;
+    @Inject
+    FleetShardMetaClient meta;
+
     private EventSourceManager eventSourceManager;
 
-    public ConnectorController(io.vertx.core.Vertx vertx) {
+    public ConnectorController() {
         this.events = new HashSet<>();
         this.retryTimer = new TimerEventSource();
-        this.vertx = new Vertx(vertx);
     }
 
     @Override
@@ -99,7 +94,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             retryTimer);
         this.eventSourceManager.registerEventSource(
             "_connector-operator",
-            new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getConnectorsNamespace()));
+            new ConnectorOperatorEventSource(fleetShard));
     }
 
     @Override
@@ -150,24 +145,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 break;
             }
             case DESIRED_STATE_READY: {
-                final OperatorSelector selector = connector.getSpec().getDeployment().getOperatorSelector();
+                final OperatorSelector selector = connector.getSpec().getOperatorSelector();
                 final List<Operator> operators = fleetShard.lookupOperators();
+                final Operator assigned = selector.assign(operators).orElseThrow(
+                    () -> new IllegalStateException(
+                        "Unable to find an operator for deployment: " + connector.getSpec().getDeployment()));
 
-                LOGGER.info("operator (init): {}", operators);
-
-                selector.assign(operators).ifPresentOrElse(
-                    operator -> {
-                        LOGGER.info("deployment (init): {} -> operator: {}",
-                            connector.getSpec().getDeployment(),
-                            operator);
-
-                        connector.getStatus().setOperator(operator);
-                    },
-                    () -> {
-                        throw new IllegalArgumentException(
-                            "Unable to determine operator for deployment: " + connector.getSpec().getDeployment());
-                    });
-
+                connector.getStatus().setAssignedOperator(assigned);
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
                 break;
             }
@@ -181,62 +165,42 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
-
         final DeploymentSpec ref = connector.getSpec().getDeployment();
         final String connectorId = connector.getMetadata().getName();
-        final String connectorMeta = connector.getStatus().getOperator().getMetaService();
 
         try {
             ConnectorDeployment deployment = controlPlane.getDeployment(
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId());
 
-            ConnectorDeploymentSpec cdspec;
-            WebClient client = WebClient.create(vertx);
+            KafkaSpec ks = new KafkaSpec()
+                .id(deployment.getSpec().getKafkaId())
+                .clientId(deployment.getSpec().getKafka().getClientId())
+                .clientSecret(deployment.getSpec().getKafka().getClientSecret())
+                .bootstrapServer(deployment.getSpec().getKafka().getBootstrapServer());
 
-            try {
-                LOGGER.info("Connecting to meta service at : {}", connectorMeta);
+            ConnectorDeploymentReifyRequest rr = new ConnectorDeploymentReifyRequest()
+                .connectorResourceVersion(deployment.getSpec().getConnectorResourceVersion())
+                .deploymentResourceVersion(ref.getDeploymentResourceVersion())
+                .managedConnectorId(connectorId)
+                .deploymentId(connector.getSpec().getDeploymentId())
+                .connectorId(deployment.getSpec().getConnectorId())
+                .connectorId(deployment.getSpec().getConnectorTypeId())
+                .connectorSpec(deployment.getSpec().getConnectorSpec())
+                .shardMetadata(deployment.getSpec().getShardMetadata())
+                .kafkaSpec(ks);
 
-                final String[] hp = connectorMeta.split(":");
-                final String host = hp[0];
-                final int port = hp.length == 2 ? Integer.parseInt(hp[1]) : 80;
+            var answer = meta.reify(
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                rr);
 
-                KafkaSpec ks = new KafkaSpec()
-                    .id(deployment.getSpec().getKafkaId())
-                    .clientId(deployment.getSpec().getKafka().getClientId())
-                    .clientSecret(deployment.getSpec().getKafka().getClientSecret())
-                    .bootstrapServer(deployment.getSpec().getKafka().getBootstrapServer());
-
-                ConnectorDeploymentReifyRequest rr = new ConnectorDeploymentReifyRequest()
-                    .connectorResourceVersion(deployment.getSpec().getConnectorResourceVersion())
-                    .deploymentResourceVersion(ref.getDeploymentResourceVersion())
-                    .managedConnectorId(connectorId)
-                    .deploymentId(connector.getSpec().getDeploymentId())
-                    .connectorId(deployment.getSpec().getConnectorId())
-                    .connectorId(deployment.getSpec().getConnectorTypeId())
-                    .connectorSpec(deployment.getSpec().getConnectorSpec())
-                    .shardMetadata(deployment.getSpec().getShardMetadata())
-                    .kafkaSpec(ks);
-
-                // TODO: set-up ssl/tls
-                cdspec = client.post(port, host, "/reify")
-                    .sendJson(rr)
-                    .await()
-                    .atMost(Duration.ofSeconds(30))
-                    .bodyAsJson(ConnectorDeploymentSpec.class);
-            } finally {
-                client.close();
-            }
-
-            if (cdspec.getResources() != null) {
-                for (JsonNode node : cdspec.getResources()) {
-                    LOGGER.info("Got {}", Serialization.asJson(node));
-
+            if (answer.getResources() != null) {
+                for (JsonNode node : answer.getResources()) {
                     ObjectNode on = (ObjectNode) node;
                     on.with("metadata")
                         .with("labels")
                         .put(LABEL_CONNECTOR_GENERATED, "true")
-                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getOperator().getId());
+                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getAssignedOperator().getId());
                     on.with("metadata")
                         .withArray("ownerReferences")
                         .addObject()
@@ -265,13 +229,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             }
 
-            connector.getStatus().setStatusExtractor(cdspec.getStatusExtractor());
             connector.getStatus().setDeployment(connector.getSpec().getDeployment());
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Monitor);
 
             return UpdateControl.updateStatusSubResource(connector);
         } catch (ConnectException e) {
-            LOGGER.warn("Error connecting to meta service " + connectorMeta + ", retrying");
+            LOGGER.warn("Error connecting to meta service "
+                + connector.getStatus().getAssignedOperator().getMetaService()
+                + ", retrying");
+
             // TODO: remove once the SDK support re-scheduling
             //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
             // TODO: add back-off
@@ -291,55 +257,50 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getDeployment());
 
         if (updated) {
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-
             JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
             JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
 
             LOGGER.info("Drift detected {}, move to phase: {}",
                 JsonDiff.asJson(statusNode, specNode),
                 connector.getStatus().getPhase());
+
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+        }
+
+        //
+        // Set up watcher for resource types owned by the connectors. We don't
+        // create a watch for each resource the connector owns to avoid creating
+        // loads of watchers, instead we create a resource per type which will
+        // triggers connectors based on the UUID of the owner (see the 'monitor'
+        // method for more info)
+        //
+        for (var res : connector.getStatus().getResources()) {
+            watchResource(connector, res);
+        }
+
+        //
+        // Search for newly installed ManagedOperators
+        //
+        final List<Operator> operators = fleetShard.lookupOperators();
+        final Operator assigned = connector.getStatus().getAssignedOperator();
+        final Operator available = connector.getStatus().getAvailableOperator();
+        final OperatorSelector selector = connector.getSpec().getOperatorSelector();
+
+        var maybeAvailable = selector.available(operators)
+            .filter(operator -> !Objects.equals(operator, assigned) && !Objects.equals(operator, available));
+
+        if (maybeAvailable.isPresent()) {
+            LOGGER.info("deployment (upd): {} -> from:{}, to: {}",
+                connector.getSpec().getDeployment(),
+                assigned,
+                maybeAvailable.get());
+
+            connector.getStatus().setAvailableOperator(maybeAvailable.get());
+            updated = true;
         }
 
         try {
-            ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-            ds.setResourceVersion(connector.getStatus().getDeployment().getDeploymentResourceVersion());
-
-            extractStatus(connector, ds);
-            checkForAvailableUpdates(connector, ds);
-
-            //
-            // Set up watcher for resource types owned by the connectors. We don't
-            // create a watch for each resource the connector owns to avoid creating
-            // loads of watchers, instead we create a resource per type which will
-            // triggers connectors based on the UUID of the owner (see the 'monitor'
-            // method for more info)
-            //
-            for (var res : connector.getStatus().getResources()) {
-                watchResource(connector, res);
-            }
-
-            controlPlane.updateConnectorStatus(connector, ds);
-        } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            var removed = cleanupResources(connector);
-            if (!removed.isEmpty()) {
-                for (var ref : removed) {
-                    LOGGER.info("Resource removed {}/{}/{} (deployment={})",
-                        ref.getApiVersion(),
-                        ref.getKind(),
-                        ref.getName(),
-                        connector.getSpec().getDeploymentId());
-                }
-
-                updated = true;
-            }
+            updated |= !cleanupResources(connector).isEmpty();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -353,18 +314,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         boolean updated = false;
 
         try {
-            var removed = cleanupResources(connector);
-            if (!removed.isEmpty()) {
-                for (var ref : removed) {
-                    LOGGER.info("Resource removed {}/{}/{} (deployment={})",
-                        ref.getApiVersion(),
-                        ref.getKind(),
-                        ref.getName(),
-                        connector.getSpec().getDeploymentId());
-                }
-
-                updated = true;
-            }
+            updated = !cleanupResources(connector).isEmpty();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -427,6 +377,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             }
         }
 
+        for (var ref : removed) {
+            LOGGER.info("Resource removed {}/{}/{} (deployment={})",
+                ref.getApiVersion(),
+                ref.getKind(),
+                ref.getName(),
+                connector.getSpec().getDeploymentId());
+        }
+
         return removed;
     }
 
@@ -462,6 +420,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         final ResourceRef ref = ResourceUtil.asResourceRef(unstructured);
                         final ObjectMeta meta = ResourceUtil.getObjectMeta(unstructured);
 
+                        LOGGER.info("Event received on resource: {}", ref);
+
                         //
                         // Since we need to know the owner UUID of the resource to properly
                         // generate the event, we can use the list of the owners
@@ -488,131 +448,5 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             });
         }
-    }
-
-    private void extractStatus(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) throws Exception {
-        if (connector.getStatus().getStatusExtractor() == null) {
-            return;
-        }
-
-        var extractor = connector.getStatus().getStatusExtractor();
-
-        LOGGER.info("Scraping status for resource {}/{}/{}",
-            extractor.getRef().getApiVersion(),
-            extractor.getRef().getKind(),
-            extractor.getRef().getName());
-
-        try {
-            final ResourceRef ref = new ResourceRef(
-                extractor.getRef().getApiVersion(),
-                extractor.getRef().getKind(),
-                extractor.getRef().getName());
-
-            final JsonNode unstructured = uc.getAsNode(connector.getMetadata().getNamespace(), ref);
-
-            if (!extractor.getConditions().getTypes().isEmpty()) {
-                JsonNode conditions = unstructured.at(extractor.getConditions().getPath());
-                if (!conditions.isMissingNode()) {
-                    if (!conditions.isArray()) {
-                        throw new IllegalArgumentException(
-                            "Unsupported conditions field type: " + conditions.getNodeType());
-                    }
-
-                    for (JsonNode conditionNode : conditions) {
-                        var condition = Serialization.jsonMapper().treeToValue(conditionNode, Condition.class);
-
-                        for (String type : extractor.getConditions().getTypes()) {
-                            if (!condition.getType().equals(type) && !condition.getType().matches(type)) {
-                                continue;
-                            }
-
-                            var rc = new MetaV1Condition();
-                            rc.setMessage(condition.getMessage());
-                            rc.setReason(condition.getReason());
-                            rc.setStatus(condition.getStatus());
-                            rc.setType(condition.getType());
-                            rc.setLastTransitionTime(condition.getLastTransitionTime());
-
-                            LOGGER.info("Resource {}/{}/{} : extracted condition {}",
-                                extractor.getRef().getApiVersion(),
-                                extractor.getRef().getKind(),
-                                extractor.getRef().getName(),
-                                Serialization.asJson(condition));
-
-                            deploymentStatus.addConditionsItem(rc);
-                        }
-                    }
-                } else {
-                    LOGGER.info("Resource {}/{}/{} does not have conditions",
-                        extractor.getRef().getApiVersion(),
-                        extractor.getRef().getKind(),
-                        extractor.getRef().getName());
-                }
-            }
-
-            if (!extractor.getPhase().getMapping().isEmpty()) {
-                JsonNode phase = unstructured.at(extractor.getPhase().getPath());
-                if (!phase.isMissingNode()) {
-                    String phaseValue = phase.asText();
-
-                    for (var mapping : extractor.getPhase().getMapping()) {
-                        if (phase.equals(mapping.getResource()) || phaseValue.matches(mapping.getResource())) {
-                            deploymentStatus.setPhase(mapping.getConnector());
-                            break;
-                        }
-                    }
-
-                } else {
-                    deploymentStatus.setPhase("provisioning");
-
-                    LOGGER.info("Resource {}/{}/{} does not have phase",
-                        extractor.getRef().getApiVersion(),
-                        extractor.getRef().getKind(),
-                        extractor.getRef().getName());
-                }
-            }
-        } catch (KubernetesClientException e) {
-            if (e.getCode() != 404) {
-                throw e;
-            } else {
-                LOGGER.info("Resource {}/{}/{} not found, skipping it",
-                    extractor.getRef().getApiVersion(),
-                    extractor.getRef().getKind(),
-                    extractor.getRef().getName());
-            }
-        }
-    }
-
-    private void checkForAvailableUpdates(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        final List<Operator> operators = fleetShard.lookupOperators();
-        final OperatorSelector selector = connector.getStatus().getDeployment().getOperatorSelector();
-
-        selector.available(operators).ifPresent(
-            operator -> {
-                if (!Objects.equals(operator, connector.getStatus().getOperator())) {
-                    LOGGER.info("deployment (upd): {} -> operator: {}",
-                        connector.getSpec().getDeployment(),
-                        operator);
-
-                    deploymentStatus.setOperators(
-                        new ConnectorDeploymentStatusOperators()
-                            .assigned(new ConnectorOperator()
-                                .id(connector.getStatus().getOperator().getId())
-                                .type(connector.getStatus().getOperator().getType())
-                                .version(connector.getStatus().getOperator().getVersion()))
-                            .available(new ConnectorOperator()
-                                .id(operator.getId())
-                                .type(operator.getType())
-                                .version(operator.getVersion())));
-                } else {
-                    deploymentStatus.setOperators(
-                        new ConnectorDeploymentStatusOperators()
-                            .assigned(new ConnectorOperator()
-                                .id(connector.getStatus().getOperator().getId())
-                                .type(connector.getStatus().getOperator().getType())
-                                .version(connector.getStatus().getOperator().getVersion()))
-                            .available(null));
-                }
-            });
     }
 }

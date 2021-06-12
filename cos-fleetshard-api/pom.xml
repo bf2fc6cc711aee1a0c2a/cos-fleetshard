@@ -128,6 +128,26 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <id>generate-meta-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/connector_meta.yaml</inputSpec>
+                            <library>microprofile</library>
+                            <apisToGenerate>ConnectorMetaService</apisToGenerate>
+                            <apiPackage>org.bf2.cos.fleet.manager.api.client.meta</apiPackage>
+                            <modelPackage>org.bf2.cos.fleet.manager.api.model.meta</modelPackage>
+                            <generateModels>false</generateModels>
+                            <generateApis>true</generateApis>
+                            <generateSupportingFiles>true</generateSupportingFiles>
+                            <templateDirectory>${project.basedir}/openapi-generator/templates</templateDirectory>
+                            <configOptions>
+                                <ensureUniqueParams>false</ensureUniqueParams>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>generate-control-plane-model</id>
                         <goals>
                             <goal>generate</goal>

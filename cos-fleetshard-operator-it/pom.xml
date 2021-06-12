@@ -50,6 +50,7 @@
         <module>test-support</module>
         <module>cluster</module>
         <module>reify</module>
+        <module>status</module>
         <module>upgrade</module>
     </modules>
 

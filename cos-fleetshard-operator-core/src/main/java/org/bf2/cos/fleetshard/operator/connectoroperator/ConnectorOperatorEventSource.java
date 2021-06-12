@@ -2,21 +2,23 @@ package org.bf2.cos.fleetshard.operator.connectoroperator;
 
 import java.util.Objects;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
-import io.javaoperatorsdk.operator.processing.event.AbstractEvent;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Version;
+import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConnectorOperator> {
-    private final String connectorsNamespace;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);
 
-    public ConnectorOperatorEventSource(KubernetesClient client, String connectorsNamespace) {
-        super(client);
+    private final FleetShardClient fleetShardClient;
 
-        this.connectorsNamespace = connectorsNamespace;
+    public ConnectorOperatorEventSource(FleetShardClient fleetShardClient) {
+        super(fleetShardClient.getKubernetesClient());
+
+        this.fleetShardClient = fleetShardClient;
     }
 
     @Override
@@ -35,35 +37,32 @@ public class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConn
             return;
         }
 
-        var connectors = getClient()
-            .customResources(ManagedConnector.class)
-            .inNamespace(this.connectorsNamespace)
-            .list()
-            .getItems();
+        LOGGER.info("Event {} received on operator: {}/{}",
+            action.name(),
+            resource.getMetadata().getNamespace(),
+            resource.getMetadata().getName());
 
-        if (connectors == null) {
-            return;
-        }
-
-        for (var connector : connectors) {
+        for (var connector : fleetShardClient.lookupConnectors()) {
             if (connector.getStatus() == null) {
                 continue;
             }
-            if (connector.getStatus().getOperator() == null) {
+            if (connector.getStatus().getAssignedOperator() == null) {
                 continue;
             }
-            if (!Objects.equals(resource.getSpec().getType(), connector.getStatus().getOperator().getType())) {
+            if (!Objects.equals(resource.getSpec().getType(), connector.getStatus().getAssignedOperator().getType())) {
                 continue;
             }
 
             final var rv = new Version(resource.getSpec().getVersion());
-            final var cv = new Version(connector.getStatus().getOperator().getVersion());
+            final var cv = new Version(connector.getStatus().getAssignedOperator().getVersion());
 
             if (rv.compareTo(cv) > 0) {
-                getLogger().info("ManagedConnectorOperator updated: {}", resource.getSpec());
+                getLogger().info("ManagedConnectorOperator updated, connector: {}/{}, operator: {}",
+                    connector.getMetadata().getNamespace(),
+                    connector.getMetadata().getName(),
+                    resource.getSpec());
 
-                eventHandler.handleEvent(new AbstractEvent(connector.getMetadata().getUid(), this) {
-                });
+                eventHandler.handleEvent(new ConnectorOperatorEvent(connector.getMetadata().getUid(), this));
             }
         }
     }

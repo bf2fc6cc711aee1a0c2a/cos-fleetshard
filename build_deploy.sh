@@ -72,7 +72,11 @@ if [ ! -z "${CONTAINER_VERSION}" ]; then
     || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
 fi
 
-./mvnw clean package -Dquarkus.container-image.tag=latest \
+./mvnw clean package \
+  -Dquarkus.container-image.username="${CONTAINER_REGISTRY_USR}" \
+  -Dquarkus.container-image.password="${CONTAINER_REGISTRY_PWD}" \
+  -Dquarkus.container-image.tag=latest \
   -Dquarkus.container-image.additional-tags="${ADDITIONAL_TAGS}" \
-  -Dquarkus.container-image.group=${IMAGE_REPO_NAMESPACE} -Pcontainer-push \
+  -Dquarkus.container-image.group=${IMAGE_REPO_NAMESPACE} \
+  -Pcontainer-push \
   -pl :cos-fleetshard-operator

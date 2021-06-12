@@ -1,21 +1,23 @@
 package org.bf2.cos.fleetshard.operator.it.support;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import io.fabric8.kubernetes.model.Scope;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.api.ResourceRefBuilder;
 
@@ -140,35 +142,79 @@ public final class ResourceUtil {
             .build();
     }
 
-    public static Map<String, String> createSecretDate(JsonNode node) {
-        var data = new HashMap<String, String>();
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(ResourceRef reference) {
+        return asCustomResourceDefinitionContext(reference, true);
+    }
 
-        if (node != null) {
-            var it = node.fields();
-            while (it.hasNext()) {
-                final var property = it.next();
-                final var pkey = property.getKey();
-                final var pval = property.getValue();
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(
+        ResourceRef reference,
+        boolean namespaced) {
 
-                if (pval.isObject()) {
-                    var kind = pval.requiredAt("/kind");
-                    var value = pval.requiredAt("/value");
+        CustomResourceDefinitionContext.Builder builder = new CustomResourceDefinitionContext.Builder();
+        if (namespaced) {
+            builder.withScope(Scope.NAMESPACED.value());
+        }
 
-                    if (!"base64".equals(kind.textValue())) {
-                        throw new RuntimeException(
-                            "Unsupported field kind " + kind + " (key=" + pkey + ")");
-                    }
-
-                    data.put(pkey, value.asText());
-                } else {
-                    data.put(
-                        pkey,
-                        Base64.getEncoder().encodeToString(pval.asText().getBytes(StandardCharsets.UTF_8)));
-
-                }
+        if (reference.getApiVersion() != null) {
+            String[] items = reference.getApiVersion().split("/");
+            if (items.length == 1) {
+                builder.withVersion(items[0]);
+            }
+            if (items.length == 2) {
+                builder.withGroup(items[0]);
+                builder.withVersion(items[1]);
             }
         }
 
-        return data;
+        if (reference.getKind() != null) {
+            builder.withKind(reference.getKind());
+            builder.withPlural(Pluralize.toPlural(reference.getKind().toLowerCase(Locale.US)));
+        }
+
+        if (reference.getName() != null) {
+            builder.withName(reference.getName());
+        }
+
+        return builder.build();
+    }
+
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(JsonNode node) {
+        return asCustomResourceDefinitionContext(node, true);
+    }
+
+    public static CustomResourceDefinitionContext asCustomResourceDefinitionContext(JsonNode node, boolean namespaced) {
+        if (!node.isObject()) {
+            throw new IllegalArgumentException("Not an ObjectNode");
+        }
+
+        ObjectNode on = (ObjectNode) node;
+        JsonNode version = on.at("/apiVersion");
+        JsonNode kind = on.at("/kind");
+        JsonNode name = on.at("/metadata/name");
+
+        CustomResourceDefinitionContext.Builder builder = new CustomResourceDefinitionContext.Builder();
+        if (namespaced) {
+            builder.withScope(Scope.NAMESPACED.value());
+        }
+
+        if (!version.isMissingNode()) {
+            String[] items = version.asText().split("/");
+            if (items.length == 1) {
+                builder.withVersion(items[0]);
+            }
+            if (items.length == 2) {
+                builder.withGroup(items[0]);
+                builder.withVersion(items[1]);
+            }
+        }
+        if (!kind.isMissingNode()) {
+            builder.withKind(kind.asText());
+            builder.withPlural(Pluralize.toPlural(kind.asText().toLowerCase(Locale.US)));
+        }
+        if (!name.isMissingNode()) {
+            builder.withName(name.asText());
+        }
+
+        return builder.build();
     }
 }

@@ -34,20 +34,20 @@ spec:
             properties:
               deployment:
                 properties:
-                  operatorSelector:
-                    properties:
-                      id:
-                        type: string
-                      version:
-                        type: string
-                      type:
-                        type: string
-                    type: object
                   deploymentResourceVersion:
                     type: number
                   resourceVersion:
                     type: number
                   desiredState:
+                    type: string
+                type: object
+              operatorSelector:
+                properties:
+                  id:
+                    type: string
+                  version:
+                    type: string
+                  type:
                     type: string
                 type: object
               connectorTypeId:
@@ -63,15 +63,6 @@ spec:
             properties:
               deployment:
                 properties:
-                  operatorSelector:
-                    properties:
-                      id:
-                        type: string
-                      version:
-                        type: string
-                      type:
-                        type: string
-                    type: object
                   deploymentResourceVersion:
                     type: number
                   resourceVersion:
@@ -79,48 +70,40 @@ spec:
                   desiredState:
                     type: string
                 type: object
-              statusExtractor:
+              assignedOperator:
                 properties:
-                  phase:
-                    properties:
-                      path:
-                        type: string
-                      mapping:
-                        items:
-                          properties:
-                            connector:
-                              type: string
-                            resource:
-                              type: string
-                          type: object
-                        type: array
-                    type: object
-                  conditions:
-                    properties:
-                      path:
-                        type: string
-                      types:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                  ref:
-                    properties:
-                      apiVersion:
-                        type: string
-                      name:
-                        type: string
-                      kind:
-                        type: string
-                    type: object
+                  id:
+                    type: string
+                  version:
+                    type: string
+                  metaService:
+                    type: string
+                  type:
+                    type: string
+                  namespace:
+                    type: string
                 type: object
               phase:
                 enum:
+                - Upgrade
                 - Delete
                 - Initialization
                 - Augmentation
                 - Monitor
                 type: string
+              availableOperator:
+                properties:
+                  id:
+                    type: string
+                  version:
+                    type: string
+                  metaService:
+                    type: string
+                  type:
+                    type: string
+                  namespace:
+                    type: string
+                type: object
               conditions:
                 items:
                   properties:
@@ -155,19 +138,6 @@ spec:
                       type: string
                   type: object
                 type: array
-              operator:
-                properties:
-                  id:
-                    type: string
-                  version:
-                    type: string
-                  metaService:
-                    type: string
-                  type:
-                    type: string
-                  namespace:
-                    type: string
-                type: object
             type: object
         type: object
     served: true

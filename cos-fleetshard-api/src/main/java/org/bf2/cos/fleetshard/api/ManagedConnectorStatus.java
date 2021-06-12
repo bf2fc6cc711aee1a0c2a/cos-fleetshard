@@ -6,12 +6,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bf2.cos.fleet.manager.api.model.meta.StatusExtractor;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ConditionBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -32,11 +29,10 @@ public class ManagedConnectorStatus {
     private List<Condition> conditions = new ArrayList<>();
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<DeployedResource> resources = new ArrayList<>();
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private StatusExtractor statusExtractor = new StatusExtractor();
 
     private DeploymentSpec deployment = new DeploymentSpec();
-    private Operator operator;
+    private Operator assignedOperator;
+    private Operator availableOperator;
 
     @JsonProperty
     public DeploymentSpec getDeployment() {
@@ -46,6 +42,26 @@ public class ManagedConnectorStatus {
     @JsonProperty
     public void setDeployment(DeploymentSpec deployment) {
         this.deployment = deployment;
+    }
+
+    @JsonProperty
+    public Operator getAssignedOperator() {
+        return assignedOperator;
+    }
+
+    @JsonProperty
+    public void setAssignedOperator(Operator assignedOperator) {
+        this.assignedOperator = assignedOperator;
+    }
+
+    @JsonProperty
+    public Operator getAvailableOperator() {
+        return availableOperator;
+    }
+
+    @JsonProperty
+    public void setAvailableOperator(Operator availableOperator) {
+        this.availableOperator = availableOperator;
     }
 
     @JsonProperty
@@ -76,16 +92,6 @@ public class ManagedConnectorStatus {
     @JsonProperty
     public void setResources(List<DeployedResource> resources) {
         this.resources = resources;
-    }
-
-    @JsonProperty
-    public StatusExtractor getStatusExtractor() {
-        return statusExtractor;
-    }
-
-    @JsonProperty
-    public void setStatusExtractor(StatusExtractor statusExtractor) {
-        this.statusExtractor = statusExtractor;
     }
 
     @JsonIgnore
@@ -131,24 +137,15 @@ public class ManagedConnectorStatus {
         return answer;
     }
 
-    public Operator getOperator() {
-        return operator;
-    }
-
-    public void setOperator(Operator operator) {
-        this.operator = operator;
-    }
-
     public enum PhaseType {
         Initialization,
         Augmentation,
         Monitor,
         Delete,
+        Upgrade,
     }
 
     public enum ConditionType {
-        MetaPodCreated,
-        MetaPodServiceCreated,
     }
 
     public enum ConditionStatus {

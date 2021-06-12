@@ -11,6 +11,8 @@ servers:
 paths:
   '/reify':
     post:
+      tags:
+        - Connector Meta Service
       requestBody:
         description: Connector deployment data
         content:
@@ -45,6 +47,45 @@ paths:
           description: Unexpected error occurred
       operationId: connectorDeploymentReifyRequest
       summary: Reify
+
+  '/status':
+    post:
+      tags:
+        - Connector Meta Service
+      requestBody:
+        description: Connector data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorDeploymentStatusRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorDeploymentStatus'
+          description: The connector deployment spec
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching connector type exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: connectorDeploymentStatusRequest
+      summary: Status
 
 components:
   schemas:
@@ -88,8 +129,34 @@ components:
           type: array
           items:
             type: object
-        status_extractor:
-          $ref: '#/components/schemas/StatusExtractor'
+
+    ConnectorDeploymentStatusRequest:
+      description: Holds the deployment spec
+      type: object
+      properties:
+        managed_connector_id:
+          type: string
+        deployment_id:
+          type: string
+        connector_id:
+          type: string
+        connector_type_id:
+          type: string
+        resources:
+          type: array
+          items:
+            type: object
+
+    ConnectorDeploymentStatus:
+      description: The status of connector deployment
+      type: object
+      properties:
+        phase:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
 
     KafkaSpec:
       properties:
@@ -101,45 +168,6 @@ components:
           type: string
         client_secret:
           type: string
-
-    StatusExtractor:
-      description: Status eextractor.
-      type: object
-      properties:
-        ref:
-          type: object
-          properties:
-            apiVersion:
-              type: string
-            kind:
-              type: string
-            name:
-              type: string
-        phase:
-          type: object
-          properties:
-            path:
-              type: string
-              default: "/status/phase"
-            mapping:
-              type: array
-              items:
-                type: object
-                properties:
-                  resource:
-                    type: string
-                  connector:
-                    type: string
-        conditions:
-          type: object
-          properties:
-            path:
-              type: string
-              default: "/status/conditions"
-            types:
-              type: array
-              items:
-                type: string
 
     Error:
       allOf:
@@ -173,3 +201,18 @@ components:
       required:
         - type
         - version
+
+    MetaV1Condition:
+      type: object
+      properties:
+        type:
+          type: string
+        reason:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        last_transition_time:
+          type: string
+          #format: date-time # enable this?? or just set it as pure plain string?

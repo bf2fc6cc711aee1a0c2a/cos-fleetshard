@@ -115,7 +115,7 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setResourceVersion(deployment.getSpec().getConnectorResourceVersion());
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
-        connector.getSpec().getDeployment().setOperatorSelector(ConnectorSupport.getOperatorSelector(deployment));
+        connector.getSpec().setOperatorSelector(ConnectorSupport.getOperatorSelector(deployment));
 
         LOGGER.info("provisioning connector id={} - {}/{}: {}", mcId, connectorsNs, connectorId, deployment.getSpec());
 

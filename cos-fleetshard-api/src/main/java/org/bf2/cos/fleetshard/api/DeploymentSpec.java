@@ -14,7 +14,6 @@ public class DeploymentSpec {
     private Long resourceVersion;
     private Long deploymentResourceVersion;
     private String desiredState;
-    private OperatorSelector operatorSelector;
 
     public Long getDeploymentResourceVersion() {
         return deploymentResourceVersion;
@@ -50,16 +49,6 @@ public class DeploymentSpec {
         return Objects.equals(this.desiredState, desiredState);
     }
 
-    @JsonProperty
-    public OperatorSelector getOperatorSelector() {
-        return operatorSelector;
-    }
-
-    @JsonProperty
-    public void setOperatorSelector(OperatorSelector operatorSelector) {
-        this.operatorSelector = operatorSelector;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -71,8 +60,7 @@ public class DeploymentSpec {
         DeploymentSpec spec = (DeploymentSpec) o;
         return Objects.equals(getResourceVersion(), spec.getResourceVersion())
             && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
-            && Objects.equals(getDesiredState(), spec.getDesiredState())
-            && Objects.equals(getOperatorSelector(), spec.getOperatorSelector());
+            && Objects.equals(getDesiredState(), spec.getDesiredState());
     }
 
     @Override
@@ -80,8 +68,7 @@ public class DeploymentSpec {
         return Objects.hash(
             getResourceVersion(),
             getDeploymentResourceVersion(),
-            getDesiredState(),
-            getOperatorSelector());
+            getDesiredState());
     }
 
     @Override
@@ -89,8 +76,7 @@ public class DeploymentSpec {
         return "DeploymentSpec{" +
             "resourceVersion=" + resourceVersion +
             ", deploymentResourceVersion=" + deploymentResourceVersion +
-            ", desiredState='" + desiredState + '\'' +
-            ", operatorSelector=" + operatorSelector +
+            ", desiredState='" + desiredState +
             '}';
     }
 }
