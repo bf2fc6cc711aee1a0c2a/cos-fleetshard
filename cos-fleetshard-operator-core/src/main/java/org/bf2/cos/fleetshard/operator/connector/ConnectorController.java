@@ -27,7 +27,6 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-import io.javaoperatorsdk.operator.processing.event.internal.TimerEventSource;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
@@ -36,18 +35,21 @@ import org.bf2.cos.fleet.manager.api.model.meta.KafkaSpec;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.api.Version;
+import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
+import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
+import org.bf2.cos.fleetshard.operator.client.MetaClient;
+import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEvent;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
-import org.bf2.cos.fleetshard.operator.fleet.FleetManagerClient;
-import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.fleet.FleetShardMetaClient;
 import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.it.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.it.support.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.it.support.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,8 +67,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERAT
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
-    private final Set<String> events;
-    private final TimerEventSource retryTimer;
+    private final Set<String> events = new HashSet<>();
 
     @Inject
     KubernetesClient kubernetesClient;
@@ -77,24 +78,41 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @Inject
     FleetShardClient fleetShard;
     @Inject
-    FleetShardMetaClient meta;
-
-    private EventSourceManager eventSourceManager;
-
-    public ConnectorController() {
-        this.events = new HashSet<>();
-        this.retryTimer = new TimerEventSource();
-    }
+    MetaClient meta;
 
     @Override
-    public void init(EventSourceManager eventSourceManager) {
-        this.eventSourceManager = eventSourceManager;
-        this.eventSourceManager.registerEventSource(
-            "_connector-retry-timer",
-            retryTimer);
-        this.eventSourceManager.registerEventSource(
-            "_connector-operator",
-            new ConnectorOperatorEventSource(fleetShard));
+    public void registerEventSources(EventSourceManager eventSourceManager) {
+        eventSourceManager.registerEventSource(
+            "_operators",
+            new ConnectorOperatorEventSource(kubernetesClient) {
+                @Override
+                protected void resourceUpdated(ManagedConnectorOperator resource) {
+                    for (var connector : fleetShard.lookupConnectors()) {
+                        if (connector.getStatus() == null) {
+                            continue;
+                        }
+                        if (connector.getStatus().getAssignedOperator() == null) {
+                            continue;
+                        }
+                        if (!Objects.equals(resource.getSpec().getType(),
+                            connector.getStatus().getAssignedOperator().getType())) {
+                            continue;
+                        }
+
+                        final var rv = new Version(resource.getSpec().getVersion());
+                        final var cv = new Version(connector.getStatus().getAssignedOperator().getVersion());
+
+                        if (rv.compareTo(cv) > 0) {
+                            getLogger().info("ManagedConnectorOperator updated, connector: {}/{}, operator: {}",
+                                connector.getMetadata().getNamespace(),
+                                connector.getMetadata().getName(),
+                                resource.getSpec());
+
+                            eventHandler.handleEvent(new ConnectorOperatorEvent(connector.getMetadata().getUid(), this));
+                        }
+                    }
+                }
+            });
     }
 
     @Override
@@ -242,7 +260,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             //       https://github.com/java-operator-sdk/java-operator-sdk/issues/369
             // TODO: add back-off
             // TODO: better exception checking
-            retryTimer.scheduleOnce(connector, 1500);
+            getRetryTimer().scheduleOnce(connector, 1500);
         } catch (Exception e) {
             LOGGER.warn("Error retrieving data from the meta service", e);
         }
@@ -404,7 +422,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         if (this.events.add(key)) {
             LOGGER.info("Registering an event for: {}", key);
 
-            this.eventSourceManager.registerEventSource(key, new WatcherEventSource<String>(kubernetesClient) {
+            getEventSourceManager().registerEventSource(key, new WatcherEventSource<String>(kubernetesClient) {
                 @SuppressWarnings("unchecked")
                 @Override
                 public void eventReceived(Action action, String resource) {

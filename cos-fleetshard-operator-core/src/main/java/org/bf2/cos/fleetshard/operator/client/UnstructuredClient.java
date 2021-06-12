@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.it.support;
+package org.bf2.cos.fleetshard.operator.client;
 
 import java.io.IOException;
 import java.util.HashMap;

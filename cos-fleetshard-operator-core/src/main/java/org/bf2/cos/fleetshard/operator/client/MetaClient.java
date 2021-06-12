@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.fleet;
+package org.bf2.cos.fleetshard.operator.client;
 
 import java.time.Duration;
 
@@ -16,12 +16,12 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
 
 @ApplicationScoped
-public class FleetShardMetaClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FleetShardMetaClient.class);
+public class MetaClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaClient.class);
 
     private final Vertx vertx;
 
-    public FleetShardMetaClient(io.vertx.core.Vertx vertx) {
+    public MetaClient(io.vertx.core.Vertx vertx) {
         this.vertx = new Vertx(vertx);
     }
 

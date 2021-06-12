@@ -27,7 +27,7 @@ import org.bf2.cos.fleetshard.operator.it.support.FleetManager;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
-import org.bf2.cos.fleetshard.operator.it.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 

@@ -1,29 +1,29 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.operator.fleet.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
 
-public class ConnectorEventSource extends WatcherEventSource<ManagedConnector> {
-    private final FleetShardClient fleetShardClient;
+public abstract class ConnectorEventSource extends WatcherEventSource<ManagedConnector> {
+    private final String namespace;
 
-    public ConnectorEventSource(FleetShardClient fleetShardClient) {
-        super(fleetShardClient.getKubernetesClient());
+    public ConnectorEventSource(KubernetesClient kubernetesClient, String namespace) {
+        super(kubernetesClient);
 
-        this.fleetShardClient = fleetShardClient;
+        this.namespace = namespace;
     }
 
     @Override
     protected Watch watch() {
         return getClient()
             .customResources(ManagedConnector.class)
-            .inNamespace(fleetShardClient.getConnectorsNamespace())
+            .inNamespace(namespace)
             .watch(this);
     }
 
     @Override
-    public void eventReceived(Action action, ManagedConnector connector) {
+    public void eventReceived(Action action, ManagedConnector resource) {
         getLogger().info("Event received for action: {}", action.name());
         if (action == Action.ERROR) {
             getLogger().warn("Skipping");
@@ -32,13 +32,11 @@ public class ConnectorEventSource extends WatcherEventSource<ManagedConnector> {
 
         getLogger().info("Event {} received on connector: {}/{}",
             action.name(),
-            connector.getMetadata().getNamespace(),
-            connector.getMetadata().getName());
+            resource.getMetadata().getNamespace(),
+            resource.getMetadata().getName());
 
-        eventHandler.handleEvent(new ConnectorEvent(
-            connector.getMetadata().getOwnerReferences().get(0).getUid(),
-            this,
-            connector.getMetadata().getName(),
-            connector.getMetadata().getNamespace()));
+        resourceUpdated(resource);
     }
+
+    protected abstract void resourceUpdated(ManagedConnector resource);
 }

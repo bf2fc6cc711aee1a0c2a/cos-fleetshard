@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.fleet;
+package org.bf2.cos.fleetshard.operator.client;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.fleet;
+package org.bf2.cos.fleetshard.operator.client;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,15 +41,15 @@ public class FleetManagerClient {
                 phase = ManagedConnectorClusterStatus.PhaseType.Unconnected;
             }
 
-            var status = new ConnectorClusterStatus();
-            status.setPhase(phase.name().toLowerCase(Locale.US));
-
-            controlPlane.updateKafkaConnectorClusterStatus(cluster.getSpec().getId(), status);
+            controlPlane.updateKafkaConnectorClusterStatus(
+                cluster.getSpec().getId(),
+                new ConnectorClusterStatus()
+                    .phase(phase.name().toLowerCase(Locale.US)));
         } catch (javax.ws.rs.WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         } catch (ApiException e) {
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         }
     }
 
@@ -58,9 +58,9 @@ public class FleetManagerClient {
             return controlPlane.getClusterAsignedConnectorDeploymentById(clusterId, deploymentId);
         } catch (javax.ws.rs.WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         } catch (ApiException e) {
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         }
     }
 
@@ -100,9 +100,9 @@ public class FleetManagerClient {
                 }
             } catch (javax.ws.rs.WebApplicationException e) {
                 LOGGER.warn("{}", e.getResponse().readEntity(Error.class));
-                throw new RuntimeException(e);
+                throw new FleetManagerClientException(e);
             } catch (ApiException e) {
-                throw new RuntimeException(e);
+                throw new FleetManagerClientException(e);
             }
         }
 
@@ -122,9 +122,9 @@ public class FleetManagerClient {
                 status);
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new FleetManagerClientException(e);
         }
     }
 }
