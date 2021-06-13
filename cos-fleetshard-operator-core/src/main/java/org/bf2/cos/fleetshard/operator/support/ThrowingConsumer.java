@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.it.support;
+package org.bf2.cos.fleetshard.operator.support;
 
 /**
  * Represents an operation that accepts a single input argument and may thrown an exception.

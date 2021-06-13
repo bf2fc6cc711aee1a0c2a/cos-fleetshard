@@ -28,8 +28,8 @@ import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEvent;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEventSource;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
-import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.it.support.OperatorSupport;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

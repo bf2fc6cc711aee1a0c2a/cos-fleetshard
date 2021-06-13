@@ -16,7 +16,7 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 
-import static org.bf2.cos.fleetshard.operator.it.support.ResourceUtil.asCustomResourceDefinitionContext;
+import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 @ApplicationScoped
 public class UnstructuredClient {

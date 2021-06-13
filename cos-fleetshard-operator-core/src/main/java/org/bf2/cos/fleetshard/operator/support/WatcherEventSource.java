@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.it.support;
+package org.bf2.cos.fleetshard.operator.support;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
@@ -30,7 +30,7 @@ public abstract class WatcherEventSource<T> extends AbstractEventSource implemen
     public void close() {
         if (watch != null) {
             try {
-                logger.debug("Closing watch {}", watch);
+                logger.info("Closing watch {}", watch);
                 watch.close();
             } catch (Exception e) {
                 logger.warn("Failed to close watch {}", watch, e);

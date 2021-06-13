@@ -3,7 +3,7 @@ package org.bf2.cos.fleetshard.operator.connectoroperator;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
+import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

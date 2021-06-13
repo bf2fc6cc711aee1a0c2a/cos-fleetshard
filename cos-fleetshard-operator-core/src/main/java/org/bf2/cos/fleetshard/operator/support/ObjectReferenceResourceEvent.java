@@ -1,7 +1,7 @@
-package org.bf2.cos.fleetshard.operator.it.support;
+package org.bf2.cos.fleetshard.operator.support;
 
-import static org.bf2.cos.fleetshard.operator.it.support.ResourceUtil.objectRef;
-import static org.bf2.cos.fleetshard.operator.it.support.ResourceUtil.ownerUid;
+import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.objectRef;
+import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.ownerUid;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectReference;

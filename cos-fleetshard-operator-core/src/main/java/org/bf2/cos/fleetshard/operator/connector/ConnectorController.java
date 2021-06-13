@@ -47,10 +47,10 @@ import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEvent;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
-import org.bf2.cos.fleetshard.operator.it.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.it.support.ResourceEvent;
-import org.bf2.cos.fleetshard.operator.it.support.ResourceUtil;
-import org.bf2.cos.fleetshard.operator.it.support.WatcherEventSource;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
+import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
+import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

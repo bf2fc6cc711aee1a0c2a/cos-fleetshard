@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.it.support;
+package org.bf2.cos.fleetshard.operator.support;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
