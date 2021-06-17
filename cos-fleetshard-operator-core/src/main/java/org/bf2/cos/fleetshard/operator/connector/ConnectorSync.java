@@ -8,6 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
@@ -123,5 +124,32 @@ public class ConnectorSync {
         kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(connectorsNs)
             .createOrReplace(connector);
+    }
+
+    @Scheduled(
+        every = "{cos.cluster.sync.interval}",
+        concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    void syncStatus() {
+        LOGGER.info("Sync connector status");
+
+        fleetShard.lookupManagedConnectorCluster()
+            .filter(cluster -> cluster.getStatus().isReady())
+            .ifPresentOrElse(
+                this::updateStatus,
+                () -> LOGGER.debug("Operator not yet configured"));
+    }
+
+    private void updateStatus(ManagedConnectorCluster cluster) {
+        LOGGER.debug("Updating control plane connectors");
+
+        final String namespace = cluster.getSpec().getConnectorsNamespace();
+
+        kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(namespace)
+            .list().getItems()
+            .forEach(c -> {
+                ConnectorDeploymentStatus status = fleetShard.getConnectorDeploymentStatus(c);
+                controlPlane.updateConnectorStatus(c, status);
+            });
     }
 }
