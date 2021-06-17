@@ -124,4 +124,32 @@ public class ConnectorSync {
             .inNamespace(connectorsNs)
             .createOrReplace(connector);
     }
+
+    @Scheduled(
+            every = "{cos.cluster.sync.interval}",
+            concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    void syncStatus() {
+        LOGGER.info("Sync connector status");
+
+        fleetShard.lookupManagedConnectorCluster()
+                .filter(cluster -> cluster.getStatus().isReady())
+                .ifPresentOrElse(
+                        this::updateStatus,
+                        () -> LOGGER.debug("Operator not yet configured"));
+    }
+
+    private void updateStatus(ManagedConnectorCluster cluster) {
+        LOGGER.debug("Updating control plane connectors");
+
+        final String id = cluster.getSpec().getId();
+        final String namespace = cluster.getSpec().getConnectorsNamespace();
+
+        kubernetesClient.customResources(ManagedConnector.class)
+                .inNamespace(namespace)
+                .list().getItems()
+                .forEach(connector -> {
+                    ConnectorDeployment deployment = controlPlane.getDeployment(id, connector.getSpec().getDeploymentId());
+                    controlPlane.updateConnectorStatus(connector, deployment.getStatus());
+                });
+    }
 }
