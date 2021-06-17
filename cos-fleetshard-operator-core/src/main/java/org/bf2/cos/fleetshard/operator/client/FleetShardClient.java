@@ -2,18 +2,26 @@ package org.bf2.cos.fleetshard.operator.client;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
+import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
+import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentStatusRequest;
+import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
+import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +30,12 @@ import org.slf4j.LoggerFactory;
 public class FleetShardClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetShardClient.class);
 
-    private final KubernetesClient kubernetesClient;
+    @Inject
+    KubernetesClient kubernetesClient;
+    @Inject
+    MetaClient meta;
+    @Inject
+    UnstructuredClient uc;
 
     @ConfigProperty(
         name = "cos.cluster.id")
@@ -30,14 +43,6 @@ public class FleetShardClient {
     @ConfigProperty(
         name = "cos.connectors.namespace")
     String connectorsNamespace;
-
-    public FleetShardClient(KubernetesClient kubernetesClient) {
-        this.kubernetesClient = kubernetesClient;
-    }
-
-    public KubernetesClient getKubernetesClient() {
-        return kubernetesClient;
-    }
 
     public String getConnectorsNamespace() {
         return connectorsNamespace;
@@ -168,5 +173,59 @@ public class FleetShardClient {
             .getItems();
 
         return answer != null ? answer : Collections.emptyList();
+    }
+
+    public ConnectorDeploymentStatus getConnectorDeploymentStatus(ManagedConnector connector) {
+        ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
+        ds.setResourceVersion(connector.getStatus().getDeployment().getDeploymentResourceVersion());
+
+        setConnectorOperators(connector, ds);
+        setConnectorStatus(connector, ds);
+        return ds;
+    }
+
+    private void setConnectorOperators(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
+        // report available operators
+        deploymentStatus.setOperators(
+            new ConnectorDeploymentStatusOperators()
+                .assigned(OperatorSupport.toConnectorOperator(connector.getStatus().getAssignedOperator()))
+                .available(OperatorSupport.toConnectorOperator(connector.getStatus().getAvailableOperator())));
+    }
+
+    private void setConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
+        ConnectorDeploymentStatusRequest sr = new ConnectorDeploymentStatusRequest()
+            .managedConnectorId(connector.getMetadata().getName())
+            .deploymentId(connector.getSpec().getDeploymentId())
+            .connectorId(connector.getSpec().getConnectorId())
+            .connectorTypeId(connector.getSpec().getConnectorTypeId());
+
+        for (DeployedResource resource : connector.getStatus().getResources()) {
+            // don't send secrets ...
+            if (Objects.equals("v1", resource.getApiVersion()) && Objects.equals("Secret", resource.getKind())) {
+                continue;
+            }
+
+            sr.addResourcesItem(
+                uc.getAsNode(connector.getMetadata().getNamespace(), resource));
+        }
+
+        var answer = meta.status(
+            connector.getStatus().getAssignedOperator().getMetaService(),
+            sr);
+
+        deploymentStatus.setPhase(answer.getPhase());
+
+        // TODO: fix model duplications
+        if (answer.getConditions() != null) {
+            for (var cond : answer.getConditions()) {
+                deploymentStatus.addConditionsItem(
+                    new MetaV1Condition()
+                        .type(cond.getType())
+                        .status(cond.getStatus())
+                        .message(cond.getMessage())
+                        .reason(cond.getReason())
+                        .lastTransitionTime(cond.getLastTransitionTime()));
+            }
+        }
     }
 }
