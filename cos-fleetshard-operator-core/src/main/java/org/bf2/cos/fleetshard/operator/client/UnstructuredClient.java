@@ -41,6 +41,10 @@ public class UnstructuredClient {
         return Serialization.jsonMapper().valueToTree(unstructured);
     }
 
+    public JsonNode getAsNode(String namespace, String apiVersion, String kind, String name) {
+        return getAsNode(namespace, new ResourceRef(apiVersion, kind, name));
+    }
+
     public Map<String, Object> get(String namespace, JsonNode ref) {
         return get(namespace, asCustomResourceDefinitionContext(ref));
     }

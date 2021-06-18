@@ -2,71 +2,87 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
-import org.bf2.cos.fleetshard.operator.it.support.FleetManager;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
-import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
-import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
+
+import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
 public class CamelConnectorStatusTest extends CamelTestSupport {
-    @KubernetesTestServer
-    KubernetesServer ksrv;
-    @Inject
-    FleetManager fm;
-
-    @ConfigProperty(
-        name = "cluster-id")
-    String clusterId;
-
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String connectorsNamespace;
-
-    @ConfigProperty(
-        name = "cos.fleetshard.meta.camel")
-    String connectorsMeta;
 
     @Test
-    void managedCamelConnectorIsReified() throws Exception {
-        ksrv.getClient()
-            .customResources(ManagedConnectorOperator.class)
-            .inNamespace(connectorsNamespace)
-            .createOrReplace(
-                newConnectorOperator(connectorsNamespace, "cm-1", "1.1.0", connectorsMeta));
+    void managedCamelConnectorStatusIsReported() throws Exception {
+        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0");
+        final ConnectorDeployment cd = withConnectorDeployment();
+        final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
+        await(30, TimeUnit.SECONDS, () -> {
+            List<ManagedConnector> connectors = getManagedConnectors(cd);
+            if (connectors.size() != 1) {
+                return false;
+            }
+
+            JsonNode secret = uc.getAsNode(
+                connectorsNamespace,
+                "v1",
+                "Secret",
+                connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+
+            JsonNode binding = uc.getAsNode(
+                connectorsNamespace,
+                "camel.apache.org/v1alpha1",
+                "KameletBinding",
+                connectors.get(0).getMetadata().getName());
+
+            return secret != null && binding != null;
+        });
+
+        updateConnector(getManagedConnectors(cd).get(0));
+
+        await(30, TimeUnit.SECONDS, () -> {
+            ConnectorDeploymentStatus status = fm.getCluster(clusterId)
+                .orElseThrow(() -> new IllegalStateException(""))
+                .getConnector(cd.getId())
+                .getStatus();
+
+            // TODO: unstructured update event seems not propagated
+            return status != null
+                && Objects.equals("provisioning", status.getPhase());
+        });
+
+    }
+
+    private ConnectorDeployment withConnectorDeployment() {
         final String barB64 = Base64.getEncoder()
             .encodeToString("bar".getBytes(StandardCharsets.UTF_8));
         final String kcidB64 = Base64.getEncoder()
             .encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
 
-        final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
         final String deploymentId = UUID.randomUUID().toString();
         final String connectorId = "cid";
         final String connectorTypeId = "ctid";
@@ -108,67 +124,16 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
                 .shardMetadata(connectorMeta)
                 .desiredState("ready"));
 
-        fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
+        return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
+    }
 
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var result = ksrv.getClient()
-                    .customResources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-                    .list();
-
-                return result.getItems() != null && result.getItems().size() == 1;
-            });
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var connector = ksrv.getClient()
-                    .customResources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-                    .list()
-                    .getItems()
-                    .get(0);
-
-                var secret = uc.getAsNode(
-                    connectorsNamespace,
-                    new ResourceRef(
-                        "v1",
-                        "Secret",
-                        connector.getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion()));
-
-                var binding = uc.getAsNode(
-                    connectorsNamespace,
-                    new ResourceRef(
-                        "camel.apache.org/v1alpha1",
-                        "KameletBinding",
-                        connector.getMetadata().getName()));
-
-                return secret != null && binding != null;
-            });
-
-        var connector = ksrv.getClient()
-            .customResources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-            .list()
-            .getItems()
-            .get(0);
-
-        var binding = (ObjectNode) uc.getAsNode(
+    private Map<String, Object> updateConnector(ManagedConnector connector) throws Exception {
+        UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
+        ObjectNode binding = (ObjectNode) uc.getAsNode(
             connectorsNamespace,
-            new ResourceRef(
-                "camel.apache.org/v1alpha1",
-                "KameletBinding",
-                connector.getMetadata().getName()));
+            "camel.apache.org/v1alpha1",
+            "KameletBinding",
+            connector.getMetadata().getName());
 
         binding.with("status").put("phase", "Ready");
         binding.with("status").withArray("conditions")
@@ -179,22 +144,6 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
             .put("type", "the type")
             .put("lastTransitionTime", "2021-06-12T12:35:09+02:00");
 
-        new UnstructuredClient(ksrv.getClient())
-            .createOrReplace(connectorsNamespace, binding);
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var status = fm.getCluster(clusterId)
-                    .orElseThrow(() -> new IllegalStateException(""))
-                    .getConnector(deploymentId)
-                    .getStatus();
-
-                // TODO: unstructured update event seems not propagated
-                return status != null
-                    && Objects.equals("provisioning", status.getPhase());
-            });
-
+        return uc.createOrReplace(connectorsNamespace, binding);
     }
 }
