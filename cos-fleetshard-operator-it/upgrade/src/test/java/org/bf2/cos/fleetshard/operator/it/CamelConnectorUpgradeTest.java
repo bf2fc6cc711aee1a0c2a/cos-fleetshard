@@ -6,59 +6,70 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
+import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
-import org.bf2.cos.fleetshard.operator.it.support.FleetManager;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
-import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
+
+import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
 public class CamelConnectorUpgradeTest extends CamelTestSupport {
-    @KubernetesTestServer
-    KubernetesServer ksrv;
-    @Inject
-    FleetManager fm;
-
-    @ConfigProperty(
-        name = "cluster-id")
-    String clusterId;
-
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String connectorsNamespace;
-
-    @ConfigProperty(
-        name = "cos.fleetshard.meta.camel")
-    String connectorsMeta;
 
     @Test
     void execute() {
-        ksrv.getClient()
-            .customResources(ManagedConnectorOperator.class)
-            .inNamespace(connectorsNamespace)
-            .createOrReplace(
-                newConnectorOperator(connectorsNamespace, "cm-1", "1.1.0", connectorsMeta));
+        withConnectorOperator("cm-1", "1.1.0");
 
+        final ConnectorDeployment cd = withConnectorDeployment();
+
+        await(30, TimeUnit.SECONDS, () -> {
+            ConnectorDeploymentStatus status = getDeploymentStatus(cd);
+            if (status == null) {
+                return false;
+            }
+
+            return status.getOperators() != null
+                && status.getOperators().getAssigned() != null
+                && status.getOperators().getAvailable() == null
+                && Objects.equals("camel-connector-operator", status.getOperators().getAssigned().getType())
+                && Objects.equals("1.1.0", status.getOperators().getAssigned().getVersion())
+                && Objects.equals("cm-1", status.getOperators().getAssigned().getId());
+        });
+
+        withConnectorOperator("cm-2", "1.2.0");
+
+        await(30, TimeUnit.SECONDS, () -> {
+            ConnectorDeploymentStatus status = getDeploymentStatus(cd);
+            if (status == null) {
+                return false;
+            }
+
+            return status.getOperators() != null
+                && status.getOperators().getAssigned() != null
+                && status.getOperators().getAvailable() != null
+                && Objects.equals("camel-connector-operator", status.getOperators().getAssigned().getType())
+                && Objects.equals("1.1.0", status.getOperators().getAssigned().getVersion())
+                && Objects.equals("cm-1", status.getOperators().getAssigned().getId())
+                && Objects.equals("camel-connector-operator", status.getOperators().getAvailable().getType())
+                && Objects.equals("1.2.0", status.getOperators().getAvailable().getVersion())
+                && Objects.equals("cm-2", status.getOperators().getAvailable().getId());
+        });
+    }
+
+    private ConnectorDeployment withConnectorDeployment() {
         final String barB64 = Base64.getEncoder()
             .encodeToString("bar".getBytes(StandardCharsets.UTF_8));
         final String kcidB64 = Base64.getEncoder()
@@ -105,64 +116,6 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
                 .shardMetadata(connectorMeta)
                 .desiredState("ready"));
 
-        fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var result = ksrv.getClient()
-                    .customResources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-                    .list();
-
-                return result.getItems() != null && result.getItems().size() == 1;
-            });
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var operators = fm.getCluster(clusterId)
-                    .orElseThrow(() -> new IllegalStateException(""))
-                    .getConnector(deploymentId)
-                    .getStatus()
-                    .getOperators();
-
-                return operators != null
-                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
-                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
-                    && Objects.equals("cm-1", operators.getAssigned().getId())
-                    && operators.getAvailable() == null;
-            });
-
-        ksrv.getClient()
-            .customResources(ManagedConnectorOperator.class)
-            .inNamespace(connectorsNamespace)
-            .createOrReplace(
-                newConnectorOperator("test", "cm-2", "1.2.0", connectorsMeta));
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var operators = fm.getCluster(clusterId)
-                    .orElseThrow(() -> new IllegalStateException(""))
-                    .getConnector(deploymentId)
-                    .getStatus()
-                    .getOperators();
-
-                return operators != null
-                    && operators.getAssigned() != null
-                    && operators.getAvailable() != null
-                    && Objects.equals("camel-connector-operator", operators.getAssigned().getType())
-                    && Objects.equals("1.1.0", operators.getAssigned().getVersion())
-                    && Objects.equals("cm-1", operators.getAssigned().getId())
-                    && Objects.equals("camel-connector-operator", operators.getAvailable().getType())
-                    && Objects.equals("1.2.0", operators.getAvailable().getVersion())
-                    && Objects.equals("cm-2", operators.getAvailable().getId());
-            });
+        return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
     }
 }

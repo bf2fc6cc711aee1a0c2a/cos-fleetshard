@@ -2,76 +2,65 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import javax.inject.Inject;
-
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpec;
-import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
-import org.bf2.cos.fleetshard.operator.it.support.FleetManager;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
-import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
-import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
+
+import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
 public class CamelConnectorReifyTest extends CamelTestSupport {
-    @KubernetesTestServer
-    KubernetesServer ksrv;
-    @Inject
-    FleetManager fm;
-
-    @ConfigProperty(
-        name = "cluster-id")
-    String clusterId;
-
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String connectorsNamespace;
-
-    @ConfigProperty(
-        name = "cos.fleetshard.meta.camel")
-    String connectorsMeta;
-
     @Test
     void managedCamelConnectorIsReified() {
-        var mco = new ManagedConnectorOperator();
-        mco.setMetadata(new ObjectMeta());
-        mco.getMetadata().setName("cm-1");
-        mco.getMetadata().setNamespace("test");
-        mco.setSpec(new ManagedConnectorOperatorSpec());
-        mco.getSpec().setNamespace("test");
-        mco.getSpec().setType("camel-connector-operator");
-        mco.getSpec().setType("camel-connector-operator");
-        mco.getSpec().setVersion("1.1.0");
-        mco.getSpec().setMetaService(connectorsMeta);
+        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0");
+        final ConnectorDeployment cd = withConnectorDeployment();
+        final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
-        ksrv.getClient()
-            .customResources(ManagedConnectorOperator.class)
-            .inNamespace(connectorsNamespace)
-            .createOrReplace(mco);
+        await(30, TimeUnit.SECONDS, () -> {
+            List<ManagedConnector> connectors = getManagedConnectors(cd);
+            if (connectors.size() != 1) {
+                return false;
+            }
 
+            JsonNode secret = uc.getAsNode(
+                connectorsNamespace,
+                "v1",
+                "Secret",
+                connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+
+            JsonNode binding = uc.getAsNode(
+                connectorsNamespace,
+                "camel.apache.org/v1alpha1",
+                "KameletBinding",
+                connectors.get(0).getMetadata().getName());
+
+            return secret != null && binding != null;
+        });
+
+    }
+
+    private ConnectorDeployment withConnectorDeployment() {
         final String barB64 = Base64.getEncoder()
             .encodeToString("bar".getBytes(StandardCharsets.UTF_8));
         final String kcidB64 = Base64.getEncoder()
@@ -118,50 +107,6 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
                 .shardMetadata(connectorMeta)
                 .desiredState("ready"));
 
-        fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var result = ksrv.getClient()
-                    .customResources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-                    .list();
-
-                return result.getItems() != null && result.getItems().size() == 1;
-            });
-
-        TestSupport.await(
-            30,
-            TimeUnit.SECONDS,
-            () -> {
-                var connector = ksrv.getClient()
-                    .customResources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, connectorId)
-                    .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-                    .list()
-                    .getItems()
-                    .get(0);
-
-                var secret = new UnstructuredClient(ksrv.getClient()).getAsNode(
-                    connectorsNamespace,
-                    new ResourceRef(
-                        "v1",
-                        "Secret",
-                        connector.getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion()));
-
-                var binding = new UnstructuredClient(ksrv.getClient()).getAsNode(
-                    connectorsNamespace,
-                    new ResourceRef(
-                        "camel.apache.org/v1alpha1",
-                        "KameletBinding",
-                        connector.getMetadata().getName()));
-
-                return secret != null && binding != null;
-            });
+        return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
     }
 }

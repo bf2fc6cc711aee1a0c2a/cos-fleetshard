@@ -146,7 +146,7 @@ public class FleetManager {
             return status;
         }
 
-        public void setConnectorDeployment(ConnectorDeployment deployment) {
+        public ConnectorDeployment setConnectorDeployment(ConnectorDeployment deployment) {
             connectors.compute(deployment.getId(), (k, v) -> {
                 if (v == null) {
                     v = new Connector();
@@ -154,6 +154,8 @@ public class FleetManager {
                 v.deployment = deployment;
                 return v;
             });
+
+            return deployment;
         }
     }
 
