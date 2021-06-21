@@ -51,7 +51,7 @@ jobs:
           IMAGE_REPO_NAMESPACE: ${{secrets.IMAGE_REPO_NAMESPACE}}
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
         run: |
-          ./build_deploy.sh
+          ./etc/scripts/build_deploy.sh
 
       - name: Print image url
         run: echo "Image pushed to ${{secrets.IMAGE_REPO_HOSTNAME}}/${{secrets.IMAGE_REPO_NAMESPACE}}/cos-fleetshard:${{steps.metadata.outputs.current-version}}"
