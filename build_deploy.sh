@@ -28,8 +28,7 @@
 # The machines that run this script need to have access to internet, so that
 # the built images can be pushed to quay.io.
 #
-# Set the directory for docker configuration:
-export DOCKER_CONFIG="${PWD}/.docker"
+
 
 # Log in to the image registry:
 if [ -z "${IMAGE_REPO_USERNAME}" ]; then
@@ -50,8 +49,6 @@ if [ -z "${IMAGE_REPO_NAMESPACE}" ]; then
   exit 1
 fi
 
-# Set up the docker config directory
-mkdir -p "${DOCKER_CONFIG}"
 
 export CONTAINER_REGISTRY_USR="${IMAGE_REPO_USERNAME}"
 export CONTAINER_REGISTRY_PWD="${IMAGE_REPO_PASSWORD}"
