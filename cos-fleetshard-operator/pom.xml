@@ -17,9 +17,9 @@
     <properties>
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
-        <quarkus.container-image.group>mcs_dev</quarkus.container-image.group>
+        <quarkus.container-image.group>rhoas</quarkus.container-image.group>
         <quarkus.container-image.name>cos-fleetshard</quarkus.container-image.name>
-        <quarkus.container-image.tag>${project.version}</quarkus.container-image.tag>
+        <quarkus.container-image.tag>latest</quarkus.container-image.tag>
     </properties>
 
     <dependencies>
