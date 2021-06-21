@@ -36,10 +36,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: "Integration tests"
-        run: |
-          mvn ${MAVEN_ARGS} clean verify
-
       - name: Retrieve Project Metadata
         uses: radcortez/project-metadata-action@243817f1e0f2b4df4e012fc17efc45cff166425d
         id: metadata
@@ -47,10 +43,7 @@ jobs:
           metadata-file-path: '.github/project.yaml'
           local-file: true
 
-      - name: Setup Docker
-        uses: docker-practice/actions-setup-docker@v1
-
-      - name: Build docker image and push it
+      - name: Build container image and push it
         env:
           IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
           IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
@@ -58,7 +51,6 @@ jobs:
           IMAGE_REPO_NAMESPACE: ${{secrets.IMAGE_REPO_NAMESPACE}}
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
         run: |
-          docker login -u="${IMAGE_REPO_USERNAME}" -p="${IMAGE_REPO_PASSWORD}" ${IMAGE_REPO_HOSTNAME}
           ./build_deploy.sh
 
       - name: Print image url
