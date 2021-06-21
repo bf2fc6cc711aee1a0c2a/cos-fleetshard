@@ -8,6 +8,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test;
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTest
-public class ConnectorClusterTest {
+public class ConnectorClusterTest extends TestSupport {
     @KubernetesTestServer
     KubernetesServer ksrv;
 
@@ -28,7 +29,7 @@ public class ConnectorClusterTest {
 
     @Test
     void clusterIsRegistered() {
-        TestSupport.await(30, TimeUnit.SECONDS, () -> {
+        await(30, TimeUnit.SECONDS, () -> {
             ManagedConnectorCluster cluster = ksrv.getClient()
                 .customResources(ManagedConnectorCluster.class)
                 .inNamespace(ksrv.getClient().getNamespace())
@@ -37,6 +38,25 @@ public class ConnectorClusterTest {
 
             return cluster != null
                 && cluster.getStatus().getPhase() == ManagedConnectorClusterStatus.PhaseType.Ready;
+        });
+
+        ksrv.getClient()
+            .customResources(ManagedConnectorOperator.class)
+            .inNamespace(ksrv.getClient().getNamespace())
+            .createOrReplace(
+                newConnectorOperator(ksrv.getClient().getNamespace(), "cm-1", "1.0.0", "localhost:8080"));
+        ksrv.getClient()
+            .customResources(ManagedConnectorOperator.class)
+            .inNamespace(ksrv.getClient().getNamespace())
+            .createOrReplace(
+                newConnectorOperator(ksrv.getClient().getNamespace(), "cm-2", "1.1.0", "localhost:8080"));
+
+        await(30, TimeUnit.SECONDS, () -> {
+            var cluster = getCluster();
+
+            return cluster != null
+                && cluster.getStatus().getOperators() != null
+                && cluster.getStatus().getOperators().size() == 2;
         });
     }
 }

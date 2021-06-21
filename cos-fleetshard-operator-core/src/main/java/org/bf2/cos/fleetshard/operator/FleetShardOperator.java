@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -9,15 +11,25 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
-public class Application {
+public class FleetShardOperator {
     @Inject
     Operator operator;
 
+    private AtomicBoolean running = new AtomicBoolean(false);
+
     void onStart(@Observes StartupEvent ignored) {
-        operator.start();
+        if (running.compareAndSet(false, true)) {
+            operator.start();
+        }
     }
 
     void onStop(@Observes ShutdownEvent ignored) {
-        operator.close();
+        if (running.compareAndSet(true, false)) {
+            operator.close();
+        }
+    }
+
+    public boolean isRunning() {
+        return running.get();
     }
 }

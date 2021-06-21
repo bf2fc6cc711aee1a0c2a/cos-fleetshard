@@ -15,13 +15,12 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
-import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
-import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
+import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
+import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
-
-import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
@@ -29,9 +28,13 @@ import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 @QuarkusTest
 public class CamelConnectorUpgradeTest extends CamelTestSupport {
 
+    @ConfigProperty(
+        name = "cos.fleetshard.meta.camel")
+    String camelMeta;
+
     @Test
     void execute() {
-        withConnectorOperator("cm-1", "1.1.0");
+        withConnectorOperator("cm-1", "1.1.0", camelMeta);
 
         final ConnectorDeployment cd = withConnectorDeployment();
 
@@ -49,7 +52,7 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
                 && Objects.equals("cm-1", status.getOperators().getAssigned().getId());
         });
 
-        withConnectorOperator("cm-2", "1.2.0");
+        withConnectorOperator("cm-2", "1.2.0", camelMeta);
 
         await(30, TimeUnit.SECONDS, () -> {
             ConnectorDeploymentStatus status = getDeploymentStatus(cd);

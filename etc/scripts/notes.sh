@@ -3,11 +3,11 @@ curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr http://localhost:8000/api
  "kind": "Connector",
     "metadata": {
         "name": "My Example 2",
-        "kafka_id": "1tnuMzfoUJpXisas7aaZ81etMwT"
+        "kafka_id": "1uFpCmsHo3a4mr0pe0E0iHfMuNq"
     },
     "deployment_location": {
         "kind": "addon",
-        "cluster_id": "1tnuO1tkF7QfxhhuqH4xNvZfmTX"
+        "cluster_id": "1uFpG1SzJgMhCYA1f0omIGXTynC"
     },
     "kafka": {
       "bootstrap_server": "kafka.hostname",
@@ -38,11 +38,11 @@ curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr http://localhost:8000/api
  "kind": "Connector",
     "metadata": {
         "name": "My Example 5",
-        "kafka_id": "1tnuMzfoUJpXisas7aaZ81etMwT"
+        "kafka_id": "1uFpCmsHo3a4mr0pe0E0iHfMuNq"
     },
     "deployment_location": {
         "kind": "addon",
-        "cluster_id": "1tnuO1tkF7QfxhhuqH4xNvZfmTX"
+        "cluster_id": "1uFpG1SzJgMhCYA1f0omIGXTynC"
     },
     "kafka": {
       "bootstrap_server": "kafka.hostname",

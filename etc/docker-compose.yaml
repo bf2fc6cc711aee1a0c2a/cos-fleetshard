@@ -3,13 +3,12 @@ services:
   operator:
     depends_on:
       - meta
-    image: "quay.io/lburgazzoli/cfo:latest"
+    image: "quay.io/lburgazzoli/cfs:latest"
     volumes:
       - $KUBECONFIG:/etc/kube/config:Z
     environment:
       KUBECONFIG: /etc/kube/config
       QUARKUS_LOG_CONSOLE_JSON: "false"
-      COS_CONNECTOR_META_HOST: "meta:8080"
       COS_CONNECTOR_NAMESPACE: "lb-cos"
       COS_CONTROL_PLANE_URL: "http://localhost:8080"
   meta:

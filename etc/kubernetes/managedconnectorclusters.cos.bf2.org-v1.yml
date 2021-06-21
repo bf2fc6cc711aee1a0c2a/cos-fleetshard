@@ -41,21 +41,6 @@ spec:
                 - Installing
                 - Deleted
                 type: string
-              operators:
-                items:
-                  properties:
-                    id:
-                      type: string
-                    version:
-                      type: string
-                    metaService:
-                      type: string
-                    type:
-                      type: string
-                    namespace:
-                      type: string
-                  type: object
-                type: array
               conditions:
                 items:
                   type: object

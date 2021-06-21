@@ -13,6 +13,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
@@ -37,12 +38,18 @@ public class ConnectorSync {
     FleetShardClient fleetShard;
     @Inject
     KubernetesClient kubernetesClient;
+    @Inject
+    FleetShardOperator operator;
 
     @Scheduled(
-        every = "{cos.connectors.sync.interval}",
+        every = "{cos.connectors.poll.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void sync() {
-        LOGGER.debug("Sync connectors");
+        if (!operator.isRunning()) {
+            return;
+        }
+
+        LOGGER.debug("Poll connectors");
 
         fleetShard.lookupManagedConnectorCluster()
             .filter(cluster -> cluster.getStatus().isReady())
@@ -127,9 +134,13 @@ public class ConnectorSync {
     }
 
     @Scheduled(
-        every = "{cos.cluster.sync.interval}",
+        every = "{cos.connectors.sync.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void syncStatus() {
+        if (!operator.isRunning()) {
+            return;
+        }
+
         LOGGER.info("Sync connector status");
 
         fleetShard.lookupManagedConnectorCluster()

@@ -18,22 +18,25 @@ import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
-import org.bf2.cos.fleetshard.operator.it.support.CamelMetaServiceSetup;
-import org.bf2.cos.fleetshard.operator.it.support.CamelTestSupport;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
+import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
+import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
-
-import static org.bf2.cos.fleetshard.operator.it.support.TestSupport.await;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
 public class CamelConnectorReifyTest extends CamelTestSupport {
+    @ConfigProperty(
+        name = "cos.fleetshard.meta.camel")
+    String camelMeta;
+
     @Test
     void managedCamelConnectorIsReified() {
-        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0");
+        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0", camelMeta);
         final ConnectorDeployment cd = withConnectorDeployment();
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 

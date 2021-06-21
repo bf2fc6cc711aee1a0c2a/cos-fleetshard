@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.api;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.locks.Condition;
@@ -20,8 +19,6 @@ import lombok.ToString;
 public class ManagedConnectorClusterStatus {
     private PhaseType phase;
     private List<Condition> conditions;
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<Operator> operators = new ArrayList<>();
 
     @JsonProperty
     public PhaseType getPhase() {
@@ -51,16 +48,6 @@ public class ManagedConnectorClusterStatus {
     @JsonProperty
     public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
-    }
-
-    @JsonProperty
-    public List<Operator> getOperators() {
-        return operators;
-    }
-
-    @JsonProperty
-    public void setOperators(List<Operator> operators) {
-        this.operators = operators;
     }
 
     public enum PhaseType {

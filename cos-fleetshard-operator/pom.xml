@@ -41,8 +41,20 @@
             <artifactId>quarkus-container-image-jib</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkiverse.operatorsdk</groupId>
-            <artifactId>quarkus-operator-sdk</artifactId>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-oidc-client-filter</artifactId>
         </dependency>
     </dependencies>
 
@@ -83,7 +95,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/src/main/kubernetes</outputDirectory>
+                            <outputDirectory>${cos.project.root}/etc//kubernetes</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/kubernetes</directory>
@@ -103,7 +115,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/src/main/kubernetes</outputDirectory>
+                            <outputDirectory>${cos.project.root}/etc//kubernetes</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/kubernetes</directory>

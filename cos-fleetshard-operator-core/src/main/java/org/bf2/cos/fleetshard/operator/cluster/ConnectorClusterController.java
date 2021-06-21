@@ -84,7 +84,9 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
             update = true;
         }
 
-        controlPlane.updateClusterStatus(cluster);
+        controlPlane.updateClusterStatus(
+            cluster,
+            fleetShard.lookupManagedConnectorOperators());
 
         return update
             ? UpdateControl.updateStatusSubResource(cluster)

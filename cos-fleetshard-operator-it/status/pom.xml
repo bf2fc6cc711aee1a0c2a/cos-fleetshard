@@ -17,12 +17,16 @@
     <dependencies>
         <dependency>
             <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-operator-it-test-operator</artifactId>
-            <scope>test</scope>
+            <artifactId>cos-fleetshard-operator-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-operator-it-test-support</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-operator-it-test-support-camel</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

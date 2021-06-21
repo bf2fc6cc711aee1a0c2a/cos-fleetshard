@@ -19,12 +19,12 @@
         <dependencies>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-operator-it-test-operator</artifactId>
+                <artifactId>cos-fleetshard-operator-it-test-support</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-operator-it-test-support</artifactId>
+                <artifactId>cos-fleetshard-operator-it-test-support-camel</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -46,8 +46,8 @@
     </dependencyManagement>
 
     <modules>
-        <module>test-operator</module>
         <module>test-support</module>
+        <module>test-support-camel</module>
         <module>cluster</module>
         <module>reify</module>
         <module>status</module>

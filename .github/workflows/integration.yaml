@@ -1,13 +1,18 @@
-name: Integration tests
+name: os-fleetshard ci if
 
 on:
   pull_request:
-    types: [ opened, reopened, synchronize ]
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 env:
   LANG: en_US.UTF-8
   MAVEN_OPTS: -Xmx500m
-  MAVEN_ARGS: -V -Dhttp.keepAlive=false -e
+  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
   build:

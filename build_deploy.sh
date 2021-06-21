@@ -27,13 +27,7 @@
 #
 # The machines that run this script need to have access to internet, so that
 # the built images can be pushed to quay.io.
-
-if [ -z "${CONTAINER_VERSION}" ]; then
-  # The version should be the short hash from git. This is what the deployment
-  # process expects.
-  CONTAINER_VERSION="$(git log --pretty=format:'%h' -n 1)"
-fi
-
+#
 # Set the directory for docker configuration:
 export DOCKER_CONFIG="${PWD}/.docker"
 
@@ -43,6 +37,7 @@ if [ -z "${IMAGE_REPO_USERNAME}" ]; then
   echo "Make sure to set the IMAGE_REPO_USERNAME environment variable."
   exit 1
 fi
+
 if [ -z "${IMAGE_REPO_PASSWORD}" ]; then
   echo "The quay.io push token hasn't been provided."
   echo "Make sure to set the IMAGE_REPO_PASSWORD environment variable."
@@ -68,7 +63,7 @@ export CONTAINER_REGISTRY_PWD="${IMAGE_REPO_PASSWORD}"
 [ -z "${CI}" ] || ADDITIONAL_TAGS="$(git log --pretty=format:'%h' -n 1)"
 
 if [ ! -z "${CONTAINER_VERSION}" ]; then
-  [ -z "${ADDITIONAL_TAGS}" ] && ADDITIONAL_TAGS="${CONTAINER_VERSION}" \
+  [ -z ${ADDITIONAL_TAGS} ] && ADDITIONAL_TAGS="${CONTAINER_VERSION}" \
     || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
 fi
 

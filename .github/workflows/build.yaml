@@ -1,13 +1,18 @@
-name: Managed Connector Service Operator CI
+name: cos-fleetshard ci
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 env:
   LANG: en_US.UTF-8
   MAVEN_OPTS: -Xmx500m
-  MAVEN_ARGS: -V -Dhttp.keepAlive=false -e
+  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
   build:
@@ -22,6 +27,18 @@ jobs:
 
       - name: Checkout Project
         uses: actions/checkout@v2
+
+      - name: Cache m2 repo
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: "Integration tests"
+        run: |
+          mvn ${MAVEN_ARGS} clean verify
 
       - name: Retrieve Project Metadata
         uses: radcortez/project-metadata-action@243817f1e0f2b4df4e012fc17efc45cff166425d

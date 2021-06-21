@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
@@ -18,6 +19,8 @@ import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentStatusRequest
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
@@ -84,6 +87,25 @@ public class FleetShardClient {
             .list()
             .getItems();
 
+    }
+
+    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String name) {
+        return lookupOrCreateManagedConnectorCluster(kubernetesClient.getNamespace(), name);
+    }
+
+    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String namespace, String name) {
+        return lookupManagedConnectorCluster(kubernetesClient.getNamespace(), name).orElseGet(() -> {
+            return kubernetesClient.customResources(ManagedConnectorCluster.class)
+                .create(new ManagedConnectorClusterBuilder()
+                    .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .build())
+                    .withSpec(new ManagedConnectorClusterSpecBuilder()
+                        .withId(clusterId)
+                        .withConnectorsNamespace(namespace)
+                        .build())
+                    .build());
+        });
     }
 
     // ******************************************************
@@ -200,7 +222,7 @@ public class FleetShardClient {
             .connectorTypeId(connector.getSpec().getConnectorTypeId());
 
         for (DeployedResource resource : connector.getStatus().getResources()) {
-            // don't send secrets ...
+            // don't include secrets ...
             if (Objects.equals("v1", resource.getApiVersion()) && Objects.equals("Secret", resource.getKind())) {
                 continue;
             }
@@ -209,23 +231,27 @@ public class FleetShardClient {
                 uc.getAsNode(connector.getMetadata().getNamespace(), resource));
         }
 
-        var answer = meta.status(
-            connector.getStatus().getAssignedOperator().getMetaService(),
-            sr);
+        if (connector.getStatus().getAssignedOperator() != null) {
+            var answer = meta.status(
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                sr);
 
-        deploymentStatus.setPhase(answer.getPhase());
+            deploymentStatus.setPhase(answer.getPhase());
 
-        // TODO: fix model duplications
-        if (answer.getConditions() != null) {
-            for (var cond : answer.getConditions()) {
-                deploymentStatus.addConditionsItem(
-                    new MetaV1Condition()
-                        .type(cond.getType())
-                        .status(cond.getStatus())
-                        .message(cond.getMessage())
-                        .reason(cond.getReason())
-                        .lastTransitionTime(cond.getLastTransitionTime()));
+            // TODO: fix model duplications
+            if (answer.getConditions() != null) {
+                for (var cond : answer.getConditions()) {
+                    deploymentStatus.addConditionsItem(
+                        new MetaV1Condition()
+                            .type(cond.getType())
+                            .status(cond.getStatus())
+                            .message(cond.getMessage())
+                            .reason(cond.getReason())
+                            .lastTransitionTime(cond.getLastTransitionTime()));
+                }
             }
+        } else {
+            deploymentStatus.setPhase("provisioning");
         }
     }
 }
