@@ -24,7 +24,7 @@
         <kubernetes-client.version>5.4.1</kubernetes-client.version>
         <lombok.version>1.18.18</lombok.version>
         <quarkus.version>1.13.7.Final</quarkus.version>
-        <quarkus-operator-sdk.version>1.9.3</quarkus-operator-sdk.version>
+        <quarkus-operator-sdk.version>1.9.4</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
         <sundrio.version>0.40.1</sundrio.version>
 
