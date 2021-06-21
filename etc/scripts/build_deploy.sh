@@ -64,7 +64,8 @@ if [ ! -z "${CONTAINER_VERSION}" ]; then
     || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
 fi
 
-./mvnw clean package \
+./mvnw -ntp \
+  clean package \
   -Dquarkus.container-image.username="${CONTAINER_REGISTRY_USR}" \
   -Dquarkus.container-image.password="${CONTAINER_REGISTRY_PWD}" \
   -Dquarkus.container-image.tag=latest \
