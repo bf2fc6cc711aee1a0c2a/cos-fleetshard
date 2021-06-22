@@ -26,13 +26,16 @@ public class ConnectorClusterTest extends TestSupport {
     @ConfigProperty(
         name = "cluster-id")
     String clusterId;
+    @ConfigProperty(
+        name = "test.namespace")
+    String namespace;
 
     @Test
     void clusterIsRegistered() {
         await(30, TimeUnit.SECONDS, () -> {
             ManagedConnectorCluster cluster = ksrv.getClient()
                 .customResources(ManagedConnectorCluster.class)
-                .inNamespace(ksrv.getClient().getNamespace())
+                .inNamespace(namespace)
                 .withName(ConnectorClusterSupport.clusterName(clusterId))
                 .get();
 
@@ -42,14 +45,14 @@ public class ConnectorClusterTest extends TestSupport {
 
         ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
-            .inNamespace(ksrv.getClient().getNamespace())
+            .inNamespace(namespace)
             .createOrReplace(
-                newConnectorOperator(ksrv.getClient().getNamespace(), "cm-1", "1.0.0", "localhost:8080"));
+                newConnectorOperator(namespace, "cm-1", "1.0.0", "localhost:8080"));
         ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
-            .inNamespace(ksrv.getClient().getNamespace())
+            .inNamespace(namespace)
             .createOrReplace(
-                newConnectorOperator(ksrv.getClient().getNamespace(), "cm-2", "1.1.0", "localhost:8080"));
+                newConnectorOperator(namespace, "cm-2", "1.1.0", "localhost:8080"));
 
         await(30, TimeUnit.SECONDS, () -> {
             var cluster = getCluster();

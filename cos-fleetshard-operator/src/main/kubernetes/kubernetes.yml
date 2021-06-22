@@ -1,4 +1,11 @@
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cos-fleetshard
+imagePullSecrets:
+  - name: cos-pull-secret
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -86,3 +93,27 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cos-fleetshard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+  template:
+    metadata:
+      annotations:
+      labels:
+    spec:
+      containers:
+        - env:
+            - name: COS_CONNECTORS_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: COS_CLUSTER_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace

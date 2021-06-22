@@ -10,15 +10,19 @@ import org.slf4j.LoggerFactory;
 public abstract class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConnectorOperator> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);
 
-    public ConnectorOperatorEventSource(KubernetesClient kubernetesClient) {
+    private final String namespace;
+
+    public ConnectorOperatorEventSource(KubernetesClient kubernetesClient, String namespace) {
         super(kubernetesClient);
+
+        this.namespace = namespace;
     }
 
     @Override
     protected Watch watch() {
         return getClient()
             .customResources(ManagedConnectorOperator.class)
-            .inNamespace(getClient().getNamespace())
+            .inNamespace(this.namespace)
             .watch(this);
     }
 

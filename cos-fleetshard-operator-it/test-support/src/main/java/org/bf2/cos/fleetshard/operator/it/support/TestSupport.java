@@ -30,8 +30,8 @@ public class TestSupport {
     protected String clusterId;
 
     @ConfigProperty(
-        name = "cos.connectors.namespace")
-    protected String connectorsNamespace;
+        name = "test.namespace")
+    String namespace;
 
     public static void await(long timeout, TimeUnit unit, Callable<Boolean> condition) {
         Awaitility.await()
@@ -63,7 +63,7 @@ public class TestSupport {
     protected List<ManagedConnector> getManagedConnectors(ConnectorDeployment cd) {
         return ksrv.getClient()
             .customResources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
+            .inNamespace(namespace)
             .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, cd.getSpec().getConnectorId())
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, cd.getId())
             .list()
@@ -73,9 +73,9 @@ public class TestSupport {
     protected ManagedConnectorOperator withConnectorOperator(String name, String version, String connectorsMeta) {
         return ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
-            .inNamespace(connectorsNamespace)
+            .inNamespace(namespace)
             .createOrReplace(
-                TestSupport.newConnectorOperator(connectorsNamespace, name, version, connectorsMeta));
+                TestSupport.newConnectorOperator(namespace, name, version, connectorsMeta));
     }
 
     protected ConnectorDeploymentStatus getDeploymentStatus(ConnectorDeployment cd) {

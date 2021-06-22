@@ -28,9 +28,6 @@ public class ConnectorClusterSync {
     @ConfigProperty(
         name = "cos.cluster.id")
     String clusterId;
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String connectorsNamespace;
 
     @Scheduled(
         every = "{cos.cluster.sync.interval}",

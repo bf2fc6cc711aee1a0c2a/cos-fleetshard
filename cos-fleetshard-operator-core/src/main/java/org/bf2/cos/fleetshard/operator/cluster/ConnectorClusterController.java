@@ -52,7 +52,7 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
             });
         eventSourceManager.registerEventSource(
             "_operators",
-            new ConnectorOperatorEventSource(kubernetesClient) {
+            new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getClusterNamespace()) {
                 @Override
                 protected void resourceUpdated(ManagedConnectorOperator resource) {
                     // TODO
@@ -101,7 +101,8 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
 
     private void handleConnectorEvent(ManagedConnector connector) {
         try {
-            controlPlane.updateConnectorStatus(connector,
+            controlPlane.updateConnectorStatus(
+                connector,
                 fleetShard.getConnectorDeploymentStatus(connector));
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);

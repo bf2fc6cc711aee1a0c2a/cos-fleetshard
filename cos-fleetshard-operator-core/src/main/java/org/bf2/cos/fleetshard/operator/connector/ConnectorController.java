@@ -84,7 +84,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     public void registerEventSources(EventSourceManager eventSourceManager) {
         eventSourceManager.registerEventSource(
             "_operators",
-            new ConnectorOperatorEventSource(kubernetesClient) {
+            new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getClusterNamespace()) {
                 @Override
                 protected void resourceUpdated(ManagedConnectorOperator resource) {
                     for (var connector : fleetShard.lookupConnectors()) {

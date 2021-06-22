@@ -134,7 +134,7 @@ public class UnstructuredClient {
         return kubernetesClient
             .customResource(ctx)
             .inNamespace(namespace)
-            .createOrReplace(unstructured);
+            .createOrReplace(namespace, unstructured);
     }
 
     public Watch watch(String namespace, ResourceRef ref, Watcher<String> watcher) {

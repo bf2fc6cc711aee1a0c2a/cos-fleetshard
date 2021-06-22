@@ -5,15 +5,17 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 9ea3a3348d6bca3cf5b730144aa4770d4f5235ef
+    app.quarkus.io/commit-id: 17db22f26480ea9efc1e8fd31da4c62154846d68
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-06-22 - 13:39:48 +0000
+    app.quarkus.io/build-timestamp: 2021-06-22 - 19:00:14 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
     app.kubernetes.io/name: cos-fleetshard
     app.kubernetes.io/version: latest
   name: cos-fleetshard
+imagePullSecrets:
+- name: cos-pull-secret
 ---
 apiVersion: v1
 kind: Service
@@ -21,9 +23,9 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 9ea3a3348d6bca3cf5b730144aa4770d4f5235ef
+    app.quarkus.io/commit-id: 17db22f26480ea9efc1e8fd31da4c62154846d68
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-06-22 - 13:39:48 +0000
+    app.quarkus.io/build-timestamp: 2021-06-22 - 19:00:14 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
@@ -156,9 +158,9 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 9ea3a3348d6bca3cf5b730144aa4770d4f5235ef
+    app.quarkus.io/commit-id: 17db22f26480ea9efc1e8fd31da4c62154846d68
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-06-22 - 13:39:48 +0000
+    app.quarkus.io/build-timestamp: 2021-06-22 - 19:00:14 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
@@ -176,9 +178,9 @@ spec:
       annotations:
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
-        app.quarkus.io/commit-id: 9ea3a3348d6bca3cf5b730144aa4770d4f5235ef
+        app.quarkus.io/commit-id: 17db22f26480ea9efc1e8fd31da4c62154846d68
         app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-        app.quarkus.io/build-timestamp: 2021-06-22 - 13:39:48 +0000
+        app.quarkus.io/build-timestamp: 2021-06-22 - 19:00:14 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
       labels:
@@ -187,6 +189,14 @@ spec:
     spec:
       containers:
       - env:
+        - name: COS_CONNECTORS_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: COS_CLUSTER_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:

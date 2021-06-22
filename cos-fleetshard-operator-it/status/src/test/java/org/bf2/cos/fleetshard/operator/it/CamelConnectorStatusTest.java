@@ -36,6 +36,9 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
     @ConfigProperty(
         name = "cos.fleetshard.meta.camel")
     String camelMeta;
+    @ConfigProperty(
+        name = "test.namespace")
+    String namespace;
 
     @Test
     void managedCamelConnectorStatusIsReported() throws Exception {
@@ -50,13 +53,13 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
             }
 
             JsonNode secret = uc.getAsNode(
-                connectorsNamespace,
+                namespace,
                 "v1",
                 "Secret",
                 connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
 
             JsonNode binding = uc.getAsNode(
-                connectorsNamespace,
+                namespace,
                 "camel.apache.org/v1alpha1",
                 "KameletBinding",
                 connectors.get(0).getMetadata().getName());
@@ -132,7 +135,7 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
     private Map<String, Object> updateConnector(ManagedConnector connector) throws Exception {
         UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
         ObjectNode binding = (ObjectNode) uc.getAsNode(
-            connectorsNamespace,
+            namespace,
             "camel.apache.org/v1alpha1",
             "KameletBinding",
             connector.getMetadata().getName());
@@ -146,6 +149,6 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
             .put("type", "the type")
             .put("lastTransitionTime", "2021-06-12T12:35:09+02:00");
 
-        return uc.createOrReplace(connectorsNamespace, binding);
+        return uc.createOrReplace(namespace, binding);
     }
 }

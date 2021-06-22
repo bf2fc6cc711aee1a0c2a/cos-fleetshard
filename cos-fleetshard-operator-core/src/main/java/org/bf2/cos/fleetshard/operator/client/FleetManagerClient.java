@@ -21,6 +21,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,10 @@ import static org.bf2.cos.fleetshard.operator.client.FleetManagerClientHelper.ru
 @ApplicationScoped
 public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
+
+    @ConfigProperty(
+        name = "cos.cluster.id")
+    String clusterId;
 
     @Inject
     @RestClient

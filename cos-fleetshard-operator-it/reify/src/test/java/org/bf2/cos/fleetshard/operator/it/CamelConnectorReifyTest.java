@@ -33,6 +33,9 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
     @ConfigProperty(
         name = "cos.fleetshard.meta.camel")
     String camelMeta;
+    @ConfigProperty(
+        name = "test.namespace")
+    String namespace;
 
     @Test
     void managedCamelConnectorIsReified() {
@@ -47,13 +50,13 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
             }
 
             JsonNode secret = uc.getAsNode(
-                connectorsNamespace,
+                namespace,
                 "v1",
                 "Secret",
                 connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
 
             JsonNode binding = uc.getAsNode(
-                connectorsNamespace,
+                namespace,
                 "camel.apache.org/v1alpha1",
                 "KameletBinding",
                 connectors.get(0).getMetadata().getName());

@@ -46,9 +46,16 @@ public class FleetShardClient {
     @ConfigProperty(
         name = "cos.connectors.namespace")
     String connectorsNamespace;
+    @ConfigProperty(
+        name = "cos.cluster.namespace")
+    String clusterNamespace;
 
     public String getConnectorsNamespace() {
         return connectorsNamespace;
+    }
+
+    public String getClusterNamespace() {
+        return clusterNamespace;
     }
 
     public String getClusterId() {
@@ -63,7 +70,7 @@ public class FleetShardClient {
 
     public Optional<ManagedConnectorCluster> lookupManagedConnectorCluster() {
         return lookupManagedConnectorCluster(
-            kubernetesClient.getNamespace(),
+            clusterNamespace,
             ConnectorClusterSupport.clusterName(clusterId));
     }
 
@@ -90,11 +97,11 @@ public class FleetShardClient {
     }
 
     public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String name) {
-        return lookupOrCreateManagedConnectorCluster(kubernetesClient.getNamespace(), name);
+        return lookupOrCreateManagedConnectorCluster(clusterNamespace, name);
     }
 
     public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String namespace, String name) {
-        return lookupManagedConnectorCluster(kubernetesClient.getNamespace(), name).orElseGet(() -> {
+        return lookupManagedConnectorCluster(namespace, name).orElseGet(() -> {
             return kubernetesClient.customResources(ManagedConnectorCluster.class)
                 .create(new ManagedConnectorClusterBuilder()
                     .withMetadata(new ObjectMetaBuilder()
@@ -102,7 +109,7 @@ public class FleetShardClient {
                         .build())
                     .withSpec(new ManagedConnectorClusterSpecBuilder()
                         .withId(clusterId)
-                        .withConnectorsNamespace(namespace)
+                        .withConnectorsNamespace(connectorsNamespace)
                         .build())
                     .build());
         });
@@ -115,7 +122,7 @@ public class FleetShardClient {
     //  ******************************************************
 
     public List<ManagedConnectorOperator> lookupManagedConnectorOperators() {
-        return lookupManagedConnectorOperators(kubernetesClient.getNamespace());
+        return lookupManagedConnectorOperators(clusterNamespace);
     }
 
     public List<ManagedConnectorOperator> lookupManagedConnectorOperators(String namespace) {
@@ -126,7 +133,7 @@ public class FleetShardClient {
     }
 
     public List<Operator> lookupOperators() {
-        return lookupOperators(kubernetesClient.getNamespace());
+        return lookupOperators(clusterNamespace);
     }
 
     public List<Operator> lookupOperators(String namespace) {
@@ -184,13 +191,9 @@ public class FleetShardClient {
     }
 
     public List<ManagedConnector> lookupConnectors() {
-        return lookupConnectors(this.connectorsNamespace);
-    }
-
-    public List<ManagedConnector> lookupConnectors(String namespace) {
         List<ManagedConnector> answer = kubernetesClient
             .customResources(ManagedConnector.class)
-            .inNamespace(namespace)
+            .inNamespace(this.connectorsNamespace)
             .list()
             .getItems();
 

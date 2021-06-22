@@ -20,7 +20,7 @@ public class OperatorSetup implements QuarkusTestResourceLifecycleManager {
             "mas-sso-realm", "mas",
             "client-id", UUID.randomUUID().toString(),
             "client-secret", UUID.randomUUID().toString(),
-            "cos.connectors.namespace", "test");
+            "test.namespace", "test");
 
         LOGGER.info("Configuring Operator properties: {}", properties);
 
