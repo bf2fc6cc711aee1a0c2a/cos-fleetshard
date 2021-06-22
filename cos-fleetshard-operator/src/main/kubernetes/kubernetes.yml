@@ -1,0 +1,88 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: view-secrets
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  resourceNames:
+  - addon-cos-fleetshard-operator-parameters
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cos-fleetshard-operator
+rules:
+# operator custom resources
+- apiGroups:
+  - cos.bf2.org
+  resources:
+  - managedconnectors
+  - managedconnectors/status
+  - managedconnectoroperators
+  - managedconnectoroperators/status
+  - managedconnectorclusters
+  - managedconnectorclusters/status
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# managed connector resources
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - kafka.strimzi.io
+  resources:
+  - kafkaconnects
+  - kafkaconnectors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - kameletbindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cos-fleetshard-operator
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-operator
+subjects:
+- kind: ServiceAccount
+  name: cos-fleetshard
