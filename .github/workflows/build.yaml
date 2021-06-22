@@ -13,6 +13,11 @@ env:
   LANG: en_US.UTF-8
   MAVEN_OPTS: -Xmx3000m
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
+  IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
+  IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
+  IMAGE_REPO_HOSTNAME: ${{secrets.IMAGE_REPO_HOSTNAME}}
+  IMAGE_REPO_NAMESPACE: ${{secrets.IMAGE_REPO_NAMESPACE}}
+  OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
 
 jobs:
   build:
@@ -45,10 +50,6 @@ jobs:
 
       - name: Build container image and push it
         env:
-          IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
-          IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
-          IMAGE_REPO_HOSTNAME: ${{secrets.IMAGE_REPO_HOSTNAME}}
-          IMAGE_REPO_NAMESPACE: ${{secrets.IMAGE_REPO_NAMESPACE}}
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
         run: |
           ./etc/scripts/build_container_image.sh
@@ -81,12 +82,6 @@ jobs:
           insecure_skip_tls_verify: true
           namespace: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
       - name: Create Pull Secret
-        env:
-          IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
-          IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
-          IMAGE_REPO_HOSTNAME: ${{secrets.IMAGE_REPO_HOSTNAME}}
-          IMAGE_REPO_NAMESPACE: ${{secrets.IMAGE_REPO_NAMESPACE}}
-          OC_PROJECT:  ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
         run: |
           ./etc/scripts/create-pull-secret.sh
       - name: Deploy FleetShard CRDs
