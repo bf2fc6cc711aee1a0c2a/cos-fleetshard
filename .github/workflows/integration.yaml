@@ -1,4 +1,4 @@
-name: os-fleetshard ci if
+name: Integration Tests
 
 on:
   pull_request:

@@ -1,4 +1,4 @@
-name: cos-fleetshard ci
+name: Build and Deploy
 
 on:
   push:
