@@ -15,11 +15,15 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 @ApplicationScoped
 public class UnstructuredClient {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnstructuredClient.class);
+
     private final KubernetesClient kubernetesClient;
 
     public UnstructuredClient(KubernetesClient kubernetesClient) {
@@ -175,11 +179,13 @@ public class UnstructuredClient {
         Map<String, String> labels,
         Watcher<String> watcher) {
 
+        LOGGER.info("Watch {}: namespace:{}, labels:{}", ctx, namespace, labels);
+
         try {
             return kubernetesClient
                 .customResource(ctx)
                 .inNamespace(namespace)
-                .watch(null, null, labels, new ListOptionsBuilder().build(), watcher);
+                .watch(namespace, null, labels, new ListOptionsBuilder().build(), watcher);
         } catch (IOException e) {
             throw KubernetesClientException.launderThrowable(e);
         }
