@@ -74,6 +74,17 @@ public class ManagedConnectorStatus {
         this.phase = phase;
     }
 
+    @JsonIgnore
+    public boolean isInPhase(PhaseType... phases) {
+        for (PhaseType type : phases) {
+            if (type == phase) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @JsonProperty
     public List<Condition> getConditions() {
         return conditions;
@@ -141,7 +152,8 @@ public class ManagedConnectorStatus {
         Initialization,
         Augmentation,
         Monitor,
-        Delete,
+        Deleting,
+        Deleted,
         Upgrade,
     }
 

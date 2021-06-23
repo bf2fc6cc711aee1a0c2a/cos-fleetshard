@@ -30,7 +30,7 @@ public abstract class WatcherEventSource<T> extends AbstractEventSource implemen
     public void close() {
         if (watch != null) {
             try {
-                logger.info("Closing watch {}", watch);
+                logger.debug("Closing watch {}", watch);
                 watch.close();
             } catch (Exception e) {
                 logger.warn("Failed to close watch {}", watch, e);

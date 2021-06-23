@@ -7,23 +7,22 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.support.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import io.quarkus.scheduler.Scheduled;
 
 /**
  * Implements the synchronization protocol for the connectors.
@@ -126,7 +125,12 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().setOperatorSelector(ConnectorSupport.getOperatorSelector(deployment));
 
-        LOGGER.info("provisioning connector id={} - {}/{}: {}", mcId, connectorsNs, connectorId, deployment.getSpec());
+        LOGGER.info("provisioning connector id={} rv={} - {}/{}: {}",
+            mcId,
+            deployment.getMetadata().getResourceVersion(),
+            connectorsNs,
+            connectorId,
+            deployment.getSpec());
 
         kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(connectorsNs)
@@ -153,14 +157,17 @@ public class ConnectorSync {
     private void updateStatus(ManagedConnectorCluster cluster) {
         LOGGER.debug("Updating control plane connectors");
 
-        final String namespace = cluster.getSpec().getConnectorsNamespace();
-
-        kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(namespace)
-            .list().getItems()
+        fleetShard.lookupConnectors()
+            .stream()
+            .filter(c -> {
+                return !c.getStatus().isInPhase(
+                    ManagedConnectorStatus.PhaseType.Deleting,
+                    ManagedConnectorStatus.PhaseType.Deleted);
+            })
             .forEach(c -> {
-                ConnectorDeploymentStatus status = fleetShard.getConnectorDeploymentStatus(c);
-                controlPlane.updateConnectorStatus(c, status);
+                controlPlane.updateConnectorStatus(
+                    c,
+                    fleetShard.getConnectorDeploymentStatus(c));
             });
     }
 }

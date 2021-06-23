@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,10 +21,14 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 @Path("/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}")
 public class FleetManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManager.class);
+
     private final Map<String, ConnectorCluster> clusters;
 
     public FleetManager() {
@@ -131,8 +136,19 @@ public class FleetManager {
         }
 
         public void updateConnectorDeploymentStatus(String deploymentId, ConnectorDeploymentStatus connectorDeploymentStatus) {
+
             connectors.computeIfPresent(deploymentId, (k, v) -> {
-                v.status = connectorDeploymentStatus;
+                LOGGER.info("Updating status of: {}, {} -> {}", deploymentId, v.status, connectorDeploymentStatus);
+                if (v.status == null) {
+                    v.status = connectorDeploymentStatus;
+                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
+                } else if (v.status.getResourceVersion() == null) {
+                    v.status = connectorDeploymentStatus;
+                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
+                } else if (v.status.getResourceVersion() <= connectorDeploymentStatus.getResourceVersion()) {
+                    v.status = connectorDeploymentStatus;
+                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
+                }
                 return v;
             });
 
@@ -156,6 +172,16 @@ public class FleetManager {
             });
 
             return deployment;
+        }
+
+        public void updateConnector(String id, Consumer<Connector> consumer) {
+            connectors.compute(id, (k, v) -> {
+                if (v == null) {
+                    v = new Connector();
+                }
+                consumer.accept(v);
+                return v;
+            });
         }
     }
 
