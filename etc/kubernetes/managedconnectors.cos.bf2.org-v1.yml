@@ -86,10 +86,11 @@ spec:
               phase:
                 enum:
                 - Upgrade
-                - Delete
                 - Initialization
                 - Augmentation
                 - Monitor
+                - Deleting
+                - Deleted
                 type: string
               availableOperator:
                 properties:

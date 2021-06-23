@@ -51,6 +51,7 @@
         <module>cluster</module>
         <module>reify</module>
         <module>status</module>
+        <module>delete</module>
         <module>upgrade</module>
     </modules>
 

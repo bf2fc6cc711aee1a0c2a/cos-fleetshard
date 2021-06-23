@@ -202,7 +202,7 @@ public class FleetShardClient {
 
     public ConnectorDeploymentStatus getConnectorDeploymentStatus(ManagedConnector connector) {
         ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-        ds.setResourceVersion(connector.getStatus().getDeployment().getDeploymentResourceVersion());
+        ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
 
         setConnectorOperators(connector, ds);
         setConnectorStatus(connector, ds);

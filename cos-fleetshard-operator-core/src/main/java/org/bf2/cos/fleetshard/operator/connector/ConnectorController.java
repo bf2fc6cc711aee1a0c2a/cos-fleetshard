@@ -137,8 +137,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 return handleAugmentation(connector);
             case Monitor:
                 return handleMonitor(connector);
-            case Delete:
-                return handleDelete(connector);
+            case Deleting:
+                return handleDeleting(connector);
+            case Deleted:
+                return handleDeleted(connector);
             default:
                 throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
         }
@@ -154,12 +156,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         controlPlane.updateConnectorStatus(
             connector,
-            new ConnectorDeploymentStatus().phase("provisioning"));
+            new ConnectorDeploymentStatus()
+                .resourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion())
+                .phase("provisioning"));
 
         switch (connector.getSpec().getDeployment().getDesiredState()) {
             case DESIRED_STATE_DELETED: {
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
-                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Delete);
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleting);
                 break;
             }
             case DESIRED_STATE_READY: {
@@ -278,11 +282,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
             JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
 
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+
             LOGGER.info("Drift detected {}, move to phase: {}",
                 JsonDiff.asJson(statusNode, specNode),
                 connector.getStatus().getPhase());
-
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
         }
 
         //
@@ -328,21 +332,27 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             : UpdateControl.noUpdate();
     }
 
-    private UpdateControl<ManagedConnector> handleDelete(ManagedConnector connector) {
-        boolean updated = false;
+    private UpdateControl<ManagedConnector> handleDeleting(ManagedConnector connector) {
+        LOGGER.info("Deleting connector: {}", connector.getMetadata().getName());
 
         try {
-            updated = !cleanupResources(connector).isEmpty();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+            cleanupResources(connector);
 
-        try {
-            ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-            ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
-            ds.setPhase("deleted");
+            if (connector.getStatus().getResources().isEmpty()) {
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleted);
 
-            controlPlane.updateConnectorStatus(connector, ds);
+                ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
+                ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
+                ds.setPhase(DESIRED_STATE_DELETED);
+
+                controlPlane.updateConnectorStatus(connector, ds);
+
+                LOGGER.info("Connector {} deleted, move to phase: {}",
+                    connector.getMetadata().getName(),
+                    connector.getStatus().getPhase());
+
+                return UpdateControl.updateStatusSubResource(connector);
+            }
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
             throw new RuntimeException(e);
@@ -350,9 +360,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             throw new RuntimeException(e);
         }
 
-        return updated
-            ? UpdateControl.updateStatusSubResource(connector)
-            : UpdateControl.noUpdate();
+        // TODO: reschedule a cleanup with backoff
+        getRetryTimer().scheduleOnce(connector, 1500);
+
+        return UpdateControl.noUpdate();
+    }
+
+    private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
+        // TODO: cleanup leftover, maybe
+        return UpdateControl.noUpdate();
     }
 
     // **************************************************
@@ -426,7 +442,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 @SuppressWarnings("unchecked")
                 @Override
                 public void eventReceived(Action action, String resource) {
-                    LOGGER.info("Event received for action: {}", action.name());
+                    LOGGER.debug("Event received for action: {}", action.name());
 
                     if (action == Action.ERROR) {
                         getLogger().warn("Skipping");

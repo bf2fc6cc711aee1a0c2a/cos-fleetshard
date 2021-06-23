@@ -14,6 +14,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorEvent;
@@ -72,9 +73,15 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
 
                 LOGGER.info("got event on  {}/{}", ns, name);
 
-                fleetShard.lookupManagedConnector(ns, name).ifPresentOrElse(
-                    this::handleConnectorEvent,
-                    () -> LOGGER.info("Unable to find connector {}/{}", ns, name));
+                fleetShard.lookupManagedConnector(ns, name)
+                    .filter(c -> {
+                        return !c.getStatus().isInPhase(
+                            ManagedConnectorStatus.PhaseType.Deleting,
+                            ManagedConnectorStatus.PhaseType.Deleted);
+                    })
+                    .ifPresentOrElse(
+                        this::handleConnectorEvent,
+                        () -> LOGGER.info("Unable to find connector {}/{}", ns, name));
             }
         }
 

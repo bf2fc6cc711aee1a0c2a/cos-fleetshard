@@ -24,13 +24,13 @@ public abstract class ConnectorEventSource extends WatcherEventSource<ManagedCon
 
     @Override
     public void eventReceived(Action action, ManagedConnector resource) {
-        getLogger().info("Event received for action: {}", action.name());
+        getLogger().debug("Event received for action: {}", action.name());
         if (action == Action.ERROR) {
             getLogger().warn("Skipping");
             return;
         }
 
-        getLogger().info("Event {} received on connector: {}/{}",
+        getLogger().debug("Event {} received on connector: {}/{}",
             action.name(),
             resource.getMetadata().getNamespace(),
             resource.getMetadata().getName());
