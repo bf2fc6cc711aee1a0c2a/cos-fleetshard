@@ -2,7 +2,7 @@
 curl --insecure --oauth2-bearer "$(ocm token)" -S -s -D /dev/stderr "${BASE_PATH}"/api/connector_mgmt/v1/kafka_connectors?async=true -d '{
  "kind": "Connector",
     "metadata": {
-        "name": "My Example 2",
+        "name": "My Example 3",
         "kafka_id": "1uKsx0Xo6KAtIyNHF0QQbI9rEDh"
     },
     "deployment_location": {
