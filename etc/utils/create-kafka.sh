@@ -1,11 +1,11 @@
-#/bin/bash
+#!/bin/bash
 
-BASE=http://localhost:8000/api/managed-services-api/v1
+BASE=${BASE_PATH}/api/kafkas_mgmt/v1
 KAFKA_BASE=${BASE}/kafkas
 
-curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr ${KAFKA_BASE}?async=true -d '{
+curl --insecure --oauth2-bearer "$(ocm token)" -S -s -D /dev/stderr "${KAFKA_BASE}"?async=true -d '{
     "region": "us-east-1",
     "cloud_provider": "aws",
-    "name": "cos",
+    "name": "lb",
     "multi_az":true
 }' | jq

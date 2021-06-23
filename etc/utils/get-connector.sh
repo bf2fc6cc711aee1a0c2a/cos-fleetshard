@@ -1,6 +1,6 @@
-#/bin/bash
+#!/bin/bash
 
-BASE=http://localhost:8000/api/connector_mgmt/v1
+BASE=${BASE_PATH}/api/connector_mgmt/v1
 CONNECTORS_BASE=${BASE}/kafka_connectors
 
-curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr ${CONNECTORS_BASE}/${1} | jq
+curl --insecure --oauth2-bearer "$(ocm token)" -S -s -D /dev/stderr "${CONNECTORS_BASE}"/"${1}" | jq

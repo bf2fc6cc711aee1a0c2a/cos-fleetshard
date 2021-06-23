@@ -1,6 +1,6 @@
-#/bin/bash
+#!/bin/bash
 
-BASE=http://localhost:8000/api/connector_mgmt/v1
-CLUSTER_BASE=${BASE}/kafka-connector-clusters
+BASE=${BASE_PATH}/api/connector_mgmt/v1
+CLUSTER_BASE=${BASE}/kafka_connector_clusters
 
-curl --oauth2-bearer $(ocm token) -S -s -D /dev/stderr ${CLUSTER_BASE} 2>/dev/null | jq
+curl --insecure --oauth2-bearer "$(ocm token)" -S -s -D /dev/stderr "${CLUSTER_BASE}" 2>/dev/null | jq
