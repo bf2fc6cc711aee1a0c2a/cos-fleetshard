@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.cluster;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 
@@ -73,15 +75,7 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
 
                 LOGGER.info("got event on  {}/{}", ns, name);
 
-                fleetShard.lookupManagedConnector(ns, name)
-                    .filter(c -> {
-                        return !c.getStatus().isInPhase(
-                            ManagedConnectorStatus.PhaseType.Deleting,
-                            ManagedConnectorStatus.PhaseType.Deleted);
-                    })
-                    .ifPresentOrElse(
-                        this::handleConnectorEvent,
-                        () -> LOGGER.info("Unable to find connector {}/{}", ns, name));
+                handleConnectorEvent(ns, name);
             }
         }
 
@@ -106,11 +100,22 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
     //
     // **************************************************
 
-    private void handleConnectorEvent(ManagedConnector connector) {
+    private void handleConnectorEvent(String namespace, String name) {
         try {
-            controlPlane.updateConnectorStatus(
-                connector,
-                fleetShard.getConnectorDeploymentStatus(connector));
+            Optional<ManagedConnector> connector = fleetShard.lookupManagedConnector(namespace, name)
+                .filter(c -> {
+                    return !c.getStatus().isInPhase(
+                        ManagedConnectorStatus.PhaseType.Deleting,
+                        ManagedConnectorStatus.PhaseType.Deleted);
+                });
+
+            if (connector.isPresent()) {
+                controlPlane.updateConnectorStatus(
+                    connector.get(),
+                    fleetShard.getConnectorDeploymentStatus(connector.get()));
+            } else {
+                LOGGER.info("Unable to find connector {}/{}", namespace, name);
+            }
         } catch (WebApplicationException e) {
             LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
             throw new RuntimeException(e);
