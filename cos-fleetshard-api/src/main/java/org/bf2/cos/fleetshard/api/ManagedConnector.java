@@ -30,6 +30,7 @@ public class ManagedConnector
     public static final String GROUP = "cos.bf2.org";
     public static final String LABEL_DEPLOYMENT_ID = "cos.bf2.org/deployment.id";
     public static final String LABEL_CONNECTOR_ID = "cos.bf2.org/connector.id";
+    public static final String LABEL_CONNECTOR_TYPE_ID = "cos.bf2.org/connector.type.id";
     public static final String LABEL_CONNECTOR_NAME = "cos.bf2.org/connector.name";
     public static final String LABEL_CONNECTOR_META = "cos.bf2.org/connector.meta";
     public static final String LABEL_CONNECTOR_GENERATED = "cos.bf2.org/connector.generated";

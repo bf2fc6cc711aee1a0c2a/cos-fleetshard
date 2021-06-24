@@ -52,6 +52,11 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
                         resource.getMetadata().getName(),
                         resource.getMetadata().getNamespace()));
                 }
+
+                @Override
+                protected void resourceDeleted(ManagedConnector resource) {
+                    // no-hop
+                }
             });
         eventSourceManager.registerEventSource(
             "_operators",

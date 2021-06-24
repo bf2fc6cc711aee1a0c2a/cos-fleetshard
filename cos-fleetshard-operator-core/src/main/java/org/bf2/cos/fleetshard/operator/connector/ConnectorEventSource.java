@@ -35,8 +35,19 @@ public abstract class ConnectorEventSource extends WatcherEventSource<ManagedCon
             resource.getMetadata().getNamespace(),
             resource.getMetadata().getName());
 
-        resourceUpdated(resource);
+        switch (action) {
+            case ADDED:
+            case MODIFIED:
+                resourceUpdated(resource);
+                break;
+            case DELETED:
+                resourceDeleted(resource);
+                break;
+
+        }
     }
 
     protected abstract void resourceUpdated(ManagedConnector resource);
+
+    protected abstract void resourceDeleted(ManagedConnector resource);
 }

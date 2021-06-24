@@ -59,7 +59,10 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTO
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_GENERATED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 
 @Controller(
     name = "connector",
@@ -207,7 +210,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 .managedConnectorId(connectorId)
                 .deploymentId(connector.getSpec().getDeploymentId())
                 .connectorId(deployment.getSpec().getConnectorId())
-                .connectorId(deployment.getSpec().getConnectorTypeId())
+                .connectorTypeId(deployment.getSpec().getConnectorTypeId())
                 .connectorSpec(deployment.getSpec().getConnectorSpec())
                 .shardMetadata(deployment.getSpec().getShardMetadata())
                 .kafkaSpec(ks);
@@ -222,7 +225,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     on.with("metadata")
                         .with("labels")
                         .put(LABEL_CONNECTOR_GENERATED, "true")
-                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getAssignedOperator().getId());
+                        .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getAssignedOperator().getId())
+                        .put(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
+                        .put(LABEL_CONNECTOR_TYPE_ID, deployment.getSpec().getConnectorTypeId())
+                        .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
+
                     on.with("metadata")
                         .withArray("ownerReferences")
                         .addObject()
