@@ -147,16 +147,6 @@ public class ConnectorSync {
 
         LOGGER.info("Sync connector status");
 
-        fleetShard.lookupManagedConnectorCluster()
-            .filter(cluster -> cluster.getStatus().isReady())
-            .ifPresentOrElse(
-                this::updateStatus,
-                () -> LOGGER.debug("Operator not yet configured"));
-    }
-
-    private void updateStatus(ManagedConnectorCluster cluster) {
-        LOGGER.debug("Updating control plane connectors");
-
         fleetShard.lookupConnectors()
             .stream()
             .filter(c -> {
