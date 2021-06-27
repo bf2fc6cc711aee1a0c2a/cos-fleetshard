@@ -41,8 +41,9 @@ public class MetaClient {
             final String host = hp[0];
             final int port = hp.length == 2 ? Integer.parseInt(hp[1]) : 80;
 
-            LOGGER.debug("Send request to meta: address={}, request={}",
+            LOGGER.debug("Send request to meta: address={}, uri={}, request={}",
                 address,
+                uri,
                 Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(payload));
 
             // TODO: set-up ssl/tls
