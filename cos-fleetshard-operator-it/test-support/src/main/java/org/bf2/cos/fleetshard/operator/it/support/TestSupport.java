@@ -23,7 +23,7 @@ public class TestSupport {
     protected KubernetesServer ksrv;
 
     @Inject
-    protected FleetManager fm;
+    protected FleetManagerMock fm;
 
     @ConfigProperty(
         name = "cluster-id")
@@ -85,7 +85,7 @@ public class TestSupport {
             .getStatus();
     }
 
-    protected FleetManager.ConnectorCluster getCluster() {
+    protected FleetManagerMock.ConnectorCluster getCluster() {
         return fm.getCluster(clusterId)
             .orElseThrow(() -> new IllegalStateException(""));
     }

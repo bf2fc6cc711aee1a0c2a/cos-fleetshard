@@ -28,7 +28,6 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
 import org.bf2.cos.fleet.manager.api.model.meta.KafkaSpec;
@@ -82,6 +81,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     FleetShardClient fleetShard;
     @Inject
     MetaClient meta;
+    @Inject
+    ConnectorDeploymentStatusSync statusSync;
 
     @Override
     public void registerEventSources(EventSourceManager eventSourceManager) {
@@ -90,7 +91,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getClusterNamespace()) {
                 @Override
                 protected void resourceUpdated(ManagedConnectorOperator resource) {
-                    for (var connector : fleetShard.lookupConnectors()) {
+                    for (var connector : fleetShard.lookupManagedConnectors()) {
                         if (connector.getStatus() == null) {
                             continue;
                         }
@@ -111,7 +112,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                                 connector.getMetadata().getName(),
                                 resource.getSpec());
 
-                            eventHandler.handleEvent(new ConnectorOperatorEvent(connector.getMetadata().getUid(), this));
+                            getEventHandler().handleEvent(
+                                new ConnectorOperatorEvent(connector.getMetadata().getUid(), this));
                         }
                     }
                 }
@@ -130,7 +132,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getPhase());
 
         if (connector.getStatus().getPhase() == null) {
-            return handleInitialization(connector);
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+            return UpdateControl.updateStatusSubResource(connector);
         }
 
         switch (connector.getStatus().getPhase()) {
@@ -156,13 +159,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     // **************************************************
 
     private UpdateControl<ManagedConnector> handleInitialization(ManagedConnector connector) {
-
-        controlPlane.updateConnectorStatus(
-            connector,
-            new ConnectorDeploymentStatus()
-                .resourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion())
-                .phase("provisioning"));
-
         switch (connector.getSpec().getDeployment().getDesiredState()) {
             case DESIRED_STATE_DELETED: {
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
@@ -279,8 +275,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate();
     }
 
+    // TODO: check for changes to the underlying resources
+    // TODO: check for checksum mismatch
     private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
-
         boolean updated = !Objects.equals(
             connector.getSpec().getDeployment(),
             connector.getStatus().getDeployment());
@@ -334,6 +331,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             throw new RuntimeException(e);
         }
 
+        if (!updated) {
+            // no update to the resource but maybe a dependant resource has changed so we need
+            // to trigger an update
+            statusSync.submit(connector);
+        }
+
         return updated
             ? UpdateControl.updateStatusSubResource(connector)
             : UpdateControl.noUpdate();
@@ -347,12 +350,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             if (connector.getStatus().getResources().isEmpty()) {
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleted);
-
-                ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-                ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
-                ds.setPhase(DESIRED_STATE_DELETED);
-
-                controlPlane.updateConnectorStatus(connector, ds);
 
                 LOGGER.info("Connector {} deleted, move to phase: {}",
                     connector.getMetadata().getName(),
@@ -374,6 +371,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
+        statusSync.submit(connector);
+
         // TODO: cleanup leftover, maybe
         return UpdateControl.noUpdate();
     }
@@ -448,14 +447,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             getEventSourceManager().registerEventSource(key, new WatcherEventSource<String>(kubernetesClient) {
                 @SuppressWarnings("unchecked")
                 @Override
-                public void eventReceived(Action action, String resource) {
-                    LOGGER.debug("Event received for action: {}", action.name());
-
-                    if (action == Action.ERROR) {
-                        getLogger().warn("Skipping");
-                        return;
-                    }
-
+                public void onEventReceived(Action action, String resource) {
                     try {
                         final Map<String, Object> unstructured = Serialization.jsonMapper().readValue(resource, Map.class);
                         final ResourceRef ref = ResourceUtil.asResourceRef(unstructured);
@@ -468,7 +460,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         // generate the event, we can use the list of the owners
                         //
                         for (OwnerReference or : meta.getOwnerReferences()) {
-                            eventHandler.handleEvent(
+                            getEventHandler().handleEvent(
                                 new ResourceEvent(action, ref, or.getUid(), this));
                         }
                     } catch (JsonProcessingException e) {
@@ -477,7 +469,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
 
                 @Override
-                protected Watch watch() {
+                protected Watch doWatch() {
                     return uc.watch(
                         connector.getMetadata().getNamespace(),
                         new ResourceRef(

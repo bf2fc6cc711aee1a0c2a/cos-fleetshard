@@ -2,10 +2,13 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -15,6 +18,9 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
@@ -22,54 +28,60 @@ import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
+
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
-public class CamelConnectorUpgradeTest extends CamelTestSupport {
-
+public class CamelConnectorStatusTest extends CamelTestSupport {
     @ConfigProperty(
         name = "cos.fleetshard.meta.camel")
     String camelMeta;
+    @ConfigProperty(
+        name = "test.namespace")
+    String namespace;
 
     @Test
-    void execute() {
-        withConnectorOperator("cm-1", "1.1.0", camelMeta);
-
+    void managedCamelConnectorStatusIsReported() throws Exception {
+        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0", camelMeta);
         final ConnectorDeployment cd = withConnectorDeployment();
+        final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
         await(30, TimeUnit.SECONDS, () -> {
-            ConnectorDeploymentStatus status = getDeploymentStatus(cd);
-            if (status == null) {
+            List<ManagedConnector> connectors = getManagedConnectors(cd);
+            if (connectors.size() != 1) {
                 return false;
             }
 
-            return status.getOperators() != null
-                && status.getOperators().getAssigned() != null
-                && status.getOperators().getAvailable() == null
-                && Objects.equals("camel-connector-operator", status.getOperators().getAssigned().getType())
-                && Objects.equals("1.1.0", status.getOperators().getAssigned().getVersion())
-                && Objects.equals("cm-1", status.getOperators().getAssigned().getId());
+            JsonNode secret = uc.getAsNode(
+                namespace,
+                "v1",
+                "Secret",
+                connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+
+            JsonNode binding = uc.getAsNode(
+                namespace,
+                "camel.apache.org/v1alpha1",
+                "KameletBinding",
+                connectors.get(0).getMetadata().getName());
+
+            return secret != null && binding != null;
         });
 
-        withConnectorOperator("cm-2", "1.2.0", camelMeta);
+        updateKameletBinding(getManagedConnectors(cd).get(0).getMetadata().getName());
 
         await(30, TimeUnit.SECONDS, () -> {
-            ConnectorDeploymentStatus status = getDeploymentStatus(cd);
-            if (status == null) {
-                return false;
-            }
+            ConnectorDeploymentStatus status = fm.getCluster(clusterId)
+                .orElseThrow(() -> new IllegalStateException(""))
+                .getConnector(cd.getId())
+                .getStatus();
 
-            return status.getOperators() != null
-                && status.getOperators().getAssigned() != null
-                && status.getOperators().getAvailable() != null
-                && Objects.equals("camel-connector-operator", status.getOperators().getAssigned().getType())
-                && Objects.equals("1.1.0", status.getOperators().getAssigned().getVersion())
-                && Objects.equals("cm-1", status.getOperators().getAssigned().getId())
-                && Objects.equals("camel-connector-operator", status.getOperators().getAvailable().getType())
-                && Objects.equals("1.2.0", status.getOperators().getAvailable().getVersion())
-                && Objects.equals("cm-2", status.getOperators().getAvailable().getId());
+            return status != null
+                && Objects.equals(DESIRED_STATE_READY, status.getPhase());
         });
+
     }
 
     private ConnectorDeployment withConnectorDeployment() {
@@ -117,8 +129,34 @@ public class CamelConnectorUpgradeTest extends CamelTestSupport {
                     .clientSecret(kcidB64))
                 .connectorSpec(connectorSpec)
                 .shardMetadata(connectorMeta)
-                .desiredState("ready"));
+                .desiredState(DESIRED_STATE_READY));
 
         return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> updateKameletBinding(String name) throws Exception {
+        UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
+        ObjectNode binding = (ObjectNode) uc.getAsNode(
+            namespace,
+            "camel.apache.org/v1alpha1",
+            "KameletBinding",
+            name);
+
+        binding.with("status").put("phase", "Ready");
+        binding.with("status").withArray("conditions")
+            .addObject()
+            .put("message", "a message")
+            .put("reason", "a reason")
+            .put("status", "the status")
+            .put("type", "the type")
+            .put("lastTransitionTime", "2021-06-12T12:35:09+02:00");
+
+        return ksrv.getClient()
+            .customResource(asCustomResourceDefinitionContext(binding))
+            .updateStatus(
+                namespace,
+                name,
+                Serialization.jsonMapper().treeToValue(binding, Map.class));
     }
 }

@@ -28,6 +28,9 @@ import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
+
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
@@ -67,7 +70,7 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
             return secret != null && binding != null;
         });
 
-        updateConnector(getManagedConnectors(cd).get(0));
+        updateKameletBinding(getManagedConnectors(cd).get(0).getMetadata().getName());
 
         await(30, TimeUnit.SECONDS, () -> {
             ConnectorDeploymentStatus status = fm.getCluster(clusterId)
@@ -77,7 +80,7 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
 
             // TODO: unstructured update event seems not propagated
             return status != null
-                && Objects.equals("provisioning", status.getPhase());
+                && Objects.equals(DESIRED_STATE_READY, status.getPhase());
         });
 
     }
@@ -127,18 +130,19 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
                     .clientSecret(kcidB64))
                 .connectorSpec(connectorSpec)
                 .shardMetadata(connectorMeta)
-                .desiredState("ready"));
+                .desiredState(DESIRED_STATE_READY));
 
         return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
     }
 
-    private Map<String, Object> updateConnector(ManagedConnector connector) throws Exception {
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> updateKameletBinding(String name) throws Exception {
         UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
         ObjectNode binding = (ObjectNode) uc.getAsNode(
             namespace,
             "camel.apache.org/v1alpha1",
             "KameletBinding",
-            connector.getMetadata().getName());
+            name);
 
         binding.with("status").put("phase", "Ready");
         binding.with("status").withArray("conditions")
@@ -149,6 +153,11 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
             .put("type", "the type")
             .put("lastTransitionTime", "2021-06-12T12:35:09+02:00");
 
-        return uc.createOrReplace(namespace, binding);
+        return ksrv.getClient()
+            .customResource(asCustomResourceDefinitionContext(binding))
+            .updateStatus(
+                namespace,
+                name,
+                Serialization.jsonMapper().treeToValue(binding, Map.class));
     }
 }

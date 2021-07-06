@@ -11,7 +11,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>cos-fleetshard-operator-it-upgrade</artifactId>
+    <artifactId>cos-fleetshard-operator-it-status-batch</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

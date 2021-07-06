@@ -19,7 +19,7 @@ public abstract class ConnectorOperatorEventSource extends WatcherEventSource<Ma
     }
 
     @Override
-    protected Watch watch() {
+    protected Watch doWatch() {
         return getClient()
             .customResources(ManagedConnectorOperator.class)
             .inNamespace(this.namespace)
@@ -27,7 +27,7 @@ public abstract class ConnectorOperatorEventSource extends WatcherEventSource<Ma
     }
 
     @Override
-    public void eventReceived(Action action, ManagedConnectorOperator resource) {
+    protected void onEventReceived(Action action, ManagedConnectorOperator resource) {
         getLogger().debug("Event received for action: {}", action.name());
         if (action == Action.ERROR) {
             getLogger().warn("Skipping");

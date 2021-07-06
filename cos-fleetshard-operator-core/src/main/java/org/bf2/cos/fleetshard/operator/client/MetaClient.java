@@ -54,13 +54,14 @@ public class MetaClient {
                 .atMost(Duration.ofSeconds(30))
                 .bodyAsJson(responseType);
 
-            LOGGER.debug("Got answer from meta: address={}, request={}",
+            LOGGER.debug("Got answer from meta: address={}, uri={}, answer={}",
                 address,
+                uri,
                 Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(answer));
 
             return answer;
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new MetaClientException(e);
         } finally {
             client.close();
         }
