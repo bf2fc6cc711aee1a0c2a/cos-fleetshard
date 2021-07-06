@@ -12,7 +12,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class CamelMetaServiceSetup implements QuarkusTestResourceLifecycleManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelMetaServiceSetup.class);
 
-    private static final String META_IMAGE = "quay.io/lburgazzoli/cms:native";
+    //"quay.io/lburgazzoli/cms:native";
+    private static final String DEFAULT_META_IMAGE = "quay.io/rhoas/cos-fleetshard-meta-camel:latest";
     private static final int META_PORT = 8080;
 
     private GenericContainer<?> container;
@@ -20,9 +21,14 @@ public class CamelMetaServiceSetup implements QuarkusTestResourceLifecycleManage
     @Override
     public Map<String, String> start() {
         try {
-            LOGGER.info("Starting meta {}", META_IMAGE);
+            String meta = System.getenv("COS_FLEETSHARD_META_IMAGE");
+            if (meta == null) {
+                meta = DEFAULT_META_IMAGE;
+            }
 
-            container = new GenericContainer<>(META_IMAGE)
+            LOGGER.info("Starting meta {}", meta);
+
+            container = new GenericContainer<>(meta)
                 .withEnv("QUARKUS_LOG_CONSOLE_JSON", "false")
                 .withExposedPorts(META_PORT)
                 //.withLogConsumer(new Slf4jLogConsumer(LOGGER))

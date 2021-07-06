@@ -51,8 +51,8 @@
         <module>cluster</module>
         <module>reify</module>
         <module>status</module>
+        <module>status-batch</module>
         <module>delete</module>
-        <module>upgrade</module>
     </modules>
 
 </project>

@@ -85,6 +85,11 @@ public class ManagedConnectorStatus {
         return false;
     }
 
+    @JsonIgnore
+    public boolean isDeleting() {
+        return isInPhase(PhaseType.Deleting, PhaseType.Deleted);
+    }
+
     @JsonProperty
     public List<Condition> getConditions() {
         return conditions;

@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.client;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -12,11 +11,6 @@ import javax.inject.Inject;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
-import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentStatusRequest;
-import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
@@ -24,15 +18,10 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
-import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 public class FleetShardClient {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FleetShardClient.class);
-
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -60,6 +49,10 @@ public class FleetShardClient {
 
     public String getClusterId() {
         return clusterId;
+    }
+
+    public KubernetesClient getKubernetesClient() {
+        return kubernetesClient;
     }
 
     // ******************************************************
@@ -158,6 +151,16 @@ public class FleetShardClient {
     //  ******************************************************
 
     public Optional<ManagedConnector> lookupManagedConnector(
+        String name) {
+
+        return Optional.ofNullable(
+            kubernetesClient.customResources(ManagedConnector.class)
+                .inNamespace(this.connectorsNamespace)
+                .withName(name)
+                .get());
+    }
+
+    public Optional<ManagedConnector> lookupManagedConnector(
         String namespace,
         String name) {
 
@@ -190,7 +193,7 @@ public class FleetShardClient {
         return Optional.empty();
     }
 
-    public List<ManagedConnector> lookupConnectors() {
+    public List<ManagedConnector> lookupManagedConnectors() {
         List<ManagedConnector> answer = kubernetesClient
             .customResources(ManagedConnector.class)
             .inNamespace(this.connectorsNamespace)
@@ -198,63 +201,5 @@ public class FleetShardClient {
             .getItems();
 
         return answer != null ? answer : Collections.emptyList();
-    }
-
-    public ConnectorDeploymentStatus getConnectorDeploymentStatus(ManagedConnector connector) {
-        ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-        ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
-
-        setConnectorOperators(connector, ds);
-        setConnectorStatus(connector, ds);
-        return ds;
-    }
-
-    private void setConnectorOperators(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        // report available operators
-        deploymentStatus.setOperators(
-            new ConnectorDeploymentStatusOperators()
-                .assigned(OperatorSupport.toConnectorOperator(connector.getStatus().getAssignedOperator()))
-                .available(OperatorSupport.toConnectorOperator(connector.getStatus().getAvailableOperator())));
-    }
-
-    private void setConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        ConnectorDeploymentStatusRequest sr = new ConnectorDeploymentStatusRequest()
-            .managedConnectorId(connector.getMetadata().getName())
-            .deploymentId(connector.getSpec().getDeploymentId())
-            .connectorId(connector.getSpec().getConnectorId())
-            .connectorTypeId(connector.getSpec().getConnectorTypeId());
-
-        for (DeployedResource resource : connector.getStatus().getResources()) {
-            // don't include secrets ...
-            if (Objects.equals("v1", resource.getApiVersion()) && Objects.equals("Secret", resource.getKind())) {
-                continue;
-            }
-
-            sr.addResourcesItem(
-                uc.getAsNode(connector.getMetadata().getNamespace(), resource));
-        }
-
-        if (connector.getStatus().getAssignedOperator() != null) {
-            var answer = meta.status(
-                connector.getStatus().getAssignedOperator().getMetaService(),
-                sr);
-
-            deploymentStatus.setPhase(answer.getPhase());
-
-            // TODO: fix model duplications
-            if (answer.getConditions() != null) {
-                for (var cond : answer.getConditions()) {
-                    deploymentStatus.addConditionsItem(
-                        new MetaV1Condition()
-                            .type(cond.getType())
-                            .status(cond.getStatus())
-                            .message(cond.getMessage())
-                            .reason(cond.getReason())
-                            .lastTransitionTime(cond.getLastTransitionTime()));
-                }
-            }
-        } else {
-            deploymentStatus.setPhase("provisioning");
-        }
     }
 }

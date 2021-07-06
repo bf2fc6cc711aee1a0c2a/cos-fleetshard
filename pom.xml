@@ -29,7 +29,7 @@
         <sundrio.version>0.40.1</sundrio.version>
 
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
-        <formatter-maven-plugin.version>2.15.0</formatter-maven-plugin.version>
+        <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
         <jandex-maven-plugin.version>1.0.8</jandex-maven-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

@@ -17,6 +17,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.fabric8.zjsonpatch.JsonDiff;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
@@ -26,12 +29,12 @@ import org.slf4j.LoggerFactory;
 
 @ApplicationScoped
 @Path("/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}")
-public class FleetManager {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManager.class);
+public class FleetManagerMock {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerMock.class);
 
     private final Map<String, ConnectorCluster> clusters;
 
-    public FleetManager() {
+    public FleetManagerMock() {
         this.clusters = new ConcurrentHashMap<>();
     }
 
@@ -136,19 +139,30 @@ public class FleetManager {
         }
 
         public void updateConnectorDeploymentStatus(String deploymentId, ConnectorDeploymentStatus connectorDeploymentStatus) {
-
             connectors.computeIfPresent(deploymentId, (k, v) -> {
-                LOGGER.info("Updating status of: {}, {} -> {}", deploymentId, v.status, connectorDeploymentStatus);
+                final ConnectorDeploymentStatus oldStatus = v.status;
+
                 if (v.status == null) {
                     v.status = connectorDeploymentStatus;
-                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
                 } else if (v.status.getResourceVersion() == null) {
                     v.status = connectorDeploymentStatus;
-                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
                 } else if (v.status.getResourceVersion() <= connectorDeploymentStatus.getResourceVersion()) {
                     v.status = connectorDeploymentStatus;
-                    LOGGER.info("Updating status of: {} -> {}", deploymentId, v.status);
                 }
+
+                if (oldStatus != null) {
+                    JsonNode specNode = Serialization.jsonMapper().valueToTree(oldStatus);
+                    JsonNode statusNode = Serialization.jsonMapper().valueToTree(v.status);
+
+                    LOGGER.info("Updating status of deployment with id: {}, diff: {}",
+                        deploymentId,
+                        Serialization.asJson(JsonDiff.asJson(specNode, statusNode)));
+                } else {
+                    LOGGER.info("Updating status of deployment with id: {}, diff: {}",
+                        deploymentId,
+                        Serialization.asJson(v.status));
+                }
+
                 return v;
             });
 

@@ -71,33 +71,11 @@ public class UnstructuredClient {
         return delete(namespace, asCustomResourceDefinitionContext(ref));
     }
 
-    public boolean delete(String namespace, JsonNode ref) throws IOException {
-        return delete(namespace, asCustomResourceDefinitionContext(ref));
-    }
-
     public boolean delete(String namespace, CustomResourceDefinitionContext ctx) throws IOException {
         return kubernetesClient
             .customResource(ctx)
             .inNamespace(namespace)
             .delete(namespace, ctx.getName());
-    }
-
-    public Map<String, Object> createOrReplace(String namespace, ResourceRef ref, Map<String, Object> unstructured)
-        throws IOException {
-
-        return createOrReplace(
-            namespace,
-            asCustomResourceDefinitionContext(ref),
-            unstructured);
-    }
-
-    public Map<String, Object> createOrReplace(String namespace, JsonNode ref, Map<String, Object> unstructured)
-        throws IOException {
-
-        return createOrReplace(
-            namespace,
-            asCustomResourceDefinitionContext(ref),
-            unstructured);
     }
 
     @SuppressWarnings("unchecked")
@@ -110,12 +88,25 @@ public class UnstructuredClient {
             Serialization.jsonMapper().treeToValue(unstructured, Map.class));
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> createOrReplace(
         String namespace,
         CustomResourceDefinitionContext ctx,
         Map<String, Object> unstructured)
         throws IOException {
+
+        setResourceVersion(namespace, ctx, unstructured);
+
+        return kubernetesClient
+            .customResource(ctx)
+            .inNamespace(namespace)
+            .createOrReplace(namespace, unstructured);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setResourceVersion(
+        String namespace,
+        CustomResourceDefinitionContext ctx,
+        Map<String, Object> unstructured) {
 
         try {
             var old = kubernetesClient.customResource(ctx).get(namespace, ctx.getName());
@@ -134,38 +125,9 @@ public class UnstructuredClient {
                 throw e;
             }
         }
-
-        return kubernetesClient
-            .customResource(ctx)
-            .inNamespace(namespace)
-            .createOrReplace(namespace, unstructured);
-    }
-
-    public Watch watch(String namespace, ResourceRef ref, Watcher<String> watcher) {
-        return watch(
-            namespace,
-            asCustomResourceDefinitionContext(ref),
-            null,
-            watcher);
     }
 
     public Watch watch(String namespace, ResourceRef ref, Map<String, String> labels, Watcher<String> watcher) {
-        return watch(
-            namespace,
-            asCustomResourceDefinitionContext(ref),
-            labels,
-            watcher);
-    }
-
-    public Watch watch(String namespace, JsonNode ref, Watcher<String> watcher) {
-        return watch(
-            namespace,
-            asCustomResourceDefinitionContext(ref),
-            null,
-            watcher);
-    }
-
-    public Watch watch(String namespace, JsonNode ref, Map<String, String> labels, Watcher<String> watcher) {
         return watch(
             namespace,
             asCustomResourceDefinitionContext(ref),

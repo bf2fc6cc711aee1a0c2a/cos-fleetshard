@@ -16,7 +16,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
@@ -28,8 +27,8 @@ import org.slf4j.LoggerFactory;
  * Implements the synchronization protocol for the connectors.
  */
 @ApplicationScoped
-public class ConnectorSync {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSync.class);
+public class ConnectorDeploymentSync {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentSync.class);
 
     @Inject
     FleetManagerClient controlPlane;
@@ -41,6 +40,7 @@ public class ConnectorSync {
     FleetShardOperator operator;
 
     @Scheduled(
+        identity = "cos.connectors.poll",
         every = "{cos.connectors.poll.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void sync() {
@@ -60,27 +60,18 @@ public class ConnectorSync {
     private void poll(ManagedConnectorCluster cluster) {
         LOGGER.debug("Polling for control plane connectors");
 
-        final String id = cluster.getSpec().getId();
-        final String ns = cluster.getSpec().getConnectorsNamespace();
+        final String clusterId = cluster.getSpec().getId();
+        final String connectorsNamespace = cluster.getSpec().getConnectorsNamespace();
 
-        for (var deployment : controlPlane.getDeployments(id, ns)) {
+        for (ConnectorDeployment deployment : controlPlane.getDeployments(clusterId, connectorsNamespace)) {
             provision(cluster, deployment);
         }
     }
 
     private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
-        try {
-            LOGGER.debug(
-                "Provision deployment: {}",
-                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(deployment));
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
-
-        if (deployment.getSpec().getShardMetadata() == null) {
-            //TODO: report error
-            LOGGER.warn("ShardMetadata is empty !!!");
-        }
+        LOGGER.info("Got connector_id: {}, deployment_id: {}",
+            deployment.getSpec().getConnectorId(),
+            deployment.getId());
 
         final String connectorId = deployment.getSpec().getConnectorId();
         final String connectorsNs = connectorCluster.getSpec().getConnectorsNamespace();
@@ -125,39 +116,19 @@ public class ConnectorSync {
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().setOperatorSelector(ConnectorSupport.getOperatorSelector(deployment));
 
-        LOGGER.info("provisioning connector id={} rv={} - {}/{}: {}",
-            mcId,
-            deployment.getMetadata().getResourceVersion(),
-            connectorsNs,
-            connectorId,
-            deployment.getSpec());
+        try {
+            LOGGER.info("provisioning connector id={} rv={} - {}/{}: {}",
+                mcId,
+                deployment.getMetadata().getResourceVersion(),
+                connectorsNs,
+                connectorId,
+                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(deployment));
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
 
         kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(connectorsNs)
             .createOrReplace(connector);
-    }
-
-    @Scheduled(
-        every = "{cos.connectors.sync.interval}",
-        concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
-    void syncStatus() {
-        if (!operator.isRunning()) {
-            return;
-        }
-
-        LOGGER.info("Sync connector status");
-
-        fleetShard.lookupConnectors()
-            .stream()
-            .filter(c -> {
-                return !c.getStatus().isInPhase(
-                    ManagedConnectorStatus.PhaseType.Deleting,
-                    ManagedConnectorStatus.PhaseType.Deleted);
-            })
-            .forEach(c -> {
-                controlPlane.updateConnectorStatus(
-                    c,
-                    fleetShard.getConnectorDeploymentStatus(c));
-            });
     }
 }
