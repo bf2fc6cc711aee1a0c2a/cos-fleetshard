@@ -416,6 +416,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
+        boolean updated = !Objects.equals(
+            connector.getSpec().getDeployment(),
+            connector.getStatus().getDeployment());
+
+        if (updated) {
+            JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
+            JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
+
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+
+            LOGGER.info("Drift detected {}, move to phase: {}",
+                JsonDiff.asJson(statusNode, specNode),
+                connector.getStatus().getPhase());
+
+            return UpdateControl.updateStatusSubResource(connector);
+        }
+
         statusSync.submit(connector);
 
         // TODO: cleanup leftover, maybe

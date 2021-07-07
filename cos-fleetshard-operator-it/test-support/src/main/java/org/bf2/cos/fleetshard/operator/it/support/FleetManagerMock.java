@@ -98,6 +98,19 @@ public class FleetManagerMock {
         return clusters.computeIfAbsent(id, ConnectorCluster::new);
     }
 
+    public Connector updateConnector(String clusterId, String deploymentId, Consumer<Connector> consumer) {
+        return getCluster(clusterId)
+            .orElseThrow(() -> new IllegalStateException(""))
+            .updateConnector(deploymentId, consumer);
+    }
+
+    public ConnectorDeploymentStatus getConnectorDeploymentStatus(String clusterId, String deploymentId) {
+        return getCluster(clusterId)
+            .orElseThrow(() -> new IllegalStateException(""))
+            .getConnector(deploymentId)
+            .getStatus();
+    }
+
     // **********************************************
     //
     // Model
@@ -188,12 +201,17 @@ public class FleetManagerMock {
             return deployment;
         }
 
-        public void updateConnector(String id, Consumer<Connector> consumer) {
-            connectors.compute(id, (k, v) -> {
+        public Connector updateConnector(String id, Consumer<Connector> consumer) {
+            return connectors.compute(id, (k, v) -> {
                 if (v == null) {
                     v = new Connector();
                 }
                 consumer.accept(v);
+
+                var oldRv = v.getDeployment().getMetadata().getResourceVersion();
+                var newRv = oldRv + 1;
+
+                v.getDeployment().getMetadata().setResourceVersion(newRv);
                 return v;
             });
         }

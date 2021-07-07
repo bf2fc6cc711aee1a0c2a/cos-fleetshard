@@ -1,21 +1,14 @@
 package org.bf2.cos.fleetshard.operator.it;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Base64;
+import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
@@ -36,100 +29,59 @@ public class CamelConnectorStopTest extends CamelTestSupport {
     @ConfigProperty(
         name = "cos.fleetshard.meta.camel")
     String camelMeta;
-    @ConfigProperty(
-        name = "test.namespace")
-    String namespace;
 
     @Test
-    void managedCamelConnectorStatusIsReported() throws Exception {
+    void managedCamelConnectorStatusIsReported() {
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
         final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0", camelMeta);
-        final ConnectorDeployment cd = withConnectorDeployment();
+        final ConnectorDeployment cd = withDefaultConnectorDeployment();
 
-        await(30, TimeUnit.SECONDS, () -> {
-            ConnectorDeploymentStatus status = fm.getCluster(clusterId)
-                .orElseThrow(() -> new IllegalStateException(""))
-                .getConnector(cd.getId())
-                .getStatus();
+        await(() -> {
+            ConnectorDeploymentStatus status = fm.getConnectorDeploymentStatus(clusterId, cd.getId());
+            List<ManagedConnector> managedConnectors = getManagedConnectors(cd);
+
+            if (managedConnectors.isEmpty()) {
+                return false;
+            }
 
             return status != null
                 && Objects.equals("provisioning", status.getPhase())
-                && getManagedConnectors(cd).get(0).getStatus() != null
-                && getManagedConnectors(cd).get(0).getStatus().getResources() != null;
+                && managedConnectors.get(0).getStatus() != null
+                && managedConnectors.get(0).getStatus().getResources() != null;
         });
 
         var resources = new ArrayList<>(getManagedConnectors(cd).get(0).getStatus().getResources());
 
-        fm.getCluster(clusterId)
-            .orElseThrow(() -> new IllegalStateException(""))
-            .updateConnector(cd.getId(), c -> {
-                c.getDeployment().getSpec()
-                    .setDesiredState(DESIRED_STATE_STOPPED);
-                c.getDeployment().getMetadata()
-                    .setResourceVersion(c.getDeployment().getMetadata().getResourceVersion() + 1);
-            });
-
-        await(30, TimeUnit.SECONDS, () -> {
-            ConnectorDeploymentStatus status = fm.getCluster(clusterId)
-                .orElseThrow(() -> new IllegalStateException(""))
-                .getConnector(cd.getId())
-                .getStatus();
-
-            return status != null
-                && Objects.equals(DESIRED_STATE_STOPPED, status.getPhase());
+        fm.updateConnector(clusterId, cd.getId(), c -> {
+            c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_STOPPED);
         });
 
-        await(30, TimeUnit.SECONDS, () -> {
-            for (var resource : resources) {
-                if (uc.getAsNode(namespace, resource) != null) {
-                    return false;
-                }
+        await(() -> {
+            return Objects.equals(
+                DESIRED_STATE_STOPPED,
+                fm.getConnectorDeploymentStatus(clusterId, cd.getId()).getPhase());
+        });
+
+        await(() -> {
+            return resources.stream().noneMatch(r -> uc.getAsNode(namespace, r) != null);
+        });
+
+        fm.updateConnector(clusterId, cd.getId(), c -> {
+            c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_READY);
+        });
+
+        await(() -> {
+            ConnectorDeploymentStatus status = fm.getConnectorDeploymentStatus(clusterId, cd.getId());
+            List<ManagedConnector> managedConnectors = getManagedConnectors(cd);
+
+            if (managedConnectors.isEmpty()) {
+                return false;
             }
 
-            return true;
+            return status != null
+                && Objects.equals("provisioning", status.getPhase())
+                && managedConnectors.get(0).getStatus() != null
+                && managedConnectors.get(0).getStatus().getResources() != null;
         });
-
-    }
-
-    private ConnectorDeployment withConnectorDeployment() {
-        final String kcidB64 = Base64.getEncoder()
-            .encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
-
-        final String deploymentId = UUID.randomUUID().toString();
-        final String connectorId = "cid";
-        final String connectorTypeId = "ctid";
-
-        final ObjectNode connectorSpec = Serialization.jsonMapper().createObjectNode();
-        connectorSpec.with("connector").put("foo", "connector-foo");
-        connectorSpec.with("kafka").put("topic", "kafka-foo");
-
-        final ObjectNode connectorMeta = Serialization.jsonMapper().createObjectNode();
-        connectorMeta.put("connector_type", "sink");
-        connectorMeta.put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
-        connectorMeta.withArray("operators").addObject()
-            .put("type", "camel-connector-operator")
-            .put("version", "[1.0.0,2.0.0)");
-        connectorMeta.with("kamelets")
-            .put("connector", "aws-s3-sink")
-            .put("kafka", "managed-kafka-source");
-
-        ConnectorDeployment cd = new ConnectorDeployment()
-            .kind("ConnectorDeployment")
-            .id(deploymentId)
-            .metadata(new ConnectorDeploymentAllOfMetadata()
-                .resourceVersion(2L))
-            .spec(new ConnectorDeploymentSpec()
-                .connectorId(connectorId)
-                .connectorTypeId(connectorTypeId)
-                .connectorResourceVersion(1L)
-                .kafka(new KafkaConnectionSettings()
-                    .bootstrapServer("kafka.acme.com:2181")
-                    .clientId(UUID.randomUUID().toString())
-                    .clientSecret(kcidB64))
-                .connectorSpec(connectorSpec)
-                .shardMetadata(connectorMeta)
-                .desiredState(DESIRED_STATE_READY));
-
-        return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
     }
 }

@@ -31,7 +31,7 @@ public class TestSupport {
 
     @ConfigProperty(
         name = "test.namespace")
-    String namespace;
+    protected String namespace;
 
     public static void await(long timeout, TimeUnit unit, Callable<Boolean> condition) {
         Awaitility.await()
@@ -39,6 +39,10 @@ public class TestSupport {
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
             .until(condition);
+    }
+
+    public static void await(Callable<Boolean> condition) {
+        await(30, TimeUnit.SECONDS, condition);
     }
 
     public static ManagedConnectorOperator newConnectorOperator(
