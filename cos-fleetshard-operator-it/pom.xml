@@ -52,6 +52,7 @@
         <module>reify</module>
         <module>status</module>
         <module>status-batch</module>
+        <module>stop</module>
         <module>delete</module>
     </modules>
 

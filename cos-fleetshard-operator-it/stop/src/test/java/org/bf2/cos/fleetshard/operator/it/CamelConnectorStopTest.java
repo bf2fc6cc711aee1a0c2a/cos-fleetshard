@@ -25,14 +25,14 @@ import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
-public class CamelConnectorDeleteTest extends CamelTestSupport {
+public class CamelConnectorStopTest extends CamelTestSupport {
     @ConfigProperty(
         name = "cos.fleetshard.meta.camel")
     String camelMeta;
@@ -64,7 +64,7 @@ public class CamelConnectorDeleteTest extends CamelTestSupport {
             .orElseThrow(() -> new IllegalStateException(""))
             .updateConnector(cd.getId(), c -> {
                 c.getDeployment().getSpec()
-                    .setDesiredState(DESIRED_STATE_DELETED);
+                    .setDesiredState(DESIRED_STATE_STOPPED);
                 c.getDeployment().getMetadata()
                     .setResourceVersion(c.getDeployment().getMetadata().getResourceVersion() + 1);
             });
@@ -76,7 +76,7 @@ public class CamelConnectorDeleteTest extends CamelTestSupport {
                 .getStatus();
 
             return status != null
-                && Objects.equals(DESIRED_STATE_DELETED, status.getPhase());
+                && Objects.equals(DESIRED_STATE_STOPPED, status.getPhase());
         });
 
         await(30, TimeUnit.SECONDS, () -> {

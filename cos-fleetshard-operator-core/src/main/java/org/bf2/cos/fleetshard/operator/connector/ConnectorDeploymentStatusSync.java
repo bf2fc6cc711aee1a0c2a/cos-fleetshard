@@ -149,6 +149,11 @@ public class ConnectorDeploymentStatusSync {
                         // TODO: we should distinguish between deleted/deleting
                         ds.setPhase("deleted");
                         break;
+                    case Stopping:
+                    case Stopped:
+                        // TODO: we should distinguish between deleted/deleting
+                        ds.setPhase("stopped");
+                        break;
                     case Monitor:
                         setConnectorOperators(connector, ds);
                         setConnectorStatus(connector, ds);

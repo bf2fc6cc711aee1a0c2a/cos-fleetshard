@@ -44,9 +44,15 @@ public class DeploymentSpec {
     }
 
     @JsonIgnore
-    public boolean hasDesiredStateOf(String desiredState) {
-        Objects.requireNonNull(desiredState, "desiredState should not be null");
-        return Objects.equals(this.desiredState, desiredState);
+    public boolean hasDesiredStateOf(String... desiredStates) {
+        Objects.requireNonNull(desiredStates, "desiredState should not be null");
+
+        for (String desiredState : desiredStates) {
+            if (Objects.equals(this.desiredState, desiredState)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

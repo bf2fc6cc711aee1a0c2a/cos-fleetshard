@@ -89,7 +89,9 @@ spec:
                 - Initialization
                 - Augmentation
                 - Monitor
+                - Stopped
                 - Deleting
+                - Stopping
                 - Deleted
                 type: string
               availableOperator:

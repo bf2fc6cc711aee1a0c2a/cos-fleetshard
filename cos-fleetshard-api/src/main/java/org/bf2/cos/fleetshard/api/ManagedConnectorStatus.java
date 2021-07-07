@@ -159,6 +159,8 @@ public class ManagedConnectorStatus {
         Monitor,
         Deleting,
         Deleted,
+        Stopping,
+        Stopped,
         Upgrade,
     }
 

@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
-@ToString
+@ToString(
+    callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(
     builderPackage = "io.fabric8.kubernetes.api.builder")

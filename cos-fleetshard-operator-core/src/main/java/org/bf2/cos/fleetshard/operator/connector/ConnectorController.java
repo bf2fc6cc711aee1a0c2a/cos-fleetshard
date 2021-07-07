@@ -57,6 +57,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MO
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_GENERATED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
@@ -147,6 +148,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 return handleDeleting(connector);
             case Deleted:
                 return handleDeleted(connector);
+            case Stopping:
+                return handleStopping(connector);
+            case Stopped:
+                return handleStopped(connector);
             default:
                 throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
         }
@@ -163,6 +168,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             case DESIRED_STATE_DELETED: {
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleting);
+                break;
+            }
+            case DESIRED_STATE_STOPPED: {
+                connector.getStatus().setDeployment(connector.getSpec().getDeployment());
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopping);
                 break;
             }
             case DESIRED_STATE_READY: {
@@ -377,6 +387,41 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate();
     }
 
+    private UpdateControl<ManagedConnector> handleStopping(ManagedConnector connector) {
+        LOGGER.info("Stopping connector: {}", connector.getMetadata().getName());
+
+        try {
+            cleanupResources(connector);
+
+            if (connector.getStatus().getResources().isEmpty()) {
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopped);
+
+                LOGGER.info("Connector {} stopped, move to phase: {}",
+                    connector.getMetadata().getName(),
+                    connector.getStatus().getPhase());
+
+                return UpdateControl.updateStatusSubResource(connector);
+            }
+        } catch (WebApplicationException e) {
+            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
+            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // TODO: reschedule a cleanup with backoff
+        getRetryTimer().scheduleOnce(connector, 1500);
+
+        return UpdateControl.noUpdate();
+    }
+
+    private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
+        statusSync.submit(connector);
+
+        // TODO: cleanup leftover, maybe
+        return UpdateControl.noUpdate();
+    }
+
     // **************************************************
     //
     // Helpers
@@ -401,8 +446,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final var it = connector.getStatus().getResources().listIterator();
         while (it.hasNext()) {
             final var ref = it.next();
+            final var deployment = connector.getSpec().getDeployment();
 
-            if (!connector.getSpec().getDeployment().hasDesiredStateOf(DESIRED_STATE_DELETED)) {
+            if (!deployment.hasDesiredStateOf(DESIRED_STATE_DELETED, DESIRED_STATE_STOPPED)) {
                 if (ref.getDeploymentRevision() == null) {
                     continue;
                 }

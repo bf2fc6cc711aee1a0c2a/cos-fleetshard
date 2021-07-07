@@ -40,6 +40,7 @@ public class ManagedConnector
     public static final String DELETION_MODE_DEPLOYMENT = "deployment";
     public static final String DESIRED_STATE_READY = "ready";
     public static final String DESIRED_STATE_DELETED = "deleted";
+    public static final String DESIRED_STATE_STOPPED = "stopped";
 
     public ManagedConnector() {
         setSpec(new ManagedConnectorSpec());
