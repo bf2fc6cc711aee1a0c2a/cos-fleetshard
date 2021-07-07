@@ -48,6 +48,13 @@ jobs:
           metadata-file-path: '.github/project.yaml'
           local-file: true
 
+      - name: Login to quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.IMAGE_REPO_USERNAME }}
+          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
+
       - name: Build container image and push it
         env:
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
