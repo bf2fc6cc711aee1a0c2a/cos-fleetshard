@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 import io.quarkus.test.common.QuarkusTestResource;
@@ -17,6 +16,7 @@ import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
@@ -30,14 +30,12 @@ public class CamelConnectorDeleteTest extends CamelTestSupport {
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
 
         awaitStatus(clusterId, cd.getId(), status -> {
-            Optional<ManagedConnector> mc = getManagedConnector(cd);
-            if (mc.isEmpty()) {
-                return false;
-            }
+            assertThat(status.getPhase()).isEqualTo("provisioning");
 
-            return Objects.equals("provisioning", status.getPhase())
-                && mc.get().getStatus() != null
-                && mc.get().getStatus().getResources() != null;
+            Optional<ManagedConnector> mc = getManagedConnector(cd);
+            assertThat(mc).isPresent();
+            assertThat(mc.get()).hasStatus();
+            assertThat(mc.get()).hasResources();
         });
 
         var resources = new ArrayList<>(mandatoryGetManagedConnector(cd).getStatus().getResources());
@@ -46,17 +44,12 @@ public class CamelConnectorDeleteTest extends CamelTestSupport {
             c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_DELETED);
         });
         awaitStatus(clusterId, cd.getId(), status -> {
-            return Objects.equals(DESIRED_STATE_DELETED, status.getPhase());
+            assertThat(status.getPhase()).isEqualTo(DESIRED_STATE_DELETED);
         });
 
         await(() -> {
-            for (var resource : resources) {
-                if (uc.getAsNode(namespace, resource) != null) {
-                    return false;
-                }
-            }
-
-            return true;
+            assertThat(resources)
+                .noneMatch(r -> uc.getAsNode(namespace, r) != null);
         });
 
     }

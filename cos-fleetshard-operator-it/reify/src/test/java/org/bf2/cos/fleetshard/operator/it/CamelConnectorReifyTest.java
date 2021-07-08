@@ -2,6 +2,9 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
@@ -12,10 +15,7 @@ import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import io.quarkus.test.common.QuarkusTestResource;
-import io.quarkus.test.junit.QuarkusTest;
+import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
@@ -30,9 +30,8 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
 
         await(() -> {
             Optional<ManagedConnector> connector = getManagedConnector(cd);
-            if (connector.isEmpty()) {
-                return false;
-            }
+
+            assertThat(connector).isPresent();
 
             JsonNode secret = uc.getAsNode(
                 namespace,
@@ -46,7 +45,8 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
                 "KameletBinding",
                 connector.get().getMetadata().getName());
 
-            return secret != null && binding != null;
+            assertThat(secret).isNotNull();
+            assertThat(binding).isNotNull();
         });
 
     }

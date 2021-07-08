@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +14,7 @@ import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class CamelConnectorStatusTestSupport extends CamelTestSupport {
@@ -25,9 +25,8 @@ public class CamelConnectorStatusTestSupport extends CamelTestSupport {
 
         await(() -> {
             Optional<ManagedConnector> connector = getManagedConnector(cd);
-            if (connector.isEmpty()) {
-                return false;
-            }
+
+            assertThat(connector).isPresent();
 
             JsonNode secret = uc.getAsNode(
                 namespace,
@@ -41,13 +40,14 @@ public class CamelConnectorStatusTestSupport extends CamelTestSupport {
                 "KameletBinding",
                 connector.get().getMetadata().getName());
 
-            return secret != null && binding != null;
+            assertThat(secret).isNotNull();
+            assertThat(binding).isNotNull();
         });
 
         updateKameletBinding(mandatoryGetManagedConnector(cd).getMetadata().getName());
 
         awaitStatus(clusterId, cd.getId(), status -> {
-            return Objects.equals(DESIRED_STATE_READY, status.getPhase());
+            assertThat(status.getPhase()).isEqualTo(DESIRED_STATE_READY);
         });
     }
 
