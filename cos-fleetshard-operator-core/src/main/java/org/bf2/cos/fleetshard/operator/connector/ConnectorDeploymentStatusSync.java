@@ -189,7 +189,7 @@ public class ConnectorDeploymentStatusSync {
             LOGGER.warn("Error retrieving status for connector " + connector.getMetadata().getName(), e);
         } catch (FleetManagerClientException e) {
             //TODO: should be 410, https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
-            if (e.getError() != null && Objects.equals(e.getError().getCode(), "404")) {
+            if (e.getError() != null && e.getStatusCode() == 404) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 fleetShard.deleteManagedConnector(connector);
             } else {

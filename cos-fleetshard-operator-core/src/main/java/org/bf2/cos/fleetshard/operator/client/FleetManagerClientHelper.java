@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
 import org.bf2.cos.fleetshard.operator.support.ThrowingRunnable;
@@ -18,9 +19,16 @@ public class FleetManagerClientHelper {
         try {
             runnable.run();
         } catch (WebApplicationException e) {
-            final Error error = e.getResponse().readEntity(Error.class);
-            LOGGER.warn("code={}, reason={}", error.getCode(), error.getReason(), e);
-            throw new FleetManagerClientException(e, error);
+            final Response response = e.getResponse();
+            final Error error = response.readEntity(Error.class);
+
+            LOGGER.warn("code={}, reason={}, status={}",
+                error.getCode(),
+                error.getReason(),
+                response.getStatus(),
+                e);
+
+            throw new FleetManagerClientException(e, error, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
@@ -37,9 +45,16 @@ public class FleetManagerClientHelper {
         try {
             return callable.call();
         } catch (WebApplicationException e) {
-            final Error error = e.getResponse().readEntity(Error.class);
-            LOGGER.warn("code={}, reason={}", error.getCode(), error.getReason(), e);
-            throw new FleetManagerClientException(e, error);
+            final Response response = e.getResponse();
+            final Error error = response.readEntity(Error.class);
+
+            LOGGER.warn("code={}, reason={}, status={}",
+                error.getCode(),
+                error.getReason(),
+                response.getStatus(),
+                e);
+
+            throw new FleetManagerClientException(e, error, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
