@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -14,6 +13,9 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.client.Watch;
+import io.quarkus.runtime.Startup;
+import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
@@ -29,13 +31,8 @@ import org.bf2.cos.fleetshard.operator.support.AbstractWatcher;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.fabric8.kubernetes.client.Watch;
-import io.quarkus.runtime.Startup;
-import io.quarkus.scheduler.Scheduled;
 
 /**
  * Implements the status synchronization protocol for the connectors.
@@ -54,8 +51,6 @@ public class ConnectorDeploymentStatusSync {
     @Inject
     FleetShardOperator operator;
     @Inject
-    ManagedExecutor executor;
-    @Inject
     UnstructuredClient uc;
     @Inject
     MetaClient meta;
@@ -71,6 +66,9 @@ public class ConnectorDeploymentStatusSync {
     @ConfigProperty(
         name = "cos.connectors.status.sync.batch.interval")
     String batchSyncInterval;
+    @ConfigProperty(
+        name = "cos.connectors.status.sync.interval")
+    String statusSyncInterval;
 
     public ConnectorDeploymentStatusSync() {
         this.queue = new ConnectorStatusQueue();
@@ -79,7 +77,6 @@ public class ConnectorDeploymentStatusSync {
 
     @PostConstruct
     void setUp() {
-        this.executor.submit(this::doSync);
         this.observer.start();
     }
 
@@ -96,28 +93,31 @@ public class ConnectorDeploymentStatusSync {
         identity = "cos.connectors.status.sync.batch",
         every = "{cos.connectors.status.sync.batch.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
-    void syncAll() {
+    void updateAllConnectorDeploymentStatus() {
         if (!operator.isRunning() || !batchSyncEnabled) {
             return;
         }
 
-        LOGGER.debug("Sync connectors status {}", batchSyncInterval);
-
         this.queue.submit(new ConnectorStatusEvent(null));
+
+        LOGGER.debug("Sync connectors status interval={}, queue_size={}", batchSyncInterval, this.queue.size());
     }
 
-    private void doSync() {
+    @Scheduled(
+        identity = "cos.connectors.status.sync",
+        every = "{cos.connectors.status.sync.interval}",
+        concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    void updateConnectorDeploymentStatus() {
         try {
-            while (!this.executor.isShutdown()) {
-                LOGGER.debug("Polling ManagedConnector status queue");
-                Collection<ManagedConnector> connectors = queue.poll(1, TimeUnit.SECONDS);
-                LOGGER.debug("Connectors to process: {}", connectors.size());
+            LOGGER.debug("Polling ManagedConnector status queue (interval={}, size={})", statusSyncInterval, queue.size());
+            Collection<ManagedConnector> connectors = queue.poll();
+            LOGGER.debug("Connectors to process: {}", connectors.size());
 
-                for (ManagedConnector connector : connectors) {
-                    updateConnectorDeploymentStatus(connector);
-                }
+            for (ManagedConnector connector : connectors) {
+                updateConnectorDeploymentStatus(connector);
             }
         } catch (InterruptedException e) {
+            LOGGER.warn("Sync loop interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
@@ -275,8 +275,8 @@ public class ConnectorDeploymentStatusSync {
             this.queue.put(event);
         }
 
-        public Collection<ManagedConnector> poll(long timeout, TimeUnit unit) throws InterruptedException {
-            ConnectorStatusEvent event = queue.poll(timeout, unit);
+        public Collection<ManagedConnector> poll() throws InterruptedException {
+            ConnectorStatusEvent event = queue.poll();
             if (event == null) {
                 return Collections.emptyList();
             }

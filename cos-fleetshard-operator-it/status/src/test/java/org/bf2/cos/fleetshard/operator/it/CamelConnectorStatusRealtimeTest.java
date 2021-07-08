@@ -19,6 +19,7 @@ public class CamelConnectorStatusRealtimeTest extends CamelConnectorStatusTestSu
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
+                "cos.connectors.status.sync.interval", "1s",
                 "cos.connectors.status.sync.batch.interval", "60s",
                 "cos.connectors.status.sync.batch.enabled", "false",
                 "cos.connectors.status.sync.realtime.enabled", "true");
