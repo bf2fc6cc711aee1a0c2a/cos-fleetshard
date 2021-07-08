@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.support;
+package org.bf2.cos.fleetshard.support;
 
 import java.util.Collections;
 import java.util.List;

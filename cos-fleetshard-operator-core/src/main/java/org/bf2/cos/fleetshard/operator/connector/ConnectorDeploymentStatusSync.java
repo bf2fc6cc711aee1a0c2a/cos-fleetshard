@@ -14,9 +14,6 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.fabric8.kubernetes.client.Watch;
-import io.quarkus.runtime.Startup;
-import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.api.model.cp.MetaV1Condition;
@@ -28,13 +25,17 @@ import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClientException;
-import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.support.AbstractWatcher;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
+import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.fabric8.kubernetes.client.Watch;
+import io.quarkus.runtime.Startup;
+import io.quarkus.scheduler.Scheduled;
 
 /**
  * Implements the status synchronization protocol for the connectors.
