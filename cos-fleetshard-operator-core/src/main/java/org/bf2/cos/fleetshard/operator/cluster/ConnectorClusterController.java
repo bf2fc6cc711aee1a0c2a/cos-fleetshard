@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.cluster;
 
+import java.util.Objects;
+
 import javax.inject.Inject;
 
 import io.javaoperatorsdk.operator.api.Context;
@@ -29,6 +31,10 @@ public class ConnectorClusterController extends AbstractResourceController<Manag
     public UpdateControl<ManagedConnectorCluster> createOrUpdateResource(
         ManagedConnectorCluster cluster,
         Context<ManagedConnectorCluster> context) {
+
+        if (!Objects.equals(cluster.getSpec().getId(), fleetShard.getClusterId())) {
+            return UpdateControl.noUpdate();
+        }
 
         boolean update = false;
         if (!cluster.getStatus().isReady()) {
