@@ -22,11 +22,11 @@ public class FleetManagerClientHelper {
             final Response response = e.getResponse();
             final Error error = response.readEntity(Error.class);
 
-            LOGGER.warn("code={}, reason={}, status={}",
+            LOGGER.warn("code={}, reason={}, status={}, message={}",
                 error.getCode(),
                 error.getReason(),
                 response.getStatus(),
-                e);
+                e.getMessage());
 
             throw new FleetManagerClientException(e, error, response.getStatus());
         } catch (ProcessingException e) {
@@ -48,11 +48,11 @@ public class FleetManagerClientHelper {
             final Response response = e.getResponse();
             final Error error = response.readEntity(Error.class);
 
-            LOGGER.warn("code={}, reason={}, status={}",
+            LOGGER.warn("code={}, reason={}, status={}, message={}",
                 error.getCode(),
                 error.getReason(),
                 response.getStatus(),
-                e);
+                e.getMessage());
 
             throw new FleetManagerClientException(e, error, response.getStatus());
         } catch (ProcessingException e) {

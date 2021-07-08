@@ -5,9 +5,9 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 55a07b24e24fc9e74950c0c2164205beb3e3d96f
+    app.quarkus.io/commit-id: 1c26fbea97ac58437da35a53bf360d67f20e4acd
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-07-08 - 16:38:43 +0000
+    app.quarkus.io/build-timestamp: 2021-07-08 - 16:51:13 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
@@ -23,9 +23,9 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 55a07b24e24fc9e74950c0c2164205beb3e3d96f
+    app.quarkus.io/commit-id: 1c26fbea97ac58437da35a53bf360d67f20e4acd
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-07-08 - 16:38:43 +0000
+    app.quarkus.io/build-timestamp: 2021-07-08 - 16:51:13 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
@@ -132,9 +132,9 @@ metadata:
   annotations:
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
-    app.quarkus.io/commit-id: 55a07b24e24fc9e74950c0c2164205beb3e3d96f
+    app.quarkus.io/commit-id: 1c26fbea97ac58437da35a53bf360d67f20e4acd
     app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-    app.quarkus.io/build-timestamp: 2021-07-08 - 16:38:43 +0000
+    app.quarkus.io/build-timestamp: 2021-07-08 - 16:51:13 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
   labels:
@@ -152,9 +152,9 @@ spec:
       annotations:
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
-        app.quarkus.io/commit-id: 55a07b24e24fc9e74950c0c2164205beb3e3d96f
+        app.quarkus.io/commit-id: 1c26fbea97ac58437da35a53bf360d67f20e4acd
         app.quarkus.io/vcs-url: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard.git
-        app.quarkus.io/build-timestamp: 2021-07-08 - 16:38:43 +0000
+        app.quarkus.io/build-timestamp: 2021-07-08 - 16:51:13 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
       labels:
