@@ -13,18 +13,13 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class CamelConnectorStatusTestSupport extends CamelTestSupport {
-    @ConfigProperty(
-        name = "cos.fleetshard.meta.camel")
-    String camelMeta;
-
     protected void managedCamelConnectorStatusIsReported() {
-        final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0", camelMeta);
+        final ManagedConnectorOperator op = withCamelConnectorOperator("cm-1", "1.1.0");
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 

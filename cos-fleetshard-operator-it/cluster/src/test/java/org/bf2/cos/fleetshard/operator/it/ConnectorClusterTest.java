@@ -27,8 +27,8 @@ public class ConnectorClusterTest extends TestSupport {
                 && cluster.getStatus().getPhase() == ManagedConnectorClusterStatus.PhaseType.Ready;
         });
 
-        withConnectorOperator("cm-1", "1.0.0", "localhost:8080");
-        withConnectorOperator("cm-2", "1.1.0", "localhost:8080");
+        withConnectorOperator("co-1", "type", "1.0.0", "localhost:8080");
+        withConnectorOperator("co-2", "type", "1.1.0", "localhost:8080");
 
         await(() -> {
             var cluster = getCluster();

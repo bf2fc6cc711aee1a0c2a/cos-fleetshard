@@ -14,17 +14,27 @@ import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.api.model.cp.KafkaConnectionSettings;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 
 public class CamelTestSupport extends TestSupport {
+    @ConfigProperty(
+        name = "cos.fleetshard.meta.camel")
+    String camelMeta;
+
     static {
         KubernetesDeserializer.registerCustomKind("camel.apache.org/v1alpha1", "KameletBinding", KameletBindingResource.class);
     }
 
     @JsonDeserialize
     public static class KameletBindingResource extends HashMap<String, Object> implements KubernetesResource {
+    }
+
+    protected ManagedConnectorOperator withCamelConnectorOperator(String name, String version) {
+        return withConnectorOperator(name, "camel-connector-operator", version, camelMeta);
     }
 
     protected ConnectorDeployment withDefaultConnectorDeployment() {
