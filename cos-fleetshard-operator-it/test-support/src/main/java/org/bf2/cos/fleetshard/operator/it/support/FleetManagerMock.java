@@ -98,19 +98,6 @@ public class FleetManagerMock {
         return clusters.computeIfAbsent(id, ConnectorCluster::new);
     }
 
-    public Connector updateConnector(String clusterId, String deploymentId, Consumer<Connector> consumer) {
-        return getCluster(clusterId)
-            .orElseThrow(() -> new IllegalStateException(""))
-            .updateConnector(deploymentId, consumer);
-    }
-
-    public ConnectorDeploymentStatus getConnectorDeploymentStatus(String clusterId, String deploymentId) {
-        return getCluster(clusterId)
-            .orElseThrow(() -> new IllegalStateException(""))
-            .getConnector(deploymentId)
-            .getStatus();
-    }
-
     // **********************************************
     //
     // Model

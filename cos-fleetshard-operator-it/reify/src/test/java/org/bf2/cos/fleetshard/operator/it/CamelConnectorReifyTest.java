@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.it;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -35,9 +34,9 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
-        await(30, TimeUnit.SECONDS, () -> {
-            List<ManagedConnector> connectors = getManagedConnectors(cd);
-            if (connectors.size() != 1) {
+        await(() -> {
+            Optional<ManagedConnector> connector = getManagedConnector(cd);
+            if (connector.isEmpty()) {
                 return false;
             }
 
@@ -45,13 +44,13 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
                 namespace,
                 "v1",
                 "Secret",
-                connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+                connector.get().getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
 
             JsonNode binding = uc.getAsNode(
                 namespace,
                 "camel.apache.org/v1alpha1",
                 "KameletBinding",
-                connectors.get(0).getMetadata().getName());
+                connector.get().getMetadata().getName());
 
             return secret != null && binding != null;
         });
