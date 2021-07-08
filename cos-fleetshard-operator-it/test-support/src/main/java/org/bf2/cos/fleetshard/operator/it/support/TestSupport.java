@@ -40,6 +40,7 @@ public class TestSupport {
     public static ManagedConnectorOperator newConnectorOperator(
         String namespace,
         String name,
+        String type,
         String version,
         String connectorsMeta) {
 
@@ -49,7 +50,7 @@ public class TestSupport {
                 .withName(name)
                 .build())
             .withSpec(new ManagedConnectorOperatorSpecBuilder()
-                .withType("camel-connector-operator")
+                .withType(type)
                 .withVersion(version)
                 .withMetaService(connectorsMeta)
                 .build())
@@ -108,12 +109,12 @@ public class TestSupport {
             .orElseThrow(() -> new IllegalArgumentException("Unable to find a connector for deployment " + cd.getId()));
     }
 
-    protected ManagedConnectorOperator withConnectorOperator(String name, String version, String connectorsMeta) {
+    protected ManagedConnectorOperator withConnectorOperator(String name, String type, String version, String connectorsMeta) {
         return ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
             .inNamespace(namespace)
             .createOrReplace(
-                newConnectorOperator(namespace, name, version, connectorsMeta));
+                newConnectorOperator(namespace, name, type, version, connectorsMeta));
     }
 
     protected ConnectorDeploymentStatus getDeploymentStatus(ConnectorDeployment cd) {
