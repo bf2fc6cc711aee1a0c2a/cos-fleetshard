@@ -2,14 +2,17 @@ package org.bf2.cos.fleetshard.operator.it.support;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.quarkus.test.kubernetes.client.KubernetesTestServer;
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ThrowingRunnable;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -17,10 +20,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 
 public class TestSupport {
     @KubernetesTestServer
@@ -57,34 +56,36 @@ public class TestSupport {
             .build();
     }
 
-    public void await(long timeout, TimeUnit unit, Callable<Boolean> condition) {
+    public void await(long timeout, TimeUnit unit, ThrowingRunnable condition) {
         Awaitility.await()
             .atMost(timeout, unit)
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
-            .until(condition);
+            .untilAsserted(condition);
     }
 
-    public void await(Callable<Boolean> condition) {
+    public void await(ThrowingRunnable condition) {
         await(30, TimeUnit.SECONDS, condition);
     }
 
-    public void awaitStatus(String clusterId, String deploymentId, Predicate<ConnectorDeploymentStatus> predicate) {
+    public void awaitStatus(
+        String clusterId,
+        String deploymentId,
+        Consumer<ConnectorDeploymentStatus> predicate) {
+
         awaitStatus(30, TimeUnit.SECONDS, clusterId, deploymentId, predicate);
     }
 
     public void awaitStatus(long timeout, TimeUnit unit, String clusterId, String deploymentId,
-        Predicate<ConnectorDeploymentStatus> predicate) {
+        Consumer<ConnectorDeploymentStatus> predicate) {
         await(
             timeout,
             unit,
             () -> {
                 ConnectorDeploymentStatus status = getConnectorDeploymentStatus(clusterId, deploymentId);
-                if (status == null) {
-                    return false;
-                }
-
-                return predicate.test(status);
+                Assertions.assertThat(status)
+                    .isNotNull()
+                    .satisfies(predicate);
             });
     }
 

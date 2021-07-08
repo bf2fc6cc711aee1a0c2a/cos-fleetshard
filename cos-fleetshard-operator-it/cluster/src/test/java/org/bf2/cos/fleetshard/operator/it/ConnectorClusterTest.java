@@ -10,6 +10,8 @@ import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
 import org.junit.jupiter.api.Test;
 
+import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
+
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTest
@@ -23,8 +25,10 @@ public class ConnectorClusterTest extends TestSupport {
                 .withName(ConnectorClusterSupport.clusterName(clusterId))
                 .get();
 
-            return cluster != null
-                && cluster.getStatus().getPhase() == ManagedConnectorClusterStatus.PhaseType.Ready;
+            assertThat(cluster)
+                .isNotNull();
+            assertThat(cluster.getStatus().getPhase())
+                .isEqualTo(ManagedConnectorClusterStatus.PhaseType.Ready);
         });
 
         withConnectorOperator("co-1", "type", "1.0.0", "localhost:8080");
@@ -33,9 +37,10 @@ public class ConnectorClusterTest extends TestSupport {
         await(() -> {
             var cluster = getCluster();
 
-            return cluster != null
-                && cluster.getStatus().getOperators() != null
-                && cluster.getStatus().getOperators().size() == 2;
+            assertThat(cluster)
+                .isNotNull();
+            assertThat(cluster.getStatus().getOperators())
+                .hasSize(2);
         });
     }
 }

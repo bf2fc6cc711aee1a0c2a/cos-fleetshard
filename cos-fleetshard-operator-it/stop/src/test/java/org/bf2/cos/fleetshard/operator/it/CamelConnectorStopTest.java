@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Optional;
 
 import io.quarkus.test.common.QuarkusTestResource;
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
@@ -32,13 +32,11 @@ public class CamelConnectorStopTest extends CamelTestSupport {
 
         awaitStatus(clusterId, cd.getId(), status -> {
             Optional<ManagedConnector> connector = getManagedConnector(cd);
-            if (connector.isEmpty()) {
-                return false;
-            }
 
-            return Objects.equals("provisioning", status.getPhase())
-                && connector.get().getStatus() != null
-                && connector.get().getStatus().getResources() != null;
+            assertThat(connector).isPresent();
+            assertThat(status.getPhase()).isEqualTo("provisioning");
+            assertThat(connector.get()).hasStatus();
+            assertThat(connector.get()).hasResources();
         });
 
         var resources = new ArrayList<>(mandatoryGetManagedConnector(cd).getStatus().getResources());
@@ -48,11 +46,11 @@ public class CamelConnectorStopTest extends CamelTestSupport {
         });
 
         awaitStatus(clusterId, cd.getId(), status -> {
-            return Objects.equals(DESIRED_STATE_STOPPED, status.getPhase());
+            assertThat(status.getPhase()).isEqualTo(DESIRED_STATE_STOPPED);
         });
 
         await(() -> {
-            return resources.stream().noneMatch(r -> uc.getAsNode(namespace, r) != null);
+            assertThat(resources).noneMatch(r -> uc.getAsNode(namespace, r) != null);
         });
 
         updateConnector(clusterId, cd.getId(), c -> {
@@ -61,13 +59,11 @@ public class CamelConnectorStopTest extends CamelTestSupport {
 
         awaitStatus(clusterId, cd.getId(), status -> {
             Optional<ManagedConnector> connector = getManagedConnector(cd);
-            if (connector.isEmpty()) {
-                return false;
-            }
 
-            return Objects.equals("provisioning", status.getPhase())
-                && connector.get().getStatus() != null
-                && connector.get().getStatus().getResources() != null;
+            assertThat(connector).isPresent();
+            assertThat(status.getPhase()).isEqualTo("provisioning");
+            assertThat(connector.get()).hasStatus();
+            assertThat(connector.get()).hasResources();
         });
     }
 }
