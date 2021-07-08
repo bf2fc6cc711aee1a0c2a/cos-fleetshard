@@ -1,10 +1,9 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -12,7 +11,6 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
@@ -44,9 +42,9 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
-        await(30, TimeUnit.SECONDS, () -> {
-            List<ManagedConnector> connectors = getManagedConnectors(cd);
-            if (connectors.size() != 1) {
+        await(() -> {
+            Optional<ManagedConnector> connector = getManagedConnector(cd);
+            if (connector.isEmpty()) {
                 return false;
             }
 
@@ -54,30 +52,22 @@ public class CamelConnectorStatusTest extends CamelTestSupport {
                 namespace,
                 "v1",
                 "Secret",
-                connectors.get(0).getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+                connector.get().getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
 
             JsonNode binding = uc.getAsNode(
                 namespace,
                 "camel.apache.org/v1alpha1",
                 "KameletBinding",
-                connectors.get(0).getMetadata().getName());
+                connector.get().getMetadata().getName());
 
             return secret != null && binding != null;
         });
 
-        updateKameletBinding(getManagedConnectors(cd).get(0).getMetadata().getName());
+        updateKameletBinding(mandatoryGetManagedConnector(cd).getMetadata().getName());
 
-        await(30, TimeUnit.SECONDS, () -> {
-            ConnectorDeploymentStatus status = fm.getCluster(clusterId)
-                .orElseThrow(() -> new IllegalStateException(""))
-                .getConnector(cd.getId())
-                .getStatus();
-
-            // TODO: unstructured update event seems not propagated
-            return status != null
-                && Objects.equals(DESIRED_STATE_READY, status.getPhase());
+        awaitStatus(clusterId, cd.getId(), status -> {
+            return Objects.equals(DESIRED_STATE_READY, status.getPhase());
         });
-
     }
 
     @SuppressWarnings("unchecked")

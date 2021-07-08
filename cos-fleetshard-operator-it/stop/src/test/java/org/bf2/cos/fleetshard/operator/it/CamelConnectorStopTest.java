@@ -1,13 +1,12 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
@@ -36,52 +35,44 @@ public class CamelConnectorStopTest extends CamelTestSupport {
         final ManagedConnectorOperator op = withConnectorOperator("cm-1", "1.1.0", camelMeta);
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
 
-        await(() -> {
-            ConnectorDeploymentStatus status = fm.getConnectorDeploymentStatus(clusterId, cd.getId());
-            List<ManagedConnector> managedConnectors = getManagedConnectors(cd);
-
-            if (managedConnectors.isEmpty()) {
+        awaitStatus(clusterId, cd.getId(), status -> {
+            Optional<ManagedConnector> connector = getManagedConnector(cd);
+            if (connector.isEmpty()) {
                 return false;
             }
 
-            return status != null
-                && Objects.equals("provisioning", status.getPhase())
-                && managedConnectors.get(0).getStatus() != null
-                && managedConnectors.get(0).getStatus().getResources() != null;
+            return Objects.equals("provisioning", status.getPhase())
+                && connector.get().getStatus() != null
+                && connector.get().getStatus().getResources() != null;
         });
 
-        var resources = new ArrayList<>(getManagedConnectors(cd).get(0).getStatus().getResources());
+        var resources = new ArrayList<>(mandatoryGetManagedConnector(cd).getStatus().getResources());
 
-        fm.updateConnector(clusterId, cd.getId(), c -> {
+        updateConnector(clusterId, cd.getId(), c -> {
             c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_STOPPED);
         });
 
-        await(() -> {
-            return Objects.equals(
-                DESIRED_STATE_STOPPED,
-                fm.getConnectorDeploymentStatus(clusterId, cd.getId()).getPhase());
+        awaitStatus(clusterId, cd.getId(), status -> {
+            return Objects.equals(DESIRED_STATE_STOPPED, status.getPhase());
         });
 
         await(() -> {
             return resources.stream().noneMatch(r -> uc.getAsNode(namespace, r) != null);
         });
 
-        fm.updateConnector(clusterId, cd.getId(), c -> {
+        updateConnector(clusterId, cd.getId(), c -> {
             c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_READY);
         });
 
-        await(() -> {
-            ConnectorDeploymentStatus status = fm.getConnectorDeploymentStatus(clusterId, cd.getId());
-            List<ManagedConnector> managedConnectors = getManagedConnectors(cd);
-
-            if (managedConnectors.isEmpty()) {
+        awaitStatus(clusterId, cd.getId(), status -> {
+            Optional<ManagedConnector> connector = getManagedConnector(cd);
+            if (connector.isEmpty()) {
                 return false;
             }
 
-            return status != null
-                && Objects.equals("provisioning", status.getPhase())
-                && managedConnectors.get(0).getStatus() != null
-                && managedConnectors.get(0).getStatus().getResources() != null;
+            return Objects.equals("provisioning", status.getPhase())
+                && connector.get().getStatus() != null
+                && connector.get().getStatus().getResources() != null;
         });
     }
 }
