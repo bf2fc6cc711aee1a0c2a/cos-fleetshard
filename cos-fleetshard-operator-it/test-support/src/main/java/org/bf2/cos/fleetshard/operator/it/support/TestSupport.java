@@ -1,14 +1,18 @@
 package org.bf2.cos.fleetshard.operator.it.support;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import javax.inject.Inject;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
@@ -19,7 +23,10 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
+import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class TestSupport {
     @KubernetesTestServer
@@ -89,7 +96,7 @@ public class TestSupport {
             });
     }
 
-    protected Optional<ManagedConnector> getManagedConnector(ConnectorDeployment cd) {
+    public Optional<ManagedConnector> getManagedConnector(ConnectorDeployment cd) {
         List<ManagedConnector> connectors = ksrv.getClient()
             .customResources(ManagedConnector.class)
             .inNamespace(namespace)
@@ -105,12 +112,12 @@ public class TestSupport {
         return Optional.of(connectors.get(0));
     }
 
-    protected ManagedConnector mandatoryGetManagedConnector(ConnectorDeployment cd) {
+    public ManagedConnector mandatoryGetManagedConnector(ConnectorDeployment cd) {
         return getManagedConnector(cd)
             .orElseThrow(() -> new IllegalArgumentException("Unable to find a connector for deployment " + cd.getId()));
     }
 
-    protected ManagedConnectorOperator withConnectorOperator(String name, String type, String version, String connectorsMeta) {
+    public ManagedConnectorOperator withConnectorOperator(String name, String type, String version, String connectorsMeta) {
         return ksrv.getClient()
             .customResources(ManagedConnectorOperator.class)
             .inNamespace(namespace)
@@ -118,14 +125,14 @@ public class TestSupport {
                 newConnectorOperator(namespace, name, type, version, connectorsMeta));
     }
 
-    protected ConnectorDeploymentStatus getDeploymentStatus(ConnectorDeployment cd) {
+    public ConnectorDeploymentStatus getDeploymentStatus(ConnectorDeployment cd) {
         return fm.getCluster(clusterId)
             .orElseThrow(() -> new IllegalStateException(""))
             .getConnector(cd.getId())
             .getStatus();
     }
 
-    protected FleetManagerMock.ConnectorCluster getCluster() {
+    public FleetManagerMock.ConnectorCluster getCluster() {
         return fm.getCluster(clusterId)
             .orElseThrow(() -> new IllegalStateException(""));
     }
@@ -142,5 +149,32 @@ public class TestSupport {
             .orElseThrow(() -> new IllegalStateException(""))
             .getConnector(deploymentId)
             .getStatus();
+    }
+
+    public Map<String, Object> updateUnstructured(
+        String apiVersion,
+        String kind,
+        String name,
+        Consumer<ObjectNode> consumer) {
+
+        UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
+        ObjectNode unstructured = (ObjectNode) uc.getAsNode(
+            namespace,
+            apiVersion,
+            kind,
+            name);
+
+        consumer.accept(unstructured);
+
+        try {
+            return ksrv.getClient()
+                .customResource(asCustomResourceDefinitionContext(unstructured))
+                .updateStatus(
+                    namespace,
+                    name,
+                    Serialization.jsonMapper().treeToValue(unstructured, Map.class));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

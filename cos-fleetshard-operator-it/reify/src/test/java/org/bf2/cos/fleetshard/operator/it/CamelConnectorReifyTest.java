@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
@@ -31,22 +30,18 @@ public class CamelConnectorReifyTest extends CamelTestSupport {
         await(() -> {
             Optional<ManagedConnector> connector = getManagedConnector(cd);
 
-            assertThat(connector).isPresent();
-
-            JsonNode secret = uc.getAsNode(
-                namespace,
-                "v1",
-                "Secret",
-                connector.get().getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
-
-            JsonNode binding = uc.getAsNode(
-                namespace,
-                "camel.apache.org/v1alpha1",
-                "KameletBinding",
-                connector.get().getMetadata().getName());
-
-            assertThat(secret).isNotNull();
-            assertThat(binding).isNotNull();
+            assertThat(connector).get().satisfies(c -> {
+                assertThat(uc).hasResource(
+                    namespace,
+                    "v1",
+                    "Secret",
+                    c.getMetadata().getName() + "-" + cd.getMetadata().getResourceVersion());
+                assertThat(uc).hasResource(
+                    namespace,
+                    "camel.apache.org/v1alpha1",
+                    "KameletBinding",
+                    c.getMetadata().getName());
+            });
         });
 
     }
