@@ -68,6 +68,9 @@ public class ConnectorDeploymentStatusSync {
         name = "cos.connectors.status.sync.realtime.enabled",
         defaultValue = "true")
     boolean realtimeSyncEnabled;
+    @ConfigProperty(
+        name = "cos.connectors.status.sync.batch.interval")
+    String batchSyncInterval;
 
     public ConnectorDeploymentStatusSync() {
         this.queue = new ConnectorStatusQueue();
@@ -98,7 +101,7 @@ public class ConnectorDeploymentStatusSync {
             return;
         }
 
-        LOGGER.debug("Sync connectors status");
+        LOGGER.debug("Sync connectors status {}", batchSyncInterval);
 
         this.queue.submit(new ConnectorStatusEvent(null));
     }
