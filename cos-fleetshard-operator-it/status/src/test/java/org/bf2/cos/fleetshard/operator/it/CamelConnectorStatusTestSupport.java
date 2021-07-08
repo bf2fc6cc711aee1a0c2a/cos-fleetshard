@@ -11,11 +11,11 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.operator.client.UnstructuredClient;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
+import org.bf2.cos.fleetshard.support.UnstructuredClient;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.operator.support.ResourceUtil.asCustomResourceDefinitionContext;
+import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class CamelConnectorStatusTestSupport extends CamelTestSupport {
     protected void managedCamelConnectorStatusIsReported() {
