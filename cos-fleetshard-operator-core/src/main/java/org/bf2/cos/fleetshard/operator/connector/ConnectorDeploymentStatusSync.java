@@ -108,6 +108,11 @@ public class ConnectorDeploymentStatusSync {
         every = "{cos.connectors.status.sync.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void updateConnectorDeploymentStatus() {
+        if (!operator.isRunning()) {
+            LOGGER.debug("Operator is not yet ready");
+            return;
+        }
+
         try {
             LOGGER.debug("Polling ManagedConnector status queue (interval={}, size={})", statusSyncInterval, queue.size());
             Collection<ManagedConnector> connectors = queue.poll();
@@ -297,6 +302,7 @@ public class ConnectorDeploymentStatusSync {
                     .sorted()
                     .distinct()
                     .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
             }
 
