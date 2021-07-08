@@ -41,6 +41,7 @@ import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.api.Version;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
+import org.bf2.cos.fleetshard.operator.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEvent;
@@ -278,8 +279,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             // TODO: add back-off
             // TODO: better exception checking
             getRetryTimer().scheduleOnce(connector, 1500);
+        } catch (FleetManagerClientException e) {
+            //TODO: should be 410, https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
+            if (e.getError() != null && Objects.equals(e.getError().getCode(), "404")) {
+                LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
+                fleetShard.deleteManagedConnector(connector);
+            } else {
+                LOGGER.warn("Error augmenting connector " + connector.getMetadata().getName(), e);
+            }
         } catch (Exception e) {
-            LOGGER.warn("Error retrieving data from the meta service", e);
+            LOGGER.warn("Error augmenting connector " + connector.getMetadata().getName(), e);
         }
 
         return UpdateControl.noUpdate();

@@ -18,8 +18,9 @@ public class FleetManagerClientHelper {
         try {
             runnable.run();
         } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new FleetManagerClientException(e);
+            final Error error = e.getResponse().readEntity(Error.class);
+            LOGGER.warn("code={}, reason={}", error.getCode(), error.getReason(), e);
+            throw new FleetManagerClientException(e, error);
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
@@ -36,8 +37,9 @@ public class FleetManagerClientHelper {
         try {
             return callable.call();
         } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new FleetManagerClientException(e);
+            final Error error = e.getResponse().readEntity(Error.class);
+            LOGGER.warn("code={}, reason={}", error.getCode(), error.getReason(), e);
+            throw new FleetManagerClientException(e, error);
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());

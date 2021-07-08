@@ -24,6 +24,7 @@ import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
+import org.bf2.cos.fleetshard.operator.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClientException;
@@ -186,6 +187,14 @@ public class ConnectorDeploymentStatusSync {
 
         } catch (MetaClientException e) {
             LOGGER.warn("Error retrieving status for connector " + connector.getMetadata().getName(), e);
+        } catch (FleetManagerClientException e) {
+            //TODO: should be 410, https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
+            if (e.getError() != null && Objects.equals(e.getError().getCode(), "404")) {
+                LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
+                fleetShard.deleteManagedConnector(connector);
+            } else {
+                LOGGER.warn("Error updating status of connector " + connector.getMetadata().getName(), e);
+            }
         } catch (Exception e) {
             LOGGER.warn("Error updating status of connector " + connector.getMetadata().getName(), e);
         }

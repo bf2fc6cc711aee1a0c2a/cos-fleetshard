@@ -152,6 +152,13 @@ public class FleetShardClient {
     //
     //  ******************************************************
 
+    public Boolean deleteManagedConnector(ManagedConnector managedConnector) {
+        return kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(this.connectorsNamespace)
+            .withName(managedConnector.getMetadata().getName())
+            .delete();
+    }
+
     public Optional<ManagedConnector> lookupManagedConnector(
         String name) {
 
