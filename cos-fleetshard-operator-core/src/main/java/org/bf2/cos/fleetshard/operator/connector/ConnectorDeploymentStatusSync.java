@@ -1,11 +1,10 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.PriorityBlockingQueue;
+import java.util.PriorityQueue;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -275,49 +274,65 @@ public class ConnectorDeploymentStatusSync {
      * Helper class to queue events.
      */
     private class ConnectorStatusQueue {
-        private final PriorityBlockingQueue<ConnectorStatusEvent> queue;
+        private final ReentrantLock lock;
+        private final PriorityQueue<ConnectorStatusEvent> queue;
 
         public ConnectorStatusQueue() {
-            this.queue = new PriorityBlockingQueue<>();
+            this.lock = new ReentrantLock();
+            this.queue = new PriorityQueue<>();
         }
 
         public int size() {
-            return this.queue.size();
+            this.lock.lock();
+
+            try {
+                return this.queue.size();
+            } finally {
+                this.lock.unlock();
+            }
         }
 
         public void submit(ConnectorStatusEvent event) {
-            this.queue.put(event);
+            this.lock.lock();
+
+            try {
+                this.queue.add(event);
+            } finally {
+                this.lock.unlock();
+            }
         }
 
         public Collection<ManagedConnector> poll() throws InterruptedException {
-            ConnectorStatusEvent event = queue.poll();
-            if (event == null) {
-                return Collections.emptyList();
-            }
+            this.lock.lock();
 
-            Collection<ManagedConnector> answer;
+            try {
+                ConnectorStatusEvent event = queue.poll();
+                if (event == null) {
+                    return Collections.emptyList();
+                }
 
-            if (event.name == null) {
-                answer = fleetShard.lookupManagedConnectors();
+                Collection<ManagedConnector> answer;
+
+                if (event.name == null) {
+                    answer = fleetShard.lookupManagedConnectors();
+                } else {
+                    answer = this.queue.stream()
+                        .map(ConnectorStatusEvent::getName)
+                        .filter(Objects::nonNull)
+                        .sorted()
+                        .distinct()
+                        .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
+                        .collect(Collectors.toList());
+                }
+
                 queue.clear();
-            } else {
-                List<ConnectorStatusEvent> all = new ArrayList<>(queue.size() + 1);
-                all.add(event);
 
-                queue.drainTo(all);
+                LOGGER.debug("ConnectorStatusQueue: event={}, connectors={}", event, answer.size());
 
-                answer = all.stream()
-                    .map(ConnectorStatusEvent::getName)
-                    .sorted()
-                    .distinct()
-                    .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                return answer;
+            } finally {
+                this.lock.unlock();
             }
-
-            LOGGER.debug("ConnectorStatusQueue: event={}, connectors={}", event, answer.size());
-
-            return answer;
         }
     }
 
