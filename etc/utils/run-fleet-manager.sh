@@ -1,6 +1,6 @@
 #/bin/bash
 
-OCM_ENV=integration go run cmd/kas-fleet-manager/main.go \
+OCM_ENV=integration go run cmd/cos-fleet-manager/main.go \
     serve \
         --enable-connectors=true \
         --enable-ocm-mock=true \
