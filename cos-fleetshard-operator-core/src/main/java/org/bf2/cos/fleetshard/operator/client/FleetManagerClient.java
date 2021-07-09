@@ -88,7 +88,7 @@ public class FleetManagerClient {
         run(() -> {
             LOGGER.debug("polling with gv: {}", gv);
 
-            for (int i = 0; i < Integer.MAX_VALUE; i++) {
+            for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
                     clusterId,
                     Integer.toString(i),
