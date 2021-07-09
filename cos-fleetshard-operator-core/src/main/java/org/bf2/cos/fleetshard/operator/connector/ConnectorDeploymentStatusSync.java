@@ -115,15 +115,18 @@ public class ConnectorDeploymentStatusSync {
         }
 
         try {
-            LOGGER.debug("Polling ManagedConnector status queue (interval={}, size={})", statusSyncInterval, queue.size());
-            Collection<ManagedConnector> connectors = queue.poll();
-            LOGGER.debug("Connectors to process: {}", connectors.size());
+            final int queueSize = queue.size();
+            final Collection<ManagedConnector> connectors = queue.poll();
+
+            LOGGER.debug("Polling ManagedConnector status queue (interval={}, connectors={}, queue_size={})",
+                statusSyncInterval,
+                connectors.size(),
+                queueSize);
 
             for (ManagedConnector connector : connectors) {
                 updateConnectorDeploymentStatus(connector);
             }
         } catch (InterruptedException e) {
-            LOGGER.warn("Sync loop interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
@@ -185,8 +188,8 @@ public class ConnectorDeploymentStatusSync {
         } catch (MetaClientException e) {
             LOGGER.warn("Error retrieving status for connector " + connector.getMetadata().getName(), e);
         } catch (FleetManagerClientException e) {
-            //TODO: should be 410, https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
-            if (e.getError() != null && e.getStatusCode() == 404) {
+            //TODO: remove 404 after https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
+            if (e.getError() != null && (e.getStatusCode() == 404 || e.getStatusCode() == 410)) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 fleetShard.deleteManagedConnector(connector);
             } else {
