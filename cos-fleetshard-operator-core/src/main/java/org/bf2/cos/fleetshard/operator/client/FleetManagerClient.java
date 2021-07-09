@@ -10,6 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.api.client.cp.ConnectorClustersAgentApi;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatusOperators;
@@ -117,6 +118,11 @@ public class FleetManagerClient {
 
     public void updateConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus status) {
         run(() -> {
+            LOGGER.info("Update connector status: cluster_id={}, deployment_id={}, status={}",
+                connector.getSpec().getClusterId(),
+                connector.getSpec().getDeploymentId(),
+                Serialization.asJson(status));
+
             controlPlane.updateConnectorDeploymentStatus(
                 connector.getSpec().getClusterId(),
                 connector.getSpec().getDeploymentId(),

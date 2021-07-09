@@ -44,7 +44,7 @@ public class MetaClient {
             LOGGER.debug("Send request to meta: address={}, uri={}, request={}",
                 address,
                 uri,
-                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(payload));
+                Serialization.asJson(payload));
 
             // TODO: set-up ssl/tls
             // TODO: make timeout configurable
@@ -57,7 +57,7 @@ public class MetaClient {
             LOGGER.debug("Got answer from meta: address={}, uri={}, answer={}",
                 address,
                 uri,
-                Serialization.jsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(answer));
+                Serialization.asJson(answer));
 
             return answer;
         } catch (Exception e) {
