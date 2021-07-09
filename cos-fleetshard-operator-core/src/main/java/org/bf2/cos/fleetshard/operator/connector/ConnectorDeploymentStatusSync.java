@@ -142,7 +142,7 @@ public class ConnectorDeploymentStatusSync {
 
         try {
             ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-            ds.setResourceVersion(connector.getSpec().getDeployment().getDeploymentResourceVersion());
+            ds.setResourceVersion(connector.getStatus().getDeployment().getDeploymentResourceVersion());
 
             if (connector.getStatus() == null) {
                 ds.setPhase("provisioning");
