@@ -9,7 +9,7 @@ spec:
     kind: ManagedConnector
     plural: managedconnectors
     shortNames:
-    - mc
+    - mcs
     singular: managedconnector
   scope: Namespaced
   versions:
