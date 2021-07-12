@@ -22,9 +22,7 @@ public class CamelConnectorStatusBatchTest extends CamelConnectorStatusTestSuppo
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.connectors.status.sync.interval", "1s",
-                "cos.connectors.status.sync.batch.interval", "5s",
-                "cos.connectors.status.sync.batch.enabled", "true",
-                "cos.connectors.status.sync.realtime.enabled", "false");
+                "cos.connectors.status.sync.all.interval", "1s");
         }
     }
 }

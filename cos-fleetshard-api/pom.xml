@@ -82,7 +82,6 @@
                         <generateApiTests>false</generateApiTests>
                         <generateSupportingFiles>false</generateSupportingFiles>
                         <typeMappings>object=com.fasterxml.jackson.databind.JsonNode</typeMappings>
-                        <ensureUniqueParams>true</ensureUniqueParams>
                         <configOptions>
                             <ensureUniqueParams>false</ensureUniqueParams>
                             <dateLibrary>java8</dateLibrary>

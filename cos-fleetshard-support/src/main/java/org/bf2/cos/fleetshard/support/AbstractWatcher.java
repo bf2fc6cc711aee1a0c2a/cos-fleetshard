@@ -1,8 +1,9 @@
-package org.bf2.cos.fleetshard.operator.support;
+package org.bf2.cos.fleetshard.support;
 
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
+import io.quarkus.runtime.Quarkus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +60,7 @@ public abstract class AbstractWatcher<T> implements Watcher<T>, AutoCloseable {
             // Note that this should not happen normally, since fabric8 client handles reconnect.
             // In case it tries to reconnect this method is not called.
             logger.error("Unexpected error happened with watch. Will exit.", e);
-            System.exit(1);
+            Quarkus.asyncExit(1);
         }
     }
 

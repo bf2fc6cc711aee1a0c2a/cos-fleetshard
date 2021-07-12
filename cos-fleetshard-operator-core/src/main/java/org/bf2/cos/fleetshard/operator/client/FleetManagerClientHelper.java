@@ -8,7 +8,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.bf2.cos.fleet.manager.api.model.cp.Error;
-import org.bf2.cos.fleetshard.operator.support.ThrowingRunnable;
+import org.bf2.cos.fleetshard.support.ThrowingRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
