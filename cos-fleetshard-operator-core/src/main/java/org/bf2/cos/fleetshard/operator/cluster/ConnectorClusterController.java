@@ -16,7 +16,8 @@ import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 
 @Controller(
     name = "connector-cluster",
-    finalizerName = Controller.NO_FINALIZER)
+    finalizerName = Controller.NO_FINALIZER,
+    generationAwareEventProcessing = false)
 public class ConnectorClusterController extends AbstractResourceController<ManagedConnectorCluster> {
     @Inject
     FleetManagerClient controlPlane;

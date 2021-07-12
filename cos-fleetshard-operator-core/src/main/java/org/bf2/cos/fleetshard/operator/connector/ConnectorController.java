@@ -67,7 +67,8 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 
 @Controller(
     name = "connector",
-    finalizerName = Controller.NO_FINALIZER)
+    finalizerName = Controller.NO_FINALIZER,
+    generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
