@@ -1,6 +1,6 @@
 package org.bf2.cos.fleetshard.operator.support;
 
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorOperator;
+import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 

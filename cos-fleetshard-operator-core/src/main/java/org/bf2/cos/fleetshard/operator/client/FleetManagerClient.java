@@ -11,12 +11,12 @@ import javax.inject.Inject;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import org.bf2.cos.fleet.manager.api.client.cp.ConnectorClustersAgentApi;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatusOperators;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.api.ConnectorClustersAgentApi;
+import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperators;
+import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;

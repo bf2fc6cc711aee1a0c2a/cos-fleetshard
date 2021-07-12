@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;

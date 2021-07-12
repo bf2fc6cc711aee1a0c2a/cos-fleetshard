@@ -1,0 +1,218 @@
+openapi: 3.0.0 # need this as first line to allow IDEA to recognize it as op
+info:
+  title: Connector Meta Service
+  version: 0.0.1
+  description: Interface to the connector meta service
+servers:
+  - url: http://localhost:9091
+    description: localhost
+  - url: /
+    description: current domain
+paths:
+  '/reify':
+    post:
+      tags:
+        - Connector Meta Service
+      requestBody:
+        description: Connector deployment data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorDeploymentReifyRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorDeploymentSpec'
+          description: The connector deployment spec
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching connector type exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: connectorDeploymentReifyRequest
+      summary: Reify
+
+  '/status':
+    post:
+      tags:
+        - Connector Meta Service
+      requestBody:
+        description: Connector data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorDeploymentStatusRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorDeploymentStatus'
+          description: The connector deployment spec
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching connector type exists
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      operationId: connectorDeploymentStatusRequest
+      summary: Status
+
+components:
+  schemas:
+
+    ConnectorDeploymentReifyRequest:
+      description: Holds the deployment specification of a connector to be reified
+      type: object
+      properties:
+        managed_connector_id:
+          type: string
+        shard_metadata:
+          type: object
+        deployment_id:
+          type: string
+        deployment_resource_version:
+          type: integer
+          format: int64
+        kafka_spec:
+          $ref: '#/components/schemas/KafkaSpec'
+        connector_id:
+          type: string
+        connector_type_id:
+          type: string
+        connector_spec:
+          type: object
+        connector_resource_version:
+          type: integer
+          format: int64
+        desired_state:
+          type: string
+        allow_upgrade:
+          type: boolean
+        operator:
+          $ref: '#/components/schemas/Operator'
+
+    ConnectorDeploymentSpec:
+      description: Holds the deployment specification of a connector
+      type: object
+      properties:
+        resources:
+          type: array
+          items:
+            type: object
+
+    ConnectorDeploymentStatusRequest:
+      description: Holds the deployment spec
+      type: object
+      properties:
+        managed_connector_id:
+          type: string
+        deployment_id:
+          type: string
+        connector_id:
+          type: string
+        connector_type_id:
+          type: string
+        resources:
+          type: array
+          items:
+            type: object
+
+    ConnectorDeploymentStatus:
+      description: The status of connector deployment
+      type: object
+      properties:
+        phase:
+          type: string
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
+
+    KafkaSpec:
+      properties:
+        id:
+          type: string
+        bootstrap_server:
+          type: string
+        client_id:
+          type: string
+        client_secret:
+          type: string
+
+    Error:
+      allOf:
+        - $ref: "#/components/schemas/ObjectReference"
+        - type: object
+          properties:
+            code:
+              type: string
+            reason:
+              type: string
+            operation_id:
+              type: string
+
+    ObjectReference:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        href:
+          type: string
+
+    Operator:
+      type: object
+      properties:
+        type:
+          type: string
+        version:
+          type: string
+      required:
+        - type
+        - version
+
+    MetaV1Condition:
+      type: object
+      properties:
+        type:
+          type: string
+        reason:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        last_transition_time:
+          type: string
+          #format: date-time # enable this?? or just set it as pure plain string?

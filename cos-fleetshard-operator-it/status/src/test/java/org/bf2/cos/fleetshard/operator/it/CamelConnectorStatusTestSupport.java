@@ -3,7 +3,7 @@ package org.bf2.cos.fleetshard.operator.it;
 import java.util.Map;
 import java.util.Optional;
 
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;

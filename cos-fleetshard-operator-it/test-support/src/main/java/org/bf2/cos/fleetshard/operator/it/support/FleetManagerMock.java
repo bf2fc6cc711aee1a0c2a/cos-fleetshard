@@ -20,10 +20,10 @@ import javax.ws.rs.core.MediaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorClusterStatus;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentList;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
