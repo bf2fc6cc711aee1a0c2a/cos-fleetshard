@@ -1,12 +1,9 @@
 package org.bf2.cos.fleetshard.operator.it.support.camel;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -19,11 +16,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class CamelTestSupport extends TestSupport {
     static {

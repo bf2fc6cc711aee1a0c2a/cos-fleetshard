@@ -18,6 +18,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
@@ -194,6 +195,26 @@ public class FleetManagerMock {
                     v = new Connector();
                 }
                 consumer.accept(v);
+
+                var oldRv = v.getDeployment().getMetadata().getResourceVersion();
+                var newRv = oldRv + 1;
+
+                v.getDeployment().getMetadata().setResourceVersion(newRv);
+                return v;
+            });
+        }
+
+        public Connector updateConnectorSpec(String id, Consumer<ObjectNode> consumer) {
+            return connectors.compute(id, (k, v) -> {
+                if (v == null) {
+                    v = new Connector();
+                }
+                if (v.getDeployment() != null
+                    && v.getDeployment().getSpec() != null
+                    && v.getDeployment().getSpec().getConnectorSpec() != null) {
+
+                    consumer.accept((ObjectNode) v.getDeployment().getSpec().getConnectorSpec());
+                }
 
                 var oldRv = v.getDeployment().getMetadata().getResourceVersion();
                 var newRv = oldRv + 1;

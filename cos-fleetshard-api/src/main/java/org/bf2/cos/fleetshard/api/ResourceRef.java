@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.api;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
@@ -46,6 +47,17 @@ public class ResourceRef {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @JsonIgnore
+    public boolean is(String apiVersion, String kind, String name) {
+        Objects.requireNonNull(apiVersion, "apiVersion");
+        Objects.requireNonNull(kind, "kind");
+        Objects.requireNonNull(name, "name");
+
+        return Objects.equals(this.apiVersion, apiVersion)
+            && Objects.equals(this.kind, kind)
+            && Objects.equals(this.name, name);
     }
 
     @Override
