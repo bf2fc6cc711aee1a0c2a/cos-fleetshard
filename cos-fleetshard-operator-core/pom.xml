@@ -17,15 +17,19 @@
     <dependencies>
         <dependency>
             <groupId>org.bf2</groupId>
+            <artifactId>cos-fleet-manager-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-meta-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-support</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-quarkus</artifactId>
         </dependency>
 
         <dependency>

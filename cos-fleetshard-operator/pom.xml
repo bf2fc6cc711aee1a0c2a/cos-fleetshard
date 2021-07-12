@@ -31,10 +31,6 @@
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-operator-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-quarkus</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>

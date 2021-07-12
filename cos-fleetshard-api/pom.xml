@@ -11,26 +11,6 @@
     <artifactId>cos-fleetshard-api</artifactId>
     <dependencies>
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
-            <version>${swagger-annotations.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>${jsr305.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <version>${jakarta-annotation-api.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openapitools</groupId>
-            <artifactId>jackson-databind-nullable</artifactId>
-            <version>${jackson-databind-nullable.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
@@ -46,15 +26,6 @@
             <artifactId>kubernetes-client</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jackson</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
@@ -66,32 +37,6 @@
         </dependency>
     </dependencies>
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.openapitools</groupId>
-                    <artifactId>openapi-generator-maven-plugin</artifactId>
-                    <version>${openapi-generator-maven-plugin.version}</version>
-                    <configuration>
-                        <generatorName>java</generatorName>
-                        <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
-                        <generateAliasAsModel>true</generateAliasAsModel>
-                        <generateApiDocumentation>false</generateApiDocumentation>
-                        <generateModelDocumentation>false</generateModelDocumentation>
-                        <generateModelTests>false</generateModelTests>
-                        <generateApiTests>false</generateApiTests>
-                        <generateSupportingFiles>false</generateSupportingFiles>
-                        <typeMappings>object=com.fasterxml.jackson.databind.JsonNode</typeMappings>
-                        <configOptions>
-                            <ensureUniqueParams>false</ensureUniqueParams>
-                            <dateLibrary>java8</dateLibrary>
-                            <serializationLibrary>jackson</serializationLibrary>
-                            <legacyDiscriminatorBehavior>true</legacyDiscriminatorBehavior>
-                        </configOptions>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.jboss.jandex</groupId>
@@ -102,85 +47,6 @@
                         <goals>
                             <goal>jandex</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapi-generator-maven-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-meta-model</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/connector_meta.yaml</inputSpec>
-                            <library>resteasy</library>
-                            <generateModels>true</generateModels>
-                            <generateApis>false</generateApis>
-                            <modelPackage>org.bf2.cos.fleet.manager.api.model.meta</modelPackage>
-                            <configOptions>
-                                <ensureUniqueParams>false</ensureUniqueParams>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-meta-api</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/connector_meta.yaml</inputSpec>
-                            <library>microprofile</library>
-                            <apisToGenerate>ConnectorMetaService</apisToGenerate>
-                            <apiPackage>org.bf2.cos.fleet.manager.api.client.meta</apiPackage>
-                            <modelPackage>org.bf2.cos.fleet.manager.api.model.meta</modelPackage>
-                            <generateModels>false</generateModels>
-                            <generateApis>true</generateApis>
-                            <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.basedir}/openapi-generator/templates</templateDirectory>
-                            <configOptions>
-                                <ensureUniqueParams>false</ensureUniqueParams>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-control-plane-model</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
-                            <library>resteasy</library>
-                            <generateModels>true</generateModels>
-                            <generateApis>false</generateApis>
-                            <modelPackage>org.bf2.cos.fleet.manager.api.model.cp</modelPackage>
-                            <configOptions>
-                                <ensureUniqueParams>false</ensureUniqueParams>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>generate-control-plane-api</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/kas-fleet-manager-private.yaml</inputSpec>
-                            <library>microprofile</library>
-                            <apisToGenerate>ConnectorClustersAgent</apisToGenerate>
-                            <apiPackage>org.bf2.cos.fleet.manager.api.client.cp</apiPackage>
-                            <modelPackage>org.bf2.cos.fleet.manager.api.model.cp</modelPackage>
-                            <generateModels>false</generateModels>
-                            <generateApis>true</generateApis>
-                            <generateSupportingFiles>true</generateSupportingFiles>
-                            <templateDirectory>${project.basedir}/openapi-generator/templates</templateDirectory>
-                            <configOptions>
-                                <ensureUniqueParams>false</ensureUniqueParams>
-                            </configOptions>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

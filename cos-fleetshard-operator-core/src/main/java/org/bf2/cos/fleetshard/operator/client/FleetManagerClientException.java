@@ -2,7 +2,7 @@ package org.bf2.cos.fleetshard.operator.client;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.bf2.cos.fleet.manager.api.model.cp.Error;
+import org.bf2.cos.fleet.manager.model.Error;
 
 public class FleetManagerClientException extends RuntimeException {
     private Error error;

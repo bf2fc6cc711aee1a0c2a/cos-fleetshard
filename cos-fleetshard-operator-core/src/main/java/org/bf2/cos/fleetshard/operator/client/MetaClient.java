@@ -4,10 +4,10 @@ import java.time.Duration;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentReifyRequest;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentSpec;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.api.model.meta.ConnectorDeploymentStatusRequest;
+import org.bf2.cos.meta.model.ConnectorDeploymentReifyRequest;
+import org.bf2.cos.meta.model.ConnectorDeploymentSpec;
+import org.bf2.cos.meta.model.ConnectorDeploymentStatus;
+import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

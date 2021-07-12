@@ -4,7 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleet.manager.api.model.cp.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
