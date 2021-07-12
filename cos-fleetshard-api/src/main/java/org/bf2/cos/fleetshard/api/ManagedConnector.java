@@ -21,7 +21,7 @@ import lombok.ToString;
 @Version(ManagedConnector.VERSION)
 @Group(ManagedConnector.GROUP)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ShortNames("mcs")
+@ShortNames("mc")
 public class ManagedConnector
     extends CustomResource<ManagedConnectorSpec, ManagedConnectorStatus>
     implements Namespaced {

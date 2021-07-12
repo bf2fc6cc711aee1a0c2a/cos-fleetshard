@@ -84,7 +84,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @Inject
     MetaClient meta;
     @Inject
-    ConnectorDeploymentStatusSync statusSync;
+    ConnectorDeploymentStatusUpdater statusSync;
 
     @Override
     public void registerEventSources(EventSourceManager eventSourceManager) {

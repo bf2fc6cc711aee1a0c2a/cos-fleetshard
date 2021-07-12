@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.operator.support;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.processing.event.EventHandler;
 import io.javaoperatorsdk.operator.processing.event.EventSource;
+import org.bf2.cos.fleetshard.support.AbstractWatcher;
 
 public abstract class WatcherEventSource<T> extends AbstractWatcher<T> implements EventSource {
     private final KubernetesClient client;

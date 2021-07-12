@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.support;
+package org.bf2.cos.fleetshard.support;
 
 @FunctionalInterface
 public interface ThrowingRunnable<T extends Throwable> {
