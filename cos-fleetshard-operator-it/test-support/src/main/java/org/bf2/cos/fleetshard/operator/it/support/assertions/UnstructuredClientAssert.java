@@ -22,4 +22,20 @@ public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientA
 
         return this;
     }
+
+    public UnstructuredClientAssert hasSecret(String namespace, String name) {
+        return hasResource(
+            namespace,
+            "v1",
+            "Secret",
+            name);
+    }
+
+    public UnstructuredClientAssert hasKameletBinding(String namespace, String name) {
+        return hasResource(
+            namespace,
+            "camel.apache.org/v1alpha1",
+            "KameletBinding",
+            name);
+    }
 }

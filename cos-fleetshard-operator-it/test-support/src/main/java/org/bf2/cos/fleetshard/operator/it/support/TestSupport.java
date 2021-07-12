@@ -137,11 +137,24 @@ public class TestSupport {
             .orElseThrow(() -> new IllegalStateException(""));
     }
 
-    public FleetManagerMock.Connector updateConnector(String clusterId, String deploymentId,
+    public FleetManagerMock.Connector updateConnector(
+        String clusterId,
+        String deploymentId,
         Consumer<FleetManagerMock.Connector> consumer) {
+
         return fm.getCluster(clusterId)
             .orElseThrow(() -> new IllegalStateException(""))
             .updateConnector(deploymentId, consumer);
+    }
+
+    public FleetManagerMock.Connector updateConnectorSpec(
+        String clusterId,
+        String deploymentId,
+        Consumer<ObjectNode> consumer) {
+
+        return fm.getCluster(clusterId)
+            .orElseThrow(() -> new IllegalStateException(""))
+            .updateConnectorSpec(deploymentId, consumer);
     }
 
     public ConnectorDeploymentStatus getConnectorDeploymentStatus(String clusterId, String deploymentId) {

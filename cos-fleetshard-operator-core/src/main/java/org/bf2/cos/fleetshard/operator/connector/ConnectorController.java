@@ -8,7 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
@@ -54,7 +57,9 @@ import org.bf2.cos.meta.model.KafkaSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_CHECKSUM;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -128,7 +133,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector,
         Context<ManagedConnector> context) {
 
-        LOGGER.info("Reconcile {}/{}/{} (phase={})",
+        LOGGER.info("Reconcile {}:{}:{} (phase={})",
             connector.getApiVersion(),
             connector.getKind(),
             connector.getMetadata().getName(),
@@ -196,7 +201,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
-    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
         final DeploymentSpec ref = connector.getSpec().getDeployment();
         final String connectorId = connector.getMetadata().getName();
@@ -237,6 +241,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
                         .put(LABEL_CONNECTOR_TYPE_ID, deployment.getSpec().getConnectorTypeId())
                         .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
+                    on.with("metadata")
+                        .with("annotations")
+                        .put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, deployment.getMetadata().getResourceVersion());
 
                     on.with("metadata")
                         .withArray("ownerReferences")
@@ -247,21 +254,26 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put("name", connector.getMetadata().getName())
                         .put("uid", connector.getMetadata().getUid());
 
-                    final var resource = uc.createOrReplace(connector.getMetadata().getNamespace(), node);
-                    final var meta = (Map<String, Object>) resource.getOrDefault("metadata", Map.of());
-                    final var annotations = (Map<String, String>) meta.get("annotations");
-                    final var rApiVersion = (String) resource.get("apiVersion");
-                    final var rKind = (String) resource.get("kind");
-                    final var rName = (String) meta.get("name");
-                    final var res = new DeployedResource(rApiVersion, rKind, rName);
+                    final String deletionMode = getDeletionMode(node).orElse(DELETION_MODE_CONNECTOR);
+                    final String rNs = connector.getMetadata().getNamespace();
+                    final String rApiVersion = node.requiredAt("/apiVersion").asText();
+                    final String rKind = node.requiredAt("/kind").asText();
+                    final String rName = node.requiredAt("/metadata/name").asText();
+                    final DeployedResource res = new DeployedResource(rApiVersion, rKind, rName);
 
-                    if (DELETION_MODE_CONNECTOR.equals(annotations.get(ANNOTATION_DELETION_MODE))) {
-                        if (!connector.getStatus().getResources().contains(res)) {
-                            connector.getStatus().getResources().add(res);
-                        }
-                    } else {
-                        res.setDeploymentRevision(ref.getDeploymentResourceVersion());
+                    //final JsonNode oldResource = uc.getAsNode(rNs, res);
+                    //final String oldChecksum = getChecksum(oldResource);
+
+                    final String newChecksum = computeChecksum(node);
+
+                    on.with("metadata").with("annotations").put(ANNOTATION_CHECKSUM, newChecksum);
+                    uc.createOrReplace(rNs, node);
+
+                    if (!connector.getStatus().getResources().contains(res)) {
                         connector.getStatus().getResources().add(res);
+                    }
+                    if (!DELETION_MODE_CONNECTOR.equals(deletionMode)) {
+                        res.setDeploymentRevision(ref.getDeploymentResourceVersion());
                     }
                 }
             }
@@ -470,8 +482,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final var cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
         final var removed = new ArrayList<DeployedResource>();
 
-        final var it = connector.getStatus().getResources().listIterator();
-        while (it.hasNext()) {
+        for (var it = connector.getStatus().getResources().iterator(); it.hasNext();) {
             final var ref = it.next();
             final var deployment = connector.getSpec().getDeployment();
 
@@ -491,7 +502,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         }
 
         for (var ref : removed) {
-            LOGGER.info("Resource removed {}/{}/{} (deployment={})",
+            LOGGER.info("gc: resource removed {}:{}:{} (deployment={})",
                 ref.getApiVersion(),
                 ref.getKind(),
                 ref.getName(),
@@ -554,5 +565,35 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             });
         }
+    }
+
+    private String computeChecksum(JsonNode node) throws JsonProcessingException {
+        byte[] bytes = Serialization.jsonMapper().writeValueAsBytes(node);
+        Checksum crc32 = new CRC32();
+        crc32.update(bytes, 0, bytes.length);
+        crc32.getValue();
+
+        return Long.toHexString(crc32.getValue());
+    }
+
+    private String getChecksum(JsonNode node) {
+        if (node != null) {
+            JsonNode annotations = node.at("/metadata/annotations");
+            if (!annotations.isMissingNode()) {
+                JsonNode checksum = annotations.get(ANNOTATION_CHECKSUM);
+                if (checksum != null) {
+                    return checksum.asText();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private Optional<String> getDeletionMode(JsonNode node) {
+        final JsonNode mode = node.requiredAt("/metadata/annotations").get(ANNOTATION_DELETION_MODE);
+        final Optional<String> answer = Optional.ofNullable(mode).map(JsonNode::asText);
+
+        return answer;
     }
 }
