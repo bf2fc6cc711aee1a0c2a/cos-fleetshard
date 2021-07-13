@@ -38,14 +38,6 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-resteasy-mutiny</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest-client-jackson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
         <dependency>
@@ -55,21 +47,6 @@
         <dependency>
             <groupId>io.quarkiverse.operatorsdk</groupId>
             <artifactId>quarkus-operator-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.smallrye.reactive</groupId>
-            <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
