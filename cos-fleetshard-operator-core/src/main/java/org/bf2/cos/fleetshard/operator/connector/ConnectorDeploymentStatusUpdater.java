@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import javax.interceptor.Interceptor;
 
 import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
@@ -153,7 +154,7 @@ public class ConnectorDeploymentStatusUpdater {
             LOGGER.warn("Error retrieving status for connector " + connector.getMetadata().getName(), e);
         } catch (FleetManagerClientException e) {
             //TODO: remove 404 after https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
-            if (e.getError() != null && (e.getStatusCode() == 404 || e.getStatusCode() == 410)) {
+            if (e.getStatusCode() == 404 || e.getStatusCode() == 410) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 fleetShard.deleteManagedConnector(connector);
             } else {
@@ -190,9 +191,17 @@ public class ConnectorDeploymentStatusUpdater {
         }
 
         if (connector.getStatus().getAssignedOperator() != null && sr.getResources() != null) {
+            LOGGER.debug("Send status request to meta: address={}, request={}",
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                Serialization.asJson(sr));
+
             var answer = meta.status(
                 connector.getStatus().getAssignedOperator().getMetaService(),
                 sr);
+
+            LOGGER.debug("Got status answer from meta: address={}, answer={}",
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                Serialization.asJson(answer));
 
             deploymentStatus.setPhase(answer.getPhase());
 

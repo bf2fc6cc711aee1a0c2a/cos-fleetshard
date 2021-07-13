@@ -7,12 +7,13 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.bf2.cos.meta.model.Error;
 import org.bf2.cos.fleetshard.support.ThrowingRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FleetManagerClientHelper {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClientHelper.class);
+public class MetaClientHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetaClientHelper.class);
 
     public static <T extends Throwable> void run(ThrowingRunnable<T> runnable) {
         try {
@@ -26,16 +27,16 @@ public class FleetManagerClientHelper {
                 response.getStatus(),
                 e.getMessage());
 
-            throw new FleetManagerClientException(e, response.getStatus());
+            throw new MetaClientException(e, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage());
+                throw new MetaClientException(e.getMessage());
             } else {
-                throw new FleetManagerClientException(e);
+                throw new MetaClientException(e);
             }
         } catch (Throwable e) {
-            throw new FleetManagerClientException(e);
+            throw new MetaClientException(e);
         }
     }
 
@@ -51,16 +52,16 @@ public class FleetManagerClientHelper {
                 response.getStatus(),
                 e.getMessage());
 
-            throw new FleetManagerClientException(e, response.getStatus());
+            throw new MetaClientException(e, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage());
+                throw new MetaClientException(e.getMessage());
             } else {
-                throw new FleetManagerClientException(e);
+                throw new MetaClientException(e);
             }
         } catch (Throwable e) {
-            throw new FleetManagerClientException(e);
+            throw new MetaClientException(e);
         }
     }
 }

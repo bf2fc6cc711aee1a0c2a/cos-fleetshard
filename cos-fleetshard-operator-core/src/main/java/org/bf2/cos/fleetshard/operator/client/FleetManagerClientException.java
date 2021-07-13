@@ -1,11 +1,6 @@
 package org.bf2.cos.fleetshard.operator.client;
 
-import javax.ws.rs.WebApplicationException;
-
-import org.bf2.cos.fleet.manager.model.Error;
-
 public class FleetManagerClientException extends RuntimeException {
-    private Error error;
     private int statusCode;
 
     public FleetManagerClientException() {
@@ -23,27 +18,10 @@ public class FleetManagerClientException extends RuntimeException {
         super(cause);
     }
 
-    public FleetManagerClientException(Throwable cause, Error error) {
+    public FleetManagerClientException(Throwable cause, int statusCode) {
         super(cause);
 
-        this.error = error;
-    }
-
-    public FleetManagerClientException(Throwable cause, Error error, int statusCode) {
-        super(cause);
-
-        this.error = error;
         this.statusCode = statusCode;
-    }
-
-    public FleetManagerClientException(WebApplicationException cause) {
-        super(cause);
-
-        this.error = cause.getResponse().readEntity(Error.class);
-    }
-
-    public Error getError() {
-        return error;
     }
 
     public int getStatusCode() {

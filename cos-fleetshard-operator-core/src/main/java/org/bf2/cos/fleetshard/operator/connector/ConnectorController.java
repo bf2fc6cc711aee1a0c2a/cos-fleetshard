@@ -227,9 +227,17 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 .shardMetadata(deployment.getSpec().getShardMetadata())
                 .kafkaSpec(ks);
 
+            LOGGER.debug("Send reify request to meta: address={}, request={}",
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                Serialization.asJson(rr));
+
             var answer = meta.reify(
                 connector.getStatus().getAssignedOperator().getMetaService(),
                 rr);
+
+            LOGGER.debug("Got reify answer from meta: address={}, answer={}",
+                connector.getStatus().getAssignedOperator().getMetaService(),
+                Serialization.asJson(answer));
 
             if (answer.getResources() != null) {
                 for (JsonNode node : answer.getResources()) {
@@ -295,7 +303,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             getRetryTimer().scheduleOnce(connector, 1500);
         } catch (FleetManagerClientException e) {
             //TODO: remove 404 after https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
-            if (e.getError() != null && (e.getStatusCode() == 404 || e.getStatusCode() == 410)) {
+            if (e.getStatusCode() == 404 || e.getStatusCode() == 410) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 fleetShard.deleteManagedConnector(connector);
             } else {
