@@ -233,6 +233,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             if (answer.getResources() != null) {
                 for (JsonNode node : answer.getResources()) {
+                    final String checksum = computeChecksum(node);
+                    final String rv = Long.toString(deployment.getMetadata().getResourceVersion());
+
                     ObjectNode on = (ObjectNode) node;
                     on.with("metadata")
                         .with("labels")
@@ -243,7 +246,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
                     on.with("metadata")
                         .with("annotations")
-                        .put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, deployment.getMetadata().getResourceVersion());
+                        .put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, rv)
+                        .put(ANNOTATION_CHECKSUM, checksum);
 
                     on.with("metadata")
                         .withArray("ownerReferences")
@@ -264,9 +268,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     //final JsonNode oldResource = uc.getAsNode(rNs, res);
                     //final String oldChecksum = getChecksum(oldResource);
 
-                    final String newChecksum = computeChecksum(node);
-
-                    on.with("metadata").with("annotations").put(ANNOTATION_CHECKSUM, newChecksum);
                     uc.createOrReplace(rNs, node);
 
                     if (!connector.getStatus().getResources().contains(res)) {
@@ -299,9 +300,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 fleetShard.deleteManagedConnector(connector);
             } else {
                 LOGGER.warn("Error augmenting connector " + connector.getMetadata().getName(), e);
+                getRetryTimer().scheduleOnce(connector, 1500);
             }
         } catch (Exception e) {
             LOGGER.warn("Error augmenting connector " + connector.getMetadata().getName(), e);
+
+            getRetryTimer().scheduleOnce(connector, 1500);
         }
 
         return UpdateControl.noUpdate();
