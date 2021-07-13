@@ -3,15 +3,15 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c17e1067aaec5dcd1f1b1b9ec960721e7fd707f1
-    app.quarkus.io/build-timestamp: 2021-07-13 - 21:29:52 +0000
+    app.quarkus.io/commit-id: cf00174e298be73dcfa99b46ab20b9fc0209d151
+    app.quarkus.io/build-timestamp: 2021-07-13 - 21:48:45 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/name: cos-fleetshard
     app.kubernetes.io/version: latest
+    app.kubernetes.io/name: cos-fleetshard
   name: cos-fleetshard
 imagePullSecrets:
   - name: cos-pull-secret
@@ -20,8 +20,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c17e1067aaec5dcd1f1b1b9ec960721e7fd707f1
-    app.quarkus.io/build-timestamp: 2021-07-13 - 21:29:52 +0000
+    app.quarkus.io/commit-id: cf00174e298be73dcfa99b46ab20b9fc0209d151
+    app.quarkus.io/build-timestamp: 2021-07-13 - 21:48:45 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -128,34 +128,34 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c17e1067aaec5dcd1f1b1b9ec960721e7fd707f1
-    app.quarkus.io/build-timestamp: 2021-07-13 - 21:29:52 +0000
+    app.quarkus.io/commit-id: cf00174e298be73dcfa99b46ab20b9fc0209d151
+    app.quarkus.io/build-timestamp: 2021-07-13 - 21:48:45 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/name: cos-fleetshard
     app.kubernetes.io/version: latest
+    app.kubernetes.io/name: cos-fleetshard
   name: cos-fleetshard
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: cos-fleetshard
       app.kubernetes.io/version: latest
+      app.kubernetes.io/name: cos-fleetshard
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: c17e1067aaec5dcd1f1b1b9ec960721e7fd707f1
-        app.quarkus.io/build-timestamp: 2021-07-13 - 21:29:52 +0000
+        app.quarkus.io/commit-id: cf00174e298be73dcfa99b46ab20b9fc0209d151
+        app.quarkus.io/build-timestamp: 2021-07-13 - 21:48:45 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-        app.kubernetes.io/name: cos-fleetshard
         app.kubernetes.io/version: latest
+        app.kubernetes.io/name: cos-fleetshard
     spec:
       containers:
         - env:

@@ -22,7 +22,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +32,6 @@ import static org.bf2.cos.fleetshard.operator.client.FleetManagerClientHelper.ru
 @ApplicationScoped
 public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
-
-    @ConfigProperty(
-        name = "cos.cluster.id")
-    String clusterId;
 
     @Inject
     @RestClient
@@ -83,10 +78,10 @@ public class FleetManagerClient {
             .max()
             .orElse(0);
 
-        List<ConnectorDeployment> answer = new ArrayList<>();
-
-        run(() -> {
+        return call(() -> {
             LOGGER.debug("polling with gv: {}", gv);
+
+            List<ConnectorDeployment> answer = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
@@ -110,10 +105,11 @@ public class FleetManagerClient {
             if (answer.isEmpty()) {
                 LOGGER.info("No connectors for agent {}", clusterId);
             }
-        });
 
-        answer.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
-        return answer;
+            answer.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
+
+            return answer;
+        });
     }
 
     public void updateConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus status) {

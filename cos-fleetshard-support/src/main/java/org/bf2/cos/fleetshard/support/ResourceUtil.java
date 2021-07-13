@@ -5,7 +5,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.Pluralize;
@@ -20,6 +24,9 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.kubernetes.model.Scope;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.api.ResourceRefBuilder;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_CHECKSUM;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 
 public final class ResourceUtil {
     private ResourceUtil() {
@@ -216,5 +223,35 @@ public final class ResourceUtil {
         }
 
         return builder.build();
+    }
+
+    public static String computeChecksum(JsonNode node) throws JsonProcessingException {
+        byte[] bytes = Serialization.jsonMapper().writeValueAsBytes(node);
+        Checksum crc32 = new CRC32();
+        crc32.update(bytes, 0, bytes.length);
+        crc32.getValue();
+
+        return Long.toHexString(crc32.getValue());
+    }
+
+    public static String getChecksum(JsonNode node) {
+        if (node != null) {
+            JsonNode annotations = node.at("/metadata/annotations");
+            if (!annotations.isMissingNode()) {
+                JsonNode checksum = annotations.get(ANNOTATION_CHECKSUM);
+                if (checksum != null) {
+                    return checksum.asText();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static Optional<String> getDeletionMode(JsonNode node) {
+        final JsonNode mode = node.requiredAt("/metadata/annotations").get(ANNOTATION_DELETION_MODE);
+        final Optional<String> answer = Optional.ofNullable(mode).map(JsonNode::asText);
+
+        return answer;
     }
 }

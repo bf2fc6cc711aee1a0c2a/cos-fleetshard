@@ -28,12 +28,6 @@ public abstract class ConnectorOperatorEventSource extends WatcherEventSource<Ma
 
     @Override
     protected void onEventReceived(Action action, ManagedConnectorOperator resource) {
-        getLogger().debug("Event received for action: {}", action.name());
-        if (action == Action.ERROR) {
-            getLogger().warn("Skipping");
-            return;
-        }
-
         LOGGER.debug("Event {} received on operator: {}/{}",
             action.name(),
             resource.getMetadata().getNamespace(),

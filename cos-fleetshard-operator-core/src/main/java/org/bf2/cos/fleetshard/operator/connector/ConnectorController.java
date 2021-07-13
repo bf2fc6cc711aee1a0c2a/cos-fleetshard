@@ -8,10 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
@@ -58,7 +55,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_CHECKSUM;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
@@ -69,6 +65,8 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.ResourceUtil.computeChecksum;
+import static org.bf2.cos.fleetshard.support.ResourceUtil.getDeletionMode;
 
 @Controller(
     name = "connector",
@@ -577,35 +575,5 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             });
         }
-    }
-
-    private String computeChecksum(JsonNode node) throws JsonProcessingException {
-        byte[] bytes = Serialization.jsonMapper().writeValueAsBytes(node);
-        Checksum crc32 = new CRC32();
-        crc32.update(bytes, 0, bytes.length);
-        crc32.getValue();
-
-        return Long.toHexString(crc32.getValue());
-    }
-
-    private String getChecksum(JsonNode node) {
-        if (node != null) {
-            JsonNode annotations = node.at("/metadata/annotations");
-            if (!annotations.isMissingNode()) {
-                JsonNode checksum = annotations.get(ANNOTATION_CHECKSUM);
-                if (checksum != null) {
-                    return checksum.asText();
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private Optional<String> getDeletionMode(JsonNode node) {
-        final JsonNode mode = node.requiredAt("/metadata/annotations").get(ANNOTATION_DELETION_MODE);
-        final Optional<String> answer = Optional.ofNullable(mode).map(JsonNode::asText);
-
-        return answer;
     }
 }
