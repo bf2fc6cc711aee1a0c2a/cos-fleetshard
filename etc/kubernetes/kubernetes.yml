@@ -3,7 +3,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
+    app.quarkus.io/commit-id: 0dbc2ceb6afac2970ee13d00e99dd7e5554d3909
+    app.quarkus.io/build-timestamp: 2021-07-15 - 02:27:53 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -19,7 +20,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
+    app.quarkus.io/commit-id: 0dbc2ceb6afac2970ee13d00e99dd7e5554d3909
+    app.quarkus.io/build-timestamp: 2021-07-15 - 02:27:53 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -48,13 +50,10 @@ rules:
     resources:
       - managedconnectors
       - managedconnectors/status
-      - managedconnectors/finalizers
       - managedconnectoroperators
       - managedconnectoroperators/status
-      - managedconnectoroperators/finalizers
       - managedconnectorclusters
       - managedconnectorclusters/status
-      - managedconnectorclusters/finalizers
     verbs:
       - create
       - delete
@@ -129,7 +128,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
+    app.quarkus.io/commit-id: 0dbc2ceb6afac2970ee13d00e99dd7e5554d3909
+    app.quarkus.io/build-timestamp: 2021-07-15 - 02:27:53 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -147,7 +147,8 @@ spec:
   template:
     metadata:
       annotations:
-        app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
+        app.quarkus.io/commit-id: 0dbc2ceb6afac2970ee13d00e99dd7e5554d3909
+        app.quarkus.io/build-timestamp: 2021-07-15 - 02:27:53 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
