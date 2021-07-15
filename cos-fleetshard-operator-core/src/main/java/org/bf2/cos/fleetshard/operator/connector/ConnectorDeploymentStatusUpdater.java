@@ -325,6 +325,23 @@ public class ConnectorDeploymentStatusUpdater {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof ConnectorStatusEvent)) {
+                return false;
+            }
+            ConnectorStatusEvent event = (ConnectorStatusEvent) o;
+            return Objects.equals(getManagedConnectorName(), event.getManagedConnectorName());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getManagedConnectorName());
+        }
+
+        @Override
         public int compareTo(ConnectorStatusEvent o) {
             if (this.managedConnectorName == null && o.managedConnectorName != null) {
                 return 1;
