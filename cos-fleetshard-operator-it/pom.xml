@@ -49,6 +49,7 @@
         <module>test-support</module>
         <module>test-support-camel</module>
         <module>cluster</module>
+        <module>provisioner</module>
         <module>reify</module>
         <module>status</module>
         <module>update</module>
