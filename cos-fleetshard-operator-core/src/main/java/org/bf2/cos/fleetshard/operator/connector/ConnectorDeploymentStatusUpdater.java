@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -280,7 +281,7 @@ public class ConnectorDeploymentStatusUpdater {
             this.lock.lock();
 
             try {
-                ConnectorStatusEvent event = queue.poll();
+                final ConnectorStatusEvent event = queue.peek();
                 if (event == null) {
                     return Collections.emptyList();
                 }
@@ -288,11 +289,12 @@ public class ConnectorDeploymentStatusUpdater {
                 Collection<ManagedConnector> answer;
 
                 if (event.managedConnectorName == null) {
+                    // pop the head
+                    queue.remove();
                     answer = fleetShard.lookupManagedConnectors();
                 } else {
                     answer = this.queue.stream()
                         .map(ConnectorStatusEvent::getManagedConnectorName)
-                        .filter(Objects::nonNull)
                         .sorted()
                         .distinct()
                         .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
@@ -343,16 +345,15 @@ public class ConnectorDeploymentStatusUpdater {
 
         @Override
         public int compareTo(ConnectorStatusEvent o) {
-            if (this.managedConnectorName == null && o.managedConnectorName != null) {
+            if (this.managedConnectorName == null) {
+                if (o.managedConnectorName != null) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            } else if (o.managedConnectorName == null) {
                 return 1;
             }
-            if (this.managedConnectorName == null) {
-                return 0;
-            }
-            if (o.managedConnectorName == null) {
-                return -1;
-            }
-
             return this.managedConnectorName.compareTo(o.managedConnectorName);
         }
 
