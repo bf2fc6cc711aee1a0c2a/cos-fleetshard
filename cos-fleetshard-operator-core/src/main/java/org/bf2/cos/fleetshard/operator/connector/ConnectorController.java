@@ -256,13 +256,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put(ANNOTATION_CHECKSUM, checksum);
 
                     on.with("metadata")
-                        .withArray("ownerReferences")
+                        .putArray("ownerReferences")
                         .addObject()
                         .put("apiVersion", connector.getApiVersion())
-                        .put("controller", true)
                         .put("kind", connector.getKind())
                         .put("name", connector.getMetadata().getName())
-                        .put("uid", connector.getMetadata().getUid());
+                        .put("uid", connector.getMetadata().getUid())
+                        .put("blockOwnerDeletion", true);
 
                     final String deletionMode = getDeletionMode(node).orElse(DELETION_MODE_CONNECTOR);
                     final String rNs = connector.getMetadata().getNamespace();

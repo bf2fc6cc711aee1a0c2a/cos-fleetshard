@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -150,6 +151,7 @@ public class FleetShardClient {
         return kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(this.connectorsNamespace)
             .withName(managedConnector.getMetadata().getName())
+            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
             .delete();
     }
 

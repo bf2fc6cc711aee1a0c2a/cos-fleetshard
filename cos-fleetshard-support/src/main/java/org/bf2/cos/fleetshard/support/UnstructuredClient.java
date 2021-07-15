@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.ListOptionsBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -73,6 +74,7 @@ public class UnstructuredClient {
         return kubernetesClient
             .customResource(ctx)
             .inNamespace(namespace)
+            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
             .delete(namespace, ctx.getName());
     }
 
