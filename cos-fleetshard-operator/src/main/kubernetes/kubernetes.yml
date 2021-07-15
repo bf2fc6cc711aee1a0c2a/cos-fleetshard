@@ -17,10 +17,13 @@ rules:
   resources:
   - managedconnectors
   - managedconnectors/status
+  - managedconnectors/finalizers
   - managedconnectoroperators
   - managedconnectoroperators/status
+  - managedconnectoroperators/finalizers
   - managedconnectorclusters
   - managedconnectorclusters/status
+  - managedconnectorclusters/finalizers
   verbs:
   - create
   - delete
@@ -34,7 +37,6 @@ rules:
   - ""
   resources:
   - secrets
-  - secrets/finalizers
   verbs:
   - create
   - delete
@@ -48,8 +50,6 @@ rules:
   resources:
   - kafkaconnects
   - kafkaconnectors
-  - kafkaconnects/finalizers
-  - kafkaconnectors/finalizers
   verbs:
   - create
   - delete
@@ -62,7 +62,6 @@ rules:
   - camel.apache.org
   resources:
   - kameletbindings
-  - kameletbindings/finalizers
   verbs:
   - create
   - delete
