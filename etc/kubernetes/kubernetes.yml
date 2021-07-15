@@ -3,8 +3,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: f2ad0158220d45c09fcd59a45156657b91db5e81
-    app.quarkus.io/build-timestamp: 2021-07-15 - 22:23:58 +0000
+    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -20,8 +19,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: f2ad0158220d45c09fcd59a45156657b91db5e81
-    app.quarkus.io/build-timestamp: 2021-07-15 - 22:23:58 +0000
+    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -131,8 +129,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: f2ad0158220d45c09fcd59a45156657b91db5e81
-    app.quarkus.io/build-timestamp: 2021-07-15 - 22:23:58 +0000
+    app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -150,8 +147,7 @@ spec:
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: f2ad0158220d45c09fcd59a45156657b91db5e81
-        app.quarkus.io/build-timestamp: 2021-07-15 - 22:23:58 +0000
+        app.quarkus.io/build-timestamp: 2021-07-15 - 18:51:34 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
