@@ -256,12 +256,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
                         .put(LABEL_CONNECTOR_TYPE_ID, deployment.getSpec().getConnectorTypeId())
                         .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
+
                     on.with("metadata")
                         .with("annotations")
                         .put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, rv)
                         .put(ANNOTATION_CHECKSUM, checksum);
 
-                    ObjectNode ownerRef = on.with("metadata")
+                    on.with("metadata")
                         .putArray("ownerReferences")
                         .addObject()
                         .put("apiVersion", connector.getApiVersion())
@@ -269,11 +270,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put("name", connector.getMetadata().getName())
                         .put("uid", connector.getMetadata().getUid());
 
-                    if (!rApiVersion.equals("v1")) {
-                        // can't set blockOwnerDeletion on secrets
-                        ownerRef.put("blockOwnerDeletion", true);
-                    }
-
+                    //ownerRef.put("blockOwnerDeletion", true);
                     //final JsonNode oldResource = uc.getAsNode(rNs, res);
                     //final String oldChecksum = getChecksum(oldResource);
 
