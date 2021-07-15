@@ -2,11 +2,8 @@ name: Build and Deploy
 
 on:
   push:
-    branches: 
+    branches:
       - main
-    paths: 
-      - "!etc/utils/**"
-      - "!etc/examples/**"
   workflow_dispatch:
 
 concurrency:
