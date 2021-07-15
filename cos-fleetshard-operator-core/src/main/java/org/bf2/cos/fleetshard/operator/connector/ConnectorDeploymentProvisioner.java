@@ -73,7 +73,7 @@ public class ConnectorDeploymentProvisioner {
         }
     }
 
-    public void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment,
+    private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment,
         final boolean recreate) {
         LOGGER.info("Got connector_id: {}, deployment_id: {}",
             deployment.getSpec().getConnectorId(),
