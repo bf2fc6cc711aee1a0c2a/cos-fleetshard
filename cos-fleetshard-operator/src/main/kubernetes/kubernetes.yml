@@ -34,6 +34,7 @@ rules:
   - ""
   resources:
   - secrets
+  - secrets/finalizers
   verbs:
   - create
   - delete
@@ -47,6 +48,8 @@ rules:
   resources:
   - kafkaconnects
   - kafkaconnectors
+  - kafkaconnects/finalizers
+  - kafkaconnectors/finalizers
   verbs:
   - create
   - delete
@@ -59,6 +62,7 @@ rules:
   - camel.apache.org
   resources:
   - kameletbindings
+  - kameletbindings/finalizers
   verbs:
   - create
   - delete

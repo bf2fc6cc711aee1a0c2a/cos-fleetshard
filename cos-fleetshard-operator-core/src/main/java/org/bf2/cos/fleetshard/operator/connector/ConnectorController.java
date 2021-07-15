@@ -268,9 +268,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put("apiVersion", connector.getApiVersion())
                         .put("kind", connector.getKind())
                         .put("name", connector.getMetadata().getName())
-                        .put("uid", connector.getMetadata().getUid());
+                        .put("uid", connector.getMetadata().getUid())
+                        .put("blockOwnerDeletion", true);
 
-                    //ownerRef.put("blockOwnerDeletion", true);
                     //final JsonNode oldResource = uc.getAsNode(rNs, res);
                     //final String oldChecksum = getChecksum(oldResource);
 
