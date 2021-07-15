@@ -65,8 +65,8 @@ public class ConnectorDeploymentProvisioner {
                 deploymentEvents.size(),
                 queueSize);
 
-            for (ConnectorDeploymentEvent connector : deploymentEvents) {
-                provision(connector.getCluster(), connector.getDeployment(), connector.isRecreate());
+            for (ConnectorDeploymentEvent event : deploymentEvents) {
+                provision(event.getCluster(), event.getDeployment(), event.isRecreate());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -188,14 +188,17 @@ public class ConnectorDeploymentProvisioner {
             this.lock.lock();
 
             try {
-                ConnectorDeploymentProvisioner.ConnectorDeploymentEvent event = queue.poll();
+                final ConnectorDeploymentProvisioner.ConnectorDeploymentEvent event = queue.peek();
                 if (event == null) {
                     return Collections.emptyList();
                 }
 
-                Collection<ConnectorDeploymentEvent> answer;
+                final Collection<ConnectorDeploymentEvent> answer;
 
                 if (event.deployment == null) {
+                    // pop the head
+                    queue.remove();
+
                     answer = new ArrayList<>();
                     fleetShard.lookupManagedConnectorCluster()
                         .filter(cluster -> cluster.getStatus().isReady())
@@ -206,15 +209,13 @@ public class ConnectorDeploymentProvisioner {
                                 final String clusterId = cluster.getSpec().getId();
                                 final String connectorsNamespace = cluster.getSpec().getConnectorsNamespace();
 
-                                for (ConnectorDeployment deployment : fleetManager.getDeployments(clusterId,
-                                    connectorsNamespace)) {
-                                    answer.add(new ConnectorDeploymentEvent(cluster, deployment, true));
-                                }
+                                fleetManager.getDeployments(clusterId, connectorsNamespace).stream()
+                                    .map(d -> new ConnectorDeploymentEvent(cluster, d, true))
+                                    .collect(Collectors.toCollection(() -> answer));
                             },
                             () -> LOGGER.debug("Operator not yet configured")); // this should never happen
                 } else {
                     answer = this.queue.stream()
-                        .filter(Objects::nonNull)
                         .sorted()
                         .distinct()
                         .collect(Collectors.toList());
@@ -261,18 +262,18 @@ public class ConnectorDeploymentProvisioner {
 
         @Override
         public int compareTo(ConnectorDeploymentProvisioner.ConnectorDeploymentEvent o) {
-            if (this.deployment == null && o.deployment != null) {
+            if (this.deployment == null) {
+                if (o.deployment != null) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            } else if (o.deployment == null) {
                 return 1;
             }
-            if (this.deployment == null) {
-                return 0;
-            }
-            if (o.deployment == null) {
-                return -1;
-            }
 
-            // TODO: can there be an NPE here??
-            return this.deployment.getId().compareTo(o.deployment.getId());
+            // TODO: can there be an NPE here?
+            return this.deployment.getId().compareTo(o.getDeployment().getId());
         }
 
         @Override
