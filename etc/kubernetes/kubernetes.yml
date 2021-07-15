@@ -3,8 +3,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c5afe3258344e433dde4e478301329e0ddaf6831
-    app.quarkus.io/build-timestamp: 2021-07-15 - 17:19:23 +0000
+    app.quarkus.io/commit-id: c72e5984978f104a4af7b3e119ef8e0e4b2eabfa
+    app.quarkus.io/build-timestamp: 2021-07-15 - 17:42:22 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -20,8 +20,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c5afe3258344e433dde4e478301329e0ddaf6831
-    app.quarkus.io/build-timestamp: 2021-07-15 - 17:19:23 +0000
+    app.quarkus.io/commit-id: c72e5984978f104a4af7b3e119ef8e0e4b2eabfa
+    app.quarkus.io/build-timestamp: 2021-07-15 - 17:42:22 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -50,10 +50,13 @@ rules:
     resources:
       - managedconnectors
       - managedconnectors/status
+      - managedconnectors/finalizers
       - managedconnectoroperators
       - managedconnectoroperators/status
+      - managedconnectoroperators/finalizers
       - managedconnectorclusters
       - managedconnectorclusters/status
+      - managedconnectorclusters/finalizers
     verbs:
       - create
       - delete
@@ -66,7 +69,6 @@ rules:
       - ""
     resources:
       - secrets
-      - secrets/finalizers
     verbs:
       - create
       - delete
@@ -80,8 +82,6 @@ rules:
     resources:
       - kafkaconnects
       - kafkaconnectors
-      - kafkaconnects/finalizers
-      - kafkaconnectors/finalizers
     verbs:
       - create
       - delete
@@ -94,7 +94,6 @@ rules:
       - camel.apache.org
     resources:
       - kameletbindings
-      - kameletbindings/finalizers
     verbs:
       - create
       - delete
@@ -132,8 +131,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: c5afe3258344e433dde4e478301329e0ddaf6831
-    app.quarkus.io/build-timestamp: 2021-07-15 - 17:19:23 +0000
+    app.quarkus.io/commit-id: c72e5984978f104a4af7b3e119ef8e0e4b2eabfa
+    app.quarkus.io/build-timestamp: 2021-07-15 - 17:42:22 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -151,8 +150,8 @@ spec:
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: c5afe3258344e433dde4e478301329e0ddaf6831
-        app.quarkus.io/build-timestamp: 2021-07-15 - 17:19:23 +0000
+        app.quarkus.io/commit-id: c72e5984978f104a4af7b3e119ef8e0e4b2eabfa
+        app.quarkus.io/build-timestamp: 2021-07-15 - 17:42:22 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
