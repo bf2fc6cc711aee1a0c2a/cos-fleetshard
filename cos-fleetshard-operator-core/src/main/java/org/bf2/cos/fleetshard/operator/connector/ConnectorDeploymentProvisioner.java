@@ -278,7 +278,7 @@ public class ConnectorDeploymentProvisioner {
         @Override
         public String toString() {
             return "ConnectorDeploymentEvent{" +
-                "deploymentId='" + deployment.getId() + '\'' +
+                "deploymentId='" + (deployment != null ? deployment.getId() : "null") + '\'' +
                 '}';
         }
     }
