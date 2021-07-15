@@ -262,6 +262,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put("kind", connector.getKind())
                         .put("name", connector.getMetadata().getName())
                         .put("uid", connector.getMetadata().getUid())
+                        .put("controller", true)
                         .put("blockOwnerDeletion", true);
 
                     final String deletionMode = getDeletionMode(node).orElse(DELETION_MODE_CONNECTOR);
