@@ -241,6 +241,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 for (JsonNode node : answer.getResources()) {
                     final String checksum = computeChecksum(node);
                     final String rv = Long.toString(deployment.getMetadata().getResourceVersion());
+                    final String deletionMode = getDeletionMode(node).orElse(DELETION_MODE_CONNECTOR);
+                    final String rNs = connector.getMetadata().getNamespace();
+                    final String rApiVersion = node.requiredAt("/apiVersion").asText();
+                    final String rKind = node.requiredAt("/kind").asText();
+                    final String rName = node.requiredAt("/metadata/name").asText();
+                    final DeployedResource res = new DeployedResource(rApiVersion, rKind, rName);
 
                     ObjectNode on = (ObjectNode) node;
                     on.with("metadata")
@@ -255,22 +261,18 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, rv)
                         .put(ANNOTATION_CHECKSUM, checksum);
 
-                    on.with("metadata")
+                    ObjectNode ownerRef = on.with("metadata")
                         .putArray("ownerReferences")
                         .addObject()
                         .put("apiVersion", connector.getApiVersion())
                         .put("kind", connector.getKind())
                         .put("name", connector.getMetadata().getName())
-                        .put("uid", connector.getMetadata().getUid())
-                        .put("controller", true)
-                        .put("blockOwnerDeletion", true);
+                        .put("uid", connector.getMetadata().getUid());
 
-                    final String deletionMode = getDeletionMode(node).orElse(DELETION_MODE_CONNECTOR);
-                    final String rNs = connector.getMetadata().getNamespace();
-                    final String rApiVersion = node.requiredAt("/apiVersion").asText();
-                    final String rKind = node.requiredAt("/kind").asText();
-                    final String rName = node.requiredAt("/metadata/name").asText();
-                    final DeployedResource res = new DeployedResource(rApiVersion, rKind, rName);
+                    if (!rApiVersion.equals("v1")) {
+                        // can't set blockOwnerDeletion on secrets
+                        ownerRef.put("blockOwnerDeletion", true);
+                    }
 
                     //final JsonNode oldResource = uc.getAsNode(rNs, res);
                     //final String oldChecksum = getChecksum(oldResource);
