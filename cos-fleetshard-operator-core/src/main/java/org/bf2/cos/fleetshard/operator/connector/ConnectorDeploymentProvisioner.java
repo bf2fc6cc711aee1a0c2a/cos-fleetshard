@@ -261,6 +261,25 @@ public class ConnectorDeploymentProvisioner {
         }
 
         @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            ConnectorDeploymentEvent that = (ConnectorDeploymentEvent) o;
+            return recreate == that.recreate &&
+                    Objects.equals(cluster, that.cluster) &&
+                    Objects.equals(deployment, that.deployment);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(cluster, deployment, recreate);
+        }
+
+        @Override
         public int compareTo(ConnectorDeploymentProvisioner.ConnectorDeploymentEvent o) {
             if (this.deployment == null) {
                 if (o.deployment != null) {
