@@ -196,9 +196,6 @@ public class ConnectorDeploymentProvisioner {
                 final Collection<ConnectorDeploymentEvent> answer;
 
                 if (event.deployment == null) {
-                    // pop the head
-                    queue.remove();
-
                     answer = new ArrayList<>();
                     fleetShard.lookupManagedConnectorCluster()
                         .filter(cluster -> cluster.getStatus().isReady())
@@ -270,8 +267,8 @@ public class ConnectorDeploymentProvisioner {
             }
             ConnectorDeploymentEvent that = (ConnectorDeploymentEvent) o;
             return recreate == that.recreate &&
-                    Objects.equals(cluster, that.cluster) &&
-                    Objects.equals(deployment, that.deployment);
+                Objects.equals(cluster, that.cluster) &&
+                Objects.equals(deployment, that.deployment);
         }
 
         @Override

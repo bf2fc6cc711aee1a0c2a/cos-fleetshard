@@ -289,8 +289,6 @@ public class ConnectorDeploymentStatusUpdater {
                 Collection<ManagedConnector> answer;
 
                 if (event.managedConnectorName == null) {
-                    // pop the head
-                    queue.remove();
                     answer = fleetShard.lookupManagedConnectors();
                 } else {
                     answer = this.queue.stream()
