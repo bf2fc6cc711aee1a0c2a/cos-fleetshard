@@ -11,7 +11,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.ws.rs.WebApplicationException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,7 +48,6 @@ import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.bf2.cos.fleetshard.support.ResourceUtil;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.bf2.cos.meta.model.ConnectorDeploymentReifyRequest;
-import org.bf2.cos.meta.model.Error;
 import org.bf2.cos.meta.model.KafkaSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -399,10 +397,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 return UpdateControl.updateStatusSubResource(connector);
             }
-        } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -434,10 +429,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 return UpdateControl.updateStatusSubResource(connector);
             }
-        } catch (WebApplicationException e) {
-            LOGGER.warn("{}", e.getResponse().readEntity(Error.class).getReason(), e);
-            throw new RuntimeException(e);
-        } catch (Exception e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 

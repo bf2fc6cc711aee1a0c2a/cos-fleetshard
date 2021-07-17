@@ -33,8 +33,6 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
  */
 {{/appName}}
 
-@ApplicationScoped
-@RegisterRestClient(configKey="{{classVarName}}")
 @Path("{{#useAnnotatedBasePath}}{{contextPath}}{{/useAnnotatedBasePath}}{{commonPath}}")
 public interface {{classname}}  {
 {{#operations}}

@@ -17,7 +17,7 @@ public class KubernetesSetup extends KubernetesServerTestResource {
 
     @Override
     public void configureServer() {
-        LOGGER.info("Configuring KubernetesServer");
+        LOGGER.info("Configuring KubernetesServer (namespace: {}", server.getClient().getNamespace());
 
         try {
             server.expect().get().withPath("/version")

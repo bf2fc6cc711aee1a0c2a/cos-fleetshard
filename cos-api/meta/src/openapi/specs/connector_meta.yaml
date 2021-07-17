@@ -27,24 +27,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConnectorDeploymentSpec'
           description: The connector deployment spec
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Auth token is invalid
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: No matching connector type exists
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Unexpected error occurred
       operationId: connectorDeploymentReifyRequest
       summary: Reify
 
@@ -66,24 +48,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ConnectorDeploymentStatus'
           description: The connector deployment spec
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Auth token is invalid
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: No matching connector type exists
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-          description: Unexpected error occurred
       operationId: connectorDeploymentStatusRequest
       summary: Status
 
@@ -167,28 +131,6 @@ components:
         client_id:
           type: string
         client_secret:
-          type: string
-
-    Error:
-      allOf:
-        - $ref: "#/components/schemas/ObjectReference"
-        - type: object
-          properties:
-            code:
-              type: string
-            reason:
-              type: string
-            operation_id:
-              type: string
-
-    ObjectReference:
-      type: object
-      properties:
-        id:
-          type: string
-        kind:
-          type: string
-        href:
           type: string
 
     Operator:
