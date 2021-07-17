@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
+import org.bf2.cos.fleetshard.operator.it.support.OidcSetup;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.TestSupport;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
+@QuarkusTestResource(OidcSetup.class)
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTest

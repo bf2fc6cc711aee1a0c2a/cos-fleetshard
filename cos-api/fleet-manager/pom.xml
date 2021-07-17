@@ -36,6 +36,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                             <inputSpec>${project.basedir}/src/openapi/specs/kas-fleet-manager-private.yaml</inputSpec>
                             <library>resteasy</library>
                             <generateModels>true</generateModels>
@@ -52,6 +53,7 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                             <inputSpec>${project.basedir}/src/openapi/specs/kas-fleet-manager-private.yaml</inputSpec>
                             <library>microprofile</library>
                             <apisToGenerate>ConnectorClustersAgent</apisToGenerate>

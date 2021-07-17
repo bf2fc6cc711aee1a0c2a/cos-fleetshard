@@ -40,7 +40,7 @@ public class TestSupport {
     protected String clusterId;
 
     @ConfigProperty(
-        name = "test.namespace")
+        name = "kubernetes.namespace")
     protected String namespace;
 
     public static ManagedConnectorOperator newConnectorOperator(

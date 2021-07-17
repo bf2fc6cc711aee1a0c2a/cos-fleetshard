@@ -8,6 +8,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
+import org.bf2.cos.fleetshard.operator.it.support.OidcSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
+@QuarkusTestResource(OidcSetup.class)
 @QuarkusTestResource(OperatorSetup.class)
 @QuarkusTestResource(KubernetesSetup.class)
 @QuarkusTestResource(CamelMetaServiceSetup.class)

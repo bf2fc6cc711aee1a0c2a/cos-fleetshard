@@ -81,7 +81,7 @@ paths:
         - Connector Clusters Agent
       security:
         - Bearer: [ ]
-      operationId: getClusterAsignedConnectorDeployments
+      operationId: getClusterAssignedConnectorDeployments
       summary: Returns a list of connector deployments assigned to the cluster.
       parameters:
         - $ref: 'kas-fleet-manager.yaml#/components/parameters/page'
@@ -146,7 +146,7 @@ paths:
         - Connector Clusters Agent
       security:
         - Bearer: [ ]
-      operationId: getClusterAsignedConnectorDeploymentById
+      operationId: getClusterAssignedConnectorDeploymentById
       summary: Returns a list of connector deployments assigned to the cluster.
       responses:
         '200':
