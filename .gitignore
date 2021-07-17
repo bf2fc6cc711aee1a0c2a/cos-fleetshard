@@ -13,4 +13,4 @@ tests/output/kind-*
 .classpath
 kamel
 .kamel/
-
+etc/dev
