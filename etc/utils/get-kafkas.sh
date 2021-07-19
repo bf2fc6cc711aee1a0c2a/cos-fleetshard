@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASE=${BASE_PATH}/api/kafkas_mgmt/v1
+BASE=${KAS_PATH}/api/kafkas_mgmt/v1
 KAFKA_BASE=${BASE}/kafkas
 
 curl --insecure --oauth2-bearer "$(ocm token)" -S -s "${KAFKA_BASE}" \
