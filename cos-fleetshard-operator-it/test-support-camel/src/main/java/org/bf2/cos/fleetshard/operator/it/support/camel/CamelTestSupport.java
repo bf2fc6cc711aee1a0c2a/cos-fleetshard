@@ -34,6 +34,10 @@ public class CamelTestSupport extends TestSupport {
     }
 
     protected ConnectorDeployment withDefaultConnectorDeployment() {
+        return withDefaultConnectorDeployment(2L);
+    }
+
+    protected ConnectorDeployment withDefaultConnectorDeployment(long deploymentRevision) {
         final String kcidB64 = Base64.getEncoder()
             .encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8));
 
@@ -59,7 +63,7 @@ public class CamelTestSupport extends TestSupport {
             .kind("ConnectorDeployment")
             .id(deploymentId)
             .metadata(new ConnectorDeploymentAllOfMetadata()
-                .resourceVersion(2L))
+                .resourceVersion(deploymentRevision))
             .spec(new ConnectorDeploymentSpec()
                 .connectorId(connectorId)
                 .connectorTypeId(connectorTypeId)

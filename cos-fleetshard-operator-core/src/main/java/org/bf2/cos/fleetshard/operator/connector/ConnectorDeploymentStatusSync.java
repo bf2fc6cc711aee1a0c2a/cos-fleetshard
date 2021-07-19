@@ -26,17 +26,13 @@ public class ConnectorDeploymentStatusSync {
         }
 
         this.sync.submit((String) null);
-
-        LOGGER.debug("Sync connectors status (queue_size={})", this.sync.size());
     }
 
     @Scheduled(
         every = "{cos.connectors.status.sync.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void runUpdater() {
-
         if (!operator.isRunning()) {
-            LOGGER.debug("Operator is not yet ready");
             return;
         }
 
