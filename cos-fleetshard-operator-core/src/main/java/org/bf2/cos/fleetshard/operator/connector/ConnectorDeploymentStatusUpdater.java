@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
@@ -21,7 +20,6 @@ import io.quarkus.runtime.StartupEvent;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
-import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
@@ -33,6 +31,7 @@ import org.bf2.cos.fleetshard.operator.client.MetaClientException;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
 import org.bf2.cos.fleetshard.support.AbstractWatcher;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,6 +292,9 @@ public class ConnectorDeploymentStatusUpdater {
                 } else {
                     answer = this.queue.stream()
                         .map(ConnectorStatusEvent::getManagedConnectorName)
+                        // we need to filter out for null element here because there may be
+                        // more re-sync-all event in the queue thus, this may lead to a NPE
+                        .filter(Objects::nonNull)
                         .sorted()
                         .distinct()
                         .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())

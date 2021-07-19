@@ -59,7 +59,7 @@ public class FleetManagerMock {
         @QueryParam("gt_version") Long gtVersion,
         @QueryParam("watch") String watch) {
 
-        return getOrCreatCluster(connectorClusterId).listConnectorDeployments();
+        return getOrCreatCluster(connectorClusterId).listConnectorDeployments(gtVersion);
     }
 
     @PUT
@@ -126,10 +126,11 @@ public class FleetManagerMock {
                 : null;
         }
 
-        public ConnectorDeploymentList listConnectorDeployments() {
+        public ConnectorDeploymentList listConnectorDeployments(Long gv) {
             var items = connectors.values().stream()
                 .map(Connector::getDeployment)
                 .filter(Objects::nonNull)
+                .filter(d -> d.getMetadata().getResourceVersion() > gv)
                 .collect(Collectors.toList());
 
             return new ConnectorDeploymentList()

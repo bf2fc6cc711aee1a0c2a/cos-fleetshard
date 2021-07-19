@@ -4,9 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import io.quarkus.scheduler.Scheduled;
-import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
-import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +13,6 @@ import org.slf4j.LoggerFactory;
 public class ConnectorDeploymentSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentSync.class);
 
-    @Inject
-    FleetManagerClient fleetManager;
     @Inject
     FleetShardClient fleetShard;
     @Inject
@@ -32,9 +28,7 @@ public class ConnectorDeploymentSync {
             return;
         }
 
-        this.provisioner.submit(null, null);
-
-        LOGGER.debug("Sync connectors status (queue_size={})", this.provisioner.size());
+        this.provisioner.submit(0L);
     }
 
     @Scheduled(
@@ -45,31 +39,14 @@ public class ConnectorDeploymentSync {
             return;
         }
 
-        LOGGER.debug("Poll connectors");
-
-        fleetShard.lookupManagedConnectorCluster()
-            .filter(cluster -> cluster.getStatus().isReady())
-            .ifPresentOrElse(
-                cluster -> {
-                    LOGGER.debug("Polling for fleet manager connectors");
-
-                    final String clusterId = cluster.getSpec().getId();
-                    final String connectorsNamespace = cluster.getSpec().getConnectorsNamespace();
-
-                    for (ConnectorDeployment deployment : fleetManager.getDeployments(clusterId, connectorsNamespace)) {
-                        provisioner.submit(cluster, deployment);
-                    }
-                },
-                () -> LOGGER.debug("Operator not yet configured"));
+        this.provisioner.submit(fleetShard.getMaxDeploymentResourceRevision());
     }
 
     @Scheduled(
         every = "{cos.connectors.sync.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void runProvisioner() {
-
         if (!operator.isRunning()) {
-            LOGGER.debug("Operator is not yet ready");
             return;
         }
 

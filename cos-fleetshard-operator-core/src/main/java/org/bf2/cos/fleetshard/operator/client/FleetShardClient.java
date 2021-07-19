@@ -155,6 +155,18 @@ public class FleetShardClient {
             .delete();
     }
 
+    public long getMaxDeploymentResourceRevision() {
+        // TODO: check labels
+        final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(connectorsNamespace)
+            .list().getItems();
+
+        return managedConnectors.stream()
+            .mapToLong(c -> c.getSpec().getDeployment().getDeploymentResourceVersion())
+            .max()
+            .orElse(0);
+    }
+
     public Optional<ManagedConnector> lookupManagedConnector(
         String name) {
 
@@ -163,21 +175,6 @@ public class FleetShardClient {
                 .inNamespace(this.connectorsNamespace)
                 .withName(name)
                 .get());
-    }
-
-    public Optional<ManagedConnector> lookupManagedConnector(
-        String namespace,
-        String name) {
-
-        return Optional.ofNullable(
-            kubernetesClient.customResources(ManagedConnector.class).inNamespace(namespace).withName(name).get());
-    }
-
-    public Optional<ManagedConnector> lookupManagedConnector(
-        ManagedConnectorCluster connectorCluster,
-        ConnectorDeployment deployment) {
-
-        return lookupManagedConnector(connectorCluster.getSpec().getConnectorsNamespace(), deployment);
     }
 
     public Optional<ManagedConnector> lookupManagedConnector(String namespace, ConnectorDeployment deployment) {

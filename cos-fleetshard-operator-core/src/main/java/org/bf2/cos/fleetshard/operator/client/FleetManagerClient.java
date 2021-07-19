@@ -50,6 +50,18 @@ public class FleetManagerClient {
     KubernetesClient kubernetesClient;
 
     @ConfigProperty(
+        name = "cos.cluster.id")
+    String clusterId;
+
+    @ConfigProperty(
+        name = "cos.connectors.namespace")
+    String connectorsNamespace;
+
+    @ConfigProperty(
+        name = "cos.cluster.namespace")
+    String clusterNamespace;
+
+    @ConfigProperty(
         name = "quarkus.tls.trust-all")
     boolean trustAll;
 
@@ -116,11 +128,11 @@ public class FleetManagerClient {
         });
     }
 
-    public List<ConnectorDeployment> getDeployments(String clusterId, String namespace) {
+    public List<ConnectorDeployment> getDeployments() {
         // TODO: check namespaces
         // TODO: check labels
         final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(namespace)
+            .inNamespace(connectorsNamespace)
             .list().getItems();
 
         final long gv = managedConnectors.stream()
@@ -128,6 +140,10 @@ public class FleetManagerClient {
             .max()
             .orElse(0);
 
+        return getDeployments(gv);
+    }
+
+    public List<ConnectorDeployment> getDeployments(long gv) {
         return call(() -> {
             LOGGER.debug("polling with gv: {}", gv);
 

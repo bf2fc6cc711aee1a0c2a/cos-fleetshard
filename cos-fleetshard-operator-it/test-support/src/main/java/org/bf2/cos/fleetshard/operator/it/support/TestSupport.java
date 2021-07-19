@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator.it.support;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class TestSupport {
@@ -75,6 +77,15 @@ public class TestSupport {
         await(30, TimeUnit.SECONDS, condition);
     }
 
+    public void awaitConnector(ConnectorDeployment connectorDeployment, Consumer<ManagedConnector> predicate) {
+        await(30, TimeUnit.SECONDS, () -> {
+            assertThat(getManagedConnector(connectorDeployment))
+                .isPresent()
+                .get()
+                .satisfies(predicate);
+        });
+    }
+
     public void awaitStatus(
         String clusterId,
         String deploymentId,
@@ -110,6 +121,22 @@ public class TestSupport {
         }
 
         return Optional.of(connectors.get(0));
+    }
+
+    public List<ManagedConnector> getManagedConnectors() {
+        List<ManagedConnector> connectors = ksrv.getClient()
+            .customResources(ManagedConnector.class)
+            .inNamespace(namespace)
+            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID)
+            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID)
+            .list()
+            .getItems();
+
+        if (connectors == null) {
+            return Collections.emptyList();
+        }
+
+        return connectors;
     }
 
     public ManagedConnector mandatoryGetManagedConnector(ConnectorDeployment cd) {

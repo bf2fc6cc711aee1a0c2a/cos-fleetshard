@@ -4,11 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -51,78 +50,76 @@ public class ConnectorDeploymentProvisioner {
         return this.queue.size();
     }
 
-    public void submit(ManagedConnectorCluster cluster, ConnectorDeployment deployment) {
-        this.queue.submit(new ConnectorDeploymentEvent(cluster, deployment, false));
+    public void submit(Long gv) {
+        this.queue.submit(gv);
     }
 
     public void run() {
+        fleetShard.lookupManagedConnectorCluster()
+            .filter(cluster -> cluster.getStatus().isReady())
+            .ifPresentOrElse(
+                this::provision,
+                () -> LOGGER.debug("Operator not yet configured"));
+    }
+
+    private void provision(ManagedConnectorCluster cluster) {
         try {
             final int queueSize = queue.size();
-            final Collection<ConnectorDeploymentEvent> deploymentEvents = queue.poll();
+            final Collection<Deployment> deployments = queue.poll();
 
             LOGGER.debug("Polling ConnectorDeployment queue (interval={}, deployments={}, queue_size={})",
                 connectorsSyncInterval,
-                deploymentEvents.size(),
+                deployments.size(),
                 queueSize);
 
-            for (ConnectorDeploymentEvent event : deploymentEvents) {
-                provision(event.getCluster(), event.getDeployment(), event.isRecreate());
+            for (Deployment deployment : deployments) {
+                provision(cluster, deployment.getDeployment(), deployment.isRecreate());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    private void provision(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment,
+    private void provision(
+        ManagedConnectorCluster cluster,
+        ConnectorDeployment deployment,
         final boolean recreate) {
-        LOGGER.info("Got connector_id: {}, deployment_id: {}",
+
+        LOGGER.info("Got connector_id: {}, deployment_id: {}, deployment_revision: {}, recreate: {}",
             deployment.getSpec().getConnectorId(),
-            deployment.getId());
+            deployment.getId(),
+            deployment.getMetadata().getResourceVersion(),
+            recreate);
 
         final String connectorId = deployment.getSpec().getConnectorId();
-        final String connectorsNs = connectorCluster.getSpec().getConnectorsNamespace();
-        final String mcId = "c" + UUID.randomUUID().toString().replaceAll("-", "");
+        final String connectorsNs = fleetShard.getConnectorsNamespace();
+        final ManagedConnector connector;
 
-        Supplier<ManagedConnector> createConnector = () -> {
-            LOGGER.info("Creating connector (connector_id: {}, deployment_id: {})",
+        if (recreate) {
+            LOGGER.info("Recreating connector (connector_id: {}, deployment_id: {})",
                 deployment.getSpec().getConnectorId(),
                 deployment.getId());
 
-            // TODO: find suitable operator and label according
-            return new ManagedConnectorBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                    .withName(mcId)
-                    .withNamespace(connectorsNs)
-                    .addToLabels(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-                    .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-                    .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
-                    .build())
-                .withSpec(new ManagedConnectorSpecBuilder()
-                    .withClusterId(connectorCluster.getSpec().getId())
-                    .withConnectorId(connectorId)
-                    .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())
-                    .withDeploymentId(deployment.getId())
-                    .build())
-                .build();
-        };
-
-        ManagedConnector connector = recreate ? createConnector.get()
-            : fleetShard.lookupManagedConnector(connectorCluster, deployment).orElseGet(() -> {
-                LOGGER.info("Connector (connector_id: {}, deployment_id: {}) not found, creating new connector",
+            connector = createConnector(cluster, deployment);
+        } else {
+            connector = fleetShard.lookupManagedConnector(connectorsNs, deployment).orElseGet(() -> {
+                LOGGER.info("Connector not found (connector_id: {}, deployment_id: {}), creating a new one",
                     deployment.getSpec().getConnectorId(),
                     deployment.getId());
-                return createConnector.get();
+
+                return createConnector(cluster, deployment);
             });
 
-        final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
-        final Long drv = deployment.getMetadata().getResourceVersion();
+            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
+            final Long drv = deployment.getMetadata().getResourceVersion();
 
-        if (!recreate && Objects.equals(cdrv, drv)) {
-            LOGGER.info(
-                "Skipping as deployment resource version has not changed (deployment_id={}, version={})",
-                deployment.getId(),
-                deployment.getMetadata().getResourceVersion());
-            return;
+            if (Objects.equals(cdrv, drv)) {
+                LOGGER.info(
+                    "Skipping as deployment resource version has not changed (deployment_id={}, version={})",
+                    deployment.getId(),
+                    deployment.getMetadata().getResourceVersion());
+                return;
+            }
         }
 
         ArrayNode operatorsMeta = deployment.getSpec().getShardMetadata().withArray("operators");
@@ -141,7 +138,7 @@ public class ConnectorDeploymentProvisioner {
         connector.getSpec().setOperatorSelector(operatorSelector);
 
         LOGGER.info((recreate ? "Recreating " : "Provisioning ") + "connector id={} rv={} - {}/{}: {}",
-            mcId,
+            connector.getMetadata().getName(),
             deployment.getMetadata().getResourceVersion(),
             connectorsNs,
             connectorId,
@@ -152,101 +149,34 @@ public class ConnectorDeploymentProvisioner {
             .createOrReplace(connector);
     }
 
-    /**
-     * Helper class to queue events.
-     */
-    private class ConnectorDeploymentQueue {
-        private final ReentrantLock lock;
-        private final PriorityQueue<ConnectorDeploymentProvisioner.ConnectorDeploymentEvent> queue;
-
-        public ConnectorDeploymentQueue() {
-            this.lock = new ReentrantLock();
-            this.queue = new PriorityQueue<>();
-        }
-
-        public int size() {
-            this.lock.lock();
-
-            try {
-                return this.queue.size();
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public void submit(ConnectorDeploymentProvisioner.ConnectorDeploymentEvent event) {
-            this.lock.lock();
-
-            try {
-                this.queue.add(event);
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public Collection<ConnectorDeploymentEvent> poll() throws InterruptedException {
-            this.lock.lock();
-
-            try {
-                final ConnectorDeploymentProvisioner.ConnectorDeploymentEvent event = queue.peek();
-                if (event == null) {
-                    return Collections.emptyList();
-                }
-
-                final Collection<ConnectorDeploymentEvent> answer;
-
-                if (event.deployment == null) {
-                    answer = new ArrayList<>();
-                    fleetShard.lookupManagedConnectorCluster()
-                        .filter(cluster -> cluster.getStatus().isReady())
-                        .ifPresentOrElse(
-                            cluster -> {
-                                LOGGER.debug("Polling to re-sync all fleet manager connectors");
-
-                                final String clusterId = cluster.getSpec().getId();
-                                final String connectorsNamespace = cluster.getSpec().getConnectorsNamespace();
-
-                                fleetManager.getDeployments(clusterId, connectorsNamespace).stream()
-                                    .map(d -> new ConnectorDeploymentEvent(cluster, d, true))
-                                    .collect(Collectors.toCollection(() -> answer));
-                            },
-                            () -> LOGGER.debug("Operator not yet configured")); // this should never happen
-                } else {
-                    answer = this.queue.stream()
-                        .sorted()
-                        .distinct()
-                        .collect(Collectors.toList());
-                }
-
-                queue.clear();
-
-                LOGGER.debug("ConnectorDeploymentQueue: event={}, connectors={}", event, answer.size());
-
-                return answer;
-            } finally {
-                this.lock.unlock();
-            }
-        }
+    private ManagedConnector createConnector(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+        return new ManagedConnectorBuilder()
+            .withMetadata(new ObjectMetaBuilder()
+                .withName("c" + UUID.randomUUID().toString().replaceAll("-", ""))
+                .withNamespace(connectorCluster.getSpec().getConnectorsNamespace())
+                .addToLabels(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
+                .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
+                .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
+                .build())
+            .withSpec(new ManagedConnectorSpecBuilder()
+                .withClusterId(connectorCluster.getSpec().getId())
+                .withConnectorId(deployment.getSpec().getConnectorId())
+                .withConnectorTypeId(deployment.getSpec().getConnectorTypeId())
+                .withDeploymentId(deployment.getId())
+                .build())
+            .build();
     }
 
     /**
-     * Helper class to hold a connector update event.
+     * Helper class to queue events.
      */
-    private static class ConnectorDeploymentEvent
-        implements Comparable<ConnectorDeploymentProvisioner.ConnectorDeploymentEvent> {
-
-        private final ManagedConnectorCluster cluster;
+    private class Deployment {
         private final ConnectorDeployment deployment;
         private final boolean recreate;
 
-        public ConnectorDeploymentEvent(ManagedConnectorCluster cluster, ConnectorDeployment deployment, boolean recreate) {
-            this.cluster = cluster;
+        public Deployment(ConnectorDeployment deployment, boolean recreate) {
             this.deployment = deployment;
             this.recreate = recreate;
-        }
-
-        public ManagedConnectorCluster getCluster() {
-            return cluster;
         }
 
         public ConnectorDeployment getDeployment() {
@@ -256,47 +186,63 @@ public class ConnectorDeploymentProvisioner {
         public boolean isRecreate() {
             return recreate;
         }
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            ConnectorDeploymentEvent that = (ConnectorDeploymentEvent) o;
-            return recreate == that.recreate &&
-                Objects.equals(cluster, that.cluster) &&
-                Objects.equals(deployment, that.deployment);
+    /**
+     * Helper class to queue events.
+     */
+    private class ConnectorDeploymentQueue {
+        private final ReentrantLock lock;
+        private final Set<Long> events;
+
+        public ConnectorDeploymentQueue() {
+            this.lock = new ReentrantLock();
+            this.events = new TreeSet<>();
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(cluster, deployment, recreate);
+        public int size() {
+            this.lock.lock();
+
+            try {
+                return this.events.size();
+            } finally {
+                this.lock.unlock();
+            }
         }
 
-        @Override
-        public int compareTo(ConnectorDeploymentProvisioner.ConnectorDeploymentEvent o) {
-            if (this.deployment == null) {
-                if (o.deployment != null) {
-                    return -1;
-                } else {
-                    return 0;
+        public void submit(Long gv) {
+            this.lock.lock();
+
+            try {
+                this.events.add(gv);
+            } finally {
+                this.lock.unlock();
+            }
+        }
+
+        public Collection<Deployment> poll() throws InterruptedException {
+            this.lock.lock();
+
+            try {
+                if (events.isEmpty()) {
+                    return Collections.emptyList();
                 }
-            } else if (o.deployment == null) {
-                return 1;
+
+                final Collection<Deployment> answer = new ArrayList<>();
+                final long gv = Collections.min(events) == 0 ? 0 : Collections.max(events);
+
+                fleetManager.getDeployments(gv).stream()
+                    .map(d -> new Deployment(d, gv == 0))
+                    .forEach(answer::add);
+
+                events.clear();
+
+                LOGGER.debug("ConnectorDeploymentQueue: gv={}, connectors={}", gv, answer.size());
+
+                return answer;
+            } finally {
+                this.lock.unlock();
             }
-
-            // TODO: can there be an NPE here?
-            return this.deployment.getId().compareTo(o.getDeployment().getId());
-        }
-
-        @Override
-        public String toString() {
-            return "ConnectorDeploymentEvent{" +
-                "deploymentId='" + (deployment != null ? deployment.getId() : "null") + '\'' +
-                '}';
         }
     }
 
