@@ -1,16 +1,25 @@
 package org.bf2.cos.fleetshard.operator.client;
 
+import java.net.URI;
+import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
+import io.quarkus.restclient.NoopHostnameVerifier;
 import org.bf2.cos.fleet.manager.api.ConnectorClustersAgentApi;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperators;
@@ -22,7 +31,9 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.RestClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.PassthroughTrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +44,50 @@ import static org.bf2.cos.fleetshard.operator.client.FleetManagerClientHelper.ru
 public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
 
-    @Inject
-    @RestClient
     ConnectorClustersAgentApi controlPlane;
+
     @Inject
     KubernetesClient kubernetesClient;
+
+    @ConfigProperty(
+        name = "quarkus.tls.trust-all")
+    boolean trustAll;
+
+    @ConfigProperty(
+        name = "control-plane-base-url")
+    URI controlPlaneUri;
+
+    @ConfigProperty(
+        name = "cos.manager.connect.timeout",
+        defaultValue = "5s")
+    Duration connectTimeout;
+
+    @ConfigProperty(
+        name = "cos.manager.read.timeout",
+        defaultValue = "10s")
+    Duration readTimeout;
+
+    @PostConstruct
+    void setUpClientClient() throws Exception {
+        RestClientBuilder builder = RestClientBuilder.newBuilder();
+        builder.baseUri(controlPlaneUri);
+        builder.register(OidcClientRequestFilter.class);
+        builder.connectTimeout(connectTimeout.toMillis(), TimeUnit.MILLISECONDS);
+        builder.readTimeout(readTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+        if (trustAll) {
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(
+                null,
+                new TrustManager[] { new PassthroughTrustManager() },
+                new SecureRandom());
+
+            builder.sslContext(sslContext);
+            builder.register(NoopHostnameVerifier.class);
+        }
+
+        this.controlPlane = builder.build(ConnectorClustersAgentApi.class);
+    }
 
     public void updateClusterStatus(ManagedConnectorCluster cluster, List<ManagedConnectorOperator> operators) {
         run(() -> {
@@ -62,7 +112,7 @@ public class FleetManagerClient {
 
     public ConnectorDeployment getDeployment(String clusterId, String deploymentId) {
         return call(() -> {
-            return controlPlane.getClusterAsignedConnectorDeploymentById(clusterId, deploymentId);
+            return controlPlane.getClusterAssignedConnectorDeploymentById(clusterId, deploymentId);
         });
     }
 
@@ -84,7 +134,7 @@ public class FleetManagerClient {
             List<ConnectorDeployment> answer = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
+                ConnectorDeploymentList list = controlPlane.getClusterAssignedConnectorDeployments(
                     clusterId,
                     Integer.toString(i),
                     null,

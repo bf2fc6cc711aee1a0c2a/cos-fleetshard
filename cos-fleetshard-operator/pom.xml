@@ -48,10 +48,6 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-oidc-client-filter</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
