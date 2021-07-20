@@ -46,7 +46,7 @@ public class FleetManagerMock {
         @PathParam("connector_cluster_id") String connectorClusterId,
         @PathParam("deployment_id") String deploymentId) {
 
-        return getOrCreatCluster(connectorClusterId).getConnectorDeployments(deploymentId);
+        return getOrCreateCluster(connectorClusterId).getConnectorDeployments(deploymentId);
     }
 
     @GET
@@ -59,7 +59,7 @@ public class FleetManagerMock {
         @QueryParam("gt_version") Long gtVersion,
         @QueryParam("watch") String watch) {
 
-        return getOrCreatCluster(connectorClusterId).listConnectorDeployments(gtVersion);
+        return getOrCreateCluster(connectorClusterId).listConnectorDeployments(gtVersion);
     }
 
     @PUT
@@ -71,7 +71,7 @@ public class FleetManagerMock {
         @PathParam("deployment_id") String deploymentId,
         ConnectorDeploymentStatus connectorDeploymentStatus) {
 
-        getOrCreatCluster(connectorClusterId).updateConnectorDeploymentStatus(deploymentId, connectorDeploymentStatus);
+        getOrCreateCluster(connectorClusterId).updateConnectorDeploymentStatus(deploymentId, connectorDeploymentStatus);
     }
 
     @PUT
@@ -82,7 +82,7 @@ public class FleetManagerMock {
         @PathParam("connector_cluster_id") String connectorClusterId,
         ConnectorClusterStatus connectorClusterStatus) {
 
-        getOrCreatCluster(connectorClusterId).updateConnectorClusterStatus(connectorClusterStatus);
+        getOrCreateCluster(connectorClusterId).updateConnectorClusterStatus(connectorClusterStatus);
     }
 
     // **********************************************
@@ -95,7 +95,7 @@ public class FleetManagerMock {
         return Optional.ofNullable(clusters.get(id));
     }
 
-    public ConnectorCluster getOrCreatCluster(String id) {
+    public ConnectorCluster getOrCreateCluster(String id) {
         return clusters.computeIfAbsent(id, ConnectorCluster::new);
     }
 
@@ -107,7 +107,7 @@ public class FleetManagerMock {
 
     public static class ConnectorCluster {
         private final String id;
-        private final Map<String, Connector> connectors;
+        private final Map<String, ConnectorDeployment> connectors;
         private ConnectorClusterStatus status;
 
         public ConnectorCluster(String id) {
@@ -116,19 +116,22 @@ public class FleetManagerMock {
             this.status = new ConnectorClusterStatus();
         }
 
-        public Connector getConnector(String id) {
+        public String getId() {
+            return id;
+        }
+
+        public ConnectorDeployment getConnector(String id) {
             return connectors.get(id);
         }
 
         public ConnectorDeployment getConnectorDeployments(String deploymentId) {
             return connectors.containsKey(deploymentId)
-                ? connectors.get(deploymentId).getDeployment()
+                ? connectors.get(deploymentId)
                 : null;
         }
 
         public ConnectorDeploymentList listConnectorDeployments(Long gv) {
             var items = connectors.values().stream()
-                .map(Connector::getDeployment)
                 .filter(Objects::nonNull)
                 .filter(d -> d.getMetadata().getResourceVersion() > gv)
                 .collect(Collectors.toList());
@@ -142,19 +145,19 @@ public class FleetManagerMock {
 
         public void updateConnectorDeploymentStatus(String deploymentId, ConnectorDeploymentStatus connectorDeploymentStatus) {
             connectors.computeIfPresent(deploymentId, (k, v) -> {
-                final ConnectorDeploymentStatus oldStatus = v.status;
+                final ConnectorDeploymentStatus oldStatus = v.getStatus();
 
-                if (v.status == null) {
-                    v.status = connectorDeploymentStatus;
-                } else if (v.status.getResourceVersion() == null) {
-                    v.status = connectorDeploymentStatus;
-                } else if (v.status.getResourceVersion() <= connectorDeploymentStatus.getResourceVersion()) {
-                    v.status = connectorDeploymentStatus;
+                if (oldStatus == null) {
+                    v.setStatus(connectorDeploymentStatus);
+                } else if (oldStatus.getResourceVersion() == null) {
+                    v.setStatus(connectorDeploymentStatus);
+                } else if (oldStatus.getResourceVersion() <= connectorDeploymentStatus.getResourceVersion()) {
+                    v.setStatus(connectorDeploymentStatus);
                 }
 
                 if (oldStatus != null) {
                     JsonNode specNode = Serialization.jsonMapper().valueToTree(oldStatus);
-                    JsonNode statusNode = Serialization.jsonMapper().valueToTree(v.status);
+                    JsonNode statusNode = Serialization.jsonMapper().valueToTree(v.getStatus());
 
                     LOGGER.info("Updating status of deployment with id: {}, diff: {}",
                         deploymentId,
@@ -162,7 +165,7 @@ public class FleetManagerMock {
                 } else {
                     LOGGER.info("Updating status of deployment with id: {}, diff: {}",
                         deploymentId,
-                        Serialization.asJson(v.status));
+                        Serialization.asJson(v.getStatus()));
                 }
 
                 return v;
@@ -179,71 +182,31 @@ public class FleetManagerMock {
         }
 
         public ConnectorDeployment setConnectorDeployment(ConnectorDeployment deployment) {
-            connectors.compute(deployment.getId(), (k, v) -> {
-                if (v == null) {
-                    v = new Connector();
-                }
-                v.deployment = deployment;
-                return v;
-            });
-
+            connectors.put(deployment.getId(), deployment);
             return deployment;
         }
 
-        public Connector updateConnector(String id, Consumer<Connector> consumer) {
+        public ConnectorDeployment updateConnector(String id, Consumer<ConnectorDeployment> consumer) {
             return connectors.compute(id, (k, v) -> {
                 if (v == null) {
-                    v = new Connector();
+                    v = new ConnectorDeployment();
                 }
                 consumer.accept(v);
 
-                var oldRv = v.getDeployment().getMetadata().getResourceVersion();
-                var newRv = oldRv + 1;
+                Long oldRv = v.getMetadata().getResourceVersion();
+                Long newRv = oldRv + 1;
 
-                v.getDeployment().getMetadata().setResourceVersion(newRv);
+                v.getMetadata().setResourceVersion(newRv);
                 return v;
             });
         }
 
-        public Connector updateConnectorSpec(String id, Consumer<ObjectNode> consumer) {
-            return connectors.compute(id, (k, v) -> {
-                if (v == null) {
-                    v = new Connector();
+        public ConnectorDeployment updateConnectorSpec(String id, Consumer<ObjectNode> consumer) {
+            return updateConnector(id, cd -> {
+                if (cd.getSpec() != null && cd.getSpec().getConnectorSpec() != null) {
+                    consumer.accept((ObjectNode) cd.getSpec().getConnectorSpec());
                 }
-                if (v.getDeployment() != null
-                    && v.getDeployment().getSpec() != null
-                    && v.getDeployment().getSpec().getConnectorSpec() != null) {
-
-                    consumer.accept((ObjectNode) v.getDeployment().getSpec().getConnectorSpec());
-                }
-
-                var oldRv = v.getDeployment().getMetadata().getResourceVersion();
-                var newRv = oldRv + 1;
-
-                v.getDeployment().getMetadata().setResourceVersion(newRv);
-                return v;
             });
-        }
-    }
-
-    public static class Connector {
-        private ConnectorDeployment deployment;
-        private ConnectorDeploymentStatus status;
-
-        public ConnectorDeployment getDeployment() {
-            return deployment;
-        }
-
-        public void setDeployment(ConnectorDeployment deployment) {
-            this.deployment = deployment;
-        }
-
-        public ConnectorDeploymentStatus getStatus() {
-            return status;
-        }
-
-        public void setStatus(ConnectorDeploymentStatus status) {
-            this.status = status;
         }
     }
 }

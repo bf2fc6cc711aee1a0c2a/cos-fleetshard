@@ -7,13 +7,13 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.it.support.KubernetesSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OidcSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -26,10 +26,15 @@ import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.a
 @QuarkusTestResource(CamelMetaServiceSetup.class)
 @QuarkusTest
 public class CamelConnectorStopTest extends CamelTestSupport {
+
+    @BeforeEach
+    void setUp() {
+        withCamelConnectorOperator("cm-1", "1.1.0");
+    }
+
     @Test
     void managedCamelConnectorStatusIsReported() {
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
-        final ManagedConnectorOperator op = withCamelConnectorOperator("cm-1", "1.1.0");
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
 
         awaitStatus(clusterId, cd.getId(), status -> {
@@ -44,7 +49,7 @@ public class CamelConnectorStopTest extends CamelTestSupport {
         var resources = new ArrayList<>(mandatoryGetManagedConnector(cd).getStatus().getResources());
 
         updateConnector(clusterId, cd.getId(), c -> {
-            c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_STOPPED);
+            c.getSpec().setDesiredState(DESIRED_STATE_STOPPED);
         });
 
         awaitStatus(clusterId, cd.getId(), status -> {
@@ -56,7 +61,7 @@ public class CamelConnectorStopTest extends CamelTestSupport {
         });
 
         updateConnector(clusterId, cd.getId(), c -> {
-            c.getDeployment().getSpec().setDesiredState(DESIRED_STATE_READY);
+            c.getSpec().setDesiredState(DESIRED_STATE_READY);
         });
 
         awaitStatus(clusterId, cd.getId(), status -> {

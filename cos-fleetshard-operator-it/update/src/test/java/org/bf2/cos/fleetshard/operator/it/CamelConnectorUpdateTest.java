@@ -1,12 +1,10 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestProfile;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
@@ -29,10 +27,8 @@ public class CamelConnectorUpdateTest extends CamelTestSupport {
         final ConnectorDeployment cd = withDefaultConnectorDeployment();
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
-        await(() -> {
-            Optional<ManagedConnector> connector = getManagedConnector(cd);
-
-            assertThat(connector).get().satisfies(c -> {
+        awaitConnector(cd, connector -> {
+            assertThat(connector).satisfies(c -> {
                 var resources = c.getStatus().getResources();
                 var drv = c.getSpec().getDeployment().getDeploymentResourceVersion();
 
@@ -59,10 +55,8 @@ public class CamelConnectorUpdateTest extends CamelTestSupport {
             cs.with("connector").put("foo", "connector-bar");
         });
 
-        await(() -> {
-            Optional<ManagedConnector> connector = getManagedConnector(cd);
-
-            assertThat(connector).get().satisfies(c -> {
+        awaitConnector(cd, connector -> {
+            assertThat(connector).satisfies(c -> {
                 var resources = c.getStatus().getResources();
                 var drv = c.getSpec().getDeployment().getDeploymentResourceVersion();
 
