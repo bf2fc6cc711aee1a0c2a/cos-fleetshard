@@ -46,7 +46,7 @@ import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.bf2.cos.fleetshard.support.ResourceUtil;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.bf2.cos.meta.model.ConnectorDeploymentReifyRequest;
 import org.bf2.cos.meta.model.KafkaSpec;
 import org.slf4j.Logger;

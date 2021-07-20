@@ -14,6 +14,7 @@ import javax.inject.Inject;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -24,7 +25,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
-import org.bf2.cos.fleetshard.support.ResourceUtil;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,13 +144,20 @@ public class ConnectorDeploymentProvisioner {
     }
 
     private ManagedConnector createConnector(ManagedConnectorCluster connectorCluster, ConnectorDeployment deployment) {
+
         return new ManagedConnectorBuilder()
             .withMetadata(new ObjectMetaBuilder()
                 .withName("c" + UUID.randomUUID().toString().replaceAll("-", ""))
                 .withNamespace(connectorCluster.getSpec().getConnectorsNamespace())
                 .addToLabels(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
                 .addToLabels(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-                .addToOwnerReferences(ResourceUtil.asOwnerReference(connectorCluster))
+                .addToOwnerReferences(new OwnerReferenceBuilder()
+                    .withApiVersion(connectorCluster.getApiVersion())
+                    .withController(true)
+                    .withKind(connectorCluster.getKind())
+                    .withName(connectorCluster.getMetadata().getName())
+                    .withUid(connectorCluster.getMetadata().getUid())
+                    .build())
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
                 .withClusterId(connectorCluster.getSpec().getId())

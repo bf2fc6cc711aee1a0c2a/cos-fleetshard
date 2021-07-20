@@ -1,11 +1,11 @@
-package org.bf2.cos.fleetshard.operator.support;
+package org.bf2.cos.fleetshard.operator.connectoroperator;
 
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 
-public final class OperatorSupport {
-    private OperatorSupport() {
+public final class ConnectorOperatorSupport {
+    private ConnectorOperatorSupport() {
     }
 
     public static ConnectorOperator toConnectorOperator(Operator operator) {

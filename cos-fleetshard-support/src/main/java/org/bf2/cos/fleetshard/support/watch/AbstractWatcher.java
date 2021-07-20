@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.support;
+package org.bf2.cos.fleetshard.support.watch;
 
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;

@@ -30,7 +30,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
+import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.PassthroughTrustManager;
@@ -110,7 +110,7 @@ public class FleetManagerClient {
 
             var ops = operators.stream()
                 .map(o -> new ConnectorClusterStatusOperators()
-                    .operator(OperatorSupport.toConnectorOperator(o))
+                    .operator(ConnectorOperatorSupport.toConnectorOperator(o))
                     .namespace(o.getMetadata().getName()))
                 .collect(Collectors.toList());
 

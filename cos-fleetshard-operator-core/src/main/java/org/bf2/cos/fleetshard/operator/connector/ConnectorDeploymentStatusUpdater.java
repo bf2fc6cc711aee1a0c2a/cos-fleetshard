@@ -28,9 +28,9 @@ import org.bf2.cos.fleetshard.operator.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClientException;
-import org.bf2.cos.fleetshard.operator.support.OperatorSupport;
-import org.bf2.cos.fleetshard.support.AbstractWatcher;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorSupport;
+import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -165,8 +165,8 @@ public class ConnectorDeploymentStatusUpdater {
         // report available operators
         deploymentStatus.setOperators(
             new ConnectorDeploymentStatusOperators()
-                .assigned(OperatorSupport.toConnectorOperator(connector.getStatus().getAssignedOperator()))
-                .available(OperatorSupport.toConnectorOperator(connector.getStatus().getAvailableOperator())));
+                .assigned(ConnectorOperatorSupport.toConnectorOperator(connector.getStatus().getAssignedOperator()))
+                .available(ConnectorOperatorSupport.toConnectorOperator(connector.getStatus().getAvailableOperator())));
     }
 
     private void setConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
