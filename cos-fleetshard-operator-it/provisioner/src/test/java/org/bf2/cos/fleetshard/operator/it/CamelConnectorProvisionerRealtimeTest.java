@@ -1,9 +1,11 @@
 package org.bf2.cos.fleetshard.operator.it;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+import org.awaitility.Awaitility;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestProfile;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
@@ -39,6 +41,17 @@ public class CamelConnectorProvisionerRealtimeTest extends CamelTestSupport {
                         c.getMetadata().getName());
                 });
             });
+
+        // add a second deployment with resource version less than the
+        // highest known by the system. Since the sync all feature is
+        // disabled, then the deployment should be ignored
+        withDefaultConnectorDeployment(5L);
+
+        // TODO: waiting an arbitrary amount of time here but should
+        //       be replaced with a better mechanism
+        Awaitility.await()
+            .pollDelay(5, TimeUnit.SECONDS)
+            .until(() -> getManagedConnectors().size() == 1);
     }
 
     public static class Profile extends CamelTestProfile {
