@@ -97,10 +97,6 @@ public class ConnectorDeploymentStatusUpdater {
     }
 
     private void updateConnectorDeploymentStatus(ManagedConnector connector) {
-        if (!operator.isRunning()) {
-            return;
-        }
-
         LOGGER.debug("Update connector status (name: {}, phase: {})",
             connector.getMetadata().getName(),
             connector.getStatus().getPhase());
@@ -236,10 +232,6 @@ public class ConnectorDeploymentStatusUpdater {
 
         @Override
         public void onEventReceived(Action action, ManagedConnector resource) {
-            if (!operator.isRunning()) {
-                return;
-            }
-
             queue.submit(new ConnectorStatusEvent(resource.getMetadata().getName()));
         }
     }

@@ -86,6 +86,10 @@ public class FleetShardClient {
 
     }
 
+    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster() {
+        return lookupOrCreateManagedConnectorCluster(clusterNamespace, ConnectorClusterSupport.clusterName(clusterId));
+    }
+
     public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String name) {
         return lookupOrCreateManagedConnectorCluster(clusterNamespace, name);
     }
