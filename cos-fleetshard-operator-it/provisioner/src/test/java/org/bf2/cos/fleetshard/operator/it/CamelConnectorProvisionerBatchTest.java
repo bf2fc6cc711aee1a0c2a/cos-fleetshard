@@ -6,7 +6,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestProfile;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,7 @@
 package org.bf2.cos.fleetshard.operator.it.support.assertions;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 
 public final class Assertions extends org.assertj.core.api.Assertions {
     private Assertions() {

@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.support;
+package org.bf2.cos.fleetshard.support.unstructured;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -19,6 +19,8 @@ import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.bf2.cos.fleetshard.support.unstructured.UnstructuredSupport.asCustomResourceDefinitionContext;
+
 @ApplicationScoped
 public class UnstructuredClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnstructuredClient.class);
@@ -32,7 +34,7 @@ public class UnstructuredClient {
     public Map<String, Object> get(String namespace, ResourceRef ref) {
         return get(
             namespace,
-            ResourceUtil.asCustomResourceDefinitionContext(ref));
+            asCustomResourceDefinitionContext(ref));
     }
 
     public JsonNode getAsNode(String namespace, ResourceRef ref) {
@@ -49,7 +51,7 @@ public class UnstructuredClient {
     }
 
     public Map<String, Object> get(String namespace, JsonNode ref) {
-        return get(namespace, ResourceUtil.asCustomResourceDefinitionContext(ref));
+        return get(namespace, asCustomResourceDefinitionContext(ref));
     }
 
     public Map<String, Object> get(String namespace, CustomResourceDefinitionContext ctx) {
@@ -67,7 +69,7 @@ public class UnstructuredClient {
     }
 
     public boolean delete(String namespace, ResourceRef ref) throws IOException {
-        return delete(namespace, ResourceUtil.asCustomResourceDefinitionContext(ref));
+        return delete(namespace, asCustomResourceDefinitionContext(ref));
     }
 
     public boolean delete(String namespace, CustomResourceDefinitionContext ctx) throws IOException {
@@ -84,7 +86,7 @@ public class UnstructuredClient {
 
         return createOrReplace(
             namespace,
-            ResourceUtil.asCustomResourceDefinitionContext(unstructured),
+            asCustomResourceDefinitionContext(unstructured),
             Serialization.jsonMapper().treeToValue(unstructured, Map.class));
     }
 
@@ -130,7 +132,7 @@ public class UnstructuredClient {
     public Watch watch(String namespace, ResourceRef ref, Map<String, String> labels, Watcher<String> watcher) {
         return watch(
             namespace,
-            ResourceUtil.asCustomResourceDefinitionContext(ref),
+            asCustomResourceDefinitionContext(ref),
             labels,
             watcher);
     }

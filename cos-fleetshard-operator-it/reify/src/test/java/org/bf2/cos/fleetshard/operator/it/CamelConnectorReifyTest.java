@@ -8,7 +8,7 @@ import org.bf2.cos.fleetshard.operator.it.support.OidcSetup;
 import org.bf2.cos.fleetshard.operator.it.support.OperatorSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelMetaServiceSetup;
 import org.bf2.cos.fleetshard.operator.it.support.camel.CamelTestSupport;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

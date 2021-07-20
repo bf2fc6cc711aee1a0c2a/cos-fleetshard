@@ -24,12 +24,12 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeAll;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
 
 public class TestSupport {
     @KubernetesTestServer
@@ -216,7 +216,7 @@ public class TestSupport {
 
         try {
             return ksrv.getClient()
-                .customResource(asCustomResourceDefinitionContext(unstructured))
+                .customResource(UnstructuredSupport.asCustomResourceDefinitionContext(unstructured))
                 .updateStatus(
                     namespace,
                     name,

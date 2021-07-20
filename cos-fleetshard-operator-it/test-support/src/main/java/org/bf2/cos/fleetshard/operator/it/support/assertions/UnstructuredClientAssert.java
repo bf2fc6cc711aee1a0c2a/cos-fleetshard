@@ -1,7 +1,7 @@
 package org.bf2.cos.fleetshard.operator.it.support.assertions;
 
 import org.assertj.core.api.AbstractAssert;
-import org.bf2.cos.fleetshard.support.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 
 public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientAssert, UnstructuredClient> {
     public UnstructuredClientAssert(UnstructuredClient actual) {
