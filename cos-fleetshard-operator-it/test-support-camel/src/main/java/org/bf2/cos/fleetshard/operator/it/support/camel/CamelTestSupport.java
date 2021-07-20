@@ -76,7 +76,7 @@ public class CamelTestSupport extends TestSupport {
                 .shardMetadata(connectorMeta)
                 .desiredState(DESIRED_STATE_READY));
 
-        return fm.getOrCreatCluster(clusterId).setConnectorDeployment(cd);
+        return fm.getOrCreateCluster(clusterId).setConnectorDeployment(cd);
     }
 
     @JsonDeserialize

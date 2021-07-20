@@ -164,17 +164,17 @@ public class TestSupport {
             .orElseThrow(() -> new IllegalStateException(""));
     }
 
-    public FleetManagerMock.Connector updateConnector(
+    public ConnectorDeployment updateConnector(
         String clusterId,
         String deploymentId,
-        Consumer<FleetManagerMock.Connector> consumer) {
+        Consumer<ConnectorDeployment> consumer) {
 
         return fm.getCluster(clusterId)
             .orElseThrow(() -> new IllegalStateException(""))
             .updateConnector(deploymentId, consumer);
     }
 
-    public FleetManagerMock.Connector updateConnectorSpec(
+    public ConnectorDeployment updateConnectorSpec(
         String clusterId,
         String deploymentId,
         Consumer<ObjectNode> consumer) {
@@ -191,6 +191,7 @@ public class TestSupport {
             .getStatus();
     }
 
+    @SuppressWarnings("unchecked")
     public Map<String, Object> updateUnstructured(
         String apiVersion,
         String kind,
