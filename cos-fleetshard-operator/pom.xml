@@ -58,6 +58,7 @@
                 <version>${quarkus.version}</version>
                 <executions>
                     <execution>
+                        <id>build</id>
                         <goals>
                             <goal>build</goal>
                         </goals>
@@ -147,7 +148,13 @@
             </properties>
         </profile>
         <profile>
-            <id>dev</id>
+            <id>local</id>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-kubernetes-config</artifactId>
+                </dependency>
+            </dependencies>
             <build>
                 <defaultGoal>quarkus:dev</defaultGoal>
                 <plugins>
@@ -168,6 +175,12 @@
                                 <quarkus.http.port>9092</quarkus.http.port>
                                 <quarkus.log.console.json>false</quarkus.log.console.json>
                                 <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
+                                <!-- retrieve the values from k8s -->
+                                <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
+                                <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
+                                <quarkus.kubernetes-config.secrets>addon-cos-fleetshard-operator-parameters</quarkus.kubernetes-config.secrets>
+                                <quarkus.kubernetes-config.config-maps>cos-fleetshard-config</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>
                             </systemProperties>
                         </configuration>
                     </plugin>

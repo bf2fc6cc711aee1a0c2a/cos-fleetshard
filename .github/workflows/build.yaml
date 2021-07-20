@@ -100,7 +100,7 @@ jobs:
       - name: Deploy FleetShard config
         run: |
           oc create configmap cos-fleetshard-config \
-               --from-file=etc/kubernetes/application.properties \
+               --from-file=etc/kubernetes/app-config-map/application.properties \
                --dry-run=client \
                -o yaml | kubectl apply -f -
       - name: Deploy FleetShard Operator
