@@ -26,6 +26,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.bf2.cos.fleetshard.support.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.junit.jupiter.api.BeforeAll;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.ResourceUtil.asCustomResourceDefinitionContext;
@@ -44,6 +45,12 @@ public class TestSupport {
     @ConfigProperty(
         name = "kubernetes.namespace")
     protected String namespace;
+
+    @BeforeAll
+    static void setUpAwaitility() {
+        Awaitility.setDefaultPollInterval(500, TimeUnit.MILLISECONDS);
+        Awaitility.setDefaultPollDelay(100, TimeUnit.MILLISECONDS);
+    }
 
     public static ManagedConnectorOperator newConnectorOperator(
         String namespace,
