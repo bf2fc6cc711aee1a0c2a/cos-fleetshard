@@ -24,8 +24,9 @@ public class CamelConnectorProvisionerBatchTest extends CamelTestSupport {
     public void managedCamelConnectorDeployedByBatchTask() {
         final UnstructuredClient uc = new UnstructuredClient(ksrv.getClient());
 
+        var c1 = withDefaultConnectorDeployment(10L);
         awaitConnector(
-            withDefaultConnectorDeployment(10L),
+            c1,
             connector -> {
                 assertThat(connector).satisfies(c -> {
                     assertThat(c.getSpec().getDeployment().getDeploymentResourceVersion())
@@ -40,8 +41,9 @@ public class CamelConnectorProvisionerBatchTest extends CamelTestSupport {
                 });
             });
 
+        var c2 = withDefaultConnectorDeployment(5L);
         awaitConnector(
-            withDefaultConnectorDeployment(5L),
+            c2,
             connector -> {
                 assertThat(connector).satisfies(c -> {
                     assertThat(c.getSpec().getDeployment().getDeploymentResourceVersion())
@@ -55,6 +57,8 @@ public class CamelConnectorProvisionerBatchTest extends CamelTestSupport {
                         c.getMetadata().getName());
                 });
             });
+
+        assertThat(getManagedConnectors()).hasSize(2);
     }
 
     public static class Profile extends CamelTestProfile {
