@@ -374,7 +374,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         if (!updated) {
             // no update to the resource but maybe a dependant resource has changed so we need
             // to trigger an update
-            statusSync.submit(connector);
+            statusSync.submit(connector.getMetadata().getName());
         }
 
         return updated
@@ -408,7 +408,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
-        statusSync.submit(connector);
+        statusSync.submit(connector.getMetadata().getName());
 
         // TODO: cleanup leftover, maybe
         return UpdateControl.noUpdate();
@@ -457,7 +457,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        statusSync.submit(connector);
+        statusSync.submit(connector.getMetadata().getName());
 
         // TODO: cleanup leftover, maybe
         return UpdateControl.noUpdate();

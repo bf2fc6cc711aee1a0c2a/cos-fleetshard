@@ -14,7 +14,7 @@ public class ConnectorDeploymentStatusSync {
         every = "{cos.connectors.status.sync.all.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void syncAllConnectorDeploymentStatus() {
-        this.sync.submit((String) null);
+        this.sync.poison();
     }
 
     @Scheduled(

@@ -1,13 +1,10 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,6 +22,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
+import org.bf2.cos.fleetshard.support.EventQueue;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public class ConnectorDeploymentProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
 
-    private final ConnectorDeploymentProvisioner.ConnectorDeploymentQueue queue = new ConnectorDeploymentProvisioner.ConnectorDeploymentQueue();
+    private final ConnectorDeploymentQueue queue = new ConnectorDeploymentQueue();
 
     @Inject
     FleetShardClient fleetShard;
@@ -46,8 +44,8 @@ public class ConnectorDeploymentProvisioner {
         name = "cos.connectors.sync.interval")
     String connectorsSyncInterval;
 
-    public int size() {
-        return this.queue.size();
+    public void poison() {
+        this.queue.poison();
     }
 
     public void submit(Long gv) {
@@ -63,20 +61,16 @@ public class ConnectorDeploymentProvisioner {
     }
 
     private void provision(ManagedConnectorCluster cluster) {
-        try {
-            final int queueSize = queue.size();
-            final Collection<Deployment> deployments = queue.poll();
+        final int queueSize = queue.size();
+        final Collection<Deployment> deployments = queue.poll();
 
-            LOGGER.debug("Polling ConnectorDeployment queue (interval={}, deployments={}, queue_size={})",
-                connectorsSyncInterval,
-                deployments.size(),
-                queueSize);
+        LOGGER.debug("Polling ConnectorDeployment queue (interval={}, deployments={}, queue_size={})",
+            connectorsSyncInterval,
+            deployments.size(),
+            queueSize);
 
-            for (Deployment deployment : deployments) {
-                provision(cluster, deployment.getDeployment(), deployment.isRecreate());
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        for (Deployment deployment : deployments) {
+            provision(cluster, deployment.getDeployment(), deployment.isRecreate());
         }
     }
 
@@ -192,58 +186,20 @@ public class ConnectorDeploymentProvisioner {
     /**
      * Helper class to queue events.
      */
-    private class ConnectorDeploymentQueue {
-        private final ReentrantLock lock;
-        private final Set<Long> events;
+    private class ConnectorDeploymentQueue extends EventQueue<Long, Deployment> {
 
-        public ConnectorDeploymentQueue() {
-            this.lock = new ReentrantLock();
-            this.events = new TreeSet<>();
+        @Override
+        protected Collection<Deployment> collectAll() {
+            return fleetManager.getDeployments(0).stream()
+                .map(d -> new Deployment(d, true))
+                .collect(Collectors.toList());
         }
 
-        public int size() {
-            this.lock.lock();
-
-            try {
-                return this.events.size();
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public void submit(Long gv) {
-            this.lock.lock();
-
-            try {
-                this.events.add(gv);
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public Collection<Deployment> poll() throws InterruptedException {
-            this.lock.lock();
-
-            try {
-                if (events.isEmpty()) {
-                    return Collections.emptyList();
-                }
-
-                final Collection<Deployment> answer = new ArrayList<>();
-                final long gv = Collections.min(events) == 0 ? 0 : Collections.max(events);
-
-                fleetManager.getDeployments(gv).stream()
-                    .map(d -> new Deployment(d, gv == 0))
-                    .forEach(answer::add);
-
-                events.clear();
-
-                LOGGER.debug("ConnectorDeploymentQueue: gv={}, connectors={}", gv, answer.size());
-
-                return answer;
-            } finally {
-                this.lock.unlock();
-            }
+        @Override
+        protected Collection<Deployment> collectAll(Collection<Long> elements) {
+            return fleetManager.getDeployments(Collections.max(elements)).stream()
+                .map(d -> new Deployment(d, true))
+                .collect(Collectors.toList());
         }
     }
 

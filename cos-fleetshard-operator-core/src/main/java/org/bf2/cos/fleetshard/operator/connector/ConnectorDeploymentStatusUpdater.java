@@ -1,10 +1,7 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.PriorityQueue;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.annotation.Priority;
@@ -22,15 +19,15 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.operator.FleetShardOperator;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClientException;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorSupport;
-import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
+import org.bf2.cos.fleetshard.support.EventQueue;
 import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -48,8 +45,6 @@ public class ConnectorDeploymentStatusUpdater {
     @Inject
     FleetShardClient fleetShard;
     @Inject
-    FleetShardOperator operator;
-    @Inject
     UnstructuredClient uc;
     @Inject
     MetaClient meta;
@@ -66,33 +61,25 @@ public class ConnectorDeploymentStatusUpdater {
         this.observer.close();
     }
 
-    public int size() {
-        return this.queue.size();
+    public void poison() {
+        this.queue.poison();
     }
 
     public void submit(String managedConnectorName) {
-        this.queue.submit(new ConnectorStatusEvent(managedConnectorName));
-    }
-
-    public void submit(ManagedConnector managedConnector) {
-        submit(managedConnector.getMetadata().getName());
+        this.queue.submit(managedConnectorName);
     }
 
     public void run() {
-        try {
-            final int queueSize = queue.size();
-            final Collection<ManagedConnector> connectors = queue.poll();
+        final int queueSize = queue.size();
+        final Collection<ManagedConnector> connectors = queue.poll();
 
-            LOGGER.debug("Polling ManagedConnector status queue (interval={}, connectors={}, queue_size={})",
-                statusSyncInterval,
-                connectors.size(),
-                queueSize);
+        LOGGER.debug("Polling ManagedConnector status queue (interval={}, connectors={}, queue_size={})",
+            statusSyncInterval,
+            connectors.size(),
+            queueSize);
 
-            for (ManagedConnector connector : connectors) {
-                updateConnectorDeploymentStatus(connector);
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        for (ManagedConnector connector : connectors) {
+            updateConnectorDeploymentStatus(connector);
         }
     }
 
@@ -232,129 +219,26 @@ public class ConnectorDeploymentStatusUpdater {
 
         @Override
         public void onEventReceived(Action action, ManagedConnector resource) {
-            queue.submit(new ConnectorStatusEvent(resource.getMetadata().getName()));
+            queue.submit(resource.getMetadata().getName());
         }
     }
 
     /**
      * Helper class to queue events.
      */
-    private class ConnectorStatusQueue {
-        private final ReentrantLock lock;
-        private final PriorityQueue<ConnectorStatusEvent> queue;
-
-        public ConnectorStatusQueue() {
-            this.lock = new ReentrantLock();
-            this.queue = new PriorityQueue<>();
+    private class ConnectorStatusQueue extends EventQueue<String, ManagedConnector> {
+        @Override
+        protected Collection<ManagedConnector> collectAll() {
+            return fleetShard.lookupManagedConnectors();
         }
 
-        public int size() {
-            this.lock.lock();
-
-            try {
-                return this.queue.size();
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public void submit(ConnectorStatusEvent event) {
-            this.lock.lock();
-
-            try {
-                this.queue.add(event);
-            } finally {
-                this.lock.unlock();
-            }
-        }
-
-        public Collection<ManagedConnector> poll() throws InterruptedException {
-            this.lock.lock();
-
-            try {
-                final ConnectorStatusEvent event = queue.peek();
-                if (event == null) {
-                    return Collections.emptyList();
-                }
-
-                Collection<ManagedConnector> answer;
-
-                if (event.managedConnectorName == null) {
-                    answer = fleetShard.lookupManagedConnectors();
-                } else {
-                    answer = this.queue.stream()
-                        .map(ConnectorStatusEvent::getManagedConnectorName)
-                        // we need to filter out for null element here because there may be
-                        // more re-sync-all event in the queue thus, this may lead to a NPE
-                        .filter(Objects::nonNull)
-                        .sorted()
-                        .distinct()
-                        .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
-                        .collect(Collectors.toList());
-                }
-
-                queue.clear();
-
-                LOGGER.debug("ConnectorStatusQueue: event={}, connectors={}", event, answer.size());
-
-                return answer;
-            } finally {
-                this.lock.unlock();
-            }
+        @Override
+        protected Collection<ManagedConnector> collectAll(Collection<String> elements) {
+            return elements.stream()
+                .sorted()
+                .distinct()
+                .flatMap(e -> fleetShard.lookupManagedConnector(e).stream())
+                .collect(Collectors.toList());
         }
     }
-
-    /**
-     * Helper class to hold a connector update event.
-     */
-    private class ConnectorStatusEvent implements Comparable<ConnectorStatusEvent> {
-        public final String managedConnectorName;
-
-        public ConnectorStatusEvent(String name) {
-            this.managedConnectorName = name;
-        }
-
-        public String getManagedConnectorName() {
-            return managedConnectorName;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof ConnectorStatusEvent)) {
-                return false;
-            }
-            ConnectorStatusEvent event = (ConnectorStatusEvent) o;
-            return Objects.equals(getManagedConnectorName(), event.getManagedConnectorName());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getManagedConnectorName());
-        }
-
-        @Override
-        public int compareTo(ConnectorStatusEvent o) {
-            if (this.managedConnectorName == null) {
-                if (o.managedConnectorName != null) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            } else if (o.managedConnectorName == null) {
-                return 1;
-            }
-            return this.managedConnectorName.compareTo(o.managedConnectorName);
-        }
-
-        @Override
-        public String toString() {
-            return "ConnectorStatusEvent{" +
-                "managedConnectorName='" + managedConnectorName + '\'' +
-                '}';
-        }
-    }
-
 }

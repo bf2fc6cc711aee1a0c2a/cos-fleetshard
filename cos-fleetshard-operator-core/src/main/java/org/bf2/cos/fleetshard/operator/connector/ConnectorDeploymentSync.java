@@ -17,7 +17,7 @@ public class ConnectorDeploymentSync {
         every = "{cos.connectors.sync.all.interval}",
         concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void syncAllConnectorDeployments() {
-        this.provisioner.submit(0L);
+        this.provisioner.poison();
     }
 
     @Scheduled(
