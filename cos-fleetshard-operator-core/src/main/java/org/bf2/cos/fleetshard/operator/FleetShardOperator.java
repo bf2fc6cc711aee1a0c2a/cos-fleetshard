@@ -12,6 +12,7 @@ import io.quarkus.runtime.StartupEvent;
 public class FleetShardOperator {
     @Inject
     Operator operator;
+
     void onStart(@Observes StartupEvent ignored) {
         operator.start();
     }
