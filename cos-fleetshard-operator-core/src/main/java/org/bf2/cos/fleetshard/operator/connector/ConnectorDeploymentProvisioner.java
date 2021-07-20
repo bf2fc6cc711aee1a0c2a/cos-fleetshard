@@ -95,21 +95,15 @@ public class ConnectorDeploymentProvisioner {
         final String connectorsNs = fleetShard.getConnectorsNamespace();
         final ManagedConnector connector;
 
-        if (recreate) {
-            LOGGER.info("Recreating connector (connector_id: {}, deployment_id: {})",
+        connector = fleetShard.lookupManagedConnector(connectorsNs, deployment).orElseGet(() -> {
+            LOGGER.info("Connector not found (connector_id: {}, deployment_id: {}), creating a new one",
                 deployment.getSpec().getConnectorId(),
                 deployment.getId());
 
-            connector = createConnector(cluster, deployment);
-        } else {
-            connector = fleetShard.lookupManagedConnector(connectorsNs, deployment).orElseGet(() -> {
-                LOGGER.info("Connector not found (connector_id: {}, deployment_id: {}), creating a new one",
-                    deployment.getSpec().getConnectorId(),
-                    deployment.getId());
+            return createConnector(cluster, deployment);
+        });
 
-                return createConnector(cluster, deployment);
-            });
-
+        if (!recreate) {
             final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
             final Long drv = deployment.getMetadata().getResourceVersion();
 
