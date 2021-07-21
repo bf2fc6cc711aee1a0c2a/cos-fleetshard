@@ -45,7 +45,7 @@ public class ConnectorDeploymentProvisioner {
     String connectorsSyncInterval;
 
     public void poison() {
-        this.queue.poison();
+        this.queue.submitPoisonPill();
     }
 
     public void submit(Long gv) {
