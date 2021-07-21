@@ -62,7 +62,7 @@ public class ConnectorDeploymentStatusUpdater {
     }
 
     public void poison() {
-        this.queue.poison();
+        this.queue.submitPoisonPill();
     }
 
     public void submit(String managedConnectorName) {

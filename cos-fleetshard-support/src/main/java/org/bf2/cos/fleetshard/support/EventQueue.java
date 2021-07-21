@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.support;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -32,21 +33,23 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
         }
     }
 
-    public void poison() {
+    public void submitPoisonPill() {
         this.lock.lock();
 
         try {
-            this.events.add(new PoisonEvent<>());
+            this.events.add(new Event<T>(null));
         } finally {
             this.lock.unlock();
         }
     }
 
     public void submit(T element) {
+        Objects.requireNonNull(element, "Element must not be null");
+
         this.lock.lock();
 
         try {
-            this.events.add(new SimpleEvent<T>(element));
+            this.events.add(new Event<T>(element));
         } finally {
             this.lock.unlock();
         }
@@ -63,7 +66,7 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
             Collection<R> answer;
 
-            if (event instanceof EventQueue.PoisonEvent) {
+            if (event.event == null) {
                 answer = collectAll();
             } else {
                 answer = collectAll(
@@ -86,19 +89,14 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
     protected abstract Collection<R> collectAll(Collection<T> elements);
 
-    // *******************************
-    //
-    // Tasks
-    //
-    // *******************************
-
-    public interface Event<T extends Comparable<T>> extends Comparable<Event<T>>, Supplier<T> {
-    }
-
-    public static class SimpleEvent<T extends Comparable<T>> implements Event<T> {
+    /**
+     * Helper class to encapsulate an event where if the payload is null, then the event
+     * has to be handled as a poison pill event.
+     */
+    private static class Event<T extends Comparable<T>> implements Comparable<Event<T>>, Supplier<T> {
         private final T event;
 
-        public SimpleEvent(T event) {
+        public Event(T event) {
             this.event = event;
         }
 
@@ -109,28 +107,30 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
         @Override
         public int compareTo(Event<T> o) {
-            if (o instanceof EventQueue.PoisonEvent) {
+            if (this.event == null) {
+                return o.event != null ? -1 : 0;
+            } else if (o.event == null) {
                 return 1;
             }
-
-            return this.event.compareTo(o.get());
-        }
-    }
-
-    public static class PoisonEvent<T extends Comparable<T>> implements Event<T> {
-
-        @Override
-        public T get() {
-            return null;
+            return this.event.compareTo(o.event);
         }
 
         @Override
-        public int compareTo(Event<T> o) {
-            if (o instanceof EventQueue.PoisonEvent) {
-                return 0;
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
             }
+            if (!(o instanceof Event)) {
+                return false;
+            }
+            Event<?> event1 = (Event<?>) o;
+            return Objects.equals(event, event1.event);
+        }
 
-            return -1;
+        @Override
+        public int hashCode() {
+            return Objects.hash(event);
         }
     }
+
 }

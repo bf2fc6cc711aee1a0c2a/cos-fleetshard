@@ -45,7 +45,7 @@ public class EventQueueTest {
     void poison() {
         queue.submit("A");
         queue.submit("B");
-        queue.poison();
+        queue.submitPoisonPill();
         queue.submit("C");
 
         assertThat(queue.size()).isEqualTo(4);
@@ -56,9 +56,9 @@ public class EventQueueTest {
     @Test
     void poison2() {
         queue.submit("A");
-        queue.poison();
+        queue.submitPoisonPill();
         queue.submit("B");
-        queue.poison();
+        queue.submitPoisonPill();
         queue.submit("C");
 
         assertThat(queue.size()).isEqualTo(4);
