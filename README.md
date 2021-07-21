@@ -26,14 +26,14 @@ kubectl create configmap cos-fleetshard-config \
 
 #
 # create operator secret
-#  
+#
 # NOTE: the file in etc/kubernetes/app-secret/application.properties is
 #       only a template, copy it somewhere and adapt the command below
 #       and remember not to commit it
-#      
-kubectl create configmap addon-cos-fleetshard-operator-parameters \
+#
+kubectl create secret generic addon-cos-fleetshard-operator-parameters \
   --from-file=etc/kubernetes/app-secret/application.properties
-               
+
 # build
 ./mvnw install
 
