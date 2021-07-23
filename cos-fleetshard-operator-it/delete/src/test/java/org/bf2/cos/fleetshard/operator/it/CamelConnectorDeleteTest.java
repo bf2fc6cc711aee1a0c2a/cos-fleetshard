@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.operator.it.support.assertions.Assertions.assertThat;
 
 @QuarkusTestResource(OidcSetup.class)
@@ -50,7 +51,7 @@ public class CamelConnectorDeleteTest extends CamelTestSupport {
             c.getSpec().setDesiredState(DESIRED_STATE_DELETED);
         });
         awaitStatus(clusterId, cd.getId(), status -> {
-            assertThat(status.getPhase()).isEqualTo(DESIRED_STATE_DELETED);
+            assertThat(status.getPhase()).isEqualTo(STATE_DELETED);
         });
 
         await(() -> {

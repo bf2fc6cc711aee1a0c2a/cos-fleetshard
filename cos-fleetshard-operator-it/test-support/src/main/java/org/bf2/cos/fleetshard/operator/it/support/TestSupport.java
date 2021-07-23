@@ -114,6 +114,10 @@ public class TestSupport {
             });
     }
 
+    public void awaitConnectorDeploymentPhase(String clusterId, String deploymentId, String state) {
+        awaitStatus(clusterId, deploymentId, status -> assertThat(status.getPhase()).isEqualTo(state));
+    }
+
     public Optional<ManagedConnector> getManagedConnector(ConnectorDeployment cd) {
         List<ManagedConnector> connectors = ksrv.getClient()
             .customResources(ManagedConnector.class)
@@ -196,6 +200,10 @@ public class TestSupport {
             .orElseThrow(() -> new IllegalStateException(""))
             .getConnector(deploymentId)
             .getStatus();
+    }
+
+    public void setConnectorDeploymentDesiredState(String clusterId, String deploymentId, String state) {
+        updateConnector(clusterId, deploymentId, c -> c.getSpec().setDesiredState(state));
     }
 
     @SuppressWarnings("unchecked")

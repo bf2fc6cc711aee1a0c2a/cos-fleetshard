@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.Priority;
@@ -11,24 +10,16 @@ import javax.inject.Inject;
 import javax.interceptor.Interceptor;
 
 import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
-import org.bf2.cos.fleet.manager.model.MetaV1Condition;
-import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.client.MetaClient;
 import org.bf2.cos.fleetshard.operator.client.MetaClientException;
-import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorSupport;
 import org.bf2.cos.fleetshard.support.EventQueue;
 import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
-import org.bf2.cos.meta.model.ConnectorDeploymentStatusRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +38,7 @@ public class ConnectorDeploymentStatusUpdater {
     @Inject
     UnstructuredClient uc;
     @Inject
-    MetaClient meta;
+    ConnectorDeploymentStatusExtractor extractor;
 
     @ConfigProperty(
         name = "cos.connectors.status.sync.interval")
@@ -89,49 +80,9 @@ public class ConnectorDeploymentStatusUpdater {
             connector.getStatus().getPhase());
 
         try {
-            ConnectorDeploymentStatus ds = new ConnectorDeploymentStatus();
-            ds.setResourceVersion(connector.getStatus().getDeployment().getDeploymentResourceVersion());
-
-            if (connector.getStatus() == null) {
-                ds.setPhase("provisioning");
-            } else if (connector.getStatus().getPhase() == null) {
-                ds.setPhase("provisioning");
-            } else {
-                switch (connector.getStatus().getPhase()) {
-                    case Augmentation:
-                    case Initialization:
-                        ds.setPhase("provisioning");
-                        break;
-                    case Deleted:
-                    case Deleting:
-                        // TODO: we should distinguish between deleted/deleting
-                        ds.setPhase("deleted");
-                        break;
-                    case Stopping:
-                    case Stopped:
-                        // TODO: we should distinguish between deleted/deleting
-                        ds.setPhase("stopped");
-                        break;
-                    case Monitor:
-                        setConnectorOperators(connector, ds);
-                        setConnectorStatus(connector, ds);
-                        break;
-                    default:
-                        throw new IllegalStateException(
-                            "Unsupported phase ("
-                                + connector.getStatus().getPhase()
-                                + ") for connector "
-                                + connector.getMetadata().getName());
-                }
-            }
-
-            if (ds.getPhase() == null) {
-                ds.setPhase("provisioning");
-            }
-
             controlPlane.updateConnectorStatus(
                 connector,
-                ds);
+                extractor.extract(connector));
 
         } catch (MetaClientException e) {
             LOGGER.warn("Error retrieving status for connector " + connector.getMetadata().getName(), e);
@@ -145,63 +96,6 @@ public class ConnectorDeploymentStatusUpdater {
             }
         } catch (Exception e) {
             LOGGER.warn("Error updating status of connector " + connector.getMetadata().getName(), e);
-        }
-    }
-
-    private void setConnectorOperators(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        // report available operators
-        deploymentStatus.setOperators(
-            new ConnectorDeploymentStatusOperators()
-                .assigned(ConnectorOperatorSupport.toConnectorOperator(connector.getStatus().getAssignedOperator()))
-                .available(ConnectorOperatorSupport.toConnectorOperator(connector.getStatus().getAvailableOperator())));
-    }
-
-    private void setConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus deploymentStatus) {
-        ConnectorDeploymentStatusRequest sr = new ConnectorDeploymentStatusRequest()
-            .managedConnectorId(connector.getMetadata().getName())
-            .deploymentId(connector.getSpec().getDeploymentId())
-            .connectorId(connector.getSpec().getConnectorId())
-            .connectorTypeId(connector.getSpec().getConnectorTypeId());
-
-        for (DeployedResource resource : connector.getStatus().getResources()) {
-            // don't include secrets ...
-            if (Objects.equals("v1", resource.getApiVersion()) && Objects.equals("Secret", resource.getKind())) {
-                continue;
-            }
-
-            sr.addResourcesItem(
-                uc.getAsNode(connector.getMetadata().getNamespace(), resource));
-        }
-
-        if (connector.getStatus().getAssignedOperator() != null && sr.getResources() != null) {
-            LOGGER.debug("Send status request to meta: address={}, request={}",
-                connector.getStatus().getAssignedOperator().getMetaService(),
-                Serialization.asJson(sr));
-
-            var answer = meta.status(
-                connector.getStatus().getAssignedOperator().getMetaService(),
-                sr);
-
-            LOGGER.debug("Got status answer from meta: address={}, answer={}",
-                connector.getStatus().getAssignedOperator().getMetaService(),
-                Serialization.asJson(answer));
-
-            deploymentStatus.setPhase(answer.getPhase());
-
-            // TODO: fix model duplications
-            if (answer.getConditions() != null) {
-                for (var cond : answer.getConditions()) {
-                    deploymentStatus.addConditionsItem(
-                        new MetaV1Condition()
-                            .type(cond.getType())
-                            .status(cond.getStatus())
-                            .message(cond.getMessage())
-                            .reason(cond.getReason())
-                            .lastTransitionTime(cond.getLastTransitionTime()));
-                }
-            }
-        } else {
-            deploymentStatus.setPhase("provisioning");
         }
     }
 
