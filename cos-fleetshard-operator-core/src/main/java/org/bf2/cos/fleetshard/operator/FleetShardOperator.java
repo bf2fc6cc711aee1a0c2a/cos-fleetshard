@@ -7,13 +7,18 @@ import javax.inject.Inject;
 import io.javaoperatorsdk.operator.Operator;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 
 @ApplicationScoped
 public class FleetShardOperator {
     @Inject
+    FleetShardClient fleetShardClient;
+    @Inject
     Operator operator;
 
     void onStart(@Observes StartupEvent ignored) {
+        fleetShardClient.lookupOrCreateManagedConnectorCluster();
+
         operator.start();
     }
 

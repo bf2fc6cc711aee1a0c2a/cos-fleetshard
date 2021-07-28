@@ -30,11 +30,24 @@ public class ConnectorClusterTest extends TestSupport {
             assertThat(cluster)
                 .isNotNull();
             assertThat(cluster.getStatus().getPhase())
-                .isEqualTo(ManagedConnectorClusterStatus.PhaseType.Ready);
+                .isEqualTo(ManagedConnectorClusterStatus.PhaseType.Unconnected);
         });
 
         withConnectorOperator("co-1", "type", "1.0.0", "localhost:8080");
         withConnectorOperator("co-2", "type", "1.1.0", "localhost:8080");
+
+        await(() -> {
+            ManagedConnectorCluster cluster = ksrv.getClient()
+                .customResources(ManagedConnectorCluster.class)
+                .inNamespace(namespace)
+                .withName(ConnectorClusterSupport.clusterName(clusterId))
+                .get();
+
+            assertThat(cluster)
+                .isNotNull();
+            assertThat(cluster.getStatus().getPhase())
+                .isEqualTo(ManagedConnectorClusterStatus.PhaseType.Ready);
+        });
 
         await(() -> {
             var cluster = getCluster();
