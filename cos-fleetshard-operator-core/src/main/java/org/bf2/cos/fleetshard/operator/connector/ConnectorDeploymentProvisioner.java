@@ -23,7 +23,6 @@ import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.support.EventQueue;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +38,6 @@ public class ConnectorDeploymentProvisioner {
     FleetManagerClient fleetManager;
     @Inject
     KubernetesClient kubernetesClient;
-
-    @ConfigProperty(
-        name = "cos.connectors.sync.interval")
-    String connectorsSyncInterval;
 
     public void poison() {
         this.queue.submitPoisonPill();
@@ -64,8 +59,7 @@ public class ConnectorDeploymentProvisioner {
         final int queueSize = queue.size();
         final Collection<Deployment> deployments = queue.poll();
 
-        LOGGER.debug("Polling ConnectorDeployment queue (interval={}, deployments={}, queue_size={})",
-            connectorsSyncInterval,
+        LOGGER.debug("Polling ConnectorDeployment queue (deployments={}, queue_size={})",
             deployments.size(),
             queueSize);
 
