@@ -58,7 +58,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTO
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_GENERATED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
@@ -249,11 +249,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     ObjectNode on = (ObjectNode) node;
                     on.with("metadata")
                         .with("labels")
-                        .put(LABEL_CONNECTOR_GENERATED, "true")
                         .put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getAssignedOperator().getId())
                         .put(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
                         .put(LABEL_CONNECTOR_TYPE_ID, deployment.getSpec().getConnectorTypeId())
-                        .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
+                        .put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId())
+                        .put(LABEL_CLUSTER_ID, connector.getSpec().getClusterId());
 
                     on.with("metadata")
                         .with("annotations")
@@ -539,7 +539,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         final ResourceRef ref = ResourceUtil.asResourceRef(unstructured);
                         final ObjectMeta meta = ResourceUtil.getObjectMeta(unstructured);
 
-                        LOGGER.info("Event received on resource: {}", ref);
+                        LOGGER.debug("Event received on resource: {}", ref);
 
                         //
                         // Since we need to know the owner UUID of the resource to properly
@@ -562,7 +562,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                             resource.getApiVersion(),
                             resource.getKind(),
                             null),
-                        Map.of(LABEL_CONNECTOR_GENERATED, "true"),
+                        Map.of(LABEL_CLUSTER_ID, fleetShard.getClusterId()),
                         this);
                 }
             });
