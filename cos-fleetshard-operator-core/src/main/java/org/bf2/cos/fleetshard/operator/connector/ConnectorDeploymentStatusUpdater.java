@@ -20,7 +20,6 @@ import org.bf2.cos.fleetshard.operator.client.MetaClientException;
 import org.bf2.cos.fleetshard.support.EventQueue;
 import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +38,6 @@ public class ConnectorDeploymentStatusUpdater {
     UnstructuredClient uc;
     @Inject
     ConnectorDeploymentStatusExtractor extractor;
-
-    @ConfigProperty(
-        name = "cos.connectors.status.sync.interval")
-    String statusSyncInterval;
 
     void onStart(@Observes @Priority(Interceptor.Priority.PLATFORM_AFTER) StartupEvent event) {
         this.observer.start();
@@ -64,8 +59,7 @@ public class ConnectorDeploymentStatusUpdater {
         final int queueSize = queue.size();
         final Collection<ManagedConnector> connectors = queue.poll();
 
-        LOGGER.debug("Polling ManagedConnector status queue (interval={}, connectors={}, queue_size={})",
-            statusSyncInterval,
+        LOGGER.debug("Polling ManagedConnector status queue (connectors={}, queue_size={})",
             connectors.size(),
             queueSize);
 
