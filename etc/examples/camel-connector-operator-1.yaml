@@ -4,6 +4,5 @@ metadata:
   name: camel-connector-operator-1
 spec:
   metaService: cos-fleetshard-meta-camel:80
-  namespace: managed-services-chirino
   type: camel-connector-operator
   version: 1.5.0

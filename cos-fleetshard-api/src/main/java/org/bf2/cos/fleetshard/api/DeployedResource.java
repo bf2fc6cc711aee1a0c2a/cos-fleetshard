@@ -5,14 +5,13 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
-@ToString(
-    callSuper = true)
+@ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class DeployedResource extends ResourceRef {
     private Long deploymentRevision;
 
@@ -20,7 +19,29 @@ public class DeployedResource extends ResourceRef {
     }
 
     public DeployedResource(String apiVersion, String kind, String name) {
+        this(apiVersion, kind, name, null);
+    }
+
+    public DeployedResource(String apiVersion, String kind, String name, Long deploymentRevision) {
         super(apiVersion, kind, name);
+
+        this.deploymentRevision = deploymentRevision;
+    }
+
+    public DeployedResource(HasMetadata resource, Long deploymentRevision) {
+        this(
+            resource.getApiVersion(),
+            resource.getKind(),
+            resource.getMetadata().getName(),
+            deploymentRevision);
+    }
+
+    public DeployedResource(HasMetadata resource) {
+        this(
+            resource.getApiVersion(),
+            resource.getKind(),
+            resource.getMetadata().getName(),
+            null);
     }
 
     @JsonProperty

@@ -4,6 +4,5 @@ metadata:
   name: debezium-connector-operator-1
 spec:
   metaService: cos-fleetshard-meta-debezium:8080
-  namespace: managed-services-chirino
   type: debezium-connector-operator
   version: 1.5.0

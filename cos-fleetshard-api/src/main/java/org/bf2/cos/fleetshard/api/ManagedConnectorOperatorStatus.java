@@ -7,8 +7,7 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorOperatorStatus {
 }

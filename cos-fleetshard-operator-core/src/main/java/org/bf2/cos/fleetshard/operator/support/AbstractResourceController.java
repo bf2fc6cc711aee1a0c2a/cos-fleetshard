@@ -9,17 +9,20 @@ import io.javaoperatorsdk.operator.processing.event.internal.TimerEventSource;
 
 public abstract class AbstractResourceController<R extends CustomResource> implements ResourceController<R> {
     private final TimerEventSource retryTimer;
+    private final RefreshEventSource refresher;
 
-    private EventSourceManager eventSourceManager;
+    private volatile EventSourceManager eventSourceManager;
 
-    public AbstractResourceController() {
+    protected AbstractResourceController() {
         this.retryTimer = new TimerEventSource();
+        this.refresher = new RefreshEventSource();
     }
 
     @Override
     public void init(EventSourceManager eventSourceManager) {
         this.eventSourceManager = eventSourceManager;
         this.eventSourceManager.registerEventSource("_timer", retryTimer);
+        this.eventSourceManager.registerEventSource("_refresh", refresher);
 
         registerEventSources(this.eventSourceManager);
     }
@@ -27,6 +30,10 @@ public abstract class AbstractResourceController<R extends CustomResource> imple
     @Override
     public DeleteControl deleteResource(R resource, Context<R> context) {
         return DeleteControl.DEFAULT_DELETE;
+    }
+
+    public void refresher(String uid) {
+        this.refresher.refresh(uid);
     }
 
     protected TimerEventSource getRetryTimer() {
@@ -39,4 +46,5 @@ public abstract class AbstractResourceController<R extends CustomResource> imple
 
     protected void registerEventSources(EventSourceManager eventSourceManager) {
     }
+
 }

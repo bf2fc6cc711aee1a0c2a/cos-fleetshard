@@ -14,14 +14,20 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.clusterId
+      name: CLUSTERID
+      type: string
     - jsonPath: .spec.connectorId
       name: CONNECTORID
       type: string
-    - jsonPath: .spec.connectorTypeId
-      name: CONNECTORTYPEID
-      type: string
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
+      type: string
+    - jsonPath: .status.connectorStatus.phase
+      name: deployment_phase
+      type: string
+    - jsonPath: .status.deployment.connectorTypeId
+      name: CONNECTORTYPEID
       type: string
     - jsonPath: .status.phase
       name: PHASE
@@ -34,11 +40,17 @@ spec:
             properties:
               deployment:
                 properties:
+                  secretChecksum:
+                    type: string
+                  connectorResourceVersion:
+                    type: number
                   deploymentResourceVersion:
                     type: number
-                  resourceVersion:
-                    type: number
+                  connectorTypeId:
+                    type: string
                   desiredState:
+                    type: string
+                  secret:
                     type: string
                 type: object
               operatorSelector:
@@ -50,8 +62,6 @@ spec:
                   type:
                     type: string
                 type: object
-              connectorTypeId:
-                type: string
               clusterId:
                 type: string
               connectorId:
@@ -61,13 +71,45 @@ spec:
             type: object
           status:
             properties:
+              connectorStatus:
+                properties:
+                  phase:
+                    type: string
+                  conditions:
+                    items:
+                      properties:
+                        status:
+                          type: string
+                        reason:
+                          type: string
+                        lastTransitionTime:
+                          type: string
+                        observedGeneration:
+                          type: number
+                        type:
+                          type: string
+                        additionalProperties:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        message:
+                          type: string
+                      type: object
+                    type: array
+                type: object
               deployment:
                 properties:
+                  secretChecksum:
+                    type: string
+                  connectorResourceVersion:
+                    type: number
                   deploymentResourceVersion:
                     type: number
-                  resourceVersion:
-                    type: number
+                  connectorTypeId:
+                    type: string
                   desiredState:
+                    type: string
+                  secret:
                     type: string
                 type: object
               assignedOperator:
@@ -80,11 +122,10 @@ spec:
                     type: string
                   type:
                     type: string
-                  namespace:
-                    type: string
                 type: object
               phase:
                 enum:
+                - Error
                 - Upgrade
                 - Initialization
                 - Augmentation
@@ -103,8 +144,6 @@ spec:
                   metaService:
                     type: string
                   type:
-                    type: string
-                  namespace:
                     type: string
                 type: object
               conditions:

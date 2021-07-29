@@ -1,0 +1,233 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <parent>
+        <groupId>org.bf2</groupId>
+        <artifactId>cos-fleetshard</artifactId>
+        <version>999-SNAPSHOT</version>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cos-fleetshard-sync</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <!-- CRD -->
+        <quarkus.kubernetes.part-of>cos-fleetshard</quarkus.kubernetes.part-of>
+        <quarkus.kubernetes.app-secret>cos-fleetshard-operator-config</quarkus.kubernetes.app-secret>
+        <quarkus.kubernetes.app-config-map>cos-fleetshard-operator-config</quarkus.kubernetes.app-config-map>
+
+        <!-- container image -->
+        <quarkus.container-image.build>false</quarkus.container-image.build>
+        <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
+        <quarkus.container-image.group>rhoas</quarkus.container-image.group>
+        <quarkus.container-image.name>cos-fleetshard-sync</quarkus.container-image.name>
+        <quarkus.container-image.tag>latest</quarkus.container-image.tag>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-sync-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-jib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.version}</version>
+                <executions>
+                    <execution>
+                        <id>build</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jboss.jandex</groupId>
+                <artifactId>jandex-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>make-index</id>
+                        <goals>
+                            <goal>jandex</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-k8s</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${cos.project.root}/etc/kubernetes/sync</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/target/kubernetes</directory>
+                                    <filtering>true</filtering>
+                                    <includes>
+                                        <include>kubernetes.yml</include>
+                                        <include>kubernetes.yaml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>container-build</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <quarkus.container-image.push>false</quarkus.container-image.push>
+                <quarkus.container-image.build>true</quarkus.container-image.build>
+            </properties>
+        </profile>
+        <profile>
+            <id>container-push</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <quarkus.container-image.push>true</quarkus.container-image.push>
+                <quarkus.container-image.build>true</quarkus.container-image.build>
+            </properties>
+        </profile>
+        <profile>
+            <id>local</id>
+            <activation>
+                <property>
+                    <name>local</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-kubernetes-config</artifactId>
+                </dependency>
+            </dependencies>
+            <build>
+                <defaultGoal>quarkus:dev</defaultGoal>
+                <plugins>
+                    <plugin>
+                        <groupId>io.quarkus</groupId>
+                        <artifactId>quarkus-maven-plugin</artifactId>
+                        <version>${quarkus.version}</version>
+                        <executions>
+                            <execution>
+                                <id>dev</id>
+                                <goals>
+                                    <goal>dev</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <systemProperties>
+                                <quarkus.test.continuous-testing>disabled</quarkus.test.continuous-testing>
+                                <quarkus.http.port>0</quarkus.http.port>
+                                <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
+
+                                <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
+                                <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
+                                <quarkus.kubernetes-config.secrets>cos-fleetshard-sync-config</quarkus.kubernetes-config.secrets>
+                                <quarkus.kubernetes-config.config-maps>cos-fleetshard-sync-config</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
+
+                                <!--
+                                 The fabric8 kubernetes client is supposed to properly handle the
+                                 insecure-skip-tls-verify flag from KUBECONFIG file however, it
+                                 does not seem the case, see:
+
+                                   https://github.com/java-operator-sdk/java-operator-sdk/issues/366
+                                   https://github.com/fabric8io/kubernetes-client/issues/2888
+
+                                -->
+                                <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+            </properties>
+        </profile>
+        <profile>
+            <id>jvm</id>
+            <activation>
+                <property>
+                    <name>!native</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.jib.base-jvm-image>adoptopenjdk/openjdk11:ubi-minimal</quarkus.jib.base-jvm-image>
+                <quarkus.jib.jvm-entrypoint>java,-XX:+UseShenandoahGC,-Djava.util.logging.manager=org.jboss.logmanager.LogManager,-jar,/work/quarkus-run.jar</quarkus.jib.jvm-entrypoint>
+            </properties>
+        </profile>
+        <profile>
+            <id>docker</id>
+            <activation>
+                <property>
+                    <name>docker</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.native.container-build>true</quarkus.native.container-build>
+                <quarkus.native.container-runtime>docker</quarkus.native.container-runtime>
+            </properties>
+        </profile>
+        <profile>
+            <id>podman</id>
+            <activation>
+                <property>
+                    <name>podman</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.native.container-build>true</quarkus.native.container-build>
+                <quarkus.native.container-runtime>podman</quarkus.native.container-runtime>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

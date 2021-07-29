@@ -9,8 +9,7 @@ import lombok.ToString;
 
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class ResourceRef {
     private String apiVersion;
     private String kind;

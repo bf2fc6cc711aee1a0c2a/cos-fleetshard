@@ -13,11 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @ToString
-@EqualsAndHashCode(
-    callSuper = true)
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder",
-    refs = @BuildableReference(CustomResource.class),
+@EqualsAndHashCode(callSuper = true)
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class),
     editableEnabled = false)
 @Version(ManagedConnectorOperator.VERSION)
 @Group(ManagedConnectorOperator.GROUP)
@@ -31,7 +28,15 @@ public class ManagedConnectorOperator
     public static final String GROUP = "cos.bf2.org";
 
     public ManagedConnectorOperator() {
-        setSpec(new ManagedConnectorOperatorSpec());
-        setStatus(new ManagedConnectorOperatorStatus());
+    }
+
+    @Override
+    protected ManagedConnectorOperatorSpec initSpec() {
+        return new ManagedConnectorOperatorSpec();
+    }
+
+    @Override
+    protected ManagedConnectorOperatorStatus initStatus() {
+        return new ManagedConnectorOperatorStatus();
     }
 }

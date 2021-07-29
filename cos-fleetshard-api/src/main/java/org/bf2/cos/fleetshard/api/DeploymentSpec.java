@@ -5,32 +5,49 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.fabric8.kubernetes.model.annotation.PrinterColumn;
 import io.sundr.builder.annotations.Buildable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class DeploymentSpec {
-    private Long resourceVersion;
+
+    @PrinterColumn
+    private String connectorTypeId;
+    private Long connectorResourceVersion;
     private Long deploymentResourceVersion;
     private String desiredState;
+    private String secret;
+    private String secretChecksum;
 
+    @JsonProperty
+    public String getConnectorTypeId() {
+        return connectorTypeId;
+    }
+
+    @JsonProperty
+    public void setConnectorTypeId(String connectorTypeId) {
+        this.connectorTypeId = connectorTypeId;
+    }
+
+    @JsonProperty
+    public Long getConnectorResourceVersion() {
+        return connectorResourceVersion;
+    }
+
+    @JsonProperty
+    public void setConnectorResourceVersion(Long connectorResourceVersion) {
+        this.connectorResourceVersion = connectorResourceVersion;
+    }
+
+    @JsonProperty
     public Long getDeploymentResourceVersion() {
         return deploymentResourceVersion;
     }
 
+    @JsonProperty
     public void setDeploymentResourceVersion(Long deploymentResourceVersion) {
         this.deploymentResourceVersion = deploymentResourceVersion;
-    }
-
-    @JsonProperty
-    public Long getResourceVersion() {
-        return resourceVersion;
-    }
-
-    @JsonProperty
-    public void setResourceVersion(Long resourceVersion) {
-        this.resourceVersion = resourceVersion;
     }
 
     @JsonProperty
@@ -55,6 +72,26 @@ public class DeploymentSpec {
         return false;
     }
 
+    @JsonProperty
+    public String getSecret() {
+        return secret;
+    }
+
+    @JsonProperty
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
+    @JsonProperty
+    public String getSecretChecksum() {
+        return secretChecksum;
+    }
+
+    @JsonProperty
+    public void setSecretChecksum(String secretChecksum) {
+        this.secretChecksum = secretChecksum;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -64,25 +101,34 @@ public class DeploymentSpec {
             return false;
         }
         DeploymentSpec spec = (DeploymentSpec) o;
-        return Objects.equals(getResourceVersion(), spec.getResourceVersion())
+        return Objects.equals(getConnectorTypeId(), spec.getConnectorTypeId())
+            && Objects.equals(getConnectorResourceVersion(), spec.getConnectorResourceVersion())
             && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
-            && Objects.equals(getDesiredState(), spec.getDesiredState());
+            && Objects.equals(getDesiredState(), spec.getDesiredState())
+            && Objects.equals(getSecret(), spec.getSecret())
+            && Objects.equals(getSecretChecksum(), spec.getSecretChecksum());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-            getResourceVersion(),
+            getConnectorTypeId(),
+            getConnectorResourceVersion(),
             getDeploymentResourceVersion(),
-            getDesiredState());
+            getDesiredState(),
+            getSecret(),
+            getSecretChecksum());
     }
 
     @Override
     public String toString() {
         return "DeploymentSpec{" +
-            "resourceVersion=" + resourceVersion +
+            "connectorTypeId=" + connectorTypeId +
+            ", connectorResourceVersion=" + connectorResourceVersion +
             ", deploymentResourceVersion=" + deploymentResourceVersion +
             ", desiredState='" + desiredState +
+            ", secret='" + secret +
+            ", secretChecksum='" + secretChecksum +
             '}';
     }
 }

@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.support;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,38 +32,42 @@ public class EventQueueTest {
     }
 
     @Test
-    void contains() {
+    void contains() throws InterruptedException {
         queue.submit("A");
         queue.submit("B");
         queue.submit("C");
 
         assertThat(queue.size()).isEqualTo(3);
-        assertThat(queue.poll()).containsOnly("a", "b", "c");
+        assertThat(queue.poll(1, TimeUnit.MILLISECONDS)).containsOnly("a", "b", "c");
         assertThat(queue.size()).isEqualTo(0);
     }
 
     @Test
-    void poison() {
+    void poison() throws InterruptedException {
         queue.submit("A");
         queue.submit("B");
         queue.submitPoisonPill();
         queue.submit("C");
 
-        assertThat(queue.size()).isEqualTo(4);
-        assertThat(queue.poll()).containsOnly("x");
+        assertThat(queue.size()).isEqualTo(3);
+        assertThat(queue.isPoisoned()).isTrue();
+        assertThat(queue.poll(1, TimeUnit.MILLISECONDS)).containsOnly("x");
         assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.isPoisoned()).isFalse();
     }
 
     @Test
-    void poison2() {
+    void poison2() throws InterruptedException {
         queue.submit("A");
         queue.submitPoisonPill();
         queue.submit("B");
         queue.submitPoisonPill();
         queue.submit("C");
 
-        assertThat(queue.size()).isEqualTo(4);
-        assertThat(queue.poll()).containsOnly("x");
+        assertThat(queue.size()).isEqualTo(3);
+        assertThat(queue.isPoisoned()).isTrue();
+        assertThat(queue.poll(1, TimeUnit.MILLISECONDS)).containsOnly("x");
         assertThat(queue.size()).isEqualTo(0);
+        assertThat(queue.isPoisoned()).isFalse();
     }
 }

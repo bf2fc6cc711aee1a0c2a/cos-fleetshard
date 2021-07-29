@@ -2,12 +2,12 @@ package org.bf2.cos.fleetshard.support;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.TreeSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +15,16 @@ import org.slf4j.LoggerFactory;
 public abstract class EventQueue<T extends Comparable<T>, R> {
     private final Logger logger;
     private final ReentrantLock lock;
-    private final TreeSet<Event<T>> events;
+    private final Condition condition;
+    private final Set<T> events;
+    private volatile boolean poison;
 
     public EventQueue() {
         this.logger = LoggerFactory.getLogger(getClass());
         this.lock = new ReentrantLock();
-        this.events = new TreeSet<>();
+        this.condition = lock.newCondition();
+        this.poison = false;
+        this.events = new HashSet<>();
     }
 
     public int size() {
@@ -33,11 +37,22 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
         }
     }
 
+    public boolean isPoisoned() {
+        this.lock.lock();
+
+        try {
+            return poison;
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
     public void submitPoisonPill() {
         this.lock.lock();
 
         try {
-            this.events.add(new Event<T>(null));
+            this.poison = true;
+            this.condition.signalAll();
         } finally {
             this.lock.unlock();
         }
@@ -49,35 +64,35 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
         this.lock.lock();
 
         try {
-            this.events.add(new Event<T>(element));
+            this.events.add(element);
+            this.condition.signalAll();
         } finally {
             this.lock.unlock();
         }
     }
 
-    public Collection<R> poll() {
+    public Collection<R> poll(long time, TimeUnit unit) throws InterruptedException {
         this.lock.lock();
 
         try {
-            final Event<T> event = events.pollFirst();
-            if (event == null) {
-                return Collections.emptyList();
+            if (events.isEmpty() && !poison) {
+                this.condition.await(time, unit);
             }
 
             Collection<R> answer;
 
-            if (event.event == null) {
+            if (poison) {
                 answer = collectAll();
+                poison = false;
+            } else if (events.isEmpty()) {
+                return Collections.emptyList();
             } else {
-                answer = collectAll(
-                    Stream.concat(Stream.of(event), this.events.stream())
-                        .map(Event::get)
-                        .collect(Collectors.toList()));
+                answer = collectAll(events);
             }
 
             events.clear();
 
-            logger.debug("TaskQueue: answer={}, connectors={}", answer, answer.size());
+            logger.debug("TaskQueue: elements={}", answer.size());
 
             return answer;
         } finally {
@@ -88,49 +103,4 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
     protected abstract Collection<R> collectAll();
 
     protected abstract Collection<R> collectAll(Collection<T> elements);
-
-    /**
-     * Helper class to encapsulate an event where if the payload is null, then the event
-     * has to be handled as a poison pill event.
-     */
-    private static class Event<T extends Comparable<T>> implements Comparable<Event<T>>, Supplier<T> {
-        private final T event;
-
-        public Event(T event) {
-            this.event = event;
-        }
-
-        @Override
-        public T get() {
-            return this.event;
-        }
-
-        @Override
-        public int compareTo(Event<T> o) {
-            if (this.event == null) {
-                return o.event != null ? -1 : 0;
-            } else if (o.event == null) {
-                return 1;
-            }
-            return this.event.compareTo(o.event);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof Event)) {
-                return false;
-            }
-            Event<?> event1 = (Event<?>) o;
-            return Objects.equals(event, event1.event);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(event);
-        }
-    }
-
 }
