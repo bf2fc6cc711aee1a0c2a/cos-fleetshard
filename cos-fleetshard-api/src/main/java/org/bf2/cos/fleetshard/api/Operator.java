@@ -8,14 +8,12 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Operator {
     private String id;
     private String type;
     private String version;
-    private String namespace;
     private String metaService;
 
     public Operator() {
@@ -23,16 +21,11 @@ public class Operator {
     }
 
     public Operator(String id, String type, String version) {
-        this(id, null, type, version, null);
+        this(id, type, version, null);
     }
 
-    public Operator(String id, String namespace, String type, String version) {
-        this(id, namespace, type, version, null);
-    }
-
-    public Operator(String id, String namespace, String type, String version, String metaService) {
+    public Operator(String id, String type, String version, String metaService) {
         this.id = id;
-        this.namespace = namespace;
         this.type = type;
         this.version = version;
         this.metaService = metaService;
@@ -66,16 +59,6 @@ public class Operator {
     @JsonProperty
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    @JsonProperty
-    public String getNamespace() {
-        return namespace;
-    }
-
-    @JsonProperty
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 
     @JsonProperty

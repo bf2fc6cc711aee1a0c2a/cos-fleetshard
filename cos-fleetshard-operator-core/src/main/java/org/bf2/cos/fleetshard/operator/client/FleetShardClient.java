@@ -2,39 +2,34 @@ package org.bf2.cos.fleetshard.operator.client;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
-import io.fabric8.kubernetes.api.model.DeletionPropagation;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
-import org.bf2.cos.fleetshard.operator.cluster.ConnectorClusterSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class FleetShardClient {
-    @Inject
-    KubernetesClient kubernetesClient;
 
-    @ConfigProperty(
-        name = "cos.cluster.id")
-    String clusterId;
-    @ConfigProperty(
-        name = "cos.connectors.namespace")
-    String connectorsNamespace;
-    @ConfigProperty(
-        name = "cos.cluster.namespace")
-    String clusterNamespace;
+    private final KubernetesClient kubernetesClient;
+    private final String connectorsNamespace;
+    private final String clusterNamespace;
+
+    public FleetShardClient(
+        KubernetesClient kubernetesClient,
+        @ConfigProperty(name = "cos.cluster.namespace") String clusterNamespace,
+        @ConfigProperty(name = "cos.connectors.namespace") String connectorsNamespace) {
+
+        this.kubernetesClient = kubernetesClient;
+        this.clusterNamespace = clusterNamespace;
+        this.connectorsNamespace = connectorsNamespace;
+    }
 
     public String getConnectorsNamespace() {
         return connectorsNamespace;
@@ -44,159 +39,22 @@ public class FleetShardClient {
         return clusterNamespace;
     }
 
-    public String getClusterId() {
-        return clusterId;
-    }
-
     public KubernetesClient getKubernetesClient() {
         return kubernetesClient;
     }
 
-    // ******************************************************
-    //
-    // Cluster
-    //
-    //  ******************************************************
-
-    public Optional<ManagedConnectorCluster> lookupManagedConnectorCluster() {
-        return lookupManagedConnectorCluster(
-            clusterNamespace,
-            ConnectorClusterSupport.clusterName(clusterId));
-    }
-
-    public Optional<ManagedConnectorCluster> lookupManagedConnectorCluster(String namespace) {
-        return lookupManagedConnectorCluster(
-            namespace,
-            ConnectorClusterSupport.clusterName(clusterId));
-    }
-
-    public Optional<ManagedConnectorCluster> lookupManagedConnectorCluster(String namespace, String name) {
-        return Optional.ofNullable(
-            kubernetesClient.customResources(ManagedConnectorCluster.class)
-                .inNamespace(namespace)
-                .withName(name)
-                .get());
-    }
-
-    public List<ManagedConnectorCluster> lookupManagedConnectorClusters(String namespace) {
-        return kubernetesClient.customResources(ManagedConnectorCluster.class)
-            .inNamespace(namespace)
-            .list()
-            .getItems();
-
-    }
-
-    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster() {
-        return lookupOrCreateManagedConnectorCluster(clusterNamespace, ConnectorClusterSupport.clusterName(clusterId));
-    }
-
-    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String name) {
-        return lookupOrCreateManagedConnectorCluster(clusterNamespace, name);
-    }
-
-    public ManagedConnectorCluster lookupOrCreateManagedConnectorCluster(String namespace, String name) {
-        return lookupManagedConnectorCluster(namespace, name).orElseGet(() -> {
-            return kubernetesClient.customResources(ManagedConnectorCluster.class)
-                .create(new ManagedConnectorClusterBuilder()
-                    .withMetadata(new ObjectMetaBuilder()
-                        .withName(name)
-                        .build())
-                    .withSpec(new ManagedConnectorClusterSpecBuilder()
-                        .withId(clusterId)
-                        .withConnectorsNamespace(connectorsNamespace)
-                        .build())
-                    .build());
-        });
-    }
-
-    // ******************************************************
-    //
-    // Operators
-    //
-    //  ******************************************************
-
-    public List<ManagedConnectorOperator> lookupManagedConnectorOperators() {
-        return lookupManagedConnectorOperators(clusterNamespace);
-    }
-
-    public List<ManagedConnectorOperator> lookupManagedConnectorOperators(String namespace) {
-        return kubernetesClient.customResources(ManagedConnectorOperator.class)
-            .inNamespace(namespace)
-            .list()
-            .getItems();
-    }
-
     public List<Operator> lookupOperators() {
-        return lookupOperators(clusterNamespace);
-    }
-
-    public List<Operator> lookupOperators(String namespace) {
         return kubernetesClient.customResources(ManagedConnectorOperator.class)
-            .inNamespace(namespace)
+            .inNamespace(this.clusterNamespace)
             .list()
             .getItems()
             .stream()
             .map(mco -> new Operator(
                 mco.getMetadata().getName(),
-                mco.getSpec().getNamespace(),
                 mco.getSpec().getType(),
                 mco.getSpec().getVersion(),
                 mco.getSpec().getMetaService()))
             .collect(Collectors.toList());
-    }
-
-    // ******************************************************
-    //
-    // Connectors
-    //
-    //  ******************************************************
-
-    public Boolean deleteManagedConnector(ManagedConnector managedConnector) {
-        return kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(this.connectorsNamespace)
-            .withName(managedConnector.getMetadata().getName())
-            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
-            .delete();
-    }
-
-    public long getMaxDeploymentResourceRevision() {
-        // TODO: check labels
-        final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .list().getItems();
-
-        return managedConnectors.stream()
-            .mapToLong(c -> c.getSpec().getDeployment().getDeploymentResourceVersion())
-            .max()
-            .orElse(0);
-    }
-
-    public Optional<ManagedConnector> lookupManagedConnector(
-        String name) {
-
-        return Optional.ofNullable(
-            kubernetesClient.customResources(ManagedConnector.class)
-                .inNamespace(this.connectorsNamespace)
-                .withName(name)
-                .get());
-    }
-
-    public Optional<ManagedConnector> lookupManagedConnector(String namespace, ConnectorDeployment deployment) {
-        var items = kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(namespace)
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple connectors with id " + deployment.getSpec().getConnectorId());
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return Optional.of(items.getItems().get(0));
-        }
-
-        return Optional.empty();
     }
 
     public List<ManagedConnector> lookupManagedConnectors() {
@@ -207,5 +65,29 @@ public class FleetShardClient {
             .getItems();
 
         return answer != null ? answer : Collections.emptyList();
+    }
+
+    public ManagedConnector create(ManagedConnector connector) {
+        return kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(connectorsNamespace)
+            .createOrReplace(connector);
+    }
+
+    public ManagedConnector edit(String name, Consumer<ManagedConnector> consumer) {
+        return kubernetesClient.customResources(ManagedConnector.class)
+            .inNamespace(connectorsNamespace)
+            .withName(name).accept(consumer);
+    }
+
+    public Secret create(Secret secret) {
+        return kubernetesClient.secrets()
+            .inNamespace(connectorsNamespace)
+            .createOrReplace(secret);
+    }
+
+    public ManagedConnectorOperator create(ManagedConnectorOperator connectorOperator) {
+        return kubernetesClient.customResources(ManagedConnectorOperator.class)
+            .inNamespace(clusterNamespace)
+            .createOrReplace(connectorOperator);
     }
 }

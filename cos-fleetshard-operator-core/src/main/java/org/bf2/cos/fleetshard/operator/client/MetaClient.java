@@ -22,14 +22,10 @@ import static org.bf2.cos.fleetshard.operator.client.MetaClientHelper.call;
 public class MetaClient {
     private final ConcurrentMap<String, ConnectorMetaServiceApi> clients;
 
-    @ConfigProperty(
-        name = "cos.meta.connect.timeout",
-        defaultValue = "5s")
+    @ConfigProperty(name = "cos.meta.connect.timeout", defaultValue = "5s")
     Duration connectTimeout;
 
-    @ConfigProperty(
-        name = "cos.meta.read.timeout",
-        defaultValue = "10s")
+    @ConfigProperty(name = "cos.meta.read.timeout", defaultValue = "10s")
     Duration readTimeout;
 
     public MetaClient() {

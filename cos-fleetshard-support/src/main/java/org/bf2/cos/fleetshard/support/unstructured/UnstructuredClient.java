@@ -1,14 +1,12 @@
 package org.bf2.cos.fleetshard.support.unstructured;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
-import io.fabric8.kubernetes.api.model.ListOptionsBuilder;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -31,35 +29,20 @@ public class UnstructuredClient {
         this.kubernetesClient = kubernetesClient;
     }
 
-    public Map<String, Object> get(String namespace, ResourceRef ref) {
+    public GenericKubernetesResource get(String namespace, ResourceRef ref) {
         return get(
             namespace,
+            ref.getName(),
             asCustomResourceDefinitionContext(ref));
     }
 
-    public JsonNode getAsNode(String namespace, ResourceRef ref) {
-        Map<String, Object> unstructured = get(namespace, ref);
-        if (unstructured == null) {
-            return null;
-        }
-
-        return Serialization.jsonMapper().valueToTree(unstructured);
-    }
-
-    public JsonNode getAsNode(String namespace, String apiVersion, String kind, String name) {
-        return getAsNode(namespace, new ResourceRef(apiVersion, kind, name));
-    }
-
-    public Map<String, Object> get(String namespace, JsonNode ref) {
-        return get(namespace, asCustomResourceDefinitionContext(ref));
-    }
-
-    public Map<String, Object> get(String namespace, CustomResourceDefinitionContext ctx) {
+    public GenericKubernetesResource get(String namespace, String name, CustomResourceDefinitionContext ctx) {
         try {
             return kubernetesClient
-                .customResource(ctx)
+                .genericKubernetesResources(ctx)
                 .inNamespace(namespace)
-                .get(namespace, ctx.getName());
+                .withName(name)
+                .get();
         } catch (KubernetesClientException e) {
             if (e.getCode() != 404) {
                 throw e;
@@ -68,68 +51,54 @@ public class UnstructuredClient {
         return null;
     }
 
-    public boolean delete(String namespace, ResourceRef ref) throws IOException {
-        return delete(namespace, asCustomResourceDefinitionContext(ref));
+    public ObjectNode getAsNode(String namespace, String apiVersion, String kind, String name) {
+        return getAsNode(namespace, name, asCustomResourceDefinitionContext(apiVersion, kind));
     }
 
-    public boolean delete(String namespace, CustomResourceDefinitionContext ctx) throws IOException {
-        return kubernetesClient
-            .customResource(ctx)
-            .inNamespace(namespace)
-            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
-            .delete(namespace, ctx.getName());
+    public ObjectNode getAsNode(String namespace, ResourceRef ref) {
+        return getAsNode(namespace, ref.getName(), asCustomResourceDefinitionContext(ref));
     }
 
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> createOrReplace(String namespace, JsonNode unstructured)
-        throws IOException {
-
-        return createOrReplace(
-            namespace,
-            asCustomResourceDefinitionContext(unstructured),
-            Serialization.jsonMapper().treeToValue(unstructured, Map.class));
-    }
-
-    private Map<String, Object> createOrReplace(
-        String namespace,
-        CustomResourceDefinitionContext ctx,
-        Map<String, Object> unstructured)
-        throws IOException {
-
-        setResourceVersion(namespace, ctx, unstructured);
-
-        return kubernetesClient
-            .customResource(ctx)
-            .inNamespace(namespace)
-            .createOrReplace(namespace, unstructured);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void setResourceVersion(
-        String namespace,
-        CustomResourceDefinitionContext ctx,
-        Map<String, Object> unstructured) {
-
+    public ObjectNode getAsNode(String namespace, String name, CustomResourceDefinitionContext ctx) {
         try {
-            var old = kubernetesClient.customResource(ctx).get(namespace, ctx.getName());
-            if (old != null) {
-                var meta = (Map<String, Object>) old.get("metadata");
-                if (meta != null) {
-                    var rv = meta.get("resourceVersion");
-                    if (rv != null) {
-                        var umeta = (Map<String, Object>) unstructured.computeIfAbsent("metadata", k -> new HashMap<>());
-                        umeta.putIfAbsent("resourceVersion", rv);
-                    }
-                }
+            GenericKubernetesResource resource = get(namespace, name, ctx);
+            if (resource != null) {
+                return Serialization.jsonMapper().convertValue(resource, ObjectNode.class);
             }
         } catch (KubernetesClientException e) {
             if (e.getCode() != 404) {
                 throw e;
             }
         }
+        return null;
     }
 
-    public Watch watch(String namespace, ResourceRef ref, Map<String, String> labels, Watcher<String> watcher) {
+    public boolean delete(String namespace, ResourceRef ref) {
+        return kubernetesClient
+            .genericKubernetesResources(asCustomResourceDefinitionContext(ref))
+            .inNamespace(namespace)
+            .withName(ref.getName())
+            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
+            .delete();
+    }
+
+    public GenericKubernetesResource createOrReplace(
+        String namespace,
+        GenericKubernetesResource unstructured) {
+
+        return kubernetesClient
+            .genericKubernetesResources(asCustomResourceDefinitionContext(unstructured))
+            .inNamespace(namespace)
+            .withName(unstructured.getMetadata().getName())
+            .createOrReplace(unstructured);
+    }
+
+    public Watch watch(
+        String namespace,
+        ResourceRef ref,
+        Map<String, String> labels,
+        Watcher<GenericKubernetesResource> watcher) {
+
         return watch(
             namespace,
             asCustomResourceDefinitionContext(ref),
@@ -141,17 +110,14 @@ public class UnstructuredClient {
         String namespace,
         CustomResourceDefinitionContext ctx,
         Map<String, String> labels,
-        Watcher<String> watcher) {
+        Watcher<GenericKubernetesResource> watcher) {
 
         LOGGER.info("Watch {}: namespace:{}, labels:{}", ctx, namespace, labels);
 
-        try {
-            return kubernetesClient
-                .customResource(ctx)
-                .inNamespace(namespace)
-                .watch(namespace, null, labels, new ListOptionsBuilder().build(), watcher);
-        } catch (IOException e) {
-            throw KubernetesClientException.launderThrowable(e);
-        }
+        return kubernetesClient
+            .genericKubernetesResources(ctx)
+            .inNamespace(namespace)
+            .withLabels(labels)
+            .watch(watcher);
     }
 }

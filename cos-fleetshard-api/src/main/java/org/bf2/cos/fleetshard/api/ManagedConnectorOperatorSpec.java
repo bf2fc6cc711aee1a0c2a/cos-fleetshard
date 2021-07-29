@@ -6,19 +6,15 @@ import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-@ToString(
-    callSuper = true)
+@ToString
 @EqualsAndHashCode
-@Buildable(
-    builderPackage = "io.fabric8.kubernetes.api.builder")
+@Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorOperatorSpec {
     @PrinterColumn
     private String type;
     @PrinterColumn
     private String version;
-    @PrinterColumn
-    private String namespace;
     @PrinterColumn
     private String metaService;
 
@@ -36,14 +32,6 @@ public class ManagedConnectorOperatorSpec {
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
     }
 
     public String getMetaService() {

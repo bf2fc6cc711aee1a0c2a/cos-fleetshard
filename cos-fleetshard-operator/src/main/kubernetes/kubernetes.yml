@@ -21,9 +21,6 @@ rules:
   - managedconnectoroperators
   - managedconnectoroperators/status
   - managedconnectoroperators/finalizers
-  - managedconnectorclusters
-  - managedconnectorclusters/status
-  - managedconnectorclusters/finalizers
   verbs:
   - create
   - delete

@@ -10,4 +10,4 @@ curl --insecure --oauth2-bearer "$(ocm token)" -S -s "${BASE}"/"${1}"/addon_para
 
 cat "${tmp_dir}"/application.properties
 
-kubectl create secret generic addon-cos-fleetshard-operator-parameters --from-file="${tmp_dir}"/application.properties
+kubectl create secret generic cos-fleetshard-sync-config --from-file="${tmp_dir}"/application.properties

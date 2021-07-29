@@ -15,10 +15,16 @@
     <packaging>jar</packaging>
 
     <properties>
+        <!-- CRD -->
+        <quarkus.kubernetes.part-of>cos-fleetshard</quarkus.kubernetes.part-of>
+        <quarkus.kubernetes.app-secret>cos-fleetshard-operator-config</quarkus.kubernetes.app-secret>
+        <quarkus.kubernetes.app-config-map>cos-fleetshard-operator-config</quarkus.kubernetes.app-config-map>
+
+        <!-- container image -->
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
         <quarkus.container-image.group>rhoas</quarkus.container-image.group>
-        <quarkus.container-image.name>cos-fleetshard</quarkus.container-image.name>
+        <quarkus.container-image.name>cos-fleetshard-operator</quarkus.container-image.name>
         <quarkus.container-image.tag>latest</quarkus.container-image.tag>
     </properties>
 
@@ -39,10 +45,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-kubernetes</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-kubernetes-config</artifactId>
         </dependency>
     </dependencies>
 
@@ -84,7 +86,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${cos.project.root}/etc//kubernetes</outputDirectory>
+                            <outputDirectory>${cos.project.root}/etc/kubernetes</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/kubernetes</directory>
@@ -104,7 +106,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${cos.project.root}/etc//kubernetes</outputDirectory>
+                            <outputDirectory>${cos.project.root}/etc/kubernetes/operator</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/kubernetes</directory>
@@ -145,6 +147,11 @@
         </profile>
         <profile>
             <id>local</id>
+            <activation>
+                <property>
+                    <name>local</name>
+                </property>
+            </activation>
             <dependencies>
                 <dependency>
                     <groupId>io.quarkus</groupId>
@@ -168,15 +175,26 @@
                         </executions>
                         <configuration>
                             <systemProperties>
-                                <quarkus.http.port>9092</quarkus.http.port>
-                                <quarkus.log.console.json>false</quarkus.log.console.json>
+                                <quarkus.test.continuous-testing>disabled</quarkus.test.continuous-testing>
+                                <quarkus.http.port>0</quarkus.http.port>
                                 <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
-                                <!-- retrieve the values from k8s -->
+
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
                                 <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
-                                <quarkus.kubernetes-config.secrets>addon-cos-fleetshard-operator-parameters</quarkus.kubernetes-config.secrets>
-                                <quarkus.kubernetes-config.config-maps>cos-fleetshard-config</quarkus.kubernetes-config.config-maps>
-                                <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>
+                                <quarkus.kubernetes-config.secrets>cos-fleetshard-operator-config</quarkus.kubernetes-config.secrets>
+                                <quarkus.kubernetes-config.config-maps>cos-fleetshard-operator-config</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
+
+                                <!--
+                                 The fabric8 kubernetes client is supposed to properly handle the
+                                 insecure-skip-tls-verify flag from KUBECONFIG file however, it
+                                 does not seem the case, see:
+
+                                   https://github.com/java-operator-sdk/java-operator-sdk/issues/366
+                                   https://github.com/fabric8io/kubernetes-client/issues/2888
+
+                                -->
+                                <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
                             </systemProperties>
                         </configuration>
                     </plugin>
@@ -185,8 +203,25 @@
         </profile>
         <profile>
             <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
             <properties>
                 <quarkus.package.type>native</quarkus.package.type>
+            </properties>
+        </profile>
+        <profile>
+            <id>jvm</id>
+            <activation>
+                <property>
+                    <name>!native</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.jib.base-jvm-image>adoptopenjdk/openjdk11:ubi-minimal</quarkus.jib.base-jvm-image>
+                <quarkus.jib.jvm-entrypoint>java,-XX:+UseShenandoahGC,-Djava.util.logging.manager=org.jboss.logmanager.LogManager,-jar,/work/quarkus-run.jar</quarkus.jib.jvm-entrypoint>
             </properties>
         </profile>
         <profile>

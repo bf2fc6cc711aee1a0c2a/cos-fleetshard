@@ -17,9 +17,6 @@ spec:
     - jsonPath: .spec.metaService
       name: METASERVICE
       type: string
-    - jsonPath: .spec.namespace
-      name: NAMESPACE
-      type: string
     - jsonPath: .spec.type
       name: TYPE
       type: string
@@ -37,8 +34,6 @@ spec:
               metaService:
                 type: string
               type:
-                type: string
-              namespace:
                 type: string
             type: object
           status:
