@@ -62,10 +62,6 @@ public class FleetManagerClient {
     String clusterNamespace;
 
     @ConfigProperty(
-        name = "quarkus.tls.trust-all")
-    boolean trustAll;
-
-    @ConfigProperty(
         name = "control-plane-base-url")
     URI controlPlaneUri;
 
@@ -86,17 +82,6 @@ public class FleetManagerClient {
         builder.register(OidcClientRequestFilter.class);
         builder.connectTimeout(connectTimeout.toMillis(), TimeUnit.MILLISECONDS);
         builder.readTimeout(readTimeout.toMillis(), TimeUnit.MILLISECONDS);
-
-        if (trustAll) {
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(
-                null,
-                new TrustManager[] { new PassthroughTrustManager() },
-                new SecureRandom());
-
-            builder.sslContext(sslContext);
-            builder.register(NoopHostnameVerifier.class);
-        }
 
         this.controlPlane = builder.build(ConnectorClustersAgentApi.class);
     }
