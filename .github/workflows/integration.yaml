@@ -43,9 +43,9 @@ jobs:
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
 
-      - name: "Integration tests"
-        run: |
-          mvn ${MAVEN_ARGS} clean verify
+      - name: "Build"
+        run: |          
+          ./etc/scripts/build.sh
 
       - name: Archive results
         uses: actions/upload-artifact@v2
