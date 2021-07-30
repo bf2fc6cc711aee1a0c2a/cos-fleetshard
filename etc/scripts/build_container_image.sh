@@ -49,11 +49,9 @@ if [ -z "${IMAGE_REPO_NAMESPACE}" ]; then
   exit 1
 fi
 
-
 export CONTAINER_REGISTRY_USR="${IMAGE_REPO_USERNAME}"
 export CONTAINER_REGISTRY_PWD="${IMAGE_REPO_PASSWORD}"
-
-./mvnw clean install
+export MAVEN_ARGS="-V -ntp -Dhttp.keepAlive=false -e"
 
 # CONTAINER_VERSION can be set to the release tag so an extra image is pushed
 # for the current build. When in CI, we also want a separate image for each commit
@@ -64,7 +62,7 @@ if [ ! -z "${CONTAINER_VERSION}" ]; then
     || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
 fi
 
-./mvnw -ntp \
+./mvnw ${MAVEN_ARGS} \
   clean package \
   -Dquarkus.container-image.username="${CONTAINER_REGISTRY_USR}" \
   -Dquarkus.container-image.password="${CONTAINER_REGISTRY_PWD}" \
