@@ -1,0 +1,139 @@
+= cos-fleetshard
+
+== requirements
+
+* jq
+* curl
+* stern
+* ocm
+* kubectl
+* https://github.com/bf2fc6cc711aee1a0c2a/cos-tools
+
+define the following env vars:
+
+* COS_BASE_PATH -> base URL for the managed connector service
+* KAS_BASE_PATH -> base URL for the managed kafka service
+
+
+[TIP]
+====
+I use https://direnv.net[direnv] with the following set-up
+
+[source,shell]
+----
+export OCM_CONFIG=$PWD/.ocm.json
+export KUBECONFIG=$PWD/.kube/config
+export COS_BASE_PATH=https://kas-fleet-manager-managed-services-chirino.apps.kammellol.rhmw-integrations.net
+export KAS_BASE_PATH=https://api.openshift.com
+----
+====
+
+== local installation
+
+[NOTE]
+====
+This is an example installation that consists in:
+
+- 2 syncs (to point to two distinct connectors clusters)
+- 1 camel connector operator
+- 1 debezium connector operator
+====
+
+* *install minikbe*
++
+[source,shell]
+----
+# you may need to tune this command
+minikube start --profile cos --insecure-registry 10.0.0.0/24 --cpus=4 --memory=4096
+minikube addons --profile cos enable registry
+----
+
+* *install camel-k*
++
+[source,shell]
+----
+kamel install --olm=false
+----
+
+* *install strimzi*
++
+[source,shell]
+----
+kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
+----
+
+
+* *install images*
++
+[source,shell]
+----
+eval $(minikube --profile cos docker-env)
+mvn clean install -DskipTests=true -Pcontainer-build
+----
+
+* *install CRDs*
++
+[source,shell]
+----
+kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
+kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
+----
+
+* *install operators and sync*
++
+[source,shell]
+----
+kubectl apply -k etc/kubernetes/operator-camel/base
+kubectl apply -k etc/kubernetes/operator-debezium/base
+kubectl apply -k etc/kubernetes/sync/examples/my-sync-1
+kubectl apply -k etc/kubernetes/sync/examples/my-sync-2
+----
++
+We need to patch the cos-fleetshard-operator-debezium deployment to point to the right registry
++
+[source,shell]
+----
+kubectl set env deployment/cos-fleetshard-operator-debezium COS_OPERATOR_DEBEZIUM_CONTAINER_IMAGE_REGISTRY=$(kubectl get svc registry -n kube-system -o=jsonpath='{.spec.clusterIP}')
+kubectl rollout restart deployment cos-fleetshard-operator-debezium
+----
++
+At this point, operators and syncs are deployed but syncs are not running as replica is set to 0 by default because the sync related secres have to be configured to point to the related clusters.
++
+[source,shell]
+----
+➜ kubectl get deployments
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+camel-k-operator                   1/1     1            1           14h
+cos-fleetshard-operator-camel      1/1     1            1           39m
+cos-fleetshard-operator-debezium   1/1     1            1           40m
+cos-fleetshard-sync-1              0/0     0            0           14h
+cos-fleetshard-sync-2              0/0     0            0           14h
+----
++
+* *configure secrets*
++
+[NOTE]
+====
+This creates two new cluster on the fleet manager, remember to delete them once done
+====
++
+[source,shell]
+----
+SUFFIX=$(uuidgen | tr -d '-')
+create-cluster-secret $(create-cluster "$USER-1-$SUFFIX" | jq -r '.id') ${REPLACE_WITH_SECRET_NAME}
+create-cluster-secret $(create-cluster "$USER-2-$SUFFIX" | jq -r '.id') ${REPLACE_WITH_SECRET_NAME}
+----
++
+* *starts syncs*
++
+[source,shell]
+----
+kubectl scale deployment cos-fleetshard-sync-1 --replicas=1
+kubectl scale deployment cos-fleetshard-sync-2 --replicas=1
+----
+
+== components
+
+- link:cos-fleetshard-sync/README.adoc[sync]
+- link:cos-fleetshard-operator-camel/README.adoc[camel]
+- link:cos-fleetshard-operator-debezium/README.adoc[debezium]

@@ -15,8 +15,6 @@ public class ManagedConnectorOperatorSpec {
     private String type;
     @PrinterColumn
     private String version;
-    @PrinterColumn
-    private String metaService;
 
     public String getType() {
         return type;
@@ -32,13 +30,5 @@ public class ManagedConnectorOperatorSpec {
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    public String getMetaService() {
-        return metaService;
-    }
-
-    public void setMetaService(String metaService) {
-        this.metaService = metaService;
     }
 }

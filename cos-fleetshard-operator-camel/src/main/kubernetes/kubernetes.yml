@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cos-fleetshard-operator-camel
+imagePullSecrets:
+  - name: cos-pull-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cos-fleetshard-operator-camel
+rules:
+# operator custom resources
+- apiGroups:
+  - cos.bf2.org
+  resources:
+  - managedconnectors
+  - managedconnectors/status
+  - managedconnectors/finalizers
+  - managedconnectoroperators
+  - managedconnectoroperators/status
+  - managedconnectoroperators/finalizers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# managed connector resources
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - camel.apache.org
+  resources:
+  - kameletbindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cos-fleetshard-operator-camel
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-operator-camel
+subjects:
+- kind: ServiceAccount
+  name: cos-fleetshard-operator-camel

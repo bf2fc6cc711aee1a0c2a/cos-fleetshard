@@ -14,9 +14,6 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.metaService
-      name: METASERVICE
-      type: string
     - jsonPath: .spec.type
       name: TYPE
       type: string
@@ -29,11 +26,9 @@ spec:
         properties:
           spec:
             properties:
-              version:
-                type: string
-              metaService:
-                type: string
               type:
+                type: string
+              version:
                 type: string
             type: object
           status:

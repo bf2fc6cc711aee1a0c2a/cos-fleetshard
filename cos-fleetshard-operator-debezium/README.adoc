@@ -1,0 +1,80 @@
+= cos-fleetshard-operator-debezium
+
+
+== configuration
+
+* create application config
++
+[source,shell]
+----
+kubectl create configmap cos-fleetshard-operator-debezium-config \
+    --from-file=../etc/kubernetes/operator-debezium/base/app-config/application.properties
+----
++
+[IMPORTANT]
+====
+the provided `application.properties` is only a template, copy it somewhere and adapt the command below
+====
+
+* create application secret
++
+[source,shell]
+----
+kubectl create secret generic cos-fleetshard-operator-debezium-config \
+    --from-file=../etc/kubernetes/operator-debezium/base/app-secret/application.properties
+----
++
+[IMPORTANT]
+====
+the provided `application.properties` is only a template, copy it somewhere and adapt the command below
+====
+
+== local profile
+
+Start Quarkus in dev mode and read the application configuration from the current namespace.
+
+[source,shell]
+----
+export KUBERNETES_NAMESPACE=$(oc project -q)
+export COS_OPERATOR_ID==${some_value}
+export COS_OPERATOR_VERSION==${some_value}
+
+mvn -Dlocal
+----
+
+By default, the application searches for:
+
+* **Secret**: cos-fleetshard-operator-debezium-config
+* **ConfigMap**: cos-fleetshard-operator-debezium-config
+
+To change the default values, use the following system properties:
+- quarkus.kubernetes-config.namespace
+- quarkus.kubernetes-config.secrets
+- quarkus.kubernetes-config.config-maps
+
+== configuration options
+
+[cols="1,1,1"]
+|===
+| Property | Default | Description
+
+| cos.operator.id
+|
+| the id of the operator
+
+| cos.operator.version
+|
+| the version of the operator
+
+| cos.connectors.resync.interval
+| 60
+| the interval between forces reconcile loop
+
+| cos.connectors.watch.resources
+| true
+| if the operator has to watch for generated resources changes
+
+| cos.operator.namespace
+| ${kubernetes.namespace}
+| the namespace where operator related resources are created
+|===

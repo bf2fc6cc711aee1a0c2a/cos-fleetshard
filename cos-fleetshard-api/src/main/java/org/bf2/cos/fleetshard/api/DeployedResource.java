@@ -19,29 +19,21 @@ public class DeployedResource extends ResourceRef {
     }
 
     public DeployedResource(String apiVersion, String kind, String name) {
-        this(apiVersion, kind, name, null);
+        this(apiVersion, kind, name, null, null);
     }
 
     public DeployedResource(String apiVersion, String kind, String name, Long deploymentRevision) {
-        super(apiVersion, kind, name);
+        this(apiVersion, kind, name, null, deploymentRevision);
+    }
+
+    public DeployedResource(String apiVersion, String kind, String name, String namespace) {
+        this(apiVersion, kind, name, namespace, null);
+    }
+
+    public DeployedResource(String apiVersion, String kind, String name, String namespace, Long deploymentRevision) {
+        super(apiVersion, kind, name, namespace);
 
         this.deploymentRevision = deploymentRevision;
-    }
-
-    public DeployedResource(HasMetadata resource, Long deploymentRevision) {
-        this(
-            resource.getApiVersion(),
-            resource.getKind(),
-            resource.getMetadata().getName(),
-            deploymentRevision);
-    }
-
-    public DeployedResource(HasMetadata resource) {
-        this(
-            resource.getApiVersion(),
-            resource.getKind(),
-            resource.getMetadata().getName(),
-            null);
     }
 
     @JsonProperty
@@ -80,5 +72,14 @@ public class DeployedResource extends ResourceRef {
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), getDeploymentRevision());
+    }
+
+    public static DeployedResource of(HasMetadata metadata) {
+        return new DeployedResource(
+            metadata.getApiVersion(),
+            metadata.getKind(),
+            metadata.getMetadata().getName(),
+            metadata.getMetadata().getNamespace());
+
     }
 }

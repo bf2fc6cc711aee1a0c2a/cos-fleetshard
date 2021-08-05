@@ -18,7 +18,7 @@ import lombok.ToString;
 @Version(ManagedConnector.VERSION)
 @Group(ManagedConnector.GROUP)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ShortNames("mcs")
+@ShortNames("mctr")
 public class ManagedConnector
     extends CustomResource<ManagedConnectorSpec, ManagedConnectorStatus>
     implements Namespaced {
@@ -58,7 +58,15 @@ public class ManagedConnector
     public static final String CONTEXT_CONNECTOR = "connector";
 
     public ManagedConnector() {
-        setSpec(new ManagedConnectorSpec());
-        setStatus(new ManagedConnectorStatus());
+    }
+
+    @Override
+    protected ManagedConnectorSpec initSpec() {
+        return new ManagedConnectorSpec();
+    }
+
+    @Override
+    protected ManagedConnectorStatus initStatus() {
+        return new ManagedConnectorStatus();
     }
 }

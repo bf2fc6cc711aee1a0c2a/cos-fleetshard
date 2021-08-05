@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.assertj.core.api.AbstractAssert;
 import org.bf2.cos.fleetshard.support.function.Functions;
-import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

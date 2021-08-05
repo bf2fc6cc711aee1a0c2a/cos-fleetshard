@@ -10,8 +10,8 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.awaitility.Awaitility;
-import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
-import org.bf2.cos.fleetshard.support.unstructured.UnstructuredSupport;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeAll;
 

@@ -32,6 +32,8 @@
         <groovy.version>3.0.8</groovy.version>
         <json-unit.version>2.27.0</json-unit.version>
         <bouncycastle.version>1.68</bouncycastle.version>
+        <strimzi.version>0.24.0</strimzi.version>
+        <bson.version>2.7.1</bson.version>
 
         <directory-maven-plugin.version>0.3.1</directory-maven-plugin.version>
         <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
@@ -43,19 +45,20 @@
         <meven-resources-plugin.version>3.2.0</meven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <gmavenplus-plugin.version>1.12.1</gmavenplus-plugin.version>
+        <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
     </properties>
 
     <modules>
-        <module>cos-api</module>
+        <module>cos-fleet-manager-api</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
-        <module>cos-fleetshard-sync-core</module>
-        <module>cos-fleetshard-sync</module>
-        <module>cos-fleetshard-operator-core</module>
-        <module>cos-fleetshard-operator</module>
         <module>cos-fleetshard-it-support</module>
-        <module>cos-fleetshard-it-sync</module>
-        <module>cos-fleetshard-it-operator</module>
+        <module>cos-fleetshard-sync</module>
+        <module>cos-fleetshard-sync-it</module>
+        <module>cos-fleetshard-operator</module>
+        <module>cos-fleetshard-operator-camel</module>
+        <module>cos-fleetshard-operator-camel-it</module>
+        <module>cos-fleetshard-operator-debezium</module>
     </modules>
 
     <dependencyManagement>
@@ -96,11 +99,6 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-meta-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -111,22 +109,22 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-sync-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-sync</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-operator-core</artifactId>
+                <artifactId>cos-fleetshard-operator</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-operator</artifactId>
+                <artifactId>cos-fleetshard-operator-camel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-debezium</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -178,6 +176,11 @@
                             <version>${jandex.version}</version>
                         </dependency>
                     </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build-helper-maven-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

@@ -9,7 +9,7 @@ spec:
     kind: ManagedConnector
     plural: managedconnectors
     shortNames:
-    - mcs
+    - mctr
     singular: managedconnector
   scope: Namespaced
   versions:
@@ -22,6 +22,9 @@ spec:
       type: string
     - jsonPath: .spec.deploymentId
       name: DEPLOYMENTID
+      type: string
+    - jsonPath: .spec.id
+      name: ID
       type: string
     - jsonPath: .status.connectorStatus.phase
       name: deployment_phase
@@ -38,133 +41,72 @@ spec:
         properties:
           spec:
             properties:
-              deployment:
-                properties:
-                  secretChecksum:
-                    type: string
-                  connectorResourceVersion:
-                    type: number
-                  deploymentResourceVersion:
-                    type: number
-                  connectorTypeId:
-                    type: string
-                  desiredState:
-                    type: string
-                  secret:
-                    type: string
-                type: object
-              operatorSelector:
-                properties:
-                  id:
-                    type: string
-                  version:
-                    type: string
-                  type:
-                    type: string
-                type: object
+              id:
+                type: string
               clusterId:
                 type: string
               connectorId:
                 type: string
               deploymentId:
                 type: string
-            type: object
-          status:
-            properties:
-              connectorStatus:
-                properties:
-                  phase:
-                    type: string
-                  conditions:
-                    items:
-                      properties:
-                        status:
-                          type: string
-                        reason:
-                          type: string
-                        lastTransitionTime:
-                          type: string
-                        observedGeneration:
-                          type: number
-                        type:
-                          type: string
-                        additionalProperties:
-                          additionalProperties:
-                            type: string
-                          type: object
-                        message:
-                          type: string
-                      type: object
-                    type: array
-                type: object
               deployment:
                 properties:
-                  secretChecksum:
+                  connectorTypeId:
                     type: string
                   connectorResourceVersion:
                     type: number
                   deploymentResourceVersion:
                     type: number
-                  connectorTypeId:
-                    type: string
                   desiredState:
                     type: string
                   secret:
                     type: string
+                  secretChecksum:
+                    type: string
                 type: object
-              assignedOperator:
+              operatorSelector:
                 properties:
                   id:
                     type: string
-                  version:
-                    type: string
-                  metaService:
-                    type: string
                   type:
                     type: string
+                  version:
+                    type: string
                 type: object
+            type: object
+          status:
+            properties:
               phase:
                 enum:
-                - Error
-                - Upgrade
                 - Initialization
                 - Augmentation
                 - Monitor
-                - Stopped
                 - Deleting
-                - Stopping
                 - Deleted
+                - Stopping
+                - Stopped
+                - Upgrade
+                - Error
                 type: string
-              availableOperator:
-                properties:
-                  id:
-                    type: string
-                  version:
-                    type: string
-                  metaService:
-                    type: string
-                  type:
-                    type: string
-                type: object
               conditions:
                 items:
                   properties:
-                    status:
-                      type: string
-                    reason:
-                      type: string
                     lastTransitionTime:
+                      type: string
+                    message:
                       type: string
                     observedGeneration:
                       type: number
+                    reason:
+                      type: string
+                    status:
+                      type: string
                     type:
                       type: string
                     additionalProperties:
                       additionalProperties:
                         type: string
                       type: object
-                    message:
-                      type: string
                   type: object
                 type: array
               resources:
@@ -174,12 +116,73 @@ spec:
                       type: number
                     apiVersion:
                       type: string
+                    kind:
+                      type: string
                     name:
                       type: string
-                    kind:
+                    namespace:
                       type: string
                   type: object
                 type: array
+              deployment:
+                properties:
+                  connectorTypeId:
+                    type: string
+                  connectorResourceVersion:
+                    type: number
+                  deploymentResourceVersion:
+                    type: number
+                  desiredState:
+                    type: string
+                  secret:
+                    type: string
+                  secretChecksum:
+                    type: string
+                type: object
+              connectorStatus:
+                properties:
+                  phase:
+                    type: string
+                  conditions:
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          type: string
+                        message:
+                          type: string
+                        observedGeneration:
+                          type: number
+                        reason:
+                          type: string
+                        status:
+                          type: string
+                        type:
+                          type: string
+                        additionalProperties:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    type: array
+                type: object
+              assignedOperator:
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              availableOperator:
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  version:
+                    type: string
+                type: object
             type: object
         type: object
     served: true

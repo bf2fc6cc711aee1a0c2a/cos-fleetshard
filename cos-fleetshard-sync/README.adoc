@@ -1,0 +1,130 @@
+= cos-fleetshard-sync
+
+
+== configuration
+
+* create application config
++
+[source,shell]
+----
+kubectl create configmap cos-fleetshard-sync-config \
+    --from-file=../etc/kubernetes/sync/base/app-config/application.properties
+----
++
+[IMPORTANT]
+====
+the provided `application.properties` is only a template, copy it somewhere and adapt the command below
+====
+
+* create application secret
++
+[source,shell]
+----
+kubectl create secret generic cos-fleetshard-sync-config \
+    --from-file=../etc/kubernetes/sync/base/app-secret/application.properties
+----
++
+[IMPORTANT]
+====
+the provided `application.properties` is only a template, copy it somewhere and adapt the command below
+====
+
+== local profile
+
+Start Quarkus in dev mode and read the application configuration from the current namespace.
+
+[source,shell]
+----
+export KUBERNETES_NAMESPACE=$(oc project -q)
+
+mvn -Plocal
+----
+
+To use a different set of configmaps/secrets:
+
+[source,shell]
+----
+export KUBERNETES_NAMESPACE=$(oc project -q)
+
+mvn -Plocal \
+  -Dquarkus.kubernetes-config.secrets=cos-fleetshard-sync-config-1 \
+  -Dquarkus.kubernetes-config.config-maps=cos-fleetshard-sync-config-1
+----
+
+By default, the application searches for:
+
+* **Secret**: cos-fleetshard-sync-config
+* **ConfigMap**: cos-fleetshard-sync-config
+
+To change the default values, use the following system properties:
+- quarkus.kubernetes-config.namespace
+- quarkus.kubernetes-config.secrets
+- quarkus.kubernetes-config.config-maps
+
+== configuration options
+
+[cols="1,1,1"]
+|===
+| Property | Default | Description
+
+| cos.operators.namespace
+| ${kubernetes.namespace}
+| the namespace where operators are installed
+
+| cos.connectors.namespace
+| ${kubernetes.namespace}
+| the namespace where connectors should be created
+
+| cos.connectors.poll.interval
+| 15s
+| the interval between pool for new deployments
+
+| cos.connectors.poll.resync.interval
+| 60s
+| the interval between full deployments re-sync
+
+| cos.connectors.provisioner.queue.timeout
+| 15s
+| the wait timeout for the internal event queue
+
+| cos.connectors.status.sync.observe
+| true
+| enable/disable observing resources to trigger status update
+
+| cos.connectors.status.resync.interval
+| 60s
+| the interval between full connector status re-sync
+
+| cos.connectors.status.queue.timeout
+| 15s
+| the wait timeout for the internal event queue
+
+| cos.cluster.status.sync.interval
+| 60s
+| the interval between cluster status sync
+
+| mas-sso-base-url
+|
+| sso base url
+
+| mas-sso-realm
+|
+| sso realm
+
+| client-id
+|
+| connector cluster client id
+
+| client-secret
+|
+| connector cluster client secret
+
+| control-plane-base-url
+|
+| control plane base url
+
+| cluster-id
+|
+| connector cluster id
+
+|===
