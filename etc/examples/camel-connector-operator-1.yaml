@@ -1,8 +1,0 @@
-apiVersion: cos.bf2.org/v1alpha1
-kind: ManagedConnectorOperator
-metadata:
-  name: camel-connector-operator-1
-spec:
-  metaService: cos-fleetshard-meta-camel:80
-  type: camel-connector-operator
-  version: 1.5.0

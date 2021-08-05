@@ -34,12 +34,11 @@ public class OidcTestResource extends WireMockTestResource {
                 .withBody(TOKEN_BODY)));
 
         return Map.of(
-            "quarkus.oidc-client-filter.register-filter", "false",
-            "quarkus.oidc-client.client-enabled", "true",
-            "quarkus.oidc-client.auth-server-url", server.baseUrl() + "/auth/realms/" + REALM,
+            "mas-sso-base-url", server.baseUrl(),
+            "mas-sso-realm", REALM,
+            "client-id", CLIENT_ID,
+            "client-secret", CLIENT_SECRET,
             "quarkus.oidc-client.token-path", "/protocol/openid-connect/token",
-            "quarkus.oidc-client.discovery-enabled", "false",
-            "quarkus.oidc-client.client-id", CLIENT_ID,
-            "quarkus.oidc-client.credentials.secret", CLIENT_SECRET);
+            "quarkus.oidc-client.discovery-enabled", "false");
     }
 }

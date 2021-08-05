@@ -26,6 +26,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+    - cos.bf2.org
+  resources:
+    - managedconnectoroperators
+    - managedconnectoroperators/status
+    - managedconnectoroperators/finalizers
+  verbs:
+    - get
+    - list
 # managed connector resources
 - apiGroups:
     - ""

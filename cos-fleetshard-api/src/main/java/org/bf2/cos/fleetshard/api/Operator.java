@@ -14,21 +14,15 @@ public class Operator {
     private String id;
     private String type;
     private String version;
-    private String metaService;
 
     public Operator() {
-        this(null, null, null, null);
+        this(null, null, null);
     }
 
     public Operator(String id, String type, String version) {
-        this(id, type, version, null);
-    }
-
-    public Operator(String id, String type, String version, String metaService) {
         this.id = id;
         this.type = type;
         this.version = version;
-        this.metaService = metaService;
     }
 
     @JsonProperty
@@ -59,15 +53,5 @@ public class Operator {
     @JsonProperty
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    @JsonProperty
-    public String getMetaService() {
-        return metaService;
-    }
-
-    @JsonProperty
-    public void setMetaService(String metaService) {
-        this.metaService = metaService;
     }
 }

@@ -12,6 +12,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonPropertyOrder({
+    "id",
     "clusterId",
     "connectorId",
     "deploymentId",
@@ -21,6 +22,9 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorSpec {
     @PrinterColumn
+    private String id;
+
+    @PrinterColumn
     private String clusterId;
 
     @PrinterColumn
@@ -28,9 +32,18 @@ public class ManagedConnectorSpec {
 
     @PrinterColumn
     private String deploymentId;
+
     private DeploymentSpec deployment = new DeploymentSpec();
 
     private OperatorSelector operatorSelector;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     @JsonProperty
     public String getClusterId() {

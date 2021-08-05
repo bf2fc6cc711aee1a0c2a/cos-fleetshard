@@ -20,6 +20,10 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 public final class Secrets {
+    public static final String SECRET_ENTRY_CONNECTOR = "connector";
+    public static final String SECRET_ENTRY_KAFKA = "kafka";
+    public static final String SECRET_ENTRY_META = "meta";
+
     private Secrets() {
     }
 

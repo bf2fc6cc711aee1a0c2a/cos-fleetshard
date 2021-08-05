@@ -1,0 +1,26 @@
+{
+    "kind": "Connector",
+    "metadata": {
+        "name": "lb-logger-2",
+        "kafka_id": ""
+    },
+    "deployment_location": {
+        "kind": "addon",
+        "cluster_id": ""
+    },
+    "kafka": {
+        "bootstrap_server": "",
+        "client_id": "",
+        "client_secret": ""
+    },
+    "connector_type_id": "log_sink_0.1",
+    "connector_spec": {
+        "connector": {
+            "showAll": true,
+            "multiLine": true
+        },
+        "kafka": {
+            "topic": "lb-log"
+        }
+    }
+}

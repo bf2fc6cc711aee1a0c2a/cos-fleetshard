@@ -1,6 +1,6 @@
 package org.bf2.cos.fleetshard.it.assertions;
 
-import org.bf2.cos.fleetshard.support.unstructured.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 public final class UnstructuredAssertions {
     private UnstructuredAssertions() {
