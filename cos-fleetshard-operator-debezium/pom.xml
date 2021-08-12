@@ -16,7 +16,7 @@
 
     <properties>
         <!-- CRD -->
-        <quarkus.kubernetes.part-of>cos-fleetshard</quarkus.kubernetes.part-of>
+        <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
         <quarkus.kubernetes.app-secret>${project.artifactId}-config</quarkus.kubernetes.app-secret>
         <quarkus.kubernetes.app-config-map>${project.artifactId}-config</quarkus.kubernetes.app-config-map>
 
