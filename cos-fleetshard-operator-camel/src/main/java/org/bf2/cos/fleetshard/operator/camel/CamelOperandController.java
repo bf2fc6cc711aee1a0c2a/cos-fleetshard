@@ -13,7 +13,7 @@ import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -59,7 +59,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
     }
 
     @Override
-    public List<CustomResourceDefinitionContext> getResourceTypes() {
+    public List<ResourceDefinitionContext> getResourceTypes() {
         return List.of(KameletBinding.RESOURCE_DEFINITION);
     }
 

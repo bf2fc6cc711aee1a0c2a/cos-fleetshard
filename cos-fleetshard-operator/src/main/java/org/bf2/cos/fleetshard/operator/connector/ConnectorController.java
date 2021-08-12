@@ -19,7 +19,7 @@ import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
@@ -28,6 +28,7 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+import io.quarkiverse.operatorsdk.runtime.DelayRegistrationUntil;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -35,12 +36,13 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
+import org.bf2.cos.fleetshard.operator.FleetShardEvents;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
-import org.bf2.cos.fleetshard.support.Version;
+import org.bf2.cos.fleetshard.api.Version;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -66,10 +68,10 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.assign;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.getDeletionMode;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.getDeploymentResourceVersion;
+import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
+@DelayRegistrationUntil(event = FleetShardEvents.Started.class)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
@@ -95,16 +97,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 new ConnectorOperatorEventSource());
             eventSourceManager.registerEventSource(
                 "_secrets",
-                new OperandResourceWatcher(kubernetesClient, "v1", "Secret"));
+                new OperandResourceWatcher(kubernetesClient, "v1", "Secret", fleetShard.getConnectorsNamespace()));
 
-            for (CustomResourceDefinitionContext res : operandController.getResourceTypes()) {
+            for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
                 if ("v1".equals(res.getVersion()) && "Secret".equals(res.getKind())) {
                     continue;
                 }
 
                 eventSourceManager.registerEventSource(
                     "_" + res.getGroup() + "/" + res.getVersion() + ":" + res.getKind(),
-                    new OperandResourceWatcher(kubernetesClient, res));
+                    new OperandResourceWatcher(kubernetesClient, res, fleetShard.getConnectorsNamespace()));
             }
         }
     }
@@ -283,7 +285,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         // Add the secret created by the sync among the list of resources to
         // clean-up upon delete/update
         DeployedResource res = DeployedResource.of(secret);
-        res.setDeploymentRevision(getDeploymentResourceVersion(secret));
 
         if (!connector.getStatus().getResources().contains(res)) {
             connector.getStatus().getResources().add(res);
@@ -503,7 +504,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         @Override
         protected Watch doWatch() {
             return getClient()
-                .customResources(ManagedConnectorOperator.class)
+                .resources(ManagedConnectorOperator.class)
                 .inNamespace(fleetShard.getOperatorNamespace())
                 .watch(this);
         }

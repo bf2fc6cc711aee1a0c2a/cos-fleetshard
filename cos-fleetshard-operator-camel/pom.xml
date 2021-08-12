@@ -241,7 +241,6 @@
                                 <quarkus.kubernetes-config.config-maps>${quarkus.kubernetes.app-config-map}</quarkus.kubernetes-config.config-maps>
                                 <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
                                 <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>
-
                                 <!--
                                   The fabric8 kubernetes client is supposed to properly handle the
                                   insecure-skip-tls-verify flag from KUBECONFIG file however, it

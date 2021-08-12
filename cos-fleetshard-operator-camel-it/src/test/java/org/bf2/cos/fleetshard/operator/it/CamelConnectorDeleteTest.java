@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(CamelConnectorDeleteTest.Profile.class)

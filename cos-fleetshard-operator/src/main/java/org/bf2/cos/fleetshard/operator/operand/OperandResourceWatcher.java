@@ -3,35 +3,27 @@ package org.bf2.cos.fleetshard.operator.operand;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
-import org.bf2.cos.fleetshard.support.resources.ResourceUtil;
+import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.support.resources.UnstructuredSupport.asCustomResourceDefinitionContext;
 
 public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetesResource> {
     private static final Logger LOGGER = LoggerFactory.getLogger(OperandResourceWatcher.class);
 
-    private final CustomResourceDefinitionContext context;
+    private final ResourceDefinitionContext context;
     private final String namespace;
 
-    public OperandResourceWatcher(KubernetesClient client, String apiVersion, String kind) {
-        this(client, asCustomResourceDefinitionContext(apiVersion, kind), null);
-    }
-
     public OperandResourceWatcher(KubernetesClient client, String apiVersion, String kind, String namespace) {
-        this(client, asCustomResourceDefinitionContext(apiVersion, kind), namespace);
+        this(client, UnstructuredSupport.asResourceDefinitionContext(apiVersion, kind), namespace);
     }
 
-    public OperandResourceWatcher(KubernetesClient client, CustomResourceDefinitionContext context) {
-        this(client, context, null);
-    }
-
-    public OperandResourceWatcher(KubernetesClient client, CustomResourceDefinitionContext context, String namespace) {
+    public OperandResourceWatcher(KubernetesClient client, ResourceDefinitionContext context, String namespace) {
         super(client);
 
         this.context = context;
@@ -40,12 +32,24 @@ public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetes
 
     @Override
     protected Watch doWatch() {
-        var client = getClient().genericKubernetesResources(context);
-        if (this.namespace != null) {
-            client.inNamespace(namespace);
-        }
+        LOGGER.info("Watch resource {}/{}:{} on namespace {}",
+            context.getVersion(),
+            context.getGroup(),
+            context.getKind(),
+            namespace);
 
-        return client.withLabel(LABEL_WATCH, "true").watch(this);
+        if (this.namespace != null) {
+            return getClient()
+                .genericKubernetesResources(context)
+                .inNamespace(namespace)
+                .withLabel(LABEL_WATCH, "true")
+                .watch(this);
+        } else {
+            return getClient()
+                .genericKubernetesResources(context)
+                .withLabel(LABEL_WATCH, "true")
+                .watch(this);
+        }
     }
 
     @Override
@@ -96,7 +100,7 @@ public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetes
         getEventHandler().handleEvent(
             new ResourceEvent(
                 action,
-                ResourceUtil.asResourceRef(resource),
+                Resources.asRef(resource),
                 resource.getMetadata().getOwnerReferences().get(0).getUid(),
                 this));
     }

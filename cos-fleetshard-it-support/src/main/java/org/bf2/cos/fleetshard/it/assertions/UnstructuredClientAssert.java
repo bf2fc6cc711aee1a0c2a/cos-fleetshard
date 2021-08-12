@@ -2,12 +2,10 @@ package org.bf2.cos.fleetshard.it.assertions;
 
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import org.assertj.core.api.AbstractAssert;
 import org.bf2.cos.fleetshard.support.function.Functions;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientAssert, UnstructuredClient> {
     public UnstructuredClientAssert(UnstructuredClient actual) {
@@ -17,8 +15,8 @@ public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientA
     public UnstructuredClientAssert doesNotHaveResource(String namespace, String apiVersion, String kind, String name) {
         isNotNull();
 
-        JsonNode node = actual.getAsNode(namespace, apiVersion, kind, name);
-        if (node != null) {
+        GenericKubernetesResource resource = actual.get(namespace, apiVersion, kind, name);
+        if (resource != null) {
             failWithMessage(
                 "Expected resources %s:%s:%s to not exists in namespace %s",
                 apiVersion,
@@ -39,27 +37,20 @@ public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientA
         String apiVersion,
         String kind,
         String name,
-        Consumer<ObjectNode> consumer) {
+        Consumer<GenericKubernetesResource> consumer) {
 
         isNotNull();
 
-        JsonNode node = actual.getAsNode(namespace, apiVersion, kind, name);
-        if (node == null) {
+        GenericKubernetesResource resource = actual.get(namespace, apiVersion, kind, name);
+        if (resource == null) {
             failWithMessage(
                 "Expected resources %s:%s:%s to exists in namespace %s",
                 apiVersion,
                 kind,
                 name,
                 namespace);
-        } else if (!node.isObject()) {
-            failWithMessage(
-                "Expected resources %s:%s:%s to be an Object, got",
-                apiVersion,
-                kind,
-                name,
-                node.getNodeType());
         } else {
-            consumer.accept((ObjectNode) node);
+            consumer.accept(resource);
         }
 
         return this;
@@ -81,7 +72,8 @@ public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientA
             name);
     }
 
-    public UnstructuredClientAssert hasSecretSatisfying(String namespace, String name, Consumer<ObjectNode> consumer) {
+    public UnstructuredClientAssert hasSecretSatisfying(String namespace, String name,
+        Consumer<GenericKubernetesResource> consumer) {
         return hasResourceSatisfying(
             namespace,
             "v1",
@@ -106,7 +98,8 @@ public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientA
             name);
     }
 
-    public UnstructuredClientAssert hasKameletBindingSatisfying(String namespace, String name, Consumer<ObjectNode> consumer) {
+    public UnstructuredClientAssert hasKameletBindingSatisfying(String namespace, String name,
+        Consumer<GenericKubernetesResource> consumer) {
         return hasResourceSatisfying(
             namespace,
             "camel.apache.org/v1alpha1",

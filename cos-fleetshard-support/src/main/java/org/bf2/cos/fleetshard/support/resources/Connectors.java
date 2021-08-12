@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.support.resources;
 
-import java.util.Collections;
 import java.util.Map;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -13,16 +12,10 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 
 public final class Connectors {
+
+    public static final String CONNECTOR_PREFIX = "mctr";
+
     private Connectors() {
-    }
-
-    public static ManagedConnector newConnector(
-        String name,
-        String clusterId,
-        String connectorId,
-        String deploymentId) {
-
-        return newConnector(name, clusterId, connectorId, deploymentId, Collections.emptyMap());
     }
 
     public static ManagedConnector newConnector(
@@ -46,5 +39,9 @@ public final class Connectors {
                 .withDeploymentId(deploymentId)
                 .build())
             .build();
+    }
+
+    public static String generateConnectorId() {
+        return CONNECTOR_PREFIX + "-" + Resources.uid();
     }
 }

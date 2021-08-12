@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -13,7 +14,6 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
-import org.bf2.cos.fleetshard.support.resources.ResourceUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -57,7 +57,7 @@ public class ConnectorDeploymentProvisioner {
         // The operator has to wait till the information about the Secret to use are
         // properly set.
         //
-        ManagedConnector base = createManagedConnector(deployment);
+        ManagedConnector base = createManagedConnector(deployment, fleetShard.createManagedConnectorCluster());
 
         //
         // When a connector has to be deleted, we don't set any secret as it is about
@@ -87,7 +87,7 @@ public class ConnectorDeploymentProvisioner {
         }
     }
 
-    private ManagedConnector createManagedConnector(ConnectorDeployment deployment) {
+    private ManagedConnector createManagedConnector(ConnectorDeployment deployment, HasMetadata owner) {
         ManagedConnector connector = fleetShard.getConnector(deployment).orElseGet(() -> {
             LOGGER.info(
                 "Connector not found (cluster_id: {}, connector_id: {}, deployment_id: {}, resource_version: {}), creating a new one",
@@ -97,7 +97,7 @@ public class ConnectorDeploymentProvisioner {
                 deployment.getMetadata().getResourceVersion());
 
             return Connectors.newConnector(
-                ResourceUtil.generateConnectorId(),
+                Connectors.generateConnectorId(),
                 fleetShard.getClusterId(),
                 deployment.getSpec().getConnectorId(),
                 deployment.getId(),
@@ -121,6 +121,15 @@ public class ConnectorDeploymentProvisioner {
             OperatorSelectorUtil.assign(operatorSelector, fleetShard.lookupOperators())
                 .ifPresent(operator -> operatorSelector.setId(operator.getId()));
         }
+
+        connector.getMetadata().setOwnerReferences(List.of(
+            new OwnerReferenceBuilder()
+                .withApiVersion(owner.getApiVersion())
+                .withKind(owner.getKind())
+                .withName(owner.getMetadata().getName())
+                .withUid(owner.getMetadata().getUid())
+                .withBlockOwnerDeletion(true)
+                .build()));
 
         connector.getSpec().setId(connector.getMetadata().getName());
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());

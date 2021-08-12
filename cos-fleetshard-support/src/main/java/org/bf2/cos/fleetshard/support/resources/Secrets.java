@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.support.resources;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.CRC32;
@@ -44,7 +43,7 @@ public final class Secrets {
         return Long.toHexString(crc32.getValue());
     }
 
-    public static ObjectNode get(Secret secret, String key) {
+    public static ObjectNode extract(Secret secret, String key) {
         if (secret == null) {
             return Serialization.jsonMapper().createObjectNode();
         }
@@ -56,10 +55,10 @@ public final class Secrets {
             return Serialization.jsonMapper().createObjectNode();
         }
 
-        return get(secret, key, ObjectNode.class);
+        return extract(secret, key, ObjectNode.class);
     }
 
-    public static <T> T get(Secret secret, String key, Class<T> type) {
+    public static <T> T extract(Secret secret, String key, Class<T> type) {
         if (secret == null) {
             return null;
         }
@@ -97,15 +96,6 @@ public final class Secrets {
     public static String toBase64(String in) {
         return Base64.getEncoder()
             .encodeToString(in.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static Secret newSecret(
-        String name,
-        String clusterId,
-        String connectorId,
-        String deploymentId,
-        long deploymentResourceVersion) {
-        return newSecret(name, clusterId, connectorId, deploymentId, deploymentResourceVersion, Collections.emptyMap());
     }
 
     public static Secret newSecret(

@@ -21,7 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(ClusterStatusUpdaterTest.Profile.class)

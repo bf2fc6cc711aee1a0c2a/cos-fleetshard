@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.support;
+package org.bf2.cos.fleetshard.api;
 
 import java.util.Objects;
 import java.util.regex.Matcher;

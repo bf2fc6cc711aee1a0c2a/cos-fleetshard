@@ -17,7 +17,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnectBuilder;
@@ -58,13 +58,21 @@ import static org.bf2.cos.fleetshard.support.PropertiesUtil.asBytesBase64;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
-    private static final List<CustomResourceDefinitionContext> RESOURCE_TYPES = List.of(
-        UnstructuredSupport.asCustomResourceDefinitionContext(
-            Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION,
-            KafkaConnect.RESOURCE_KIND),
-        UnstructuredSupport.asCustomResourceDefinitionContext(
-            Constants.STRIMZI_GROUP + "/" + KafkaConnector.CONSUMED_VERSION,
-            KafkaConnector.RESOURCE_KIND));
+    private static final List<ResourceDefinitionContext> RESOURCE_TYPES = List.of(
+        new ResourceDefinitionContext.Builder()
+            .withNamespaced(true)
+            .withGroup(Constants.STRIMZI_GROUP)
+            .withVersion(KafkaConnect.CONSUMED_VERSION)
+            .withKind(KafkaConnect.RESOURCE_KIND)
+            .withPlural(KafkaConnect.RESOURCE_PLURAL)
+            .build(),
+        new ResourceDefinitionContext.Builder()
+            .withNamespaced(true)
+            .withGroup(Constants.STRIMZI_GROUP)
+            .withVersion(KafkaConnector.CONSUMED_VERSION)
+            .withKind(KafkaConnector.RESOURCE_KIND)
+            .withPlural(KafkaConnector.RESOURCE_PLURAL)
+            .build());
 
     private final UnstructuredClient uc;
     private final DebeziumOperandConfiguration configuration;
@@ -77,7 +85,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     }
 
     @Override
-    public List<CustomResourceDefinitionContext> getResourceTypes() {
+    public List<ResourceDefinitionContext> getResourceTypes() {
         return RESOURCE_TYPES;
     }
 

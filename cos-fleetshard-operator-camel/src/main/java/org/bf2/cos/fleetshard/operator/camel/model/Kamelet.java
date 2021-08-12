@@ -3,8 +3,7 @@ package org.bf2.cos.fleetshard.operator.camel.model;
 import java.util.Locale;
 
 import io.fabric8.kubernetes.api.Pluralize;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import io.fabric8.kubernetes.model.Scope;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 public class Kamelet {
     public static final String RESOURCE_GROUP = "camel.apache.org";
@@ -14,8 +13,8 @@ public class Kamelet {
     public static final String TYPE_SOURCE = "source";
     public static final String TYPE_SINK = "sink";
 
-    public static final CustomResourceDefinitionContext RESOURCE_DEFINITION = new CustomResourceDefinitionContext.Builder()
-        .withScope(Scope.NAMESPACED.value())
+    public static final ResourceDefinitionContext RESOURCE_DEFINITION = new ResourceDefinitionContext.Builder()
+        .withNamespaced(true)
         .withGroup(RESOURCE_GROUP)
         .withVersion(RESOURCE_VERSION)
         .withKind(RESOURCE_KIND)

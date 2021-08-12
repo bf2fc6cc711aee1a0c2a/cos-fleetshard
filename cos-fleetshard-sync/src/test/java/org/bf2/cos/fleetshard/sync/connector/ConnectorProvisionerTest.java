@@ -22,7 +22,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.CONNECTOR_PREFIX;
+import static org.bf2.cos.fleetshard.support.resources.Connectors.CONNECTOR_PREFIX;
 import static org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport.createDeployment;
 import static org.mockito.Mockito.verify;
 
@@ -70,7 +70,7 @@ public class ConnectorProvisionerTest {
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.get(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
+            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
             assertThat(kafkaNode.getBootstrapServer())
                 .isEqualTo(deployment.getSpec().getKafka().getBootstrapServer());
             assertThat(kafkaNode.getClientSecret())
@@ -78,13 +78,13 @@ public class ConnectorProvisionerTest {
             assertThat(kafkaNode.getClientId())
                 .isEqualTo(deployment.getSpec().getKafka().getClientId());
 
-            var connectorNode = Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR);
-            assertThatJson(Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR))
+            var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
+            assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
                 .inPath("connector.foo").isEqualTo("connector-foo");
             assertThatJson(connectorNode)
                 .inPath("kafka.topic").isEqualTo("kafka-foo");
 
-            var metaNode = Secrets.get(val, Secrets.SECRET_ENTRY_META);
+            var metaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_META);
             assertThatJson(metaNode)
                 .isObject()
                 .containsKey("connector_type")
@@ -177,7 +177,7 @@ public class ConnectorProvisionerTest {
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.get(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
+            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
             assertThat(kafkaNode.getBootstrapServer())
                 .isEqualTo(newDeployment.getSpec().getKafka().getBootstrapServer());
             assertThat(kafkaNode.getClientSecret())
@@ -185,13 +185,13 @@ public class ConnectorProvisionerTest {
             assertThat(kafkaNode.getClientId())
                 .isEqualTo(newDeployment.getSpec().getKafka().getClientId());
 
-            var connectorNode = Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR);
-            assertThatJson(Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR))
+            var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
+            assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
                 .inPath("connector.foo").isEqualTo("connector-baz");
             assertThatJson(connectorNode)
                 .inPath("kafka.topic").isEqualTo("kafka-foo");
 
-            var metaNode = Secrets.get(val, Secrets.SECRET_ENTRY_META);
+            var metaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_META);
             assertThatJson(metaNode)
                 .isObject()
                 .containsKey("connector_type")
@@ -283,7 +283,7 @@ public class ConnectorProvisionerTest {
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.get(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
+            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
             assertThat(kafkaNode.getBootstrapServer())
                 .isEqualTo(newDeployment.getSpec().getKafka().getBootstrapServer());
             assertThat(kafkaNode.getClientSecret())
@@ -291,13 +291,13 @@ public class ConnectorProvisionerTest {
             assertThat(kafkaNode.getClientId())
                 .isEqualTo(newDeployment.getSpec().getKafka().getClientId());
 
-            var connectorNode = Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR);
-            assertThatJson(Secrets.get(val, Secrets.SECRET_ENTRY_CONNECTOR))
+            var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
+            assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
                 .inPath("connector.foo").isEqualTo("connector-baz");
             assertThatJson(connectorNode)
                 .inPath("kafka.topic").isEqualTo("kafka-foo");
 
-            var metaNode = Secrets.get(val, Secrets.SECRET_ENTRY_META);
+            var metaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_META);
             assertThatJson(metaNode)
                 .isObject()
                 .containsKey("connector_type")

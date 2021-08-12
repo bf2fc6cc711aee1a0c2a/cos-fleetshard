@@ -4,7 +4,6 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -12,13 +11,11 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.bf2.cos.fleetshard.support.resources.UnstructuredSupport.asCustomResourceDefinitionContext;
 
 @ApplicationScoped
 public class UnstructuredClient {
@@ -34,10 +31,17 @@ public class UnstructuredClient {
         return get(
             namespace,
             ref.getName(),
-            asCustomResourceDefinitionContext(ref));
+            UnstructuredSupport.asResourceDefinitionContext(ref));
     }
 
-    public GenericKubernetesResource get(String namespace, String name, CustomResourceDefinitionContext ctx) {
+    public GenericKubernetesResource get(String namespace, String apiVersion, String kind, String name) {
+        return get(
+            namespace,
+            name,
+            UnstructuredSupport.asResourceDefinitionContext(apiVersion, kind));
+    }
+
+    public GenericKubernetesResource get(String namespace, String name, ResourceDefinitionContext ctx) {
         try {
             return kubernetesClient
                 .genericKubernetesResources(ctx)
@@ -52,31 +56,9 @@ public class UnstructuredClient {
         return null;
     }
 
-    public ObjectNode getAsNode(String namespace, String apiVersion, String kind, String name) {
-        return getAsNode(namespace, name, asCustomResourceDefinitionContext(apiVersion, kind));
-    }
-
-    public ObjectNode getAsNode(String namespace, ResourceRef ref) {
-        return getAsNode(namespace, ref.getName(), asCustomResourceDefinitionContext(ref));
-    }
-
-    public ObjectNode getAsNode(String namespace, String name, CustomResourceDefinitionContext ctx) {
-        try {
-            GenericKubernetesResource resource = get(namespace, name, ctx);
-            if (resource != null) {
-                return Serialization.jsonMapper().convertValue(resource, ObjectNode.class);
-            }
-        } catch (KubernetesClientException e) {
-            if (e.getCode() != 404) {
-                throw e;
-            }
-        }
-        return null;
-    }
-
     public boolean delete(String namespace, ResourceRef ref) {
         return kubernetesClient
-            .genericKubernetesResources(asCustomResourceDefinitionContext(ref))
+            .genericKubernetesResources(UnstructuredSupport.asResourceDefinitionContext(ref))
             .inNamespace(namespace)
             .withName(ref.getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
@@ -87,11 +69,15 @@ public class UnstructuredClient {
         String namespace,
         HasMetadata resource) {
 
-        return kubernetesClient
-            .genericKubernetesResources(asCustomResourceDefinitionContext(resource))
-            .inNamespace(namespace)
-            .withName(resource.getMetadata().getName())
-            .createOrReplace(Serialization.jsonMapper().convertValue(resource, GenericKubernetesResource.class));
+        final GenericKubernetesResource generic;
+
+        if (resource instanceof GenericKubernetesResource) {
+            generic = (GenericKubernetesResource) resource;
+        } else {
+            generic = Serialization.jsonMapper().convertValue(resource, GenericKubernetesResource.class);
+        }
+
+        return createOrReplace(namespace, generic);
     }
 
     public GenericKubernetesResource createOrReplace(
@@ -99,7 +85,7 @@ public class UnstructuredClient {
         GenericKubernetesResource unstructured) {
 
         return kubernetesClient
-            .genericKubernetesResources(asCustomResourceDefinitionContext(unstructured))
+            .genericKubernetesResources(UnstructuredSupport.asResourceDefinitionContext(unstructured))
             .inNamespace(namespace)
             .withName(unstructured.getMetadata().getName())
             .createOrReplace(unstructured);
@@ -113,14 +99,14 @@ public class UnstructuredClient {
 
         return watch(
             namespace,
-            asCustomResourceDefinitionContext(ref),
+            UnstructuredSupport.asResourceDefinitionContext(ref),
             labels,
             watcher);
     }
 
     private Watch watch(
         String namespace,
-        CustomResourceDefinitionContext ctx,
+        ResourceDefinitionContext ctx,
         Map<String, String> labels,
         Watcher<GenericKubernetesResource> watcher) {
 
