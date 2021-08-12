@@ -5,13 +5,11 @@ import java.util.Locale;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import io.fabric8.kubernetes.model.Scope;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -27,8 +25,8 @@ public class KameletBinding implements HasMetadata, Namespaced {
     public static final String RESOURCE_API_VERSION = RESOURCE_GROUP + "/" + RESOURCE_VERSION;
     public static final String RESOURCE_KIND = "KameletBinding";
 
-    public static final CustomResourceDefinitionContext RESOURCE_DEFINITION = new CustomResourceDefinitionContext.Builder()
-        .withScope(Scope.NAMESPACED.value())
+    public static final ResourceDefinitionContext RESOURCE_DEFINITION = new ResourceDefinitionContext.Builder()
+        .withNamespaced(true)
         .withGroup(RESOURCE_GROUP)
         .withVersion(RESOURCE_VERSION)
         .withKind(RESOURCE_KIND)

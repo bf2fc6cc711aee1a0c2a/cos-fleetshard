@@ -1,15 +1,11 @@
-package org.bf2.cos.fleetshard.support;
+package org.bf2.cos.fleetshard.api;
 
 import java.util.List;
 
-import org.bf2.cos.fleetshard.api.Operator;
-import org.bf2.cos.fleetshard.api.OperatorSelector;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.assign;
-import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
 
 public class OperatorSelectorTest {
     public static final List<Operator> OPERATORS = List.of(
@@ -22,23 +18,23 @@ public class OperatorSelectorTest {
 
     @Test
     void assignOperator() {
-        assertThat(assign(new OperatorSelector("2", "camel", "[1.0.0,2.0.0)"), OPERATORS))
+        Assertions.assertThat(new OperatorSelector("2", "camel", "[1.0.0,2.0.0)").assign(OPERATORS))
             .isPresent()
             .get()
             .hasFieldOrPropertyWithValue("type", "camel")
             .hasFieldOrPropertyWithValue("version", "1.1.0");
 
-        assertThat(assign(new OperatorSelector("camel", "[1.0.0,2.0.0)"), OPERATORS))
+        Assertions.assertThat(new OperatorSelector("camel", "[1.0.0,2.0.0)").assign(OPERATORS))
             .isPresent()
             .get()
             .hasFieldOrPropertyWithValue("type", "camel")
             .hasFieldOrPropertyWithValue("version", "1.9.0");
 
-        assertThatThrownBy(() -> assign(new OperatorSelector("5", "camel", "[1.0.0,2.0.0)"), OPERATORS))
+        assertThatThrownBy(() -> new OperatorSelector("5", "camel", "[1.0.0,2.0.0)").assign(OPERATORS))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("The given operator id does not match the operator selector type");
 
-        assertThatThrownBy(() -> assign(new OperatorSelector("4", "camel", "[1.0.0,2.0.0)"), OPERATORS))
+        assertThatThrownBy(() -> new OperatorSelector("4", "camel", "[1.0.0,2.0.0)").assign(OPERATORS))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("The given operator id is outside the operator selector range");
     }
@@ -46,19 +42,19 @@ public class OperatorSelectorTest {
     @Test
     void availableOperator() {
 
-        assertThat(available(new OperatorSelector("strimzi", "[1.0.0,2.0.0)"), OPERATORS))
+        Assertions.assertThat(new OperatorSelector("strimzi", "[1.0.0,2.0.0)").available(OPERATORS))
             .isPresent()
             .get()
             .hasFieldOrPropertyWithValue("type", "strimzi")
             .hasFieldOrPropertyWithValue("version", "1.9.0");
 
-        assertThat(available(new OperatorSelector("camel", "[1.0.0,2.0.0)"), OPERATORS))
+        Assertions.assertThat(new OperatorSelector("camel", "[1.0.0,2.0.0)").available(OPERATORS))
             .isPresent()
             .get()
             .hasFieldOrPropertyWithValue("type", "camel")
             .hasFieldOrPropertyWithValue("version", "1.9.0");
 
-        assertThat(available(new OperatorSelector("camel", "(1.0.0,1.8.9)"), OPERATORS))
+        Assertions.assertThat(new OperatorSelector("camel", "(1.0.0,1.8.9)").available(OPERATORS))
             .isPresent()
             .get()
             .hasFieldOrPropertyWithValue("type", "camel")

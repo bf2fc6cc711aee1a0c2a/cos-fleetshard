@@ -12,7 +12,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.get;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 
 public abstract class AbstractOperandController<M, S> implements OperandController {
     private final Class<M> metadataType;
@@ -25,15 +25,15 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
 
     @Override
     public List<HasMetadata> reify(ManagedConnectorSpec connector, Secret secret) {
-        final KafkaConnectionSettings kafkaSettings = get(
+        final KafkaConnectionSettings kafkaSettings = extract(
             secret,
             SECRET_ENTRY_KAFKA,
             KafkaConnectionSettings.class);
 
         return doReify(
             connector,
-            get(secret, SECRET_ENTRY_META, metadataType),
-            get(secret, SECRET_ENTRY_CONNECTOR, connectorSpecType),
+            extract(secret, SECRET_ENTRY_META, metadataType),
+            extract(secret, SECRET_ENTRY_CONNECTOR, connectorSpecType),
             new KafkaSpecBuilder()
                 .withClientId(kafkaSettings.getClientId())
                 .withClientSecret(kafkaSettings.getClientSecret())

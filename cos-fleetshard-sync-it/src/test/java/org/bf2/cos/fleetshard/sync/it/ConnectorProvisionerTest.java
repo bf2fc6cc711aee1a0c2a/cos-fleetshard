@@ -18,7 +18,8 @@ import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.WireMockTestResource;
-import org.bf2.cos.fleetshard.support.resources.ResourceUtil;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -31,9 +32,9 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.computeChecksum;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.get;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 @QuarkusTest
@@ -70,33 +71,33 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(ResourceUtil.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
                     .endsWith("-" + 1);
 
-                assertThatJson(get(item, SECRET_ENTRY_KAFKA))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
                     .containsEntry("bootstrap_server", KAFKA_URL)
                     .containsEntry("client_id", KAFKA_CLIENT_ID)
                     .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
 
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("connector")
                     .isObject()
                     .containsEntry("foo", "connector-foo");
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("kafka")
                     .isObject()
                     .containsEntry("topic", "kafka-foo");
 
-                assertThatJson(get(item, SECRET_ENTRY_META))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_type", "sink");
-                assertThatJson(get(item, SECRET_ENTRY_META))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(ResourceUtil.CONNECTOR_PREFIX + "-");
+            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
             assertThat(mc.getSpec().getId()).isEqualTo(mc.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecretChecksum()).isEqualTo(computeChecksum(s1));
@@ -129,53 +130,53 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(ResourceUtil.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
                     .endsWith("-" + 1);
 
-                assertThatJson(get(item, SECRET_ENTRY_KAFKA))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
                     .containsEntry("bootstrap_server", KAFKA_URL)
                     .containsEntry("client_id", KAFKA_CLIENT_ID)
                     .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
 
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("connector")
                     .isObject()
                     .containsEntry("foo", "connector-foo");
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("kafka")
                     .isObject()
                     .containsEntry("topic", "kafka-foo");
             });
             assertThat(s2).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(ResourceUtil.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
                     .endsWith("-" + 2);
 
-                assertThatJson(get(item, SECRET_ENTRY_KAFKA))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
                     .containsEntry("bootstrap_server", KAFKA_URL)
                     .containsEntry("client_id", KAFKA_CLIENT_ID)
                     .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
 
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("connector")
                     .isObject()
                     .containsEntry("foo", "connector-bar");
-                assertThatJson(get(item, SECRET_ENTRY_CONNECTOR))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
                     .inPath("kafka")
                     .isObject()
                     .containsEntry("topic", "kafka-bar");
 
-                assertThatJson(get(item, SECRET_ENTRY_META))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_type", "sink");
-                assertThatJson(get(item, SECRET_ENTRY_META))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(ResourceUtil.CONNECTOR_PREFIX + "-");
+            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
             assertThat(mc.getSpec().getId()).isEqualTo(mc.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s2.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecretChecksum()).isEqualTo(computeChecksum(s2));

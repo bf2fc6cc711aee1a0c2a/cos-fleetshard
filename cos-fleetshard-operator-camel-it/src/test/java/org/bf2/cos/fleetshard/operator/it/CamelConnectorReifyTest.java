@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(CamelConnectorReifyTest.Profile.class)

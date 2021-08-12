@@ -9,6 +9,9 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
+import static io.fabric8.kubernetes.client.utils.KubernetesResourceUtil.getLabels;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
@@ -75,11 +78,18 @@ public class DeployedResource extends ResourceRef {
     }
 
     public static DeployedResource of(HasMetadata metadata) {
-        return new DeployedResource(
+        DeployedResource answer = new DeployedResource(
             metadata.getApiVersion(),
             metadata.getKind(),
             metadata.getMetadata().getName(),
             metadata.getMetadata().getNamespace());
+
+        String version = getLabels(metadata.getMetadata()).get(LABEL_DEPLOYMENT_RESOURCE_VERSION);
+        if (version != null) {
+            answer.setDeploymentRevision(Long.parseLong(version));
+        }
+
+        return answer;
 
     }
 }

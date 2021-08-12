@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
+import org.bf2.cos.fleetshard.api.Version;
+import org.bf2.cos.fleetshard.api.VersionRange;
 
 public final class OperatorSelectorUtil {
     private OperatorSelectorUtil() {

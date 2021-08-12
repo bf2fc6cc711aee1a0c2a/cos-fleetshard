@@ -17,7 +17,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.camel.CamelConstants;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
-import org.bf2.cos.fleetshard.support.resources.ResourceUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
@@ -29,7 +28,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 public class CamelConnectorTestSupport {
@@ -95,7 +94,7 @@ public class CamelConnectorTestSupport {
             "kamelets", Map.of("connector", "aws-s3-sink", "kafka", "kafka-source")));
 
         this.connector = Connectors.newConnector(
-            ResourceUtil.generateConnectorId(),
+            Connectors.generateConnectorId(),
             clusterId,
             connectorId,
             deploymentId,
@@ -169,7 +168,7 @@ public class CamelConnectorTestSupport {
         Consumer<GenericKubernetesResource> consumer) {
 
         return ksrv.getClient()
-            .genericKubernetesResources(UnstructuredSupport.asCustomResourceDefinitionContext(apiVersion, kind))
+            .genericKubernetesResources(UnstructuredSupport.asResourceDefinitionContext(apiVersion, kind))
             .inNamespace(namespace)
             .withName(name)
             .editStatus(item -> {

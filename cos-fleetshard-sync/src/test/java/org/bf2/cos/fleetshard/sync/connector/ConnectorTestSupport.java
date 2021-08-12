@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -22,6 +23,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
+import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.mockito.Mockito;
 
@@ -168,6 +171,16 @@ public final class ConnectorTestSupport {
                 var arg = invocation.getArgument(0, Secret.class);
                 allSecrets.put(arg.getMetadata().getName(), arg);
                 return arg;
+            });
+
+        when(fleetShard.createManagedConnectorCluster())
+            .thenAnswer(invocation -> {
+                return new ManagedConnectorClusterBuilder()
+                    .withMetadata(new ObjectMetaBuilder()
+                        .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-1")
+                        .addToLabels(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+                        .build())
+                    .build();
             });
 
         return fleetShard;

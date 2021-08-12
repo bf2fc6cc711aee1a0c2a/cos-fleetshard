@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -20,6 +21,11 @@ public class FleetShardOperator {
     @Inject
     Operator operator;
 
+    @Inject
+    Event<FleetShardEvents.Started> startedEvent;
+    @Inject
+    Event<FleetShardEvents.Stopped> stoppedEvent;
+
     @ConfigProperty(name = "cos.operator.namespace")
     String operatorNamespace;
 
@@ -29,9 +35,13 @@ public class FleetShardOperator {
             .createOrReplace(managedConnectorOperator);
 
         operator.start();
+
+        startedEvent.fire(new FleetShardEvents.Started());
     }
 
     void onStop(@Observes ShutdownEvent ignored) {
         operator.close();
+
+        stoppedEvent.fire(new FleetShardEvents.Stopped());
     }
 }

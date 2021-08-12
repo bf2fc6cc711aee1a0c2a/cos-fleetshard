@@ -1,6 +1,9 @@
 resources:
   - kubernetes.yml
 
+generatorOptions:
+  disableNameSuffixHash: true
+
 configMapGenerator:
   - name: cos-fleetshard-operator-debezium-config
     files:
@@ -10,11 +13,6 @@ secretGenerator:
     files:
       - application.properties=app-secret/application.properties
 
-#images:
-#  - name: quay.io/rhoas/cos-fleetshard-operator-debezium:latest
-#    newName: quay.io/lburgazzoli/cfs-d
-#    newTag: latest
-
 patchesJson6902:
   - target:
       group: apps
@@ -22,6 +20,9 @@ patchesJson6902:
       kind: Deployment
       name: cos-fleetshard-operator-debezium
     patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
       - op: replace
         path: /spec/template/spec/containers/0/name
         value: application

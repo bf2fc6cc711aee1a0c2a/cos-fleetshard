@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.support;
+package org.bf2.cos.fleetshard.api;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -36,7 +36,7 @@ Start Quarkus in dev mode and read the application configuration from the curren
 [source,shell]
 ----
 export KUBERNETES_NAMESPACE=$(oc project -q)
-export COS_OPERATOR_ID==${some_value}
+export COS_OPERATOR_ID=${some_value}
 export COS_OPERATOR_VERSION==${some_value}
 
 mvn -Dlocal

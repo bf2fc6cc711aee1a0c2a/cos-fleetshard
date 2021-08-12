@@ -16,7 +16,6 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.InjectWireMock;
 import org.bf2.cos.fleetshard.it.WireMockTestResource;
-import org.bf2.cos.fleetshard.support.resources.ResourceUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -30,7 +29,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
-import static org.bf2.cos.fleetshard.support.resources.ResourceUtil.uid;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(ConnectorStatusUpdaterTest.Profile.class)
@@ -45,7 +44,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         final String clusterId = ConfigProvider.getConfig().getValue("cluster-id", String.class);
         final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
-        final String name = ResourceUtil.generateConnectorId();
+        final String name = Connectors.generateConnectorId();
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
         final Operator operator = new Operator(uid(), "operator-type", "1.2.3");

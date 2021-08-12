@@ -10,18 +10,23 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
+import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
 public class FleetShardClient {
@@ -236,5 +241,41 @@ public class FleetShardClient {
                 mco.getSpec().getType(),
                 mco.getSpec().getVersion()))
             .collect(Collectors.toList());
+    }
+
+    public Optional<ManagedConnectorCluster> getConnectorCluster() {
+        var items = kubernetesClient.customResources(ManagedConnectorCluster.class)
+            .inNamespace(connectorsNamespace)
+            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .list();
+
+        if (items.getItems() != null && items.getItems().size() > 1) {
+            throw new IllegalArgumentException(
+                "Multiple connectors clusters with id: " + clusterId);
+        }
+        if (items.getItems() != null && items.getItems().size() == 1) {
+            return Optional.of(items.getItems().get(0));
+        }
+
+        return Optional.empty();
+    }
+
+    public ManagedConnectorCluster createManagedConnectorCluster() {
+        ManagedConnectorCluster cluster = getConnectorCluster().orElseGet(() -> {
+            return new ManagedConnectorClusterBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + uid())
+                    .addToLabels(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+                    .build())
+                .build();
+        });
+
+        cluster.getSpec().setClusterId(clusterId);
+        ;
+
+        return kubernetesClient.customResources(ManagedConnectorCluster.class)
+            .inNamespace(connectorsNamespace)
+            .withName(cluster.getMetadata().getName())
+            .createOrReplace(cluster);
     }
 }
