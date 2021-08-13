@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
@@ -79,7 +79,7 @@ public class CamelConnectorTestSupport {
             connectorId,
             deploymentId,
             1L,
-            Map.of(LABEL_CONTEXT, CONTEXT_DEPLOYMENT, LABEL_WATCH, "true"));
+            Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT, LABEL_WATCH, "true"));
 
         Secrets.set(secret, Secrets.SECRET_ENTRY_CONNECTOR, Map.of(
             "connector", Map.of("foo", "bar"),
@@ -98,7 +98,7 @@ public class CamelConnectorTestSupport {
             clusterId,
             connectorId,
             deploymentId,
-            Map.of(LABEL_CONTEXT, CONTEXT_DEPLOYMENT));
+            Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
 
         connector.getSpec().setId(connector.getMetadata().getName());
         connector.getSpec().getDeployment().setConnectorResourceVersion(1L);
@@ -123,7 +123,7 @@ public class CamelConnectorTestSupport {
     protected Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
         var items = kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(namespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
             .list();
@@ -144,7 +144,7 @@ public class CamelConnectorTestSupport {
         var items = fleetShard.getKubernetesClient()
             .secrets()
             .inNamespace(namespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)

@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -9,17 +8,13 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
-import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
@@ -32,6 +27,7 @@ import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ANNOTATIONS_TO_TRANSFER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
@@ -40,21 +36,21 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createApplicationProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createIntegrationSpec;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.isKameletBinding;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.PropertiesUtil.asBytesBase64;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {
-    private final UnstructuredClient uc;
     private final CamelOperandConfiguration configuration;
 
     public CamelOperandController(UnstructuredClient uc, CamelOperandConfiguration configuration) {
-        super(CamelShardMetadata.class, ObjectNode.class);
+        super(uc, CamelShardMetadata.class, ObjectNode.class);
 
-        this.uc = uc;
         this.configuration = configuration;
     }
 
@@ -106,7 +102,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
             .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
             .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false")
-            .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS, LABELS_TO_TRANSFER)
+            .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER)
+            .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS, ANNOTATIONS_TO_TRANSFER)
             .build());
         binding.setSpec(new KameletBindingSpecBuilder()
             .withIntegration(createIntegrationSpec(secret.getMetadata().getName(), configuration))
@@ -126,45 +123,14 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
     }
 
     @Override
-    public void status(ManagedConnectorStatus connector) {
-        if (connector.getResources() == null) {
-            return;
-        }
-
-        for (ResourceRef ref : connector.getResources()) {
-            GenericKubernetesResource resource = uc.get(ref.getNamespace(), ref);
-
-            if (resource == null) {
-                continue;
-            }
-            if (!isKameletBinding(ref)) {
-                continue;
-            }
-
-            UnstructuredSupport.getPropertyAs(resource, "status", KameletBindingStatus.class).ifPresent(status -> {
-                ConnectorStatusSpec statusSpec = new ConnectorStatusSpec();
-
-                if (status.phase != null) {
-                    switch (status.phase.toLowerCase(Locale.US)) {
-                        case KameletBindingStatus.PHASE_READY:
-                            statusSpec.setPhase(ManagedConnector.STATE_READY);
-                            break;
-                        case KameletBindingStatus.PHASE_ERROR:
-                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            break;
-                        default:
-                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                            break;
-                    }
-                }
-
-                if (status.conditions != null) {
-                    statusSpec.setConditions(status.conditions);
-                }
-
-                connector.setConnectorStatus(statusSpec);
-            });
-        }
+    public void status(ManagedConnector connector) {
+        lookupBinding(getUnstructuredClient(), connector)
+            .flatMap(kb -> UnstructuredSupport.getPropertyAs(kb, "status", KameletBindingStatus.class))
+            .ifPresent(kbs -> computeStatus(connector.getStatus().getConnectorStatus(), kbs));
     }
 
+    @Override
+    public boolean stop(ManagedConnector connector) {
+        return delete(connector);
+    }
 }

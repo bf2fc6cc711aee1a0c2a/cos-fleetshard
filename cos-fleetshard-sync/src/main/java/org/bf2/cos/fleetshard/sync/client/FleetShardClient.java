@@ -25,7 +25,7 @@ import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
@@ -82,7 +82,7 @@ public class FleetShardClient {
     public Optional<Secret> getSecret(ConnectorDeployment deployment) {
         var items = kubernetesClient.secrets()
             .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
@@ -103,7 +103,7 @@ public class FleetShardClient {
     public Optional<Secret> getSecretByDeploymentIdAndRevision(String deploymentId, long revision) {
         var items = kubernetesClient.secrets()
             .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
@@ -131,7 +131,7 @@ public class FleetShardClient {
     public Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
         var items = kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, this.clusterId)
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
             .list();
@@ -151,7 +151,7 @@ public class FleetShardClient {
     public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
         var items = kubernetesClient.customResources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_CONTEXT, CONTEXT_DEPLOYMENT)
+            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
             .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())

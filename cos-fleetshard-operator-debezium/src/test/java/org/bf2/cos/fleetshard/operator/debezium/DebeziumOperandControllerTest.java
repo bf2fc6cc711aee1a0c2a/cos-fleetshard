@@ -2,20 +2,31 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.stream.Stream;
 
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
+import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
+import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.status.KafkaConnectorStatusBuilder;
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DebeziumOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
@@ -135,5 +146,72 @@ public class DebeziumOperandControllerTest {
             .anyMatch(DebeziumOperandSupport::isKafkaConnect)
             .anyMatch(DebeziumOperandSupport::isKafkaConnector)
             .anyMatch(DebeziumOperandSupport::isSecret);
+    }
+
+    public static Stream<Arguments> computeStatus() {
+        return Stream.of(
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                "Ready",
+                "reason",
+                ManagedConnector.STATE_READY),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                "NotReady",
+                "reason",
+                ManagedConnector.STATE_PROVISIONING),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                "NotReady",
+                "ConnectRestException",
+                ManagedConnector.STATE_FAILED),
+            arguments(
+                KafkaConnectorStatus.STATE_FAILED,
+                "Foo",
+                "Bar",
+                ManagedConnector.STATE_FAILED),
+            arguments(
+                KafkaConnectorStatus.STATE_PAUSED,
+                "Foo",
+                "Bar",
+                ManagedConnector.STATE_STOPPED),
+            arguments(
+                KafkaConnectorStatus.STATE_UNASSIGNED,
+                "Foo",
+                "Bar",
+                ManagedConnector.STATE_PROVISIONING));
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void computeStatus(
+        String connectorState,
+        String conditionType,
+        String conditionReason,
+        String expectedConnectorState) {
+
+        ConnectorStatusSpec status = new ConnectorStatusSpec();
+
+        DebeziumOperandSupport.computeStatus(
+            status,
+            new KafkaConnectorBuilder()
+                .withStatus(new KafkaConnectorStatusBuilder()
+                    .addToConditions(new ConditionBuilder()
+                        .withType(conditionType)
+                        .withReason(conditionReason)
+                        .build())
+                    .addToConnectorStatus("connector",
+                        new org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatusBuilder()
+                            .withState(connectorState)
+                            .build())
+                    .build())
+                .build());
+
+        assertThat(status.getPhase()).isEqualTo(expectedConnectorState);
+        assertThat(status.getConditions()).anySatisfy(condition -> {
+            assertThat(condition)
+                .hasFieldOrPropertyWithValue("type", conditionType)
+                .hasFieldOrPropertyWithValue("reason", conditionReason);
+        });
     }
 }

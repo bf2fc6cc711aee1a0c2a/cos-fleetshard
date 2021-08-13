@@ -4,17 +4,24 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import static java.lang.String.format;
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
@@ -166,6 +173,33 @@ public final class CamelOperandSupport {
         }
 
         return integration;
+    }
+
+    public static Optional<GenericKubernetesResource> lookupBinding(UnstructuredClient uc, ManagedConnector connector) {
+        return Optional.ofNullable(uc.get(
+            connector.getMetadata().getNamespace(),
+            connector.getSpec().getId() + "-camel",
+            KameletBinding.RESOURCE_DEFINITION));
+    }
+
+    public static void computeStatus(ConnectorStatusSpec statusSpec, KameletBindingStatus kameletBindingStatus) {
+        if (kameletBindingStatus.phase != null) {
+            switch (kameletBindingStatus.phase.toLowerCase(Locale.US)) {
+                case KameletBindingStatus.PHASE_READY:
+                    statusSpec.setPhase(ManagedConnector.STATE_READY);
+                    break;
+                case KameletBindingStatus.PHASE_ERROR:
+                    statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                    break;
+                default:
+                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+                    break;
+            }
+        }
+
+        if (kameletBindingStatus.conditions != null) {
+            statusSpec.setConditions(kameletBindingStatus.conditions);
+        }
     }
 
     public static class Step {

@@ -1,21 +1,14 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.inject.Singleton;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
@@ -34,53 +27,33 @@ import io.strimzi.api.kafka.model.connect.build.BuildBuilder;
 import io.strimzi.api.kafka.model.connect.build.DockerOutputBuilder;
 import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
 import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
-import io.strimzi.api.kafka.model.status.Condition;
-import io.strimzi.api.kafka.model.status.KafkaConnectorStatus;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
-import org.bf2.cos.fleetshard.api.ResourceRef;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorTaskStatus;
+import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
-import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.DELETION_MODE_ANNOTATION;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.isKafkaConnector;
-import static org.bf2.cos.fleetshard.support.PropertiesUtil.asBytesBase64;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecret;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
-    private static final List<ResourceDefinitionContext> RESOURCE_TYPES = List.of(
-        new ResourceDefinitionContext.Builder()
-            .withNamespaced(true)
-            .withGroup(Constants.STRIMZI_GROUP)
-            .withVersion(KafkaConnect.CONSUMED_VERSION)
-            .withKind(KafkaConnect.RESOURCE_KIND)
-            .withPlural(KafkaConnect.RESOURCE_PLURAL)
-            .build(),
-        new ResourceDefinitionContext.Builder()
-            .withNamespaced(true)
-            .withGroup(Constants.STRIMZI_GROUP)
-            .withVersion(KafkaConnector.CONSUMED_VERSION)
-            .withKind(KafkaConnector.RESOURCE_KIND)
-            .withPlural(KafkaConnector.RESOURCE_PLURAL)
-            .build());
-
-    private final UnstructuredClient uc;
     private final DebeziumOperandConfiguration configuration;
 
     public DebeziumOperandController(UnstructuredClient uc, DebeziumOperandConfiguration configuration) {
-        super(DebeziumShardMetadata.class, ObjectNode.class);
+        super(uc, DebeziumShardMetadata.class, ObjectNode.class);
 
-        this.uc = uc;
         this.configuration = configuration;
     }
 
@@ -105,8 +78,8 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withApiVersion(Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
                 .withName(name)
-                .addToAnnotations("strimzi.io/use-connector-resources", "true")
-                .addToAnnotations(DELETION_MODE_ANNOTATION, DELETION_MODE_CONNECTOR)
+                .addToAnnotations(STRIMZI_IO_USE_CONNECTOR_RESOURCES, "true")
+                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .withSpec(new KafkaConnectSpecBuilder()
                 .withReplicas(1)
@@ -159,7 +132,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                             String.format("%s/%s/cos-debezium:%s",
                                 configuration.containerImage().registry(),
                                 configuration.containerImage().group(),
-                                connectorId))
+                                connector.getDeploymentId()))
                         .build())
                     .addToPlugins(new PluginBuilder()
                         .withName("debezium-connector")
@@ -177,13 +150,14 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withApiVersion(Constants.STRIMZI_GROUP + "/" + KafkaConnector.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
                 .withName(name)
-                .addToLabels("strimzi.io/cluster", name)
-                .addToAnnotations(DELETION_MODE_ANNOTATION, DELETION_MODE_CONNECTOR)
+                .addToLabels(STRIMZI_DOMAIN + "cluster", name)
+                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .withSpec(new KafkaConnectorSpecBuilder()
                 .withClassName(shardMetadata.getConnectorClass())
                 .withTasksMax(1)
-                .withConfig(createConfig(connectorSpec))
+                .withPause(false)
+                .withConfig(createConfig(configuration, connectorSpec))
                 .build())
             .build();
 
@@ -191,129 +165,26 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     }
 
     @Override
-    public void status(ManagedConnectorStatus connector) {
-        if (connector.getResources() == null) {
-            return;
-        }
-
-        for (ResourceRef ref : connector.getResources()) {
-            GenericKubernetesResource resource = uc.get(ref.getNamespace(), ref);
-
-            if (!isKafkaConnector(ref)) {
-                continue;
-            }
-
-            UnstructuredSupport.getPropertyAs(resource, "status", KafkaConnectorStatus.class).ifPresent(status -> {
-                ConnectorStatusSpec statusSpec = new ConnectorStatusSpec();
-                statusSpec.setConditions(new ArrayList<>());
-
-                for (Condition condition : status.getConditions()) {
-                    switch (condition.getType()) {
-                        case "Ready":
-                            statusSpec.setPhase(ManagedConnector.STATE_READY);
-                            break;
-                        case "NotReady":
-                            //TODO: something better here, we need to check for errors
-                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-
-                            if ("ConnectRestException".equals(condition.getReason())) {
-                                statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            }
-                            break;
-                        default:
-                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                            break;
-                    }
-
-                    var rc = new io.fabric8.kubernetes.api.model.Condition();
-                    rc.setMessage(condition.getMessage());
-                    rc.setReason(condition.getReason());
-                    rc.setStatus(condition.getStatus());
-                    rc.setType(condition.getType());
-                    rc.setLastTransitionTime(condition.getLastTransitionTime());
-
-                    statusSpec.getConditions().add(rc);
-                }
-
-                if (status.getConnectorStatus() != null && status.getConnectorStatus().containsKey("tasks")) {
-                    List<KafkaConnectorTaskStatus> tasks = JacksonUtil.covertToListOf(
-                        status.getConnectorStatus().get("tasks"),
-                        KafkaConnectorTaskStatus.class);
-
-                    for (KafkaConnectorTaskStatus task : tasks) {
-                        if ("FAILED".equals(task.state)) {
-                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            break;
-                        }
-                    }
-                }
-
-                connector.setConnectorStatus(statusSpec);
-            });
-        }
+    public void status(ManagedConnector connector) {
+        lookupConnector(getKubernetesClient(), connector)
+            .filter(kc -> kc.getStatus() != null)
+            .ifPresent(kbs -> computeStatus(connector.getStatus().getConnectorStatus(), kbs));
     }
 
-    private Map<String, Object> createConfig(ObjectNode connectorSpec) {
-        Map<String, Object> config = new TreeMap<>();
-
-        if (connectorSpec != null) {
-            var cit = connectorSpec.fields();
-            while (cit.hasNext()) {
-                final var property = cit.next();
-
-                if (!property.getValue().isObject()) {
-                    config.put(
-                        property.getKey(),
-                        property.getValue().asText());
-                }
+    @Override
+    public boolean stop(ManagedConnector connector) {
+        return lookupConnector(getKubernetesClient(), connector).map(kc -> {
+            if (kc.getSpec().getPause() != null && kc.getSpec().getPause()) {
+                return connector(kc)
+                    .map(c -> KafkaConnectorStatus.STATE_PAUSED.equals(c.state))
+                    .orElse(false);
             }
-        }
 
-        config.putIfAbsent("key.converter", configuration.keyConverter());
-        config.putIfAbsent("value.converter", configuration.valueConverter());
+            kc.getSpec().setPause(true);
 
-        config.putIfAbsent(
-            "database.password",
-            "${file:/opt/kafka/external-configuration/"
-                + EXTERNAL_CONFIG_DIRECTORY
-                + "/"
-                + EXTERNAL_CONFIG_FILE
-                + ":database.password}");
+            getKubernetesClient().resources(KafkaConnector.class).patch(kc);
 
-        return config;
+            return false;
+        }).orElse(true);
     }
-
-    private Secret createSecret(String secretName, JsonNode connectorSpec, KafkaSpec kafkaSpec) {
-        Map<String, String> props = new TreeMap<>();
-        if (connectorSpec != null) {
-            var cit = connectorSpec.fields();
-            while (cit.hasNext()) {
-                final var property = cit.next();
-
-                if (property.getValue().isObject()) {
-                    JsonNode kind = property.getValue().requiredAt("/kind");
-                    JsonNode value = property.getValue().requiredAt("/value");
-
-                    if (!"base64".equals(kind.textValue())) {
-                        throw new RuntimeException(
-                            "Unsupported field kind " + kind + " (key=" + property.getKey() + ")");
-                    }
-
-                    props.put(
-                        property.getKey(),
-                        new String(Base64.getDecoder().decode(value.asText())));
-                }
-            }
-        }
-
-        return new SecretBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(secretName)
-                .addToAnnotations(DELETION_MODE_ANNOTATION, DELETION_MODE_CONNECTOR)
-                .build())
-            .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(props))
-            .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
-            .build();
-    }
-
 }

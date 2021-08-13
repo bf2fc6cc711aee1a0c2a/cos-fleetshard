@@ -4,16 +4,12 @@ import java.util.Base64;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ConditionBuilder;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import org.bf2.cos.fleetshard.api.DeployedResourceBuilder;
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
-import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
@@ -36,11 +32,7 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.isKameletBinding;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
 
 public final class CamelOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
@@ -126,7 +118,7 @@ public final class CamelOperandControllerTest {
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false")
-                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS, LABELS_TO_TRANSFER);
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
 
                 /*
                  * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_MANAGED_CONNECTOR_ID")).asText())
@@ -207,80 +199,23 @@ public final class CamelOperandControllerTest {
 
     @Test
     void status() {
-        UnstructuredClient uc = Mockito.mock(UnstructuredClient.class);
-        CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
-
-        when(uc.get(anyString(), any(ResourceRef.class))).thenAnswer(invocation -> {
-            ResourceRef ref = invocation.getArgument(1, ResourceRef.class);
-            GenericKubernetesResource answer = null;
-
-            if (!isKameletBinding(ref)) {
-                return null;
-            }
-
-            switch (ref.getName()) {
-                case KameletBindingStatus.PHASE_READY: {
-                    answer = new GenericKubernetesResource();
-
-                    answer.setMetadata(new ObjectMetaBuilder()
-                        .withNamespace(invocation.getArgument(0, String.class))
-                        .withName(ref.getName())
-                        .build());
-                    answer.getAdditionalProperties().put(
-                        "status",
-                        new KameletBindingStatusBuilder()
-                            .withPhase(KameletBindingStatus.PHASE_READY)
-                            .addToConditions(new ConditionBuilder()
-                                .withType("Ready")
-                                .withStatus("False")
-                                .withReason("reason")
-                                .withMessage("message")
-                                .build())
-                            .build());
-
-                    break;
-                }
-                case KameletBindingStatus.PHASE_ERROR: {
-                    answer = new GenericKubernetesResource();
-
-                    answer.setMetadata(new ObjectMetaBuilder()
-                        .withNamespace(invocation.getArgument(0, String.class))
-                        .withName(ref.getName())
-                        .build());
-                    answer.getAdditionalProperties().put(
-                        "status",
-                        new KameletBindingStatusBuilder()
-                            .withPhase(KameletBindingStatus.PHASE_ERROR)
-                            .addToConditions(new ConditionBuilder()
-                                .withType("Ready")
-                                .withStatus("False")
-                                .withReason("reason")
-                                .withMessage("message")
-                                .build())
-                            .build());
-
-                    break;
-                }
-
-            }
-
-            return answer;
-        });
-
         {
-            var status = new ManagedConnectorStatusBuilder()
-                .withResources(new DeployedResourceBuilder()
-                    .withNamespace("test")
-                    .withApiVersion(KameletBinding.RESOURCE_API_VERSION)
-                    .withKind(KameletBinding.RESOURCE_KIND)
-                    .withName(KameletBindingStatus.PHASE_READY)
-                    .build())
-                .build();
+            ConnectorStatusSpec status = new ConnectorStatusSpec();
 
-            new CamelOperandController(uc, configuration).status(status);
+            CamelOperandSupport.computeStatus(
+                status,
+                new KameletBindingStatusBuilder()
+                    .withPhase(KameletBindingStatus.PHASE_READY)
+                    .addToConditions(new ConditionBuilder()
+                        .withType("Ready")
+                        .withStatus("False")
+                        .withReason("reason")
+                        .withMessage("message")
+                        .build())
+                    .build());
 
-            assertThat(status.getConnectorStatus().getPhase()).isEqualTo(STATE_READY);
-            assertThat(status.getConnectorStatus().getConditions()).anySatisfy(condition -> {
+            assertThat(status.getPhase()).isEqualTo(STATE_READY);
+            assertThat(status.getConditions()).anySatisfy(condition -> {
                 assertThat(condition)
                     .hasFieldOrPropertyWithValue("type", "Ready")
                     .hasFieldOrPropertyWithValue("reason", "reason");
@@ -288,19 +223,22 @@ public final class CamelOperandControllerTest {
         }
 
         {
-            var status = new ManagedConnectorStatusBuilder()
-                .withResources(new DeployedResourceBuilder()
-                    .withNamespace("test")
-                    .withApiVersion(KameletBinding.RESOURCE_API_VERSION)
-                    .withKind(KameletBinding.RESOURCE_KIND)
-                    .withName(KameletBindingStatus.PHASE_ERROR)
-                    .build())
-                .build();
+            ConnectorStatusSpec status = new ConnectorStatusSpec();
 
-            new CamelOperandController(uc, configuration).status(status);
+            CamelOperandSupport.computeStatus(
+                status,
+                new KameletBindingStatusBuilder()
+                    .withPhase(KameletBindingStatus.PHASE_ERROR)
+                    .addToConditions(new ConditionBuilder()
+                        .withType("Ready")
+                        .withStatus("False")
+                        .withReason("reason")
+                        .withMessage("message")
+                        .build())
+                    .build());
 
-            assertThat(status.getConnectorStatus().getPhase()).isEqualTo(STATE_FAILED);
-            assertThat(status.getConnectorStatus().getConditions()).anySatisfy(condition -> {
+            assertThat(status.getPhase()).isEqualTo(STATE_FAILED);
+            assertThat(status.getConditions()).anySatisfy(condition -> {
                 assertThat(condition)
                     .hasFieldOrPropertyWithValue("type", "Ready")
                     .hasFieldOrPropertyWithValue("reason", "reason");

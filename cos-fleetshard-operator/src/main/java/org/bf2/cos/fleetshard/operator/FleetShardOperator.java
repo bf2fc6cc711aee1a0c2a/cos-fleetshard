@@ -30,7 +30,7 @@ public class FleetShardOperator {
     String operatorNamespace;
 
     void onStart(@Observes StartupEvent ignored) {
-        client.customResources(ManagedConnectorOperator.class)
+        client.resources(ManagedConnectorOperator.class)
             .inNamespace(operatorNamespace)
             .createOrReplace(managedConnectorOperator);
 

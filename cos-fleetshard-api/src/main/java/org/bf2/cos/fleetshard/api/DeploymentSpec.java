@@ -2,14 +2,22 @@ package org.bf2.cos.fleetshard.api;
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.model.annotation.PrinterColumn;
 import io.sundr.builder.annotations.Buildable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@JsonPropertyOrder({
+    "connectorTypeId",
+    "connectorResourceVersion",
+    "deploymentResourceVersion",
+    "desiredState",
+    "secret",
+    "secretChecksum"
+})
 public class DeploymentSpec {
 
     @PrinterColumn
@@ -58,18 +66,6 @@ public class DeploymentSpec {
     @JsonProperty
     public void setDesiredState(String desiredState) {
         this.desiredState = desiredState;
-    }
-
-    @JsonIgnore
-    public boolean hasDesiredStateOf(String... desiredStates) {
-        Objects.requireNonNull(desiredStates, "desiredState should not be null");
-
-        for (String desiredState : desiredStates) {
-            if (Objects.equals(this.desiredState, desiredState)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @JsonProperty

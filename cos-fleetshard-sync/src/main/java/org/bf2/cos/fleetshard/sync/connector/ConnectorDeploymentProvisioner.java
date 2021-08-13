@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
@@ -101,7 +101,7 @@ public class ConnectorDeploymentProvisioner {
                 fleetShard.getClusterId(),
                 deployment.getSpec().getConnectorId(),
                 deployment.getId(),
-                Map.of(LABEL_CONTEXT, CONTEXT_DEPLOYMENT));
+                Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
         });
 
         // TODO: change APIs to include a single operator
@@ -165,7 +165,7 @@ public class ConnectorDeploymentProvisioner {
                     deployment.getId(),
                     deployment.getMetadata().getResourceVersion(),
                     Map.of(
-                        LABEL_CONTEXT, CONTEXT_DEPLOYMENT,
+                        LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT,
                         LABEL_WATCH, "true"));
             });
 

@@ -4,8 +4,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class VersionRange {
-    private static final Pattern VERSION_PATTERN = Pattern
-        .compile("^([(\\[])([a-zA-Z0-9_\\-.]+),([a-zA-Z0-9_\\-.]+)?([)\\]])$");
+    private static final Pattern VERSION_PATTERN = Pattern.compile(
+        "^([(\\[])([a-zA-Z0-9_\\-.]+),([a-zA-Z0-9_\\-.]+)?([)\\]])$");
 
     private final char leftIndicator;
     private final Version leftVersion;
