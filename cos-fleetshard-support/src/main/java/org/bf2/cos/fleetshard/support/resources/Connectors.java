@@ -6,12 +6,15 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
 
 public final class Connectors {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Connectors.class);
 
     public static final String CONNECTOR_PREFIX = "mctr";
 

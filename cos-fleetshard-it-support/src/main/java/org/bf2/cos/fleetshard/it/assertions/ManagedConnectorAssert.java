@@ -24,7 +24,7 @@ public class ManagedConnectorAssert extends AbstractAssert<ManagedConnectorAsser
         isNotNull();
         hasStatus();
 
-        if (actual.getStatus().getResources() == null) {
+        if (actual.getStatus().getConnectorStatus().getResources() == null) {
             failWithMessage(
                 "Expected managed connector to have resources");
         }

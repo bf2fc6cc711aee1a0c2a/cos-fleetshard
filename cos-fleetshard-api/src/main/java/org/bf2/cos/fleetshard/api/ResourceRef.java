@@ -5,12 +5,19 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
 @ToString
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@JsonPropertyOrder({
+    "apiVersion",
+    "kind",
+    "name",
+    "namespace"
+})
 public class ResourceRef {
     @JsonProperty
     private String apiVersion;
@@ -83,8 +90,7 @@ public class ResourceRef {
 
         return Objects.equals(this.apiVersion, apiVersion)
             && Objects.equals(this.kind, kind)
-            && Objects.equals(this.name, name)
-            && Objects.equals(this.namespace, namespace);
+            && Objects.equals(this.name, name);
     }
 
     @Override

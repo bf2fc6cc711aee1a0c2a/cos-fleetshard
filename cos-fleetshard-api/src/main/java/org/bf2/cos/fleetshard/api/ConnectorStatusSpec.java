@@ -8,6 +8,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.model.annotation.PrinterColumn;
 import io.sundr.builder.annotations.Buildable;
@@ -18,11 +19,24 @@ import lombok.ToString;
 @EqualsAndHashCode
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
+@JsonPropertyOrder({
+    "phase",
+    "conditions",
+    "resources",
+    "assignedOperator",
+    "availableOperator"
+})
 public class ConnectorStatusSpec {
     @PrinterColumn(name = "deployment_phase")
     private String phase;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions = new ArrayList<>();
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<DeployedResource> resources = new ArrayList<>();
+
+    private Operator assignedOperator;
+    private Operator availableOperator;
 
     public ConnectorStatusSpec() {
     }
@@ -66,5 +80,35 @@ public class ConnectorStatusSpec {
     @JsonProperty
     public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
+    }
+
+    @JsonProperty
+    public List<DeployedResource> getResources() {
+        return resources;
+    }
+
+    @JsonProperty
+    public void setResources(List<DeployedResource> resources) {
+        this.resources = resources;
+    }
+
+    @JsonProperty
+    public Operator getAssignedOperator() {
+        return assignedOperator;
+    }
+
+    @JsonProperty
+    public void setAssignedOperator(Operator assignedOperator) {
+        this.assignedOperator = assignedOperator;
+    }
+
+    @JsonProperty
+    public Operator getAvailableOperator() {
+        return availableOperator;
+    }
+
+    @JsonProperty
+    public void setAvailableOperator(Operator availableOperator) {
+        this.availableOperator = availableOperator;
     }
 }

@@ -47,7 +47,7 @@ public class CamelConnectorReifyTest extends CamelConnectorTestSupport {
                     .isString()
                     .isEqualTo(connector.getSpec().getDeploymentId());
                 assertThatJson(resource)
-                    .inPath("$.metadata.labels['cos.bf2.org/deployment.resource.version']")
+                    .inPath("$.metadata.annotations['cos.bf2.org/deployment.resource.version']")
                     .isString()
                     .isEqualTo("1");
 
@@ -80,7 +80,7 @@ public class CamelConnectorReifyTest extends CamelConnectorTestSupport {
                     .isString()
                     .isEqualTo(connector.getSpec().getDeploymentId());
                 assertThatJson(resource)
-                    .inPath("$.metadata.labels['cos.bf2.org/deployment.resource.version']")
+                    .inPath("$.metadata.annotations['cos.bf2.org/deployment.resource.version']")
                     .isString()
                     .isEqualTo("1");
 

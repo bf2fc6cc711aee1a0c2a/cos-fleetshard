@@ -29,9 +29,9 @@ public class ConnectorStatusExtractor {
             status.setOperators(
                 new ConnectorDeploymentStatusOperators()
                     .assigned(
-                        toConnectorOperator(connector.getStatus().getAssignedOperator()))
+                        toConnectorOperator(connector.getStatus().getConnectorStatus().getAssignedOperator()))
                     .available(
-                        toConnectorOperator(connector.getStatus().getAvailableOperator())));
+                        toConnectorOperator(connector.getStatus().getConnectorStatus().getAvailableOperator())));
 
             if (connector.getStatus().getConnectorStatus() != null) {
                 if (connector.getStatus().getConnectorStatus().getPhase() != null) {

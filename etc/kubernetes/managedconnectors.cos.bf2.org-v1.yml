@@ -109,21 +109,6 @@ spec:
                       type: object
                   type: object
                 type: array
-              resources:
-                items:
-                  properties:
-                    deploymentRevision:
-                      type: number
-                    apiVersion:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                  type: object
-                type: array
               deployment:
                 properties:
                   connectorTypeId:
@@ -164,24 +149,39 @@ spec:
                           type: object
                       type: object
                     type: array
-                type: object
-              assignedOperator:
-                properties:
-                  id:
-                    type: string
-                  type:
-                    type: string
-                  version:
-                    type: string
-                type: object
-              availableOperator:
-                properties:
-                  id:
-                    type: string
-                  type:
-                    type: string
-                  version:
-                    type: string
+                  resources:
+                    items:
+                      properties:
+                        deploymentRevision:
+                          type: number
+                        apiVersion:
+                          type: string
+                        kind:
+                          type: string
+                        name:
+                          type: string
+                        namespace:
+                          type: string
+                      type: object
+                    type: array
+                  assignedOperator:
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  availableOperator:
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      version:
+                        type: string
+                    type: object
                 type: object
             type: object
         type: object

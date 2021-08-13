@@ -5,8 +5,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Version implements Comparable<Version> {
-    private static final Pattern VERSION_PATTERN = Pattern
-        .compile("^(\\d+)\\.(\\d+)\\.(\\d+)(?:\\.([a-zA-Z0-9_-]+))?$");
+    private static final Pattern VERSION_PATTERN = Pattern.compile(
+        "^(\\d+)\\.(\\d+)\\.(\\d+)(?:\\.([a-zA-Z0-9_-]+))?$");
 
     private final int major;
     private final int minor;

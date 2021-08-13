@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.model.annotation.PrinterColumn;
 import io.sundr.builder.annotations.Buildable;
@@ -14,6 +15,12 @@ import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
+@JsonPropertyOrder({
+    "phase",
+    "conditions",
+    "deployment",
+    "connectorStatus"
+})
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorStatus {
@@ -21,14 +28,9 @@ public class ManagedConnectorStatus {
     private PhaseType phase = PhaseType.Initialization;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions = new ArrayList<>();
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<DeployedResource> resources = new ArrayList<>();
 
     private DeploymentSpec deployment = new DeploymentSpec();
     private ConnectorStatusSpec connectorStatus = new ConnectorStatusSpec();
-
-    private Operator assignedOperator;
-    private Operator availableOperator;
 
     @JsonProperty
     public DeploymentSpec getDeployment() {
@@ -48,26 +50,6 @@ public class ManagedConnectorStatus {
     @JsonProperty
     public void setConnectorStatus(ConnectorStatusSpec connectorStatus) {
         this.connectorStatus = connectorStatus;
-    }
-
-    @JsonProperty
-    public Operator getAssignedOperator() {
-        return assignedOperator;
-    }
-
-    @JsonProperty
-    public void setAssignedOperator(Operator assignedOperator) {
-        this.assignedOperator = assignedOperator;
-    }
-
-    @JsonProperty
-    public Operator getAvailableOperator() {
-        return availableOperator;
-    }
-
-    @JsonProperty
-    public void setAvailableOperator(Operator availableOperator) {
-        this.availableOperator = availableOperator;
     }
 
     @JsonProperty
@@ -98,17 +80,7 @@ public class ManagedConnectorStatus {
 
     @JsonProperty
     public void setConditions(List<Condition> conditions) {
-        this.conditions = conditions;
-    }
-
-    @JsonProperty
-    public List<DeployedResource> getResources() {
-        return resources;
-    }
-
-    @JsonProperty
-    public void setResources(List<DeployedResource> resources) {
-        this.resources = resources;
+        this.conditions = new ArrayList<>(conditions);
     }
 
     public enum PhaseType {
@@ -121,16 +93,5 @@ public class ManagedConnectorStatus {
         Stopped,
         Upgrade,
         Error,
-    }
-
-    public enum ConditionType {
-        Error,
-        Ready
-    }
-
-    public enum ConditionStatus {
-        True,
-        False,
-        Unknown
     }
 }

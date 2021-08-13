@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: debezium-postgres
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: debezium-postgres
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debezium-postgres
+spec:
+  selector:
+    matchLabels:
+      app: debezium-postgres
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: debezium-postgres
+    spec:
+      containers:
+        - image: debezium/example-postgres:1.6
+          name: debezium-postgres
+          env:
+            - name: POSTGRES_PASSWORD
+              value: postgres
+          ports:
+            - containerPort: 5432
+              name: postgres
+

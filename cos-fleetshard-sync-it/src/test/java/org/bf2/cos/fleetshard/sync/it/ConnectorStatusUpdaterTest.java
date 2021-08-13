@@ -28,7 +28,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
@@ -55,18 +55,18 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
             clusterId,
             "connector-1",
             DEPLOYMENT_ID,
-            Map.of(LABEL_CONTEXT, CONTEXT_DEPLOYMENT));
+            Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
 
         ksrv.getClient()
-            .customResources(ManagedConnector.class)
+            .resources(ManagedConnector.class)
             .inNamespace(namespace)
             .create(connector);
 
-        connector.getStatus().setAssignedOperator(operator);
+        connectorStatusSpec.setAssignedOperator(operator);
         connector.getStatus().setConnectorStatus(connectorStatusSpec);
 
         ksrv.getClient()
-            .customResources(ManagedConnector.class)
+            .resources(ManagedConnector.class)
             .inNamespace(namespace)
             .withName(name)
             .replaceStatus(connector);

@@ -27,6 +27,10 @@ public class UnstructuredClient {
         this.kubernetesClient = kubernetesClient;
     }
 
+    public KubernetesClient getKubernetesClient() {
+        return kubernetesClient;
+    }
+
     public GenericKubernetesResource get(String namespace, ResourceRef ref) {
         return get(
             namespace,
