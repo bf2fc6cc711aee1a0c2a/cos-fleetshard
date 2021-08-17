@@ -15,22 +15,19 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .spec.clusterId
-      name: CLUSTERID
+      name: CLUSTER_ID
       type: string
     - jsonPath: .spec.connectorId
-      name: CONNECTORID
+      name: CONNECTOR_ID
+      type: string
+    - jsonPath: .spec.deployment.connectorTypeId
+      name: CONNECTOR_TYPE_ID
       type: string
     - jsonPath: .spec.deploymentId
-      name: DEPLOYMENTID
-      type: string
-    - jsonPath: .spec.id
-      name: ID
+      name: DEPLOYMENT_ID
       type: string
     - jsonPath: .status.connectorStatus.phase
       name: deployment_phase
-      type: string
-    - jsonPath: .status.deployment.connectorTypeId
-      name: CONNECTORTYPEID
       type: string
     - jsonPath: .status.phase
       name: PHASE
@@ -41,8 +38,6 @@ spec:
         properties:
           spec:
             properties:
-              id:
-                type: string
               clusterId:
                 type: string
               connectorId:

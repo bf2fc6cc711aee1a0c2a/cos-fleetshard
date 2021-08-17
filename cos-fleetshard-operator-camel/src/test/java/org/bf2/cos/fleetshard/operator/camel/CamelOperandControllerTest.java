@@ -4,11 +4,13 @@ import java.util.Base64;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ConditionBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
@@ -78,17 +80,21 @@ public final class CamelOperandControllerTest {
         spec.withArray("steps").addObject().with("insert-field").put("field", "b-field").put("value", "b-value");
 
         var resources = controller.doReify(
-            new ManagedConnectorSpecBuilder()
-                .withId(DEFAULT_MANAGED_CONNECTOR_ID)
-                .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
-                .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
-                .withDeployment(new DeploymentSpecBuilder()
-                    .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
-                    .withSecret("secret")
-                    .withSecretChecksum("TODO")
-                    .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
-                    .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
-                    .withDesiredState(DESIRED_STATE_READY)
+            new ManagedConnectorBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .build())
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
+                    .withDeployment(new DeploymentSpecBuilder()
+                        .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
+                        .withSecret("secret")
+                        .withSecretChecksum("TODO")
+                        .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
+                        .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
+                        .withDesiredState(DESIRED_STATE_READY)
+                        .build())
                     .build())
                 .build(),
             new CamelShardMetadataBuilder()
@@ -113,7 +119,7 @@ public final class CamelOperandControllerTest {
                 assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
 
                 assertThat(resource.getMetadata().getAnnotations())
-                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
+                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_DEPLOYMENT)
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, DEFAULT_CONNECTOR_IMAGE)
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
@@ -176,7 +182,7 @@ public final class CamelOperandControllerTest {
                 assertThat(resource.getKind()).isEqualTo("Secret");
 
                 assertThat(resource.getMetadata().getAnnotations())
-                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_DEPLOYMENT);
+                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR);
 
                 Secret secret = Serialization.jsonMapper().convertValue(resource, Secret.class);
                 String encoded = secret.getData().get("application.properties");

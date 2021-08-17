@@ -2,13 +2,13 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -35,7 +35,7 @@ public final class CamelOperandSupport {
             && Objects.equals(KameletBinding.RESOURCE_KIND, ref.getKind());
     }
 
-    public static void configureEndpoint(Properties props, ObjectNode node, String templateId) {
+    public static void configureEndpoint(Map<String, String> props, ObjectNode node, String templateId) {
         for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
             final var property = cit.next();
             final JsonNode pval = property.getValue();
@@ -60,7 +60,7 @@ public final class CamelOperandSupport {
         }
     }
 
-    public static void configureStep(Properties props, ObjectNode node, int index, String templateId) {
+    public static void configureStep(Map<String, String> props, ObjectNode node, int index, String templateId) {
         for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
             final var property = cit.next();
             final JsonNode pval = property.getValue();
@@ -106,7 +106,7 @@ public final class CamelOperandSupport {
         return stepDefinitions;
     }
 
-    public static Properties createApplicationProperties(
+    public static Map<String, String> createSecretsData(
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
         KafkaSpec kafkaSpec) {
@@ -114,7 +114,7 @@ public final class CamelOperandSupport {
         final String connectorKameletId = shardMetadata.getKamelets().get("connector");
         final String kafkaKameletId = shardMetadata.getKamelets().get("kafka");
 
-        Properties props = new Properties();
+        Map<String, String> props = new HashMap<>();
         if (connectorSpec != null) {
             configureEndpoint(
                 props,
@@ -178,7 +178,7 @@ public final class CamelOperandSupport {
     public static Optional<GenericKubernetesResource> lookupBinding(UnstructuredClient uc, ManagedConnector connector) {
         return Optional.ofNullable(uc.get(
             connector.getMetadata().getNamespace(),
-            connector.getSpec().getId() + "-camel",
+            connector.getMetadata().getName(),
             KameletBinding.RESOURCE_DEFINITION));
     }
 

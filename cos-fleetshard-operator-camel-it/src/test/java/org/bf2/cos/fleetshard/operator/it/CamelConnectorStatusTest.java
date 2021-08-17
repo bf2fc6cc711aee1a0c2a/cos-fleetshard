@@ -30,10 +30,10 @@ public class CamelConnectorStatusTest extends CamelConnectorTestSupport {
 
         assertThatUnstructured(uc).hasSecret(
             namespace,
-            connector.getMetadata().getName() + "-camel-" + connector.getSpec().getDeployment().getDeploymentResourceVersion());
+            connector.getMetadata().getName());
         assertThatUnstructured(uc).hasKameletBinding(
             namespace,
-            connector.getMetadata().getName() + "-camel");
+            connector.getMetadata().getName());
 
         until(
             () -> getConnectorByDeploymentId(connector.getSpec().getDeploymentId()),
@@ -45,7 +45,7 @@ public class CamelConnectorStatusTest extends CamelConnectorTestSupport {
         editUnstructuredStatus(
             KameletBinding.RESOURCE_API_VERSION,
             KameletBinding.RESOURCE_KIND,
-            connector.getMetadata().getName() + "-camel",
+            connector.getMetadata().getName(),
             binding -> {
                 Map<String, Object> status = (Map<String, Object>) binding.getAdditionalProperties().get("status");
                 if (status == null) {

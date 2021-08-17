@@ -21,29 +21,18 @@ import lombok.ToString;
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ManagedConnectorSpec {
-    @PrinterColumn
-    private String id;
-
-    @PrinterColumn
+    @PrinterColumn(name = "CLUSTER_ID")
     private String clusterId;
 
-    @PrinterColumn
+    @PrinterColumn(name = "CONNECTOR_ID")
     private String connectorId;
 
-    @PrinterColumn
+    @PrinterColumn(name = "DEPLOYMENT_ID")
     private String deploymentId;
 
     private DeploymentSpec deployment = new DeploymentSpec();
 
     private OperatorSelector operatorSelector;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     @JsonProperty
     public String getClusterId() {

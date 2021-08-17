@@ -14,6 +14,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.runtime
+      name: RUNTIME
+      type: string
     - jsonPath: .spec.type
       name: TYPE
       type: string
@@ -29,6 +32,8 @@ spec:
               type:
                 type: string
               version:
+                type: string
+              runtime:
                 type: string
             type: object
           status:

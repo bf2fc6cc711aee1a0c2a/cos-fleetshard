@@ -59,7 +59,7 @@ public class FleetShardClient {
     }
 
     public Boolean delete(ManagedConnector managedConnector) {
-        return kubernetesClient.customResources(ManagedConnector.class)
+        return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withName(managedConnector.getMetadata().getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
@@ -67,7 +67,7 @@ public class FleetShardClient {
     }
 
     public long getMaxDeploymentResourceRevision() {
-        final List<ManagedConnector> managedConnectors = kubernetesClient.customResources(ManagedConnector.class)
+        final List<ManagedConnector> managedConnectors = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .list()
@@ -122,14 +122,14 @@ public class FleetShardClient {
 
     public Optional<ManagedConnector> getConnectorByName(String name) {
         return Optional.ofNullable(
-            kubernetesClient.customResources(ManagedConnector.class)
+            kubernetesClient.resources(ManagedConnector.class)
                 .inNamespace(this.connectorsNamespace)
                 .withName(name)
                 .get());
     }
 
     public Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
-        var items = kubernetesClient.customResources(ManagedConnector.class)
+        var items = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, this.clusterId)
@@ -149,7 +149,7 @@ public class FleetShardClient {
     }
 
     public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
-        var items = kubernetesClient.customResources(ManagedConnector.class)
+        var items = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
@@ -169,7 +169,7 @@ public class FleetShardClient {
     }
 
     public List<ManagedConnector> getAllConnectors() {
-        List<ManagedConnector> answer = kubernetesClient.customResources(ManagedConnector.class)
+        List<ManagedConnector> answer = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .list()
@@ -179,14 +179,14 @@ public class FleetShardClient {
     }
 
     public AutoCloseable watchAllConnectors(Watcher<ManagedConnector> watcher) {
-        return kubernetesClient.customResources(ManagedConnector.class)
+        return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .watch(watcher);
     }
 
     public AutoCloseable watchAllConnectors(ResourceEventHandler<ManagedConnector> handler) {
-        return kubernetesClient.customResources(ManagedConnector.class)
+        return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .inform(handler, informerSyncInterval.toMillis());
@@ -212,13 +212,13 @@ public class FleetShardClient {
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {
-        return kubernetesClient.customResources(ManagedConnector.class)
+        return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .createOrReplace(connector);
     }
 
     public ManagedConnector editConnector(String name, Consumer<ManagedConnector> editor) {
-        return kubernetesClient.customResources(ManagedConnector.class)
+        return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
             .withName(name)
             .accept(editor);
@@ -231,7 +231,7 @@ public class FleetShardClient {
     }
 
     public List<Operator> lookupOperators() {
-        return kubernetesClient.customResources(ManagedConnectorOperator.class)
+        return kubernetesClient.resources(ManagedConnectorOperator.class)
             .inNamespace(this.operatorsNamespace)
             .list()
             .getItems()
@@ -244,7 +244,7 @@ public class FleetShardClient {
     }
 
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
-        var items = kubernetesClient.customResources(ManagedConnectorCluster.class)
+        var items = kubernetesClient.resources(ManagedConnectorCluster.class)
             .inNamespace(connectorsNamespace)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
             .list();
@@ -273,7 +273,7 @@ public class FleetShardClient {
         cluster.getSpec().setClusterId(clusterId);
         ;
 
-        return kubernetesClient.customResources(ManagedConnectorCluster.class)
+        return kubernetesClient.resources(ManagedConnectorCluster.class)
             .inNamespace(connectorsNamespace)
             .withName(cluster.getMetadata().getName())
             .createOrReplace(cluster);

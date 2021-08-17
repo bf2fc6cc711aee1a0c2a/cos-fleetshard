@@ -9,6 +9,8 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOU
 public final class CamelConstants {
     public static final String OPERATOR_TYPE = "camel-connector-operator";
     public static final String CAMEL_GROUP = "camel.apache.org";
+    public static final String OPERATOR_RUNTIME = "camel-k";
+    public static final String APPLICATION_PROPERTIES = "application.properties";
 
     public static final String CONNECTOR_TYPE_SOURCE = "source";
     public static final String CONNECTOR_TYPE_SINK = "sink";

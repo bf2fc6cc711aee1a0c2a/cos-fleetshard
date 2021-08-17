@@ -131,7 +131,6 @@ public class ConnectorDeploymentProvisioner {
                 .withBlockOwnerDeletion(true)
                 .build()));
 
-        connector.getSpec().setId(connector.getMetadata().getName());
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().getDeployment().setConnectorTypeId(deployment.getSpec().getConnectorTypeId());

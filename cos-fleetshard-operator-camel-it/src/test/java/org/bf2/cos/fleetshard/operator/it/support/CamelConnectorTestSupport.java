@@ -100,7 +100,6 @@ public class CamelConnectorTestSupport {
             deploymentId,
             Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
 
-        connector.getSpec().setId(connector.getMetadata().getName());
         connector.getSpec().getDeployment().setConnectorResourceVersion(1L);
         connector.getSpec().getDeployment().setDeploymentResourceVersion(1L);
         connector.getSpec().getDeployment().setDesiredState(DESIRED_STATE_READY);
@@ -121,7 +120,7 @@ public class CamelConnectorTestSupport {
     }
 
     protected Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
-        var items = kubernetesClient.customResources(ManagedConnector.class)
+        var items = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(namespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
             .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
