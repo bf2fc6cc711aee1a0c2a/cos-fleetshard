@@ -44,12 +44,5 @@ jobs:
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
 
       - name: "Build"
-        run: |          
+        run: |
           ./etc/scripts/build.sh
-
-      - name: Archive results
-        uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: artifacts
-          path: systemtests/target/logs/
