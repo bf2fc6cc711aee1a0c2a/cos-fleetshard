@@ -25,6 +25,7 @@ public class CamelProducers {
             .withSpec(new ManagedConnectorOperatorSpecBuilder()
                 .withVersion(operatorVersion)
                 .withType(CamelConstants.OPERATOR_TYPE)
+                .withRuntime(CamelConstants.OPERATOR_RUNTIME)
                 .build())
             .build();
     }

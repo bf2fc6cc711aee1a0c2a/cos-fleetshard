@@ -260,7 +260,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             "Augmentation",
             "Augmentation");
 
-        for (var resource : operandController.reify(connector.getSpec(), secret)) {
+        for (var resource : operandController.reify(connector, secret)) {
             if (resource.getMetadata().getLabels() == null) {
                 resource.getMetadata().setLabels(new HashMap<>());
             }

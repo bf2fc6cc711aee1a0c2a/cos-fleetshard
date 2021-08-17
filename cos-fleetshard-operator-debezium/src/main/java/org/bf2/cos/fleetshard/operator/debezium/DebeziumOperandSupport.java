@@ -10,9 +10,6 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.Constants;
@@ -20,17 +17,12 @@ import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.status.Condition;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
-import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
-import static org.bf2.cos.fleetshard.support.PropertiesUtil.asBytesBase64;
 
 public class DebeziumOperandSupport {
     public static final String AV_KAFKA_CONNECT = Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION;
@@ -109,7 +101,7 @@ public class DebeziumOperandSupport {
         return config;
     }
 
-    public static Secret createSecret(String secretName, JsonNode connectorSpec, KafkaSpec kafkaSpec) {
+    public static Map<String, String> createSecretsData(JsonNode connectorSpec) {
         Map<String, String> props = new TreeMap<>();
         if (connectorSpec != null) {
             var cit = connectorSpec.fields();
@@ -132,21 +124,14 @@ public class DebeziumOperandSupport {
             }
         }
 
-        return new SecretBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(secretName)
-                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
-                .build())
-            .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(props))
-            .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
-            .build();
+        return props;
     }
 
     public static Optional<KafkaConnector> lookupConnector(KubernetesClient client, ManagedConnector connector) {
         return Optional.ofNullable(
             client.resources(KafkaConnector.class)
                 .inNamespace(connector.getMetadata().getNamespace())
-                .withName(connector.getSpec().getId() + "-dbz")
+                .withName(connector.getMetadata().getName())
                 .get());
     }
 

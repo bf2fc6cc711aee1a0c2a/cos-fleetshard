@@ -20,7 +20,7 @@ import io.sundr.builder.annotations.Buildable;
 })
 public class DeploymentSpec {
 
-    @PrinterColumn
+    @PrinterColumn(name = "CONNECTOR_TYPE_ID")
     private String connectorTypeId;
     private Long connectorResourceVersion;
     private Long deploymentResourceVersion;

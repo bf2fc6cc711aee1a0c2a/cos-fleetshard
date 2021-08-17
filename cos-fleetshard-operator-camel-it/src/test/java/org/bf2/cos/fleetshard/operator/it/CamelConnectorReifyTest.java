@@ -28,7 +28,7 @@ public class CamelConnectorReifyTest extends CamelConnectorTestSupport {
 
         assertThatUnstructured(uc).hasSecretSatisfying(
             namespace,
-            mc.getMetadata().getName() + "-camel-" + mc.getSpec().getDeployment().getDeploymentResourceVersion(),
+            mc.getMetadata().getName(),
             resource -> {
                 assertThatJson(resource)
                     .inPath("$.metadata.labels['cos.bf2.org/watch']")
@@ -61,7 +61,7 @@ public class CamelConnectorReifyTest extends CamelConnectorTestSupport {
 
         assertThatUnstructured(uc).hasKameletBindingSatisfying(
             namespace,
-            mc.getMetadata().getName() + "-camel",
+            mc.getMetadata().getName(),
             resource -> {
                 assertThatJson(resource)
                     .inPath("$.metadata.labels['cos.bf2.org/watch']")

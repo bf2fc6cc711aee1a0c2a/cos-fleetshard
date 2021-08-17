@@ -6,20 +6,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
-public final class PropertiesUtil {
-    private PropertiesUtil() {
-    }
-
-    @SuppressWarnings("unchecked")
-    public static byte[] asBytes(Properties prop) {
-        return asBytes((Map) prop);
-    }
-
-    public static String asBytesBase64(Properties props) {
-        return Base64.getEncoder().encodeToString(asBytes(props));
+public final class CollectionUtils {
+    private CollectionUtils() {
     }
 
     public static byte[] asBytes(Map<String, String> props) {
@@ -40,5 +31,19 @@ public final class PropertiesUtil {
 
     public static String asBytesBase64(Map<String, String> props) {
         return Base64.getEncoder().encodeToString(asBytes(props));
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <K, V> Map<K, V> mapOf(K key, V value, Object... keyVals) {
+        Map<K, V> map = new HashMap<>();
+        map.put(key, value);
+
+        for (int i = 0; i < keyVals.length; i += 2) {
+            map.put(
+                (K) keyVals[i],
+                (V) keyVals[i + 1]);
+        }
+
+        return map;
     }
 }

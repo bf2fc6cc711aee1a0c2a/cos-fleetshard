@@ -13,7 +13,6 @@ import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
     }
 
     @Override
-    public List<HasMetadata> reify(ManagedConnectorSpec connector, Secret secret) {
+    public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
         final KafkaConnectionSettings kafkaSettings = extract(
             secret,
             SECRET_ENTRY_KAFKA,
@@ -63,7 +62,7 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
     }
 
     protected abstract List<HasMetadata> doReify(
-        ManagedConnectorSpec connector,
+        ManagedConnector connector,
         M shardMetadata,
         S connectorSpec,
         KafkaSpec kafkaSpec);

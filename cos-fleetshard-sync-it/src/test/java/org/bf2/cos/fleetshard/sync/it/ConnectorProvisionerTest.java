@@ -29,12 +29,11 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.computeChecksum;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 @QuarkusTest
@@ -98,7 +97,6 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
-            assertThat(mc.getSpec().getId()).isEqualTo(mc.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecretChecksum()).isEqualTo(computeChecksum(s1));
         }
@@ -177,7 +175,6 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
-            assertThat(mc.getSpec().getId()).isEqualTo(mc.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s2.getMetadata().getName());
             assertThat(mc.getSpec().getDeployment().getSecretChecksum()).isEqualTo(computeChecksum(s2));
         }

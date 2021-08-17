@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
 
 public interface OperandController {
     /**
@@ -21,7 +20,7 @@ public interface OperandController {
      * @param connector the connector descriptor.
      * @param secret    the secret holding the connector specific data.
      */
-    List<HasMetadata> reify(ManagedConnectorSpec connector, Secret secret);
+    List<HasMetadata> reify(ManagedConnector connector, Secret secret);
 
     /**
      * Extract the status of a connector.

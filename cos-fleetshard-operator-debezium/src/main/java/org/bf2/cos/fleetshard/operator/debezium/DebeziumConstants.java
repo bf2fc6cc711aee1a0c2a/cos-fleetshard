@@ -1,14 +1,17 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.util.List;
+import java.util.Map;
 
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
+import org.bf2.cos.fleetshard.support.CollectionUtils;
 
 public final class DebeziumConstants {
     public static final String OPERATOR_TYPE = "debezium-connector-operator";
+    public static final String OPERATOR_RUNTIME = "kafka-connect";
 
     public static final String EXTERNAL_CONFIG_DIRECTORY = "connector-configuration";
     public static final String EXTERNAL_CONFIG_FILE = "debezium-connector.properties";
@@ -16,6 +19,22 @@ public final class DebeziumConstants {
 
     public static final String STRIMZI_DOMAIN = "strimzi.io/";
     public static final String STRIMZI_IO_USE_CONNECTOR_RESOURCES = STRIMZI_DOMAIN + "use-connector-resources";
+
+    public static final Map<String, Object> DEFAULT_CONFIG_OPTIONS = CollectionUtils.mapOf(
+        "request.timeout.ms", 20_000,
+        "retry.backoff.ms", 500,
+        "consumer.request.timeout.ms", 20_000,
+        "consumer.retry.backoff.ms", 500,
+        "producer.request.timeout.ms", 20_000,
+        "producer.retry.backoff.ms", 500,
+        "producer.compression.type", "lz4",
+        "config.storage.replication.factor", 2,
+        "offset.storage.replication.factor", 2,
+        "status.storage.replication.factor", 2,
+        "key.converter.schemas.enable", true,
+        "value.converter.schemas.enable", true,
+        "config.providers", "file",
+        "config.providers.file.class", "org.apache.kafka.common.config.provider.FileConfigProvider");
 
     public static final List<ResourceDefinitionContext> RESOURCE_TYPES = List.of(
         new ResourceDefinitionContext.Builder()

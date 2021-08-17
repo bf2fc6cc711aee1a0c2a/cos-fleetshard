@@ -25,6 +25,7 @@ public class DebeziumProducers {
             .withSpec(new ManagedConnectorOperatorSpecBuilder()
                 .withVersion(operatorVersion)
                 .withType(DebeziumConstants.OPERATOR_TYPE)
+                .withRuntime(DebeziumConstants.OPERATOR_RUNTIME)
                 .build())
             .build();
     }
