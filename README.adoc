@@ -84,8 +84,8 @@ kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
 +
 [source,shell]
 ----
-kubectl apply -k etc/kubernetes/operator-camel/base
-kubectl apply -k etc/kubernetes/operator-debezium/examples/postgres
+kubectl apply -k etc/kubernetes/operator-camel/example
+kubectl apply -k etc/kubernetes/operator-debezium/example
 kubectl apply -k etc/kubernetes/sync/examples/my-sync-1
 kubectl apply -k etc/kubernetes/sync/examples/my-sync-2
 ----

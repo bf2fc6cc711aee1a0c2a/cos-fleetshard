@@ -22,5 +22,6 @@ patchesJson6902:
       - op: replace
         path: /spec/template/spec/containers/0/name
         value: "application"
-        
-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: "Never"
