@@ -20,7 +20,6 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-import io.quarkiverse.operatorsdk.runtime.DelayRegistrationUntil;
 import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -30,7 +29,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
-import org.bf2.cos.fleetshard.operator.FleetShardEvents;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
@@ -63,7 +61,6 @@ import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
 import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
-@DelayRegistrationUntil(event = FleetShardEvents.Started.class)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
