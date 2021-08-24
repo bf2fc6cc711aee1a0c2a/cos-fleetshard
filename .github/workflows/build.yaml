@@ -86,9 +86,8 @@ jobs:
         uses: redhat-actions/oc-login@v1
         with:
           openshift_server_url: ${{ secrets.K8S_CLUSTER_DEV }}
-          openshift_username: ${{ secrets.K8S_CLUSTER_DEV_USER }}
-          openshift_password: ${{ secrets.K8S_CLUSTER_DEV_PASSWORD }}
-          insecure_skip_tls_verify: true
+          openshift_token: ${{ secrets.K8S_CLUSTER_DEV_TOKEN }}
+          insecure_skip_tls_verify: false
           namespace: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
       - name: Create Pull Secret
         run: |
