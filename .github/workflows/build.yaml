@@ -94,7 +94,7 @@ jobs:
           ./etc/scripts/create_pull_secret.sh
       - name: Deploy FleetShard CRDs
         run: |
-          ./etc/scripts/deploy_fleetshard_crds.yaml
+          ./etc/scripts/deploy_fleetshard_crds.sh
       - name: Deploy FleetShard
         run: |
-          ./etc/scripts/deploy_fleetshard.yaml
+          ./etc/scripts/deploy_fleetshard.sh

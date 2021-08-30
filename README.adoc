@@ -7,6 +7,7 @@
 * stern
 * ocm
 * kubectl
+* uuidgen
 * https://github.com/bf2fc6cc711aee1a0c2a/cos-tools
 
 define the following env vars:
@@ -84,10 +85,9 @@ kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
 +
 [source,shell]
 ----
-kubectl apply -k etc/kubernetes/operator-camel/example
-kubectl apply -k etc/kubernetes/operator-debezium/example
-kubectl apply -k etc/kubernetes/sync/examples/my-sync-1
-kubectl apply -k etc/kubernetes/sync/examples/my-sync-2
+kubectl apply -k etc/kubernetes/operator-camel/local
+kubectl apply -k etc/kubernetes/operator-debezium/local
+kubectl apply -k etc/kubernetes/sync/local
 ----
 +
 We need to patch the cos-fleetshard-operator-debezium deployment to point to the right registry
@@ -97,7 +97,7 @@ We need to patch the cos-fleetshard-operator-debezium deployment to point to the
 kubectl set env deployment/cos-fleetshard-operator-debezium COS_OPERATOR_DEBEZIUM_CONTAINER_IMAGE_REGISTRY=$(kubectl get svc registry -n kube-system -o=jsonpath='{.spec.clusterIP}')
 ----
 +
-At this point, operators and syncs are deployed, but they are not running as replica is set to 0 by default because some resources have to be configured.
+At this point, operators and sync are deployed, but they are not running as replica is set to 0 by default because some resources have to be configured.
 +
 [source,shell]
 ----
@@ -106,8 +106,7 @@ NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
 camel-k-operator                   1/1     1            1           2d3h
 cos-fleetshard-operator-camel      0/0     0            0           6s
 cos-fleetshard-operator-debezium   0/0     0            0           5s
-cos-fleetshard-sync-1              0/0     0            0           4s
-cos-fleetshard-sync-2              0/0     0            0           3s
+cos-fleetshard-sync                0/0     0            0           4s
 strimzi-cluster-operator           1/1     1            1           2d3h
 ----
 +
@@ -121,8 +120,7 @@ This creates two new cluster on the fleet manager, remember to delete them once 
 [source,shell]
 ----
 SUFFIX=$(uuidgen | tr -d '-')
-create-cluster-secret $(create-cluster "$USER-1-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config-1
-create-cluster-secret $(create-cluster "$USER-2-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config-2
+create-cluster-secret $(create-cluster "$USER-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config
 ----
 +
 * *scale deployments*
