@@ -1,10 +1,13 @@
 resources:
-  - ../../base
+  - ../base
 
-nameSuffix: "-2"
+generatorOptions:
+  disableNameSuffixHash: true
 
-commonLabels:
-  app.kubernetes.io/name: "2"
+configMapGenerator:
+  - name: cos-fleetshard-sync-config
+    files:
+      - application.properties=app-config/application.properties
 
 patchesJson6902:
   - target:
@@ -17,12 +20,8 @@ patchesJson6902:
         path: /spec/replicas
         value: 0
       - op: replace
-        path: /spec/template/spec/serviceAccount
-        value: "cos-fleetshard-sync-2"
-      - op: replace
         path: /spec/template/spec/containers/0/name
         value: "application"
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: "Never"
-
