@@ -1,17 +1,18 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 public final class Connectors {
     private static final Logger LOGGER = LoggerFactory.getLogger(Connectors.class);

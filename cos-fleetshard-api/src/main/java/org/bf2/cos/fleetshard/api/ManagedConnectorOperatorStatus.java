@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

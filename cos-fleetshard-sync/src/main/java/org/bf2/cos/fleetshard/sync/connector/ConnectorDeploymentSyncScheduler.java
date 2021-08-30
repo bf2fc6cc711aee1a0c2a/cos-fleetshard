@@ -3,8 +3,9 @@ package org.bf2.cos.fleetshard.sync.connector;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+
+import io.quarkus.scheduler.Scheduled;
 
 @ApplicationScoped
 public class ConnectorDeploymentSyncScheduler {

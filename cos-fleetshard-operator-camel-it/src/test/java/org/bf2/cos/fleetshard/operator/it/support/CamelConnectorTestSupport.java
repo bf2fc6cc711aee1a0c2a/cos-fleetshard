@@ -1,5 +1,12 @@
 package org.bf2.cos.fleetshard.operator.it.support;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -7,11 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.awaitility.Awaitility;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
@@ -24,12 +26,11 @@ import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 
 public class CamelConnectorTestSupport {
     @KubernetesTestServer

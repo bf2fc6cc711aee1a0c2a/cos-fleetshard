@@ -1,6 +1,10 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import io.fabric8.kubernetes.api.model.Condition;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
+
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
@@ -9,10 +13,7 @@ import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
+import io.fabric8.kubernetes.api.model.Condition;
 
 public class ConnectorStatusExtractor {
     public static ConnectorDeploymentStatus extract(ManagedConnector connector) {

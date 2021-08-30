@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
+
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Map;
@@ -7,8 +10,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -16,13 +25,6 @@ import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.status.Condition;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ResourceRef;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
-
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 
 public class DebeziumOperandSupport {
     public static final String AV_KAFKA_CONNECT = Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION;

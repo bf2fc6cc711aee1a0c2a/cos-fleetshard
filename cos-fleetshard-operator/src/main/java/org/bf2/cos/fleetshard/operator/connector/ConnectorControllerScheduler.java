@@ -5,10 +5,11 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.quarkus.scheduler.Scheduled;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
+
+import io.quarkus.scheduler.Scheduled;
 
 @ApplicationScoped
 public class ConnectorControllerScheduler {

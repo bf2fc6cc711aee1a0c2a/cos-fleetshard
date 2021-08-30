@@ -4,6 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
+
 import io.quarkus.scheduler.Scheduled;
 
 @ApplicationScoped

@@ -13,3 +13,4 @@ tests/output/kind-*
 .classpath
 kamel
 .kamel/
+.cache/

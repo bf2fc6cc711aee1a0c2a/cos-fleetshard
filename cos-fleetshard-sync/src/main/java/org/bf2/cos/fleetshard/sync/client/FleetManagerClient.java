@@ -10,8 +10,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 
-import io.fabric8.kubernetes.client.utils.Serialization;
-import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
 import org.bf2.cos.fleet.manager.api.ConnectorClustersAgentApi;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -22,6 +20,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
 
 @ApplicationScoped
 public class FleetManagerClient {

@@ -1,5 +1,9 @@
 package org.bf2.cos.fleetshard.sync.client;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -9,12 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import io.fabric8.kubernetes.api.model.DeletionPropagation;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
@@ -24,9 +22,12 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 
 @ApplicationScoped
 public class FleetShardClient {

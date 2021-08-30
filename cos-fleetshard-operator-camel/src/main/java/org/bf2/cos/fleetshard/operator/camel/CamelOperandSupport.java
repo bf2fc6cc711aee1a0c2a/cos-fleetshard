@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import static java.lang.String.format;
+import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
+
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -10,11 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -23,8 +21,12 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
-import static java.lang.String.format;
-import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 public final class CamelOperandSupport {
     private CamelOperandSupport() {

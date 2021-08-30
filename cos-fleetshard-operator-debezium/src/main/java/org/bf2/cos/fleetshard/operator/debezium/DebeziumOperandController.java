@@ -1,12 +1,34 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
+import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
 
+import org.bf2.cos.fleetshard.api.KafkaSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
+import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -29,26 +51,6 @@ import io.strimzi.api.kafka.model.connect.build.BuildBuilder;
 import io.strimzi.api.kafka.model.connect.build.DockerOutputBuilder;
 import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
 import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
-import org.bf2.cos.fleetshard.api.KafkaSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
-import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
-import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {

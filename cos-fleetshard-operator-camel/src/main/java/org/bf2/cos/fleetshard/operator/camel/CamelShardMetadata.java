@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.bf2.cos.fleetshard.api.Operator;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.sundr.builder.annotations.Buildable;
-import org.bf2.cos.fleetshard.api.Operator;
 
 /**
  * Class representing the camel specific shard metadata object.
