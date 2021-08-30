@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
 
-import static io.fabric8.kubernetes.client.utils.KubernetesResourceUtil.getLabels;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 @ToString(callSuper = true)
@@ -17,26 +16,27 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOU
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class DeployedResource extends ResourceRef {
     private Long deploymentRevision;
+    private Long generation;
+    private String resourceVersion;
 
-    public DeployedResource() {
-    }
+    public static DeployedResource of(HasMetadata metadata) {
+        DeployedResource answer = new DeployedResource();
+        answer.setApiVersion(metadata.getApiVersion());
+        answer.setKind(metadata.getKind());
+        answer.setName(metadata.getMetadata().getName());
+        answer.setNamespace(metadata.getMetadata().getNamespace());
+        answer.setGeneration(metadata.getMetadata().getGeneration());
+        answer.setResourceVersion(metadata.getMetadata().getResourceVersion());
 
-    public DeployedResource(String apiVersion, String kind, String name) {
-        this(apiVersion, kind, name, null, null);
-    }
+        if (metadata.getMetadata().getAnnotations() != null) {
+            String version = metadata.getMetadata().getAnnotations().get(LABEL_DEPLOYMENT_RESOURCE_VERSION);
+            if (version != null) {
+                answer.setDeploymentRevision(Long.parseLong(version));
+            }
+        }
 
-    public DeployedResource(String apiVersion, String kind, String name, Long deploymentRevision) {
-        this(apiVersion, kind, name, null, deploymentRevision);
-    }
+        return answer;
 
-    public DeployedResource(String apiVersion, String kind, String name, String namespace) {
-        this(apiVersion, kind, name, namespace, null);
-    }
-
-    public DeployedResource(String apiVersion, String kind, String name, String namespace, Long deploymentRevision) {
-        super(apiVersion, kind, name, namespace);
-
-        this.deploymentRevision = deploymentRevision;
     }
 
     @JsonProperty
@@ -49,12 +49,29 @@ public class DeployedResource extends ResourceRef {
         this.deploymentRevision = deploymentRevision;
     }
 
-    @JsonIgnore
-    public boolean is(String apiVersion, String kind, String name, Long deploymentRevision) {
-        Objects.requireNonNull(deploymentRevision, "deploymentRevision");
+    @JsonProperty
+    public Long getGeneration() {
+        return generation;
+    }
 
-        return super.is(apiVersion, kind, name)
-            && Objects.equals(this.deploymentRevision, deploymentRevision);
+    @JsonProperty
+    public void setGeneration(Long generation) {
+        this.generation = generation;
+    }
+
+    @JsonProperty
+    public String getResourceVersion() {
+        return resourceVersion;
+    }
+
+    @JsonProperty
+    public void setResourceVersion(String resourceVersion) {
+        this.resourceVersion = resourceVersion;
+    }
+
+    @JsonIgnore
+    public boolean is(DeployedResource other) {
+        return super.equals(other) && Objects.equals(getDeploymentRevision(), other.getDeploymentRevision());
     }
 
     @Override
@@ -69,27 +86,13 @@ public class DeployedResource extends ResourceRef {
             return false;
         }
         DeployedResource resource = (DeployedResource) o;
-        return Objects.equals(getDeploymentRevision(), resource.getDeploymentRevision());
+        return Objects.equals(getDeploymentRevision(), resource.getDeploymentRevision())
+            && Objects.equals(getGeneration(), resource.getGeneration())
+            && Objects.equals(getResourceVersion(), resource.getResourceVersion());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getDeploymentRevision());
-    }
-
-    public static DeployedResource of(HasMetadata metadata) {
-        DeployedResource answer = new DeployedResource(
-            metadata.getApiVersion(),
-            metadata.getKind(),
-            metadata.getMetadata().getName(),
-            metadata.getMetadata().getNamespace());
-
-        String version = getLabels(metadata.getMetadata()).get(LABEL_DEPLOYMENT_RESOURCE_VERSION);
-        if (version != null) {
-            answer.setDeploymentRevision(Long.parseLong(version));
-        }
-
-        return answer;
-
+        return Objects.hash(super.hashCode(), getDeploymentRevision(), getGeneration(), getResourceVersion());
     }
 }

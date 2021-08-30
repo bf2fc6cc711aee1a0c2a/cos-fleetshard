@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -76,10 +80,7 @@ public class ConnectorDeploymentProvisioner {
                 Secret secret = createManagedConnectorSecret(deployment, base);
                 ManagedConnector connector = fleetShard.editConnector(
                     base.getMetadata().getName(),
-                    c -> {
-                        c.getSpec().getDeployment().setSecret(secret.getMetadata().getName());
-                        c.getSpec().getDeployment().setSecretChecksum(Secrets.computeChecksum(secret));
-                    });
+                    c -> c.getSpec().getDeployment().setSecret(secret.getMetadata().getName()));
 
                 LOGGER.info("CreateOrReplace - managed_connector: {}/{}, managed_connector_secret: {}/{}",
                     connector.getMetadata().getNamespace(), connector.getMetadata().getName(),
@@ -131,6 +132,11 @@ public class ConnectorDeploymentProvisioner {
                 .withBlockOwnerDeletion(true)
                 .build()));
 
+        // update the resource so it gets a new version
+        KubernetesResourceUtil.getOrCreateAnnotations(connector).put(
+            ManagedConnector.ANNOTATION_UPDATED_TIMESTAMP,
+            ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().getDeployment().setConnectorTypeId(deployment.getSpec().getConnectorTypeId());
@@ -176,6 +182,11 @@ public class ConnectorDeploymentProvisioner {
                 .withUid(owner.getMetadata().getUid())
                 .withBlockOwnerDeletion(true)
                 .build()));
+
+        // update the resource so it gets a new version
+        KubernetesResourceUtil.getOrCreateAnnotations(secret).put(
+            ManagedConnector.ANNOTATION_UPDATED_TIMESTAMP,
+            ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
         Secrets.set(secret, Secrets.SECRET_ENTRY_CONNECTOR, deployment.getSpec().getConnectorSpec());
         Secrets.set(secret, Secrets.SECRET_ENTRY_KAFKA, deployment.getSpec().getKafka());

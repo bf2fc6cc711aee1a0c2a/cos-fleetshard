@@ -90,7 +90,6 @@ public final class CamelOperandControllerTest {
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
-                        .withSecretChecksum("TODO")
                         .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
                         .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
                         .withDesiredState(DESIRED_STATE_READY)

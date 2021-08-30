@@ -104,7 +104,6 @@ public class CamelConnectorTestSupport {
         connector.getSpec().getDeployment().setDeploymentResourceVersion(1L);
         connector.getSpec().getDeployment().setDesiredState(DESIRED_STATE_READY);
         connector.getSpec().getDeployment().setSecret(secretName);
-        connector.getSpec().getDeployment().setSecretChecksum("TODO");
         connector.getSpec().getDeployment().setConnectorTypeId("connector_type_id");
         connector.getSpec().setOperatorSelector(operatorSelector());
 

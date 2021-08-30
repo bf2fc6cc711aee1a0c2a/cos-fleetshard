@@ -56,8 +56,6 @@ spec:
                     type: string
                   secret:
                     type: string
-                  secretChecksum:
-                    type: string
                 type: object
               operatorSelector:
                 properties:
@@ -116,8 +114,6 @@ spec:
                     type: string
                   secret:
                     type: string
-                  secretChecksum:
-                    type: string
                 type: object
               connectorStatus:
                 properties:
@@ -149,6 +145,10 @@ spec:
                       properties:
                         deploymentRevision:
                           type: number
+                        generation:
+                          type: number
+                        resourceVersion:
+                          type: string
                         apiVersion:
                           type: string
                         kind:

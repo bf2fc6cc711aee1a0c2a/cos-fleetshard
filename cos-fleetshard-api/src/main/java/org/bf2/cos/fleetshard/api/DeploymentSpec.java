@@ -26,7 +26,6 @@ public class DeploymentSpec {
     private Long deploymentResourceVersion;
     private String desiredState;
     private String secret;
-    private String secretChecksum;
 
     @JsonProperty
     public String getConnectorTypeId() {
@@ -78,16 +77,6 @@ public class DeploymentSpec {
         this.secret = secret;
     }
 
-    @JsonProperty
-    public String getSecretChecksum() {
-        return secretChecksum;
-    }
-
-    @JsonProperty
-    public void setSecretChecksum(String secretChecksum) {
-        this.secretChecksum = secretChecksum;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -101,8 +90,7 @@ public class DeploymentSpec {
             && Objects.equals(getConnectorResourceVersion(), spec.getConnectorResourceVersion())
             && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
             && Objects.equals(getDesiredState(), spec.getDesiredState())
-            && Objects.equals(getSecret(), spec.getSecret())
-            && Objects.equals(getSecretChecksum(), spec.getSecretChecksum());
+            && Objects.equals(getSecret(), spec.getSecret());
     }
 
     @Override
@@ -112,8 +100,7 @@ public class DeploymentSpec {
             getConnectorResourceVersion(),
             getDeploymentResourceVersion(),
             getDesiredState(),
-            getSecret(),
-            getSecretChecksum());
+            getSecret());
     }
 
     @Override
@@ -124,7 +111,6 @@ public class DeploymentSpec {
             ", deploymentResourceVersion=" + deploymentResourceVersion +
             ", desiredState='" + desiredState +
             ", secret='" + secret +
-            ", secretChecksum='" + secretChecksum +
             '}';
     }
 }

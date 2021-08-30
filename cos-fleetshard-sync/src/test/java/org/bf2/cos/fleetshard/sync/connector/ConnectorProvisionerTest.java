@@ -105,7 +105,6 @@ public class ConnectorProvisionerTest {
 
             assertThat(val.getSpec().getDeployment()).satisfies(d -> {
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
-                assertThat(d.getSecretChecksum()).isEqualTo(Secrets.computeChecksum(sc.getValue()));
             });
         });
     }
@@ -213,7 +212,6 @@ public class ConnectorProvisionerTest {
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(oldDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(newDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
-                assertThat(d.getSecretChecksum()).isEqualTo(Secrets.computeChecksum(sc.getValue()));
             });
         });
     }
@@ -319,7 +317,6 @@ public class ConnectorProvisionerTest {
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(newDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getDeploymentResourceVersion()).isNotEqualTo(oldDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
-                assertThat(d.getSecretChecksum()).isEqualTo(Secrets.computeChecksum(sc.getValue()));
             });
         });
     }
