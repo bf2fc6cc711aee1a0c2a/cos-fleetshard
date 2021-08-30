@@ -17,11 +17,5 @@ patchesJson6902:
       name: cos-fleetshard-sync
     patch: |-
       - op: replace
-        path: /spec/replicas
-        value: 0
-      - op: replace
         path: /spec/template/spec/containers/0/name
         value: "application"
-      - op: replace
-        path: /spec/template/spec/containers/0/imagePullPolicy
-        value: "Never"
