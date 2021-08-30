@@ -92,6 +92,22 @@ public class ConnectorStatusSpec {
         this.resources = resources;
     }
 
+    @JsonIgnore
+    public void addOrUpdateResource(DeployedResource ref) {
+        if (resources == null) {
+            this.resources = new ArrayList<>();
+        }
+
+        for (int i = 0; i < this.resources.size(); i++) {
+            if (ref.is(this.resources.get(i))) {
+                this.resources.set(i, ref);
+                return;
+            }
+        }
+
+        this.resources.add(ref);
+    }
+
     @JsonProperty
     public Operator getAssignedOperator() {
         return assignedOperator;

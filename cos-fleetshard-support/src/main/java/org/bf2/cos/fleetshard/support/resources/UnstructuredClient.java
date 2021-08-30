@@ -31,6 +31,13 @@ public class UnstructuredClient {
         return kubernetesClient;
     }
 
+    public GenericKubernetesResource get(ResourceRef ref) {
+        return get(
+            ref.getNamespace(),
+            ref.getName(),
+            UnstructuredSupport.asResourceDefinitionContext(ref));
+    }
+
     public GenericKubernetesResource get(String namespace, ResourceRef ref) {
         return get(
             namespace,

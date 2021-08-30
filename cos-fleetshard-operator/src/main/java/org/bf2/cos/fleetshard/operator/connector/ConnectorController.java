@@ -9,6 +9,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -267,7 +268,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             final String rv = Long.toString(connector.getSpec().getDeployment().getDeploymentResourceVersion());
             final String deletionMode = getDeletionMode(resource).orElse(DELETION_MODE_CONNECTOR);
-            final DeployedResource res = DeployedResource.of(resource);
 
             final Map<String, String> labels = KubernetesResourceUtil.getOrCreateLabels(resource);
             labels.put(LABEL_WATCH, "true");
@@ -290,12 +290,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            LOGGER.debug("createOrReplace: {}", res);
-            uc.createOrReplace(connector.getMetadata().getNamespace(), resource);
+            final DeployedResource res = DeployedResource.of(
+                uc.createOrReplace(
+                    connector.getMetadata().getNamespace(),
+                    resource));
 
-            if (!connector.getStatus().getConnectorStatus().getResources().contains(res)) {
-                connector.getStatus().getConnectorStatus().getResources().add(res);
-            }
+            connector.getStatus().getConnectorStatus().addOrUpdateResource(res);
 
             if (!DELETION_MODE_CONNECTOR.equals(deletionMode)) {
                 res.setDeploymentRevision(ref.getDeploymentResourceVersion());
@@ -304,11 +304,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         // Add the secret created by the sync among the list of resources to
         // clean-up upon delete/update
-        DeployedResource res = DeployedResource.of(secret);
-
-        if (!connector.getStatus().getConnectorStatus().getResources().contains(res)) {
-            connector.getStatus().getConnectorStatus().getResources().add(res);
-        }
+        connector.getStatus().getConnectorStatus().addOrUpdateResource(DeployedResource.of(secret));
 
         connector.getStatus().setDeployment(connector.getSpec().getDeployment());
         connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Monitor);
@@ -317,8 +313,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
-    // TODO: check for changes to the underlying resources
-    // TODO: check for checksum mismatch
     private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
         if (!Objects.equals(connector.getSpec().getDeployment(), connector.getStatus().getDeployment())) {
             JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
@@ -333,6 +327,59 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getStatus().getPhase());
 
             return UpdateControl.updateStatusSubResource(connector);
+        }
+
+        if (connector.getStatus().getConnectorStatus() != null
+            && connector.getStatus().getConnectorStatus().getResources() != null
+            && connector.getStatus().getDeployment().getDeploymentResourceVersion() != null) {
+
+            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
+
+            for (DeployedResource dr : connector.getStatus().getConnectorStatus().getResources()) {
+                if (dr.getDeploymentRevision() != null && !Objects.equals(cdrv, dr.getDeploymentRevision())) {
+                    continue;
+                }
+                if (dr.getGeneration() == null && dr.getResourceVersion() == null) {
+                    continue;
+                }
+
+                final GenericKubernetesResource res = uc.get(dr);
+                if (res == null) {
+                    continue;
+                }
+
+                if (dr.getGeneration() != null) {
+                    // custom resource
+                    if (!Objects.equals(dr.getGeneration(), res.getMetadata().getGeneration())) {
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+                        LOGGER.info(
+                            "Deployed resource drift detected observed_generation: {}, resource_generation: {}, move to phase: {}",
+                            dr.getGeneration(),
+                            res.getMetadata().getGeneration(),
+                            connector.getStatus().getPhase());
+
+                        return UpdateControl.updateStatusSubResource(connector);
+                    }
+                } else if (dr.getResourceVersion() != null) {
+                    // secret, configmap etc
+                    if (!Objects.equals(dr.getResourceVersion(), res.getMetadata().getResourceVersion())) {
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+                        LOGGER.info(
+                            "Deployed resource drift detected observed_resource_version: {}, resource_version: {}, move to phase: {}",
+                            dr.getResourceVersion(),
+                            res.getMetadata().getResourceVersion(),
+                            connector.getStatus().getPhase());
+
+                        return UpdateControl.updateStatusSubResource(connector);
+                    }
+                }
+            }
         }
 
         operandController.status(connector);
@@ -434,6 +481,57 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getStatus().getPhase());
 
             return UpdateControl.updateStatusSubResource(connector);
+        }
+
+        if (connector.getStatus().getConnectorStatus() != null
+            && connector.getStatus().getConnectorStatus().getResources() != null
+            && connector.getStatus().getDeployment().getDeploymentResourceVersion() != null) {
+
+            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
+
+            for (DeployedResource dr : connector.getStatus().getConnectorStatus().getResources()) {
+                if (dr.getDeploymentRevision() != null && !Objects.equals(cdrv, dr.getDeploymentRevision())) {
+                    continue;
+                }
+                if (dr.getGeneration() == null && dr.getResourceVersion() == null) {
+                    continue;
+                }
+
+                final GenericKubernetesResource res = uc.get(dr);
+                if (res == null) {
+                    continue;
+                }
+
+                if (dr.getGeneration() != null) {
+                    if (!Objects.equals(dr.getGeneration(), res.getMetadata().getGeneration())) {
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+                        LOGGER.info(
+                            "Deployed resource drift detected observed_generation: {}, resource_generation: {}, move to phase: {}",
+                            dr.getGeneration(),
+                            res.getMetadata().getGeneration(),
+                            connector.getStatus().getPhase());
+
+                        return UpdateControl.updateStatusSubResource(connector);
+                    }
+                } else if (dr.getResourceVersion() != null) {
+                    if (!Objects.equals(dr.getResourceVersion(), res.getMetadata().getResourceVersion())) {
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+                        LOGGER.info(
+                            "Deployed resource drift detected observed_resource_version: {}, resource_version: {}, move to phase: {}",
+                            dr.getResourceVersion(),
+                            res.getMetadata().getResourceVersion(),
+                            connector.getStatus().getPhase());
+
+                        return UpdateControl.updateStatusSubResource(connector);
+                    }
+                }
+            }
         }
 
         return UpdateControl.noUpdate();

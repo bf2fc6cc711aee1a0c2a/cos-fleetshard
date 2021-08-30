@@ -105,7 +105,7 @@ public class ResourceRef {
         return Objects.equals(getApiVersion(), ref.getApiVersion())
             && Objects.equals(getKind(), ref.getKind())
             && Objects.equals(getName(), ref.getName())
-            && Objects.equals(getNamespace(), ref.getName());
+            && Objects.equals(getNamespace(), ref.getNamespace());
     }
 
     @Override

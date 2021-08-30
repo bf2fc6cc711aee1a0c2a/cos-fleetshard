@@ -38,6 +38,7 @@ public class ManagedConnector
 
     public static final String ANNOTATION_DELETION_MODE = "cos.bf2.org/resource.deletion.mode";
     public static final String ANNOTATION_DEPLOYMENT_RESOURCE_VERSION = "cos.bf2.org/deployment.resource.version";
+    public static final String ANNOTATION_UPDATED_TIMESTAMP = "cos.bf2.org/update.timestamp";
 
     public static final String DELETION_MODE_CONNECTOR = "connector";
     public static final String DELETION_MODE_DEPLOYMENT = "deployment";
