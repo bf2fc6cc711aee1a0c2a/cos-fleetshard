@@ -2,10 +2,11 @@ package org.bf2.cos.fleetshard.it.assertions;
 
 import java.util.function.Consumer;
 
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import org.assertj.core.api.AbstractAssert;
 import org.bf2.cos.fleetshard.support.function.Functions;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 
 public class UnstructuredClientAssert extends AbstractAssert<UnstructuredClientAssert, UnstructuredClient> {
     public UnstructuredClientAssert(UnstructuredClient actual) {

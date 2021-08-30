@@ -7,9 +7,9 @@ import java.util.Collections;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.support.EventQueue;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 
 @ApplicationScoped
 public class ConnectorDeploymentQueue extends EventQueue<Long, ConnectorDeployment> {

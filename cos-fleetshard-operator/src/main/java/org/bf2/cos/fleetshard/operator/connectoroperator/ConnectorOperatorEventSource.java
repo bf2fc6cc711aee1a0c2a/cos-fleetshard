@@ -2,15 +2,16 @@ package org.bf2.cos.fleetshard.operator.connectoroperator;
 
 import java.util.Objects;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watch;
-import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Version;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watch;
+import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 
 public class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConnectorOperator> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);

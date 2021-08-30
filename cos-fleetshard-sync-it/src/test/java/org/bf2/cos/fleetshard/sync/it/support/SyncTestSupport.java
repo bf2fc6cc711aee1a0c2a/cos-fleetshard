@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,11 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ThrowingRunnable;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -25,8 +23,12 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 
 public class SyncTestSupport {
     @KubernetesTestServer

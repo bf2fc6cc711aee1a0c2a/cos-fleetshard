@@ -1,5 +1,10 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -8,15 +13,11 @@ import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
-
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 public final class Secrets {
     public static final String SECRET_ENTRY_CONNECTOR = "connector";

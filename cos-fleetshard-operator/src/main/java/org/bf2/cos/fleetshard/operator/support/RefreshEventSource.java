@@ -1,10 +1,11 @@
 package org.bf2.cos.fleetshard.operator.support;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 import io.javaoperatorsdk.operator.processing.event.EventHandler;
 import io.javaoperatorsdk.operator.processing.event.EventSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class RefreshEventSource implements EventSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(RefreshEventSource.class);

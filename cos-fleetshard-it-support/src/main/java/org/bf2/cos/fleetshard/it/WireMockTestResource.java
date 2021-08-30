@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 public abstract class WireMockTestResource implements QuarkusTestResourceLifecycleManager {

@@ -3,13 +3,15 @@ package org.bf2.cos.fleetshard.support.resources;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.bf2.cos.fleetshard.api.ResourceRef;
+
 import com.fasterxml.jackson.databind.JsonNode;
+
 import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import org.bf2.cos.fleetshard.api.ResourceRef;
 
 public final class UnstructuredSupport {
     private UnstructuredSupport() {

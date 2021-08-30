@@ -1,20 +1,21 @@
 package org.bf2.cos.fleetshard.operator.it;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.it.support.CamelConnectorTestSupport;
 import org.junit.jupiter.api.Test;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 
 @QuarkusTest
 @TestProfile(CamelConnectorStatusTest.Profile.class)

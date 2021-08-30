@@ -6,6 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.fabric8.kubernetes.api.model.Condition;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;

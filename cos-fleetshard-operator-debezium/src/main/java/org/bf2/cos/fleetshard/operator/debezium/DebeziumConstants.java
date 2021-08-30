@@ -3,11 +3,12 @@ package org.bf2.cos.fleetshard.operator.debezium;
 import java.util.List;
 import java.util.Map;
 
+import org.bf2.cos.fleetshard.support.CollectionUtils;
+
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
-import org.bf2.cos.fleetshard.support.CollectionUtils;
 
 public final class DebeziumConstants {
     public static final String OPERATOR_TYPE = "debezium-connector-operator";

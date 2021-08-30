@@ -1,26 +1,5 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import java.util.Base64;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.ConditionBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
-import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
-import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder;
-import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
@@ -35,6 +14,29 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+
+import java.util.Base64;
+
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
+import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
+import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.fabric8.kubernetes.api.model.ConditionBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 public final class CamelOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";

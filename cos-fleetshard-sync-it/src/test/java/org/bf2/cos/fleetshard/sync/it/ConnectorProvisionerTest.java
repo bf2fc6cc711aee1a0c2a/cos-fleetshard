@@ -1,29 +1,5 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.core.MediaType;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
-import io.restassured.RestAssured;
-import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.it.BaseTestProfile;
-import org.bf2.cos.fleetshard.it.WireMockTestResource;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
-import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.junit.jupiter.api.Test;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
@@ -34,6 +10,32 @@ import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONN
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.core.MediaType;
+
+import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.it.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.WireMockTestResource;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+
+import io.fabric8.kubernetes.api.model.Secret;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
+import io.restassured.RestAssured;
 
 @QuarkusTest
 @TestProfile(ConnectorProvisionerTest.Profile.class)

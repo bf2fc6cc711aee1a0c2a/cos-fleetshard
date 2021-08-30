@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.support;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Locale;
@@ -8,8 +10,6 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventQueueTest {
     private EventQueue<String, String> queue;

@@ -3,10 +3,10 @@ package org.bf2.cos.fleetshard.sync.connector;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

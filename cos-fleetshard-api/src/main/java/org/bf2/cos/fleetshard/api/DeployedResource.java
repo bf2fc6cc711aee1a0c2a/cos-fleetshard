@@ -1,15 +1,16 @@
 package org.bf2.cos.fleetshard.api;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
-
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)

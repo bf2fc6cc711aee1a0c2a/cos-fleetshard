@@ -2,11 +2,12 @@ package org.bf2.cos.fleetshard.operator.operand;
 
 import java.util.List;
 
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 
 public interface OperandController {
     /**

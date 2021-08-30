@@ -1,29 +1,5 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.inject.Singleton;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import org.bf2.cos.fleetshard.api.KafkaSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
-import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
-
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_DEPLOYMENT;
@@ -44,6 +20,32 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSe
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.inject.Singleton;
+
+import org.bf2.cos.fleetshard.api.KafkaSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
+import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {

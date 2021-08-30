@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;

@@ -3,11 +3,12 @@ package org.bf2.cos.fleetshard.operator.debezium;
 import javax.enterprise.inject.Produces;
 import javax.inject.Singleton;
 
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 public class DebeziumProducers {
     @Singleton

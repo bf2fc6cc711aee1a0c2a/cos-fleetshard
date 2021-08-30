@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
 import io.fabric8.kubernetes.model.annotation.PrinterColumn;
 import io.sundr.builder.annotations.Buildable;
 

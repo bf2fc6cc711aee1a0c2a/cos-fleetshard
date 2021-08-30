@@ -1,11 +1,19 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.fabric8.kubernetes.api.model.Condition;
-import io.fabric8.kubernetes.api.model.ConditionBuilder;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
@@ -16,15 +24,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.ConditionBuilder;
 
 public class ConnectorStatusExtractorTest {
 

@@ -92,7 +92,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${cos.project.root}/etc/kubernetes</outputDirectory>
+                            <outputDirectory>${project.basedir}/../etc/kubernetes</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/classes/META-INF/fabric8/</directory>
@@ -105,6 +105,21 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code.formatter</groupId>
+                <artifactId>formatter-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.bf2</groupId>
+                        <artifactId>cos-build-tools</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>net.revelc.code</groupId>
+                <artifactId>impsort-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

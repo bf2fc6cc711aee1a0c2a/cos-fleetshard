@@ -3,14 +3,16 @@ package org.bf2.cos.fleetshard.operator.camel.model;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.bf2.cos.fleetshard.api.ResourceRef;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import org.bf2.cos.fleetshard.api.ResourceRef;
 
 @ToString
 @EqualsAndHashCode

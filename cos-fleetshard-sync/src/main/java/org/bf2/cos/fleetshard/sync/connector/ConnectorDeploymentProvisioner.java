@@ -1,5 +1,11 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
+
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,12 +14,6 @@ import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
@@ -24,11 +24,13 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
+import io.fabric8.kubernetes.client.utils.Serialization;
 
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {

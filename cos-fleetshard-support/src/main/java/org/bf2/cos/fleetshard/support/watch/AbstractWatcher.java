@@ -1,11 +1,12 @@
 package org.bf2.cos.fleetshard.support.watch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.quarkus.runtime.Quarkus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractWatcher<T> implements Watcher<T>, AutoCloseable {
     private final Logger logger;

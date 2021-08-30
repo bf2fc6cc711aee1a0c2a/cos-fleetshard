@@ -1,45 +1,5 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.inject.Inject;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
-import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
-import io.fabric8.kubernetes.client.utils.Serialization;
-import io.fabric8.zjsonpatch.JsonDiff;
-import io.javaoperatorsdk.operator.api.Context;
-import io.javaoperatorsdk.operator.api.Controller;
-import io.javaoperatorsdk.operator.api.UpdateControl;
-import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
-import org.bf2.cos.fleetshard.api.DeployedResource;
-import org.bf2.cos.fleetshard.api.DeploymentSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
-import org.bf2.cos.fleetshard.api.Operator;
-import org.bf2.cos.fleetshard.api.OperatorBuilder;
-import org.bf2.cos.fleetshard.api.OperatorSelector;
-import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
-import org.bf2.cos.fleetshard.operator.operand.OperandController;
-import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_OPERAND;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
@@ -60,6 +20,48 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
 import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.inject.Inject;
+
+import org.bf2.cos.fleetshard.api.DeployedResource;
+import org.bf2.cos.fleetshard.api.DeploymentSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
+import org.bf2.cos.fleetshard.api.Operator;
+import org.bf2.cos.fleetshard.api.OperatorBuilder;
+import org.bf2.cos.fleetshard.api.OperatorSelector;
+import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
+import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
+import org.bf2.cos.fleetshard.operator.operand.OperandController;
+import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
+import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
+import io.fabric8.kubernetes.client.utils.Serialization;
+import io.fabric8.zjsonpatch.JsonDiff;
+import io.javaoperatorsdk.operator.api.Context;
+import io.javaoperatorsdk.operator.api.Controller;
+import io.javaoperatorsdk.operator.api.UpdateControl;
+import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
