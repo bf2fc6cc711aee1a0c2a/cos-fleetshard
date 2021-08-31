@@ -17,18 +17,23 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kubernetes:
+        - 'v1.22.1'
+        - 'v1.21.1'
 
     steps:
-      - name: Set up JDK 11
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+
+      - name: 'SetUp Java'
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Checkout Project
-        uses: actions/checkout@v2
-
-      - name: Cache m2 repo
+      - name: 'SetUp Maven repo cache'
         uses: actions/cache@v1
         with:
           path: ~/.m2/repository
@@ -36,12 +41,18 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Login to quay.io
-        uses: docker/login-action@v1
+      - name: 'SetUp KinD'
+        uses: container-tools/kind-action@v1
         with:
-          registry: quay.io
-          username: ${{ secrets.IMAGE_REPO_USERNAME }}
-          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
+          registry: false
+          node_image: kindest/node:${{ matrix.kubernetes }}
+
+      - name: 'SetUp Kubernetes Cluster'
+        run: |
+          kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
+          kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
+          kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
+          kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
 
       - name: "Build"
         run: |

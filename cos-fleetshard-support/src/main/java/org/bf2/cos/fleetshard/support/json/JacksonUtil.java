@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -55,6 +56,18 @@ public final class JacksonUtil {
     public static String asArrayString(String... elements) {
         try {
             return Serialization.jsonMapper().writeValueAsString(asArrayNode(elements));
+        } catch (JsonProcessingException e) {
+            throw KubernetesClientException.launderThrowable(e);
+        }
+    }
+
+    public static JsonNode asJsonNode(Object object) {
+        return Serialization.jsonMapper().valueToTree(object);
+    }
+
+    public static <T> T treeToValue(TreeNode node, Class<T> valueType) {
+        try {
+            return Serialization.jsonMapper().treeToValue(node, valueType);
         } catch (JsonProcessingException e) {
             throw KubernetesClientException.launderThrowable(e);
         }

@@ -59,7 +59,7 @@ public class ConnectorProvisionerTest {
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .startsWith(CONNECTOR_PREFIX + "-")
+                .startsWith(CONNECTOR_PREFIX)
                 .endsWith("-" + deployment.getMetadata().getResourceVersion());
 
             assertThat(val.getMetadata().getLabels())
@@ -98,7 +98,7 @@ public class ConnectorProvisionerTest {
 
         assertThat(mcc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .startsWith(CONNECTOR_PREFIX + "-");
+                .startsWith(CONNECTOR_PREFIX);
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)

@@ -13,7 +13,7 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 
 public final class Connectors {
-    public static final String CONNECTOR_PREFIX = "mctr";
+    public static final String CONNECTOR_PREFIX = "mctr-";
     public static final String CONNECTOR_SECRET_SUFFIX = "-config";
 
     private Connectors() {
@@ -42,10 +42,10 @@ public final class Connectors {
     }
 
     public static String generateConnectorId(String deploymentId) {
-        return CONNECTOR_PREFIX + "-" + deploymentId;
+        return CONNECTOR_PREFIX + deploymentId;
     }
 
     public static String generateSecretId(String deploymentId) {
-        return CONNECTOR_PREFIX + "-" + deploymentId + CONNECTOR_SECRET_SUFFIX;
+        return CONNECTOR_PREFIX + deploymentId + CONNECTOR_SECRET_SUFFIX;
     }
 }

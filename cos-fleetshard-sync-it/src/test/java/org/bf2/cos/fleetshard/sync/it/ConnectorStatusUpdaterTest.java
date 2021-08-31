@@ -7,20 +7,21 @@ import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
-import org.bf2.cos.fleetshard.it.BaseTestProfile;
-import org.bf2.cos.fleetshard.it.InjectWireMock;
-import org.bf2.cos.fleetshard.it.WireMockTestResource;
+import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
+import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.fabric8.kubernetes.api.model.Condition;
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
@@ -39,8 +40,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 public class ConnectorStatusUpdaterTest extends SyncTestSupport {
     public static final String DEPLOYMENT_ID = uid();
 
-    @InjectWireMock
-    WireMockServer server;
+    @WireMockTestInstance
+    com.github.tomakehurst.wiremock.WireMockServer server;
 
     @Test
     void statusIsUpdated() {
@@ -59,7 +60,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         connector.getSpec().setOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build());
 
-        ksrv.getClient()
+        kubernetesClient
             .resources(ManagedConnector.class)
             .inNamespace(namespace)
             .create(connector);
@@ -70,7 +71,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
             .withAssignedOperator(operator)
             .build());
 
-        ksrv.getClient()
+        kubernetesClient
             .resources(ManagedConnector.class)
             .inNamespace(namespace)
             .withName(connector.getMetadata().getName())
@@ -99,13 +100,15 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
-            return List.of(new TestResourceEntry(FleetManagerTestResource.class));
+            return List.of(
+                new TestResourceEntry(KubernetesTestResource.class),
+                new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
-        protected Map<String, String> doStart(WireMockServer server) {
+        protected Map<String, String> doStart(com.github.tomakehurst.wiremock.WireMockServer server) {
             MappingBuilder request = WireMock.put(WireMock.urlPathMatching(
                 "/api/connector_mgmt/v1/kafka_connector_clusters/.*/deployments/.*/status"));
 
@@ -117,7 +120,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         }
 
         @Override
-        public void inject(TestInjector testInjector) {
+        public void inject(QuarkusTestResourceLifecycleManager.TestInjector testInjector) {
             injectServerInstance(testInjector);
         }
     }

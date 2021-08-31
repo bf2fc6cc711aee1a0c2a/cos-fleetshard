@@ -7,10 +7,11 @@ import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.it.BaseTestProfile;
-import org.bf2.cos.fleetshard.it.WireMockTestResource;
+import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX)
                     .endsWith("-" + 1);
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
@@ -97,7 +98,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
+            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
         {
@@ -128,7 +129,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX)
                     .endsWith("-" + 1);
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
@@ -148,7 +149,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
             assertThat(s2).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX + "-")
+                    .startsWith(Connectors.CONNECTOR_PREFIX)
                     .endsWith("-" + 2);
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
@@ -174,7 +175,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX + "-");
+            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s2.getMetadata().getName());
         }
     }
@@ -192,7 +193,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
-            return List.of(new TestResourceEntry(FleetManagerTestResource.class));
+            return List.of(
+                new TestResourceEntry(KubernetesTestResource.class),
+                new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 

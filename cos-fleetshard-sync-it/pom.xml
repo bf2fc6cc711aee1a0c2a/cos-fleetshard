@@ -36,10 +36,20 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client-jackson</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-kubernetes-client</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-it-support</artifactId>
+            <artifactId>cos-fleetshard-it-resources</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-it-assertj</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
