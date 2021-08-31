@@ -21,7 +21,7 @@ if [ ! -z "${CONTAINER_VERSION}" ]; then
     || ADDITIONAL_TAGS="${CONTAINER_VERSION},${ADDITIONAL_TAGS}"
 fi
 
-QUARKUS_BASE_IMAGE="${QUARKUS_BASE_IMAGE:-fabric8/java-alpine-openjdk11-jre}"
+QUARKUS_BASE_IMAGE="${QUARKUS_BASE_IMAGE:-adoptopenjdk/openjdk11:ubi-minimal}"
 QUARKUS_PLATFORM="${QUARKUS_PLATFORM:-linux/amd64}"
 
 ./mvnw ${MAVEN_ARGS} \
