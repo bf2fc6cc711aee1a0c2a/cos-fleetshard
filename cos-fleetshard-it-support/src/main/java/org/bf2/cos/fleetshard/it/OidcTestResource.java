@@ -37,8 +37,6 @@ public class OidcTestResource extends WireMockTestResource {
             "mas-sso-base-url", server.baseUrl(),
             "mas-sso-realm", REALM,
             "client-id", CLIENT_ID,
-            "client-secret", CLIENT_SECRET,
-            "quarkus.oidc-client.token-path", "/protocol/openid-connect/token",
-            "quarkus.oidc-client.discovery-enabled", "false");
+            "client-secret", CLIENT_SECRET);
     }
 }
