@@ -1,21 +1,12 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
-
 import java.util.List;
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
+import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.InjectWireMock;
 import org.bf2.cos.fleetshard.it.WireMockTestResource;
@@ -32,6 +23,16 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import io.fabric8.kubernetes.api.model.Condition;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(ConnectorStatusUpdaterTest.Profile.class)
@@ -50,7 +51,6 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
         final Operator operator = new Operator(uid(), "operator-type", "1.2.3");
-        final ConnectorStatusSpec connectorStatusSpec = new ConnectorStatusSpec(DESIRED_STATE_READY, condition);
 
         final ManagedConnector connector = Connectors.newConnector(
             name,
@@ -59,13 +59,18 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
             DEPLOYMENT_ID,
             Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
 
+        connector.getSpec().setOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build());
+
         ksrv.getClient()
             .resources(ManagedConnector.class)
             .inNamespace(namespace)
             .create(connector);
 
-        connectorStatusSpec.setAssignedOperator(operator);
-        connector.getStatus().setConnectorStatus(connectorStatusSpec);
+        connector.getStatus().setConnectorStatus(new ConnectorStatusSpecBuilder()
+            .withPhase(DESIRED_STATE_READY)
+            .withConditions(condition)
+            .withAssignedOperator(operator)
+            .build());
 
         ksrv.getClient()
             .resources(ManagedConnector.class)

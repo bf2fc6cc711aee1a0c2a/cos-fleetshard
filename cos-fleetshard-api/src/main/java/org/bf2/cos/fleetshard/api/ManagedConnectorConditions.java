@@ -1,8 +1,5 @@
 package org.bf2.cos.fleetshard.api;
 
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -24,7 +21,7 @@ public final class ManagedConnectorConditions {
         condition.setStatus(status.name());
         condition.setReason(reason);
         condition.setMessage(message);
-        condition.setLastTransitionTime(ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        condition.setLastTransitionTime(Conditions.now());
 
         return setCondition(connector, condition);
     }

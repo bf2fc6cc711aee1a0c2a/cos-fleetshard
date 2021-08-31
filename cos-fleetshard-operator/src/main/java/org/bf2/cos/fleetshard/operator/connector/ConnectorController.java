@@ -1,26 +1,5 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_OPERAND;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
-import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
-import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +41,27 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_OPERAND;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
+import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
+import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
@@ -113,9 +113,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getSpec().getOperatorSelector().getId());
 
         if (!canHandle) {
-            LOGGER.debug("Skip connector: {} as assigned to operator: {}",
-                connector.getMetadata().getName(),
-                connector.getSpec().getOperatorSelector().getId());
+            if (connector.getSpec().getOperatorSelector().getId() != null) {
+                LOGGER.debug("Skip connector: {} as assigned to operator: {}",
+                    connector.getMetadata().getName(),
+                    connector.getSpec().getOperatorSelector().getId());
+            } else {
+                LOGGER.debug("Skip connector: {} as no operator has been selected",
+                    connector.getMetadata().getName());
+            }
 
             return UpdateControl.noUpdate();
         }
