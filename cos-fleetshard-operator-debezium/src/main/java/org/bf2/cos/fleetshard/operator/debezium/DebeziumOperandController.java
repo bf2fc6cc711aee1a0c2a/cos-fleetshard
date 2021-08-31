@@ -1,20 +1,5 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
-import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +37,21 @@ import io.strimzi.api.kafka.model.connect.build.DockerOutputBuilder;
 import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
 import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
 
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
+import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
     private final DebeziumOperandConfiguration configuration;
@@ -85,6 +85,55 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
             .build();
 
+        final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
+            .withReplicas(1)
+            .withBootstrapServers(kafkaSpec.getBootstrapServers())
+            .withKafkaClientAuthenticationPlain(new KafkaClientAuthenticationPlainBuilder()
+                .withUsername(kafkaSpec.getClientId())
+                .withPasswordSecret(new PasswordSecretSourceBuilder()
+                    .withSecretName(connector.getMetadata().getName())
+                    .withPassword(KAFKA_PASSWORD_SECRET_KEY)
+                    .build())
+                .build())
+            .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
+            .addToConfig("group.id", connector.getMetadata().getName())
+            .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
+            .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
+            .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
+            .withTls(new KafkaConnectTlsBuilder()
+                .withTrustedCertificates(Collections.emptyList())
+                .build())
+            .withExternalConfiguration(new ExternalConfigurationBuilder()
+                .addToVolumes(new ExternalConfigurationVolumeSourceBuilder()
+                    .withName(EXTERNAL_CONFIG_DIRECTORY)
+                    .withSecret(new SecretVolumeSourceBuilder()
+                        .withSecretName(connector.getMetadata().getName())
+                        .build())
+                    .build())
+                .build());
+
+        if (shardMetadata.getContainerImage() != null) {
+            kcsb.withImage(shardMetadata.getContainerImage());
+        } else {
+            kcsb.withBuild(new BuildBuilder()
+                .withDockerOutput(new DockerOutputBuilder()
+                    .withImage(
+                        String.format("%s/%s/cos-debezium:%s",
+                            configuration.containerImage().registry(),
+                            configuration.containerImage().group(),
+                            connector.getSpec().getDeploymentId()))
+                    .build())
+                .addToPlugins(new PluginBuilder()
+                    .withName("debezium-connector")
+                    .addToTgzArtifactArtifacts(new TgzArtifactBuilder()
+                        .withUrl(DebeziumArtifactUri.getMavenCentralUri(shardMetadata.getConnectorName(),
+                            shardMetadata.getConnectorVersion()))
+                        .withSha512sum(shardMetadata.getConnectorSha512sum())
+                        .build())
+                    .build())
+                .build());
+        }
+
         final KafkaConnect kc = new KafkaConnectBuilder()
             .withApiVersion(Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
@@ -92,50 +141,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .addToAnnotations(STRIMZI_IO_USE_CONNECTOR_RESOURCES, "true")
                 .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
-            .withSpec(new KafkaConnectSpecBuilder()
-                .withReplicas(1)
-                .withBootstrapServers(kafkaSpec.getBootstrapServers())
-                .withKafkaClientAuthenticationPlain(new KafkaClientAuthenticationPlainBuilder()
-                    .withUsername(kafkaSpec.getClientId())
-                    .withPasswordSecret(new PasswordSecretSourceBuilder()
-                        .withSecretName(connector.getMetadata().getName())
-                        .withPassword(KAFKA_PASSWORD_SECRET_KEY)
-                        .build())
-                    .build())
-                .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
-                .addToConfig("group.id", connector.getMetadata().getName())
-                .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
-                .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
-                .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
-                .withTls(new KafkaConnectTlsBuilder()
-                    .withTrustedCertificates(Collections.emptyList())
-                    .build())
-                .withExternalConfiguration(new ExternalConfigurationBuilder()
-                    .addToVolumes(new ExternalConfigurationVolumeSourceBuilder()
-                        .withName(EXTERNAL_CONFIG_DIRECTORY)
-                        .withSecret(new SecretVolumeSourceBuilder()
-                            .withSecretName(connector.getMetadata().getName())
-                            .build())
-                        .build())
-                    .build())
-                .withBuild(new BuildBuilder()
-                    .withDockerOutput(new DockerOutputBuilder()
-                        .withImage(
-                            String.format("%s/%s/cos-debezium:%s",
-                                configuration.containerImage().registry(),
-                                configuration.containerImage().group(),
-                                connector.getSpec().getDeploymentId()))
-                        .build())
-                    .addToPlugins(new PluginBuilder()
-                        .withName("debezium-connector")
-                        .addToTgzArtifactArtifacts(new TgzArtifactBuilder()
-                            .withUrl(DebeziumArtifactUri.getMavenCentralUri(shardMetadata.getConnectorName(),
-                                shardMetadata.getConnectorVersion()))
-                            .withSha512sum(shardMetadata.getConnectorSha512sum())
-                            .build())
-                        .build())
-                    .build())
-                .build())
+            .withSpec(kcsb.build())
             .build();
 
         final KafkaConnector kctr = new KafkaConnectorBuilder()

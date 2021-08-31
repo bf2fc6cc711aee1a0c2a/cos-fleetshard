@@ -1,9 +1,5 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.stream.Stream;
@@ -30,6 +26,10 @@ import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
 import io.strimzi.api.kafka.model.status.ConditionBuilder;
 import io.strimzi.api.kafka.model.status.KafkaConnectorStatusBuilder;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DebeziumOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
@@ -152,7 +152,6 @@ public class DebeziumOperandControllerTest {
         spec.with("database.password").put("kind", "base64").put("value", pwdB64);
 
         var resources = controller.doReify(
-
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(DEFAULT_MANAGED_CONNECTOR_ID)
@@ -170,7 +169,7 @@ public class DebeziumOperandControllerTest {
                     .build())
                 .build(),
             new org.bf2.cos.fleetshard.operator.debezium.DebeziumShardMetadataBuilder()
-                .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
+                .withContainerImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorClass(PG_CLASS)
                 .withConnectorName("debezium-connector-postgres")
                 .withConnectorVersion("1.5.3.Final")
@@ -187,6 +186,12 @@ public class DebeziumOperandControllerTest {
             .anyMatch(DebeziumOperandSupport::isKafkaConnect)
             .anyMatch(DebeziumOperandSupport::isKafkaConnector)
             .anyMatch(DebeziumOperandSupport::isSecret);
+
+        assertThat(resources).anySatisfy(r -> {
+            assertThat(r).isInstanceOfSatisfying(KafkaConnect.class, kc -> {
+                assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
+            });
+        });
     }
 
     @ParameterizedTest
