@@ -1,19 +1,21 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
-
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
+import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 
 import io.fabric8.kubernetes.api.model.Condition;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 
 public class ConnectorStatusExtractor {
     public static ConnectorDeploymentStatus extract(ManagedConnector connector) {
@@ -25,6 +27,18 @@ public class ConnectorStatusExtractor {
         }
 
         status.setResourceVersion(deployment.getDeploymentResourceVersion());
+
+        if (connector.getSpec().getOperatorSelector() == null || connector.getSpec().getOperatorSelector().getId() == null) {
+            status.setPhase(STATE_FAILED);
+            status.addConditionsItem(new MetaV1Condition()
+                .type(Conditions.TYPE_READY)
+                .status(Conditions.STATUS_FALSE)
+                .message("No assignable operator")
+                .reason(Conditions.NO_ASSIGNABLE_OPERATOR_REASON)
+                .lastTransitionTime(Conditions.now()));
+
+            return status;
+        }
 
         if (connector.getStatus() != null && connector.getStatus().getConnectorStatus() != null) {
             status.setOperators(

@@ -1,5 +1,26 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
+import org.bf2.cos.fleetshard.api.Conditions;
+import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
+import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
+import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.ConditionBuilder;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -9,23 +30,6 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
-import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import io.fabric8.kubernetes.api.model.Condition;
-import io.fabric8.kubernetes.api.model.ConditionBuilder;
 
 public class ConnectorStatusExtractorTest {
 
@@ -88,6 +92,11 @@ public class ConnectorStatusExtractorTest {
 
         var status = ConnectorStatusExtractor.extract(
             new ManagedConnectorBuilder()
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withOperatorSelector(new OperatorSelectorBuilder()
+                        .withId("1")
+                        .build())
+                    .build())
                 .withStatus(new ManagedConnectorStatusBuilder()
                     .withPhase(ManagedConnectorStatus.PhaseType.Monitor)
                     .withDeployment(new DeploymentSpecBuilder()
@@ -121,6 +130,11 @@ public class ConnectorStatusExtractorTest {
 
         var status = ConnectorStatusExtractor.extract(
             new ManagedConnectorBuilder()
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withOperatorSelector(new OperatorSelectorBuilder()
+                        .withId("1")
+                        .build())
+                    .build())
                 .withStatus(new ManagedConnectorStatusBuilder()
                     .withPhase(ManagedConnectorStatus.PhaseType.Monitor)
                     .withDeployment(new DeploymentSpecBuilder()
@@ -145,5 +159,57 @@ public class ConnectorStatusExtractorTest {
         assertThat(status)
             .extracting(ConnectorDeploymentStatus::getOperators)
             .hasAllNullFieldsOrProperties();
+    }
+
+    @Test
+    void errorIfNoOperatorId() {
+        var status = ConnectorStatusExtractor.extract(
+            new ManagedConnectorBuilder()
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withOperatorSelector(new OperatorSelectorBuilder()
+                        .build())
+                    .build())
+                .withStatus(new ManagedConnectorStatusBuilder()
+                    .withPhase(ManagedConnectorStatus.PhaseType.Monitor)
+                    .withDeployment(new DeploymentSpecBuilder()
+                        .withDeploymentResourceVersion(1L)
+                        .withDesiredState(DESIRED_STATE_READY)
+                        .build())
+                    .build())
+                .build());
+
+        assertThat(status.getPhase()).isEqualTo(STATE_FAILED);
+        assertThat(status.getConditions()).anySatisfy(c -> {
+            assertThat(c.getType()).isEqualTo(Conditions.TYPE_READY);
+            assertThat(c.getStatus()).isEqualTo(Conditions.STATUS_FALSE);
+            assertThat(c.getReason()).isEqualTo(Conditions.NO_ASSIGNABLE_OPERATOR_REASON);
+        });
+
+        assertThat(status.getResourceVersion()).isEqualTo(1L);
+    }
+
+    @Test
+    void errorIfNoOperatorSelector() {
+        var status = ConnectorStatusExtractor.extract(
+            new ManagedConnectorBuilder()
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .build())
+                .withStatus(new ManagedConnectorStatusBuilder()
+                    .withPhase(ManagedConnectorStatus.PhaseType.Monitor)
+                    .withDeployment(new DeploymentSpecBuilder()
+                        .withDeploymentResourceVersion(1L)
+                        .withDesiredState(DESIRED_STATE_READY)
+                        .build())
+                    .build())
+                .build());
+
+        assertThat(status.getPhase()).isEqualTo(STATE_FAILED);
+        assertThat(status.getConditions()).anySatisfy(c -> {
+            assertThat(c.getType()).isEqualTo(Conditions.TYPE_READY);
+            assertThat(c.getStatus()).isEqualTo(Conditions.STATUS_FALSE);
+            assertThat(c.getReason()).isEqualTo(Conditions.NO_ASSIGNABLE_OPERATOR_REASON);
+        });
+
+        assertThat(status.getResourceVersion()).isEqualTo(1L);
     }
 }

@@ -3,12 +3,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-    app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+    app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+    app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-sync
 imagePullSecrets:
   - name: cos-pull-secret
@@ -17,8 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-    app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+    app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+    app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -43,12 +43,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations:
-    app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-    app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+    app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+    app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-sync
 rules:
   - apiGroups:
@@ -94,12 +94,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   annotations:
-    app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-    app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+    app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+    app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-sync
 roleRef:
   kind: Role
@@ -125,37 +125,37 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-    app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+    app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+    app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-sync
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
-      app.kubernetes.io/name: cos-fleetshard-sync
       app.kubernetes.io/part-of: cos
+      app.kubernetes.io/name: cos-fleetshard-sync
+      app.kubernetes.io/version: latest
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: ff48c886b04e33d0dca5ee293ce9ccb51037066a
-        app.quarkus.io/build-timestamp: 2021-08-30 - 16:47:28 +0000
+        app.quarkus.io/commit-id: b75e76d6d33fcdcab052a19b5c280cfed3ea77d0
+        app.quarkus.io/build-timestamp: 2021-08-31 - 06:49:22 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-        app.kubernetes.io/version: latest
-        app.kubernetes.io/name: cos-fleetshard-sync
         app.kubernetes.io/part-of: cos
+        app.kubernetes.io/name: cos-fleetshard-sync
+        app.kubernetes.io/version: latest
     spec:
       containers:
         - env:
