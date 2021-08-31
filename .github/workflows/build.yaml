@@ -59,6 +59,8 @@ jobs:
       - name: Build container image and push it
         env:
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
+          QUARKUS_BASE_IMAGE: ${{ secrets.QUARKUS_BASE_IMAGE }}
+          QUARKUS_PLATFORM: ${{ secrets.QUARKUS_PLATFORM }}
         run: |
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
