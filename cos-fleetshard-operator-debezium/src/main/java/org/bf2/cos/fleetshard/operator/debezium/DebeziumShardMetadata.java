@@ -18,8 +18,8 @@ import io.sundr.builder.annotations.Buildable;
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DebeziumShardMetadata {
-    @JsonProperty("connector_image")
-    private String connectorImage;
+    @JsonProperty("container_image")
+    private String containerImage;
     @JsonProperty("connector_class")
     private String connectorClass;
     @JsonProperty("connector_name")
@@ -33,12 +33,12 @@ public class DebeziumShardMetadata {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Operator> operators = new ArrayList<>();
 
-    public String getConnectorImage() {
-        return connectorImage;
+    public String getContainerImage() {
+        return containerImage;
     }
 
-    public void setConnectorImage(String connectorImage) {
-        this.connectorImage = connectorImage;
+    public void setContainerImage(String containerImage) {
+        this.containerImage = containerImage;
     }
 
     public String getConnectorClass() {
@@ -90,7 +90,7 @@ public class DebeziumShardMetadata {
             return false;
         }
         DebeziumShardMetadata metadata = (DebeziumShardMetadata) o;
-        return Objects.equals(getConnectorImage(), metadata.getConnectorImage())
+        return Objects.equals(getContainerImage(), metadata.getContainerImage())
             && Objects.equals(getConnectorClass(), metadata.getConnectorClass())
             && Objects.equals(getConnectorName(), metadata.getConnectorName())
             && Objects.equals(getConnectorVersion(), metadata.getConnectorVersion())
@@ -101,7 +101,7 @@ public class DebeziumShardMetadata {
     @Override
     public int hashCode() {
         return Objects.hash(
-            getConnectorImage(),
+            getContainerImage(),
             getConnectorClass(),
             getConnectorName(),
             getConnectorVersion(),
