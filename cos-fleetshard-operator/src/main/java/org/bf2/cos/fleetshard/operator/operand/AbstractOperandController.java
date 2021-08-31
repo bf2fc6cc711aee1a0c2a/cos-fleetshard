@@ -99,7 +99,7 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
             return false;
         }
 
-        final var cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
+        final var cdrv = connector.getStatus().getDeployment().getDeploymentResourceVersion();
         final var removed = new ArrayList<DeployedResource>();
 
         for (var it = connector.getStatus().getConnectorStatus().getResources().iterator(); it.hasNext();) {

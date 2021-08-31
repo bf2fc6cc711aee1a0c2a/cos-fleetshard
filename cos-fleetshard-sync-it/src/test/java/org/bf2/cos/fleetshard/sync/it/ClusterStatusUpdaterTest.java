@@ -3,14 +3,14 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.it.BaseTestProfile;
-import org.bf2.cos.fleetshard.it.InjectWireMock;
-import org.bf2.cos.fleetshard.it.WireMockTestResource;
+import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
+import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -28,8 +28,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @QuarkusTest
 @TestProfile(ClusterStatusUpdaterTest.Profile.class)
 public class ClusterStatusUpdaterTest extends SyncTestSupport {
-    @InjectWireMock
-    WireMockServer server;
+    @WireMockTestInstance
+    com.github.tomakehurst.wiremock.WireMockServer server;
     @ConfigProperty(name = "cluster-id")
     String clusterId;
 
@@ -59,13 +59,15 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
 
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
-            return List.of(new TestResourceEntry(FleetManagerTestResource.class));
+            return List.of(
+                new TestResourceEntry(KubernetesTestResource.class),
+                new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
-        protected Map<String, String> doStart(WireMockServer server) {
+        protected Map<String, String> doStart(com.github.tomakehurst.wiremock.WireMockServer server) {
             MappingBuilder request = WireMock.put(WireMock.urlPathMatching(
                 "/api/connector_mgmt/v1/kafka_connector_clusters/.*/status"));
 

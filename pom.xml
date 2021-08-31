@@ -26,6 +26,7 @@
         <kubernetes-client.version>5.7.3</kubernetes-client.version>
         <lombok.version>1.18.20</lombok.version>
         <quarkus.version>2.2.3.Final</quarkus.version>
+        <quarkus-cucumber.version>0.4.0</quarkus-cucumber.version>
         <quarkus-operator-sdk.version>2.0.0.Beta5</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
         <sundrio.version>0.50.1</sundrio.version>
@@ -36,6 +37,8 @@
         <bouncycastle.version>1.68</bouncycastle.version>
         <strimzi.version>0.25.0</strimzi.version>
         <bson.version>4.3.1</bson.version>
+        <cucumber.version>6.11.0</cucumber.version>
+        <json-path.version>2.6.0</json-path.version>
 
         <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -59,7 +62,7 @@
         <module>cos-fleet-manager-api</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
-        <module>cos-fleetshard-it-support</module>
+        <module>cos-fleetshard-it</module>
         <module>cos-fleetshard-sync</module>
         <module>cos-fleetshard-sync-it</module>
         <module>cos-fleetshard-operator</module>
@@ -124,7 +127,22 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-it-support</artifactId>
+                <artifactId>cos-fleetshard-it</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-it-resources</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-it-assertj</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-it-cucumber</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
