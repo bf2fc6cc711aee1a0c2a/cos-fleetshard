@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -37,6 +38,23 @@ public final class JacksonUtil {
     public static <T> String asPrettyPrintedYaml(T object) {
         try {
             return Serialization.yamlMapper().writerWithDefaultPrettyPrinter().writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw KubernetesClientException.launderThrowable(e);
+        }
+    }
+
+    public static ArrayNode asArrayNode(String... elements) {
+        ArrayNode node = Serialization.jsonMapper().createArrayNode();
+        for (String element : elements) {
+            node.add(element);
+        }
+
+        return node;
+    }
+
+    public static String asArrayString(String... elements) {
+        try {
+            return Serialization.jsonMapper().writeValueAsString(asArrayNode(elements));
         } catch (JsonProcessingException e) {
             throw KubernetesClientException.launderThrowable(e);
         }

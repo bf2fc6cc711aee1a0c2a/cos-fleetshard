@@ -1,10 +1,11 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import org.bf2.cos.fleetshard.support.json.JacksonUtil;
+
 import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 public final class CamelConstants {
     public static final String OPERATOR_TYPE = "camel-connector-operator";
@@ -23,15 +24,12 @@ public final class CamelConstants {
     public static final String TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS = "trait.camel.apache.org/owner.target-labels";
     public static final String TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS = "trait.camel.apache.org/owner.target-annotations";
 
-    public static final String LABELS_TO_TRANSFER = String.join(
-        ",",
+    public static final String LABELS_TO_TRANSFER = JacksonUtil.asArrayString(
         LABEL_DEPLOYMENT_ID,
-        LABEL_DEPLOYMENT_RESOURCE_VERSION,
         LABEL_CONNECTOR_ID,
         LABEL_CONNECTOR_TYPE_ID);
 
-    public static final String ANNOTATIONS_TO_TRANSFER = String.join(
-        ",",
+    public static final String ANNOTATIONS_TO_TRANSFER = JacksonUtil.asArrayString(
         ANNOTATION_DEPLOYMENT_RESOURCE_VERSION);
 
     private CamelConstants() {
