@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -18,6 +19,8 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
+import org.bf2.cos.fleetshard.operator.connector.exceptions.ConnectorControllerException;
+import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
 import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventSource;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
@@ -125,10 +128,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.noUpdate();
         }
 
-        LOGGER.info("Reconcile {}:{}:{} (phase={})",
+        LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
             connector.getApiVersion(),
             connector.getKind(),
             connector.getMetadata().getName(),
+            connector.getMetadata().getNamespace(),
             connector.getStatus().getPhase());
 
         if (connector.getStatus().getPhase() == null) {
@@ -144,7 +148,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             case Augmentation:
                 return handleAugmentation(connector);
             case Monitor:
-                return handleMonitor(connector);
+                return validate(connector, this::handleMonitor);
             case Deleting:
                 return handleDeleting(connector);
             case Deleted:
@@ -152,9 +156,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             case Stopping:
                 return handleStopping(connector);
             case Stopped:
-                return handleStopped(connector);
+                return validate(connector, this::handleStopped);
             case Error:
-                return handleError(connector);
+                return validate(connector, this::handleError);
             default:
                 throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
         }
@@ -321,74 +325,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
-        if (!Objects.equals(connector.getSpec().getDeployment(), connector.getStatus().getDeployment())) {
-            JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
-            JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
-
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-            connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-            LOGGER.info("Drift detected {}, move to phase: {}",
-                JsonDiff.asJson(statusNode, specNode),
-                connector.getStatus().getPhase());
-
-            return UpdateControl.updateStatusSubResource(connector);
-        }
-
-        if (connector.getStatus().getConnectorStatus() != null
-            && connector.getStatus().getConnectorStatus().getResources() != null
-            && connector.getStatus().getDeployment().getDeploymentResourceVersion() != null) {
-
-            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
-
-            for (DeployedResource dr : connector.getStatus().getConnectorStatus().getResources()) {
-                if (dr.getDeploymentRevision() != null && !Objects.equals(cdrv, dr.getDeploymentRevision())) {
-                    continue;
-                }
-                if (dr.getGeneration() == null && dr.getResourceVersion() == null) {
-                    continue;
-                }
-
-                final GenericKubernetesResource res = uc.get(dr);
-                if (res == null) {
-                    continue;
-                }
-
-                if (dr.getGeneration() != null) {
-                    // custom resource
-                    if (!Objects.equals(dr.getGeneration(), res.getMetadata().getGeneration())) {
-                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-                        LOGGER.info(
-                            "Deployed resource drift detected observed_generation: {}, resource_generation: {}, move to phase: {}",
-                            dr.getGeneration(),
-                            res.getMetadata().getGeneration(),
-                            connector.getStatus().getPhase());
-
-                        return UpdateControl.updateStatusSubResource(connector);
-                    }
-                } else if (dr.getResourceVersion() != null) {
-                    // secret, configmap etc
-                    if (!Objects.equals(dr.getResourceVersion(), res.getMetadata().getResourceVersion())) {
-                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-                        LOGGER.info(
-                            "Deployed resource drift detected observed_resource_version: {}, resource_version: {}, move to phase: {}",
-                            dr.getResourceVersion(),
-                            res.getMetadata().getResourceVersion(),
-                            connector.getStatus().getPhase());
-
-                        return UpdateControl.updateStatusSubResource(connector);
-                    }
-                }
-            }
-        }
-
         operandController.status(connector);
         operandController.gc(connector);
 
@@ -471,23 +407,43 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
-        boolean updated = !Objects.equals(
-            connector.getSpec().getDeployment(),
-            connector.getStatus().getDeployment());
+        return UpdateControl.noUpdate();
+    }
 
-        if (updated) {
-            JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
-            JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
+    private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
+        // TODO: retry with backoff
+        getRetryTimer().scheduleOnce(connector, 1500);
 
+        return UpdateControl.noUpdate();
+    }
+
+    private UpdateControl<ManagedConnector> validate(
+        ManagedConnector connector,
+        Function<ManagedConnector, UpdateControl<ManagedConnector>> okAction) {
+
+        try {
+            validate(connector);
+
+            return okAction.apply(connector);
+        } catch (ConnectorControllerException e) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
             connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
             connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
 
-            LOGGER.info("Drift detected {}, move to phase: {}",
-                JsonDiff.asJson(statusNode, specNode),
-                connector.getStatus().getPhase());
+            LOGGER.info("{}, move to phase: {}", e.getMessage(), connector.getStatus().getPhase());
 
             return UpdateControl.updateStatusSubResource(connector);
+        }
+    }
+
+    private void validate(ManagedConnector connector) throws ConnectorControllerException {
+        if (!Objects.equals(connector.getSpec().getDeployment(), connector.getStatus().getDeployment())) {
+            JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
+            JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
+
+            throw Drifted.of("Drift detected on connector deployment %s: %s",
+                connector.getSpec().getDeploymentId(),
+                JsonDiff.asJson(statusNode, specNode));
         }
 
         if (connector.getStatus().getConnectorStatus() != null
@@ -510,63 +466,31 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
 
                 if (dr.getGeneration() != null) {
+                    // custom resource
                     if (!Objects.equals(dr.getGeneration(), res.getMetadata().getGeneration())) {
-                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-                        LOGGER.info(
-                            "Deployed resource drift detected observed_generation: {}, resource_generation: {}, move to phase: {}",
+                        throw Drifted.of(
+                            "Drift detected on resource %s:%s:%s@%s (observed_generation: %d, resource_generation: %d)",
+                            dr.getApiVersion(),
+                            dr.getKind(),
+                            dr.getName(),
+                            dr.getNamespace(),
                             dr.getGeneration(),
-                            res.getMetadata().getGeneration(),
-                            connector.getStatus().getPhase());
-
-                        return UpdateControl.updateStatusSubResource(connector);
+                            res.getMetadata().getGeneration());
                     }
                 } else if (dr.getResourceVersion() != null) {
+                    // secret, configmap etc
                     if (!Objects.equals(dr.getResourceVersion(), res.getMetadata().getResourceVersion())) {
-                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-                        connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-                        connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-                        LOGGER.info(
-                            "Deployed resource drift detected observed_resource_version: {}, resource_version: {}, move to phase: {}",
+                        throw Drifted.of(
+                            "Drift detected on resource %s:%s:%s@%s (observed_resource_version: %s, resource_version: %s)",
+                            dr.getApiVersion(),
+                            dr.getKind(),
+                            dr.getName(),
+                            dr.getNamespace(),
                             dr.getResourceVersion(),
-                            res.getMetadata().getResourceVersion(),
-                            connector.getStatus().getPhase());
-
-                        return UpdateControl.updateStatusSubResource(connector);
+                            res.getMetadata().getResourceVersion());
                     }
                 }
             }
         }
-
-        return UpdateControl.noUpdate();
-    }
-
-    private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
-        boolean updated = !Objects.equals(
-            connector.getSpec().getDeployment(),
-            connector.getStatus().getDeployment());
-
-        if (updated) {
-            JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
-            JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
-
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-            connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-            LOGGER.info("Drift detected {}, move to phase: {}",
-                JsonDiff.asJson(statusNode, specNode),
-                connector.getStatus().getPhase());
-
-            return UpdateControl.updateStatusSubResource(connector);
-        }
-
-        // TODO: retry with backoff
-        getRetryTimer().scheduleOnce(connector, 1500);
-
-        return UpdateControl.noUpdate();
     }
 }
