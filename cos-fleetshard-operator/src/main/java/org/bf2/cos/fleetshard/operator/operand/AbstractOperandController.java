@@ -1,10 +1,5 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
-import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +17,11 @@ import org.slf4j.LoggerFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
+
+import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 
 public abstract class AbstractOperandController<M, S> implements OperandController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractOperandController.class);
