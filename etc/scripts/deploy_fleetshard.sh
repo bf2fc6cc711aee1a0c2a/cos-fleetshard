@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
-oc apply -k etc/kubernetes/operator-camel/rh-fuse
-oc apply -k etc/kubernetes/operator-debezium/rh-fuse
-oc apply -k etc/kubernetes/sync/rh-fuse
+PROFILE="${KUSTOMIZE_PROFILE:-rh-fuse}"
+
+oc apply -k etc/kubernetes/operator-camel/"${PROFILE}"
+oc apply -k etc/kubernetes/operator-debezium/"${PROFILE}"
+oc apply -k etc/kubernetes/sync/"${PROFILE}"

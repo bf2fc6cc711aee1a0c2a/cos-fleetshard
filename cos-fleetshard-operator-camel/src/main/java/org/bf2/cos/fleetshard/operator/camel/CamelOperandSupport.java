@@ -1,8 +1,5 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import static java.lang.String.format;
-import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
-
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -27,6 +24,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.utils.Serialization;
+
+import static java.lang.String.format;
+import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
     private CamelOperandSupport() {

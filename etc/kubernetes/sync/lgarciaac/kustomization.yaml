@@ -1,0 +1,24 @@
+resources:
+  - ../base
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: cos-fleetshard-sync-config
+    files:
+      - application.properties=app-config/application.properties
+
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-sync
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/name
+        value: "application"
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: "quay.io/lgarciaac/cos-fleetshard-sync:latest"

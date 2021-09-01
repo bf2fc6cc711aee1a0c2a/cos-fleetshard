@@ -1,12 +1,5 @@
 package org.bf2.cos.fleetshard.operator.it.support;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -31,6 +24,13 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 public class CamelConnectorTestSupport {
     @KubernetesTestServer

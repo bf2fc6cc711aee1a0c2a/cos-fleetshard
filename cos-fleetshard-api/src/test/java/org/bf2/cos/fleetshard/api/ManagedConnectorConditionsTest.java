@@ -1,7 +1,5 @@
 package org.bf2.cos.fleetshard.api;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,6 +9,8 @@ import java.util.Objects;
 import org.junit.jupiter.api.Test;
 
 import io.fabric8.kubernetes.api.model.Condition;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ManagedConnectorConditionsTest {
 

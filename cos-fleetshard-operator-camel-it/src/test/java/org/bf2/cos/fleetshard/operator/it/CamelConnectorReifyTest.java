@@ -1,9 +1,5 @@
 package org.bf2.cos.fleetshard.operator.it;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
-
 import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -14,6 +10,10 @@ import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
+
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.bf2.cos.fleetshard.it.assertions.UnstructuredAssertions.assertThatUnstructured;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(CamelConnectorReifyTest.Profile.class)

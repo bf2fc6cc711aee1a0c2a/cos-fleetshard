@@ -1,7 +1,5 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
-
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -13,6 +11,8 @@ import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
 
 public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetesResource> {
     private static final Logger LOGGER = LoggerFactory.getLogger(OperandResourceWatcher.class);

@@ -1,8 +1,5 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
-
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +26,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 public class SyncTestSupport {
     @KubernetesTestServer

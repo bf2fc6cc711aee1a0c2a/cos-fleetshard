@@ -1,11 +1,11 @@
 package org.bf2.cos.fleetshard.api;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import java.util.List;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class OperatorSelectorTest {
     public static final List<Operator> OPERATORS = List.of(
