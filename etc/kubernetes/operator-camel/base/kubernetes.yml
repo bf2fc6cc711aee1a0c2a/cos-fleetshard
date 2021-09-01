@@ -3,12 +3,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-    app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+    app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+    app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-camel
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-camel
 imagePullSecrets:
   - name: cos-pull-secret
@@ -17,8 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-    app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+    app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+    app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -43,12 +43,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-    app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+    app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+    app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-camel
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-camel
 rules:
   - apiGroups:
@@ -97,12 +97,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-    app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+    app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+    app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-camel
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-camel
 roleRef:
   kind: Role
@@ -128,37 +128,37 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-    app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+    app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+    app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-camel
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-camel
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
       app.kubernetes.io/part-of: cos
       app.kubernetes.io/name: cos-fleetshard-operator-camel
+      app.kubernetes.io/version: latest
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: 582054195bb168293369b2ca30b3a5e62d481a91
-        app.quarkus.io/build-timestamp: 2021-08-31 - 12:25:51 +0000
+        app.quarkus.io/commit-id: 838fe144f235355f4b25e1f78744d65bf3b91705
+        app.quarkus.io/build-timestamp: 2021-09-01 - 10:48:04 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-        app.kubernetes.io/version: latest
         app.kubernetes.io/part-of: cos
         app.kubernetes.io/name: cos-fleetshard-operator-camel
+        app.kubernetes.io/version: latest
     spec:
       containers:
         - env:
