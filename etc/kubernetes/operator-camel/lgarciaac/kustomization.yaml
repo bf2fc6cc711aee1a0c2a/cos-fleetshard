@@ -12,8 +12,7 @@ secretGenerator:
   - name: cos-fleetshard-operator-camel-config
     files:
       - application.properties=app-secret/application.properties
-patchesStrategicMerge:
-  - delete-servicemonitor.yaml
+
 patchesJson6902:
   - target:
       group: apps
@@ -36,7 +35,10 @@ patchesJson6902:
           value: "1.5.0"
       - op: replace
         path: /spec/replicas
-        value: 0
+        value: 1
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy
-        value: "Never"
+        value: "Always"
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: "quay.io/lgarciaac/cos-fleetshard-operator-camel:latest"

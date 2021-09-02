@@ -98,5 +98,7 @@ jobs:
         run: |
           ./etc/scripts/deploy_fleetshard_crds.sh
       - name: Deploy FleetShard
+        env:
+          KUSTOMIZE_PROFILE: ${{ secrets.KUSTOMIZE_PROFILE }}
         run: |
           ./etc/scripts/deploy_fleetshard.sh

@@ -66,16 +66,16 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard-operator-camel
-#---
-#apiVersion: monitoring.coreos.com/v1
-#kind: ServiceMonitor
-#metadata:
-#  name: cos-fleetshard-sync
-#spec:
-#  endpoints:
-#    - interval: 30s
-#      port: http
-#      path: /q/metrics
-#      scheme: http
-#  selector:
-#    matchLabels:
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cos-fleetshard-operator-camel
+spec:
+  endpoints:
+    - interval: 30s
+      port: http
+      path: /q/metrics
+      scheme: http
+  selector:
+    matchLabels:
