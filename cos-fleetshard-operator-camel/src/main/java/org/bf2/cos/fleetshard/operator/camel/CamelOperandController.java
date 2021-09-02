@@ -1,26 +1,5 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ANNOTATIONS_TO_TRANSFER;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createIntegrationSpec;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSecretsData;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
-import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
-import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
-
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,6 +25,27 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ANNOTATIONS_TO_TRANSFER;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createIntegrationSpec;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSecretsData;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
+import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {

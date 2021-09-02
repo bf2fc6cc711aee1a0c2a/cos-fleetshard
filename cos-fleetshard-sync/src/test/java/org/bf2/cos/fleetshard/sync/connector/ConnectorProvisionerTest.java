@@ -1,15 +1,5 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.support.resources.Connectors.CONNECTOR_PREFIX;
-import static org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport.createDeployment;
-import static org.mockito.Mockito.verify;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +17,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Connectors.CONNECTOR_PREFIX;
+import static org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport.createDeployment;
+import static org.mockito.Mockito.verify;
 
 public class ConnectorProvisionerTest {
     private static final String CLUSTER_ID = UUID.randomUUID().toString();

@@ -1,7 +1,5 @@
 package org.bf2.cos.fleetshard.support.resources;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-
 import java.util.Optional;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
@@ -10,6 +8,8 @@ import org.bson.types.ObjectId;
 
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+
+import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
 
 public final class Resources {
 
