@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
   name: cos-fleetshard-sync
 imagePullSecrets:
   - name: cos-pull-secret
@@ -49,6 +50,7 @@ metadata:
     app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
   name: cos-fleetshard-sync
 rules:
   - apiGroups:
@@ -100,6 +102,7 @@ metadata:
     app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
   name: cos-fleetshard-sync
 roleRef:
   kind: Role
@@ -135,6 +138,7 @@ metadata:
     app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-sync
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/name: cos-fleetshard-sync
   name: cos-fleetshard-sync
 spec:
   replicas: 1
@@ -143,6 +147,7 @@ spec:
       app.kubernetes.io/version: latest
       app.kubernetes.io/name: cos-fleetshard-sync
       app.kubernetes.io/part-of: cos
+      app.kubernetes.io/name: cos-fleetshard-sync
   template:
     metadata:
       annotations:
@@ -156,6 +161,7 @@ spec:
         app.kubernetes.io/version: latest
         app.kubernetes.io/name: cos-fleetshard-sync
         app.kubernetes.io/part-of: cos
+        app.kubernetes.io/name: cos-fleetshard-sync
     spec:
       containers:
         - env:
