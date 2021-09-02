@@ -2,6 +2,7 @@
 
 PROFILE="${KUSTOMIZE_PROFILE:-rh-fuse}"
 
-oc apply -k etc/kubernetes/operator-camel/"${PROFILE}"
-oc apply -k etc/kubernetes/operator-debezium/"${PROFILE}"
-oc apply -k etc/kubernetes/sync/"${PROFILE}"
+for app in operator-camel operator-debezium sync; do
+  oc apply -k etc/kubernetes/"${app}"/"${PROFILE}"
+  oc rollout restart deployment/cos-fleetshard-"${app}"
+done
