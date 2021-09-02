@@ -1,12 +1,14 @@
 #!/bin/bash -ex
 
 function print_exit() {
-    echo "Make sure to set the $1 environment variable."
+    echo "$1"
     exit 1
 }
 
+[ "$#" -eq 1 ] || print_exit "This script needs one parameter."
+
 for env_var in IMAGE_REPO_USERNAME IMAGE_REPO_PASSWORD IMAGE_REPO_NAMESPACE; do
-  [ -z "${!env_var}" ] && print_exit $env_var
+  [ -z "${!env_var}" ] && print_exit "Make sure to set the ${env_var} environment variable."
 done
 
 export MAVEN_ARGS="-V -ntp -Dhttp.keepAlive=false -e"
