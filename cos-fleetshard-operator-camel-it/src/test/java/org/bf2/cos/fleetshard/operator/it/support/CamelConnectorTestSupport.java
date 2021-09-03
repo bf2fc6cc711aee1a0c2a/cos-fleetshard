@@ -13,6 +13,7 @@ import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.camel.CamelConstants;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
@@ -25,10 +26,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
+import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
@@ -122,8 +123,8 @@ public class CamelConnectorTestSupport {
         var items = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(namespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {
@@ -143,9 +144,9 @@ public class CamelConnectorTestSupport {
             .secrets()
             .inNamespace(namespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
+            .withLabel(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {

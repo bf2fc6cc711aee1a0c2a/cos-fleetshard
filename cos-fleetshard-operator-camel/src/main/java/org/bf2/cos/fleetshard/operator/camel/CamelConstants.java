@@ -2,10 +2,10 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 
 public final class CamelConstants {
     public static final String OPERATOR_TYPE = "camel-connector-operator";

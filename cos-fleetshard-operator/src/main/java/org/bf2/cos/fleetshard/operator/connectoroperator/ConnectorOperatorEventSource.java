@@ -6,6 +6,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Version;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +17,13 @@ import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
 public class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConnectorOperator> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);
 
+    private final ManagedConnectorOperator operator;
     private final String namespace;
 
-    public ConnectorOperatorEventSource(KubernetesClient kubernetesClient, String namespace) {
+    public ConnectorOperatorEventSource(KubernetesClient kubernetesClient, ManagedConnectorOperator operator,
+        String namespace) {
         super(kubernetesClient);
+        this.operator = operator;
         this.namespace = namespace;
     }
 
@@ -28,6 +32,7 @@ public class ConnectorOperatorEventSource extends WatcherEventSource<ManagedConn
         return getClient()
             .resources(ManagedConnectorOperator.class)
             .inNamespace(namespace)
+            .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
             .watch(this);
     }
 

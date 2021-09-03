@@ -18,7 +18,7 @@ public class ConnectorControllerScheduler {
     @Inject
     ConnectorController controller;
 
-    @Scheduled(every = "{cos.connectors.resync.interval:60s}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @Scheduled(every = "{cos.connectors.resync.interval:off}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void resync() {
         List<ManagedConnector> connectors = fleetShard.lookupManagedConnectors();
         for (int i = 0; i < connectors.size(); i++) {

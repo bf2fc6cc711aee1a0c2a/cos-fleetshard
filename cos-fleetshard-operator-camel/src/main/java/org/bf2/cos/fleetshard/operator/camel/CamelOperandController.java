@@ -27,9 +27,6 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_DEPLOYMENT;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ANNOTATIONS_TO_TRANSFER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
@@ -47,6 +44,9 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSe
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_DEPLOYMENT;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {

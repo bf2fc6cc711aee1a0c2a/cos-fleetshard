@@ -25,6 +25,7 @@ import org.bf2.cos.fleetshard.operator.connectoroperator.ConnectorOperatorEventS
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -45,25 +46,27 @@ import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_OPERAND;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_OPERATOR;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_TYPE_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
+import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_OPERAND;
+import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_OPERATOR;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_OWNER;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_TYPE;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
@@ -89,10 +92,18 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         if (watchResource) {
             eventSourceManager.registerEventSource(
                 "_operators",
-                new ConnectorOperatorEventSource(kubernetesClient, fleetShard.getOperatorNamespace()));
+                new ConnectorOperatorEventSource(
+                    kubernetesClient,
+                    managedConnectorOperator,
+                    fleetShard.getOperatorNamespace()));
             eventSourceManager.registerEventSource(
                 "_secrets",
-                new OperandResourceWatcher(kubernetesClient, "v1", "Secret", fleetShard.getConnectorsNamespace()));
+                new OperandResourceWatcher(
+                    kubernetesClient,
+                    managedConnectorOperator,
+                    "v1",
+                    "Secret",
+                    fleetShard.getConnectorsNamespace()));
 
             for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
                 if ("v1".equals(res.getVersion()) && "Secret".equals(res.getKind())) {
@@ -101,7 +112,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 eventSourceManager.registerEventSource(
                     "_" + res.getGroup() + "/" + res.getVersion() + ":" + res.getKind(),
-                    new OperandResourceWatcher(kubernetesClient, res, fleetShard.getConnectorsNamespace()));
+                    new OperandResourceWatcher(
+                        kubernetesClient,
+                        managedConnectorOperator,
+                        res,
+                        fleetShard.getConnectorsNamespace()));
             }
         }
     }
@@ -111,11 +126,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector,
         Context<ManagedConnector> context) {
 
-        boolean canHandle = Objects.equals(
-            managedConnectorOperator.getMetadata().getName(),
-            connector.getSpec().getOperatorSelector().getId());
+        final String selfId = managedConnectorOperator.getMetadata().getName();
 
-        if (!canHandle) {
+        if (!Objects.equals(selfId, connector.getSpec().getOperatorSelector().getId())) {
             if (connector.getSpec().getOperatorSelector().getId() != null) {
                 LOGGER.debug("Skip connector: {} as assigned to operator: {}",
                     connector.getMetadata().getName(),
@@ -126,8 +139,29 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             }
 
             return UpdateControl.noUpdate();
+
+        } else if (connector.getStatus().getConnectorStatus().getAssignedOperator() != null) {
+            //
+            // This is not fully implemented yet but the rationale here is that when a connector get moved
+            // between fleets-shard operators, then:
+            //
+            // - the connector need to be stopped
+            // - the owner of the operator should release the connector
+            // - only at that point, the new fleet-shard can start reconciling the connector
+            //
+            if (!Objects.equals(selfId, connector.getStatus().getConnectorStatus().getAssignedOperator().getId())) {
+                LOGGER.debug("Skip connector: {} as still handled by operator: {}",
+                    connector.getMetadata().getName(),
+                    connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
+
+                return UpdateControl.noUpdate();
+            }
         }
 
+        return reconcile(connector);
+    }
+
+    private UpdateControl<ManagedConnector> reconcile(ManagedConnector connector) {
         LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
             connector.getApiVersion(),
             connector.getKind(),
@@ -269,6 +303,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             "Augmentation",
             "Augmentation");
 
+        // update the secret to reclaim ownership
+        Resources.setLabel(secret, LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
+        Resources.setLabel(secret, LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
+
+        secret = kubernetesClient.resource(secret).createOrReplace();
+
+        // Add the secret created by the sync among the list of resources to clean-up upon delete/update
+        connector.getStatus().getConnectorStatus().addOrUpdateResource(Resources.asDeployedResource(secret));
+
         for (var resource : operandController.reify(connector, secret)) {
             if (resource.getMetadata().getLabels() == null) {
                 resource.getMetadata().setLabels(new HashMap<>());
@@ -288,6 +331,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_CONNECTOR_TYPE_ID, connector.getSpec().getDeployment().getConnectorTypeId());
             labels.put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
             labels.put(LABEL_CLUSTER_ID, connector.getSpec().getClusterId());
+            labels.put(LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
+            labels.put(LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
 
             final Map<String, String> annotations = KubernetesResourceUtil.getOrCreateAnnotations(resource);
             annotations.put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, rv);
@@ -301,7 +346,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            final DeployedResource res = DeployedResource.of(
+            final DeployedResource res = Resources.asDeployedResource(
                 uc.createOrReplace(
                     connector.getMetadata().getNamespace(),
                     resource));
@@ -312,10 +357,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 res.setDeploymentRevision(ref.getDeploymentResourceVersion());
             }
         }
-
-        // Add the secret created by the sync among the list of resources to
-        // clean-up upon delete/update
-        connector.getStatus().getConnectorStatus().addOrUpdateResource(DeployedResource.of(secret));
 
         connector.getStatus().setDeployment(connector.getSpec().getDeployment());
         connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Monitor);

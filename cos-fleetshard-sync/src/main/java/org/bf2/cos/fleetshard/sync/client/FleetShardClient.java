@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
@@ -26,8 +27,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
@@ -71,7 +72,7 @@ public class FleetShardClient {
     public long getMaxDeploymentResourceRevision() {
         final List<ManagedConnector> managedConnectors = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
             .list()
             .getItems();
 
@@ -85,10 +86,10 @@ public class FleetShardClient {
         var items = kubernetesClient.secrets()
             .inNamespace(connectorsNamespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion())
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
+            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deployment.getId())
+            .withLabel(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion())
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {
@@ -106,9 +107,9 @@ public class FleetShardClient {
         var items = kubernetesClient.secrets()
             .inNamespace(connectorsNamespace)
             .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
+            .withLabel(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {
@@ -145,7 +146,7 @@ public class FleetShardClient {
     public List<ManagedConnector> getAllConnectors() {
         List<ManagedConnector> answer = kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
             .list()
             .getItems();
 
@@ -155,14 +156,14 @@ public class FleetShardClient {
     public AutoCloseable watchAllConnectors(Watcher<ManagedConnector> watcher) {
         return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
             .watch(watcher);
     }
 
     public AutoCloseable watchAllConnectors(ResourceEventHandler<ManagedConnector> handler) {
         return kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
             .inform(handler, informerSyncInterval.toMillis());
     }
 
@@ -220,7 +221,7 @@ public class FleetShardClient {
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
         var items = kubernetesClient.resources(ManagedConnectorCluster.class)
             .inNamespace(connectorsNamespace)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
             .list();
 
         if (items.getItems() != null && items.getItems().size() > 1) {
@@ -239,7 +240,7 @@ public class FleetShardClient {
             return new ManagedConnectorClusterBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + uid())
-                    .addToLabels(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+                    .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
                     .build())
                 .build();
         });

@@ -67,7 +67,7 @@ To change the default values, use the following system properties:
 | the version of the operator
 
 | cos.connectors.resync.interval
-| 60
+| off
 | the interval between forces reconcile loop
 
 | cos.connectors.watch.resources

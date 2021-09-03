@@ -10,9 +10,11 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
@@ -26,11 +28,11 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_WATCH;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
+import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_DEPLOYMENT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_WATCH;
 
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {
@@ -121,7 +123,18 @@ public class ConnectorDeploymentProvisioner {
 
         if (operatorSelector.getId() == null) {
             OperatorSelectorUtil.assign(operatorSelector, fleetShard.lookupOperators())
-                .ifPresent(operator -> operatorSelector.setId(operator.getId()));
+                .map(Operator::getId)
+                .ifPresent(operatorSelector::setId);
+        }
+        if (operatorSelector.getId() != null) {
+            KubernetesResourceUtil.getOrCreateLabels(connector).put(
+                Resources.LABEL_OPERATOR_ASSIGNED,
+                operatorSelector.getId());
+        }
+        if (operatorSelector.getType() != null) {
+            KubernetesResourceUtil.getOrCreateLabels(connector).put(
+                Resources.LABEL_OPERATOR_TYPE,
+                operatorSelector.getType());
         }
 
         connector.getMetadata().setOwnerReferences(List.of(
@@ -135,7 +148,7 @@ public class ConnectorDeploymentProvisioner {
 
         // update the resource so it gets a new version
         KubernetesResourceUtil.getOrCreateAnnotations(connector).put(
-            ManagedConnector.ANNOTATION_UPDATED_TIMESTAMP,
+            Resources.ANNOTATION_UPDATED_TIMESTAMP,
             ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
@@ -186,7 +199,7 @@ public class ConnectorDeploymentProvisioner {
 
         // update the resource so it gets a new version
         KubernetesResourceUtil.getOrCreateAnnotations(secret).put(
-            ManagedConnector.ANNOTATION_UPDATED_TIMESTAMP,
+            Resources.ANNOTATION_UPDATED_TIMESTAMP,
             ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
         Secrets.set(secret, Secrets.SECRET_ENTRY_CONNECTOR, deployment.getSpec().getConnectorSpec());

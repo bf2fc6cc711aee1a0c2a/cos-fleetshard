@@ -39,9 +39,8 @@ public abstract class AbstractWatcher<T> implements Watcher<T>, AutoCloseable {
 
     @Override
     public void eventReceived(Action action, T resource) {
-        getLogger().debug("Event received for action: {}", action.name());
         if (action == Action.ERROR) {
-            getLogger().warn("Skipping");
+            getLogger().warn("Skipping ERROR event received for action: {}", action.name());
             return;
         }
 
