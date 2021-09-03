@@ -100,7 +100,6 @@ public class ConnectorDeploymentProvisioner {
                 deployment.getMetadata().getResourceVersion());
 
             return Connectors.newConnector(
-                Connectors.generateConnectorId(),
                 fleetShard.getClusterId(),
                 deployment.getSpec().getConnectorId(),
                 deployment.getId(),

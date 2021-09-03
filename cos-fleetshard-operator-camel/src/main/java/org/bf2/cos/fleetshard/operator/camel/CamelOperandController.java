@@ -15,6 +15,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 
@@ -90,7 +91,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
 
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .withName(connector.getMetadata().getName())
+                .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
                 .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .addToData(APPLICATION_PROPERTIES, asBytesBase64(secretsData))

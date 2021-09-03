@@ -16,6 +16,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
@@ -130,43 +131,15 @@ public class FleetShardClient {
     }
 
     public Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
-        var items = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, this.clusterId)
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deploymentId)
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple connectors with id: " + deploymentId);
-        }
-
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return Optional.of(items.getItems().get(0));
-        }
-
-        return Optional.empty();
+        return getConnectorByName(Connectors.generateConnectorId(deploymentId));
     }
 
     public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
-        var items = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(ManagedConnector.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-            .withLabel(ManagedConnector.LABEL_DEPLOYMENT_ID, deployment.getId())
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple connectors with id: " + deployment.getSpec().getConnectorId());
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return Optional.of(items.getItems().get(0));
-        }
-
-        return Optional.empty();
+        return Optional.ofNullable(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(connectorsNamespace)
+                .withName(Connectors.generateConnectorId(deployment.getId()))
+                .get());
     }
 
     public List<ManagedConnector> getAllConnectors() {

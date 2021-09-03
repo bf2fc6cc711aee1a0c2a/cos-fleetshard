@@ -95,7 +95,6 @@ public class CamelConnectorTestSupport {
             "kamelets", Map.of("connector", "aws-s3-sink", "kafka", "kafka-source")));
 
         this.connector = Connectors.newConnector(
-            Connectors.generateConnectorId(),
             clusterId,
             connectorId,
             deploymentId,
