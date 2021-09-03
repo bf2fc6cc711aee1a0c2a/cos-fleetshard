@@ -34,10 +34,5 @@ public class FleetShardOperator {
 
     void onStop(@Observes ShutdownEvent ignored) {
         operator.close();
-
-        client.resources(ManagedConnectorOperator.class)
-            .inNamespace(operatorNamespace)
-            .withName(managedConnectorOperator.getMetadata().getName())
-            .delete();
     }
 }
