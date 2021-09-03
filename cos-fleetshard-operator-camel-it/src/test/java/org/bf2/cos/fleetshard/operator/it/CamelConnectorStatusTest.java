@@ -8,6 +8,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.it.support.CamelConnectorTestSupport;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -31,7 +32,7 @@ public class CamelConnectorStatusTest extends CamelConnectorTestSupport {
 
         assertThatUnstructured(uc).hasSecret(
             namespace,
-            connector.getMetadata().getName());
+            connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX);
         assertThatUnstructured(uc).hasKameletBinding(
             namespace,
             connector.getMetadata().getName());

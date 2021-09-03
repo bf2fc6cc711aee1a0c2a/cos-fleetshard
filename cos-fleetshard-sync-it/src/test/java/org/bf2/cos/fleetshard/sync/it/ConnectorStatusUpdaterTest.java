@@ -47,13 +47,11 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         final String clusterId = ConfigProvider.getConfig().getValue("cluster-id", String.class);
         final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
-        final String name = Connectors.generateConnectorId();
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
         final Operator operator = new Operator(uid(), "operator-type", "1.2.3");
 
         final ManagedConnector connector = Connectors.newConnector(
-            name,
             clusterId,
             "connector-1",
             DEPLOYMENT_ID,
@@ -75,7 +73,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         ksrv.getClient()
             .resources(ManagedConnector.class)
             .inNamespace(namespace)
-            .withName(name)
+            .withName(connector.getMetadata().getName())
             .replaceStatus(connector);
 
         untilAsserted(() -> {

@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -78,7 +79,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .withName(connector.getMetadata().getName())
+                .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
                 .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(secretsData))

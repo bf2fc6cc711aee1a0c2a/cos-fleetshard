@@ -6,6 +6,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.it.BaseTestProfile;
 import org.bf2.cos.fleetshard.operator.it.support.CamelConnectorTestSupport;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.junit.jupiter.api.Test;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -29,7 +30,7 @@ public class CamelConnectorReifyTest extends CamelConnectorTestSupport {
 
         assertThatUnstructured(uc).hasSecretSatisfying(
             namespace,
-            mc.getMetadata().getName(),
+            mc.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX,
             resource -> {
                 assertThatJson(resource)
                     .inPath("$.metadata.labels['cos.bf2.org/watch']")
