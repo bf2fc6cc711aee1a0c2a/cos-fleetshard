@@ -14,10 +14,10 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 public final class Secrets {
     public static final String SECRET_ENTRY_CONNECTOR = "connector";

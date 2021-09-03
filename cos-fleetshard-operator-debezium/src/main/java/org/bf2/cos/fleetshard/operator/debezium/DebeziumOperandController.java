@@ -38,8 +38,6 @@ import io.strimzi.api.kafka.model.connect.build.DockerOutputBuilder;
 import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
 import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
@@ -52,6 +50,8 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.cr
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DELETION_MODE;
+import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {

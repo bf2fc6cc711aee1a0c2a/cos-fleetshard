@@ -18,6 +18,7 @@ import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.mockito.Mockito;
 
@@ -48,9 +49,9 @@ public final class ConnectorTestSupport {
             entry -> {
                 var labels = entry.getMetadata().getLabels();
 
-                return Objects.equals(clusterId, labels.get(ManagedConnector.LABEL_CLUSTER_ID))
-                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(ManagedConnector.LABEL_CONNECTOR_ID))
-                    && Objects.equals(deployment.getId(), labels.get(ManagedConnector.LABEL_DEPLOYMENT_ID));
+                return Objects.equals(clusterId, labels.get(Resources.LABEL_CLUSTER_ID))
+                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(Resources.LABEL_CONNECTOR_ID))
+                    && Objects.equals(deployment.getId(), labels.get(Resources.LABEL_DEPLOYMENT_ID));
             }).findFirst();
     }
 
@@ -64,10 +65,10 @@ public final class ConnectorTestSupport {
                 var labels = entry.getMetadata().getLabels();
                 var rv = "" + deployment.getMetadata().getResourceVersion();
 
-                return Objects.equals(clusterId, labels.get(ManagedConnector.LABEL_CLUSTER_ID))
-                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(ManagedConnector.LABEL_CONNECTOR_ID))
-                    && Objects.equals(deployment.getId(), labels.get(ManagedConnector.LABEL_DEPLOYMENT_ID))
-                    && Objects.equals(rv, labels.get(ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION));
+                return Objects.equals(clusterId, labels.get(Resources.LABEL_CLUSTER_ID))
+                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(Resources.LABEL_CONNECTOR_ID))
+                    && Objects.equals(deployment.getId(), labels.get(Resources.LABEL_DEPLOYMENT_ID))
+                    && Objects.equals(rv, labels.get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION));
             }).findFirst();
     }
 
@@ -180,7 +181,7 @@ public final class ConnectorTestSupport {
                 return new ManagedConnectorClusterBuilder()
                     .withMetadata(new ObjectMetaBuilder()
                         .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-1")
-                        .addToLabels(ManagedConnector.LABEL_CLUSTER_ID, clusterId)
+                        .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
                         .build())
                     .build();
             });

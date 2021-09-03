@@ -6,11 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.sundr.builder.annotations.Buildable;
 import lombok.ToString;
-
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,26 +16,6 @@ public class DeployedResource extends ResourceRef {
     private Long deploymentRevision;
     private Long generation;
     private String resourceVersion;
-
-    public static DeployedResource of(HasMetadata metadata) {
-        DeployedResource answer = new DeployedResource();
-        answer.setApiVersion(metadata.getApiVersion());
-        answer.setKind(metadata.getKind());
-        answer.setName(metadata.getMetadata().getName());
-        answer.setNamespace(metadata.getMetadata().getNamespace());
-        answer.setGeneration(metadata.getMetadata().getGeneration());
-        answer.setResourceVersion(metadata.getMetadata().getResourceVersion());
-
-        if (metadata.getMetadata().getAnnotations() != null) {
-            String version = metadata.getMetadata().getAnnotations().get(LABEL_DEPLOYMENT_RESOURCE_VERSION);
-            if (version != null) {
-                answer.setDeploymentRevision(Long.parseLong(version));
-            }
-        }
-
-        return answer;
-
-    }
 
     @JsonProperty
     public Long getDeploymentRevision() {

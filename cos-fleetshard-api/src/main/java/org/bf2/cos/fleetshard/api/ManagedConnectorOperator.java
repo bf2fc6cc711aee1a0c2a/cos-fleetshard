@@ -27,9 +27,6 @@ public class ManagedConnectorOperator
     public static final String VERSION = "v1alpha1";
     public static final String GROUP = "cos.bf2.org";
 
-    public static final String LABEL_OPERATOR_TYPE = "cos.bf2.org/operator.type";
-    public static final String LABEL_OPERATOR_VERSION = "cos.bf2.org/operator.version";
-
     public ManagedConnectorOperator() {
     }
 

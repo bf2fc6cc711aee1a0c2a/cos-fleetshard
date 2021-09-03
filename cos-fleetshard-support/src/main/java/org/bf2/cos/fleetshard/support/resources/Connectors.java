@@ -8,9 +8,9 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 
 public final class Connectors {
     public static final String CONNECTOR_PREFIX = "mctr";
