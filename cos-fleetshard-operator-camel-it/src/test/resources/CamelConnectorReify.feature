@@ -21,16 +21,13 @@ Feature: Camel Connector Reify
     Then the connector secret exists
 
     Then the klb exists
-     And the klb has annotations containing:
-          | cos.bf2.org/deployment.resource.version | 1 |
      And the klb has labels containing:
-          | cos.bf2.org/watch         | true |
           | cos.bf2.org/cluster.id    |      |
           | cos.bf2.org/connector.id  |      |
           | cos.bf2.org/deployment.id |      |
      And the klb has an array at path "$.spec.integration.configuration" containing:
           | { "type":"secret" , "value": "${json-unit.ignore}" }            |
-          | { "type":"env"    , "value": "QUARKUS_LOG_CONSOLE_JSON=false" } |
+
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
 
@@ -43,10 +40,7 @@ Feature: Camel Connector Reify
           | camel.kamelet.managed-kafka-source.password         |                            |
           | camel.kamelet.managed-kafka-source.user             |                            |
           | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
-     And the klb secret has annotations containing:
-          | cos.bf2.org/deployment.resource.version | 1 |
      And the klb secret has labels containing:
-          | cos.bf2.org/watch         | true |
           | cos.bf2.org/cluster.id    |      |
           | cos.bf2.org/connector.id  |      |
           | cos.bf2.org/deployment.id |      |

@@ -46,11 +46,4 @@ public interface OperandController {
      * @return           true if the connector has been deleted, false otherwise.
      */
     boolean delete(ManagedConnector connector);
-
-    /**
-     * Perform cleanup of connector leftovers.
-     *
-     * @param connector the connector.
-     */
-    boolean gc(ManagedConnector connector);
 }

@@ -56,6 +56,8 @@ spec:
                     type: string
                   secret:
                     type: string
+                  secretVersion:
+                    type: string
                 type: object
               operatorSelector:
                 properties:
@@ -114,6 +116,8 @@ spec:
                     type: string
                   secret:
                     type: string
+                  secretVersion:
+                    type: string
                 type: object
               connectorStatus:
                 properties:
@@ -138,25 +142,6 @@ spec:
                           additionalProperties:
                             type: string
                           type: object
-                      type: object
-                    type: array
-                  resources:
-                    items:
-                      properties:
-                        deploymentRevision:
-                          type: number
-                        generation:
-                          type: number
-                        resourceVersion:
-                          type: string
-                        apiVersion:
-                          type: string
-                        kind:
-                          type: string
-                        name:
-                          type: string
-                        namespace:
-                          type: string
                       type: object
                     type: array
                   assignedOperator:

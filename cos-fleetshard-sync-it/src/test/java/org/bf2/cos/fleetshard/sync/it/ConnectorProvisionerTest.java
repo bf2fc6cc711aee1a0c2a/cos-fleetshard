@@ -60,7 +60,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 .post("/test/connectors/deployment/provisioner/queue");
 
             Secret s1 = until(
-                () -> fleetShardClient.getSecretByDeploymentIdAndRevision(DEPLOYMENT_ID, 1L),
+                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
                 item -> true);
 
             ManagedConnector mc = until(
@@ -72,8 +72,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX)
-                    .endsWith("-" + 1);
+                    .isEqualTo(mc.getMetadata().getName());
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
@@ -113,11 +112,11 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 .post("/test/connectors/deployment/provisioner/queue");
 
             Secret s1 = until(
-                () -> fleetShardClient.getSecretByDeploymentIdAndRevision(DEPLOYMENT_ID, 1L),
+                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
                 item -> true);
 
             Secret s2 = until(
-                () -> fleetShardClient.getSecretByDeploymentIdAndRevision(DEPLOYMENT_ID, 2L),
+                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
                 item -> true);
 
             ManagedConnector mc = until(
@@ -129,8 +128,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX)
-                    .endsWith("-" + 1);
+                    .isEqualTo(mc.getMetadata().getName());
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
@@ -149,8 +147,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
             assertThat(s2).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .startsWith(Connectors.CONNECTOR_PREFIX)
-                    .endsWith("-" + 2);
+                    .isEqualTo(mc.getMetadata().getName());
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()

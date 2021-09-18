@@ -1,12 +1,8 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import org.apache.http.annotation.Obsolete;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
-import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -67,67 +63,4 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
         M shardMetadata,
         S connectorSpec,
         KafkaSpec kafkaSpec);
-
-    @Override
-    public boolean delete(ManagedConnector connector) {
-        if (connector.getStatus().getDeployment().getDeploymentResourceVersion() == null) {
-            return false;
-        }
-
-        for (var it = connector.getStatus().getConnectorStatus().getResources().iterator(); it.hasNext();) {
-            final var ref = it.next();
-
-            uc.delete(connector.getMetadata().getNamespace(), ref);
-
-            if (uc.get(connector.getMetadata().getNamespace(), ref) == null) {
-                it.remove();
-
-                LOGGER.info("delete: resource removed {}:{}:{} (deployment={})",
-                    ref.getApiVersion(),
-                    ref.getKind(),
-                    ref.getName(),
-                    connector.getSpec().getDeploymentId());
-            }
-        }
-
-        return connector.getStatus().getConnectorStatus().getResources().isEmpty();
-    }
-
-    @Obsolete
-    public boolean gc(ManagedConnector connector) {
-        if (connector.getStatus().getDeployment().getDeploymentResourceVersion() == null) {
-            return false;
-        }
-
-        final var cdrv = connector.getStatus().getDeployment().getDeploymentResourceVersion();
-        final var removed = new ArrayList<DeployedResource>();
-
-        for (var it = connector.getStatus().getConnectorStatus().getResources().iterator(); it.hasNext();) {
-            final var ref = it.next();
-
-            if (ref.getDeploymentRevision() == null) {
-                continue;
-            }
-            if (Objects.equals(cdrv, ref.getDeploymentRevision())) {
-                continue;
-            }
-
-            uc.delete(connector.getMetadata().getNamespace(), ref);
-
-            if (uc.get(connector.getMetadata().getNamespace(), ref) == null) {
-                it.remove();
-                removed.add(ref);
-            }
-        }
-
-        for (var ref : removed) {
-            LOGGER.info("gc: resource removed {}:{}:{} (deployment={})",
-                ref.getApiVersion(),
-                ref.getKind(),
-                ref.getName(),
-                connector.getSpec().getDeploymentId());
-        }
-
-        return !removed.isEmpty();
-    }
 }

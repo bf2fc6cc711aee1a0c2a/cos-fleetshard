@@ -9,7 +9,6 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.api.DeployedResource;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
@@ -33,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -55,19 +53,14 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
-import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DEPLOYMENT_RESOURCE_VERSION;
-import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_OPERAND;
-import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_OPERATOR;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_OWNER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_TYPE;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_WATCH;
-import static org.bf2.cos.fleetshard.support.resources.Resources.getDeletionMode;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
@@ -309,9 +302,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         secret = kubernetesClient.resource(secret).createOrReplace();
 
-        // Add the secret created by the sync among the list of resources to clean-up upon delete/update
-        connector.getStatus().getConnectorStatus().addOrUpdateResource(Resources.asDeployedResource(secret));
-
         for (var resource : operandController.reify(connector, secret)) {
             if (resource.getMetadata().getLabels() == null) {
                 resource.getMetadata().setLabels(new HashMap<>());
@@ -321,11 +311,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             }
 
             final String rv = Long.toString(connector.getSpec().getDeployment().getDeploymentResourceVersion());
-            final String deletionMode = getDeletionMode(resource).orElse(DELETION_MODE_CONNECTOR);
 
             final Map<String, String> labels = KubernetesResourceUtil.getOrCreateLabels(resource);
-            labels.put(LABEL_WATCH, "true");
-            labels.put(LABEL_RESOURCE_CONTEXT, CONTEXT_OPERAND);
             labels.put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
             labels.put(LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId());
             labels.put(LABEL_CONNECTOR_TYPE_ID, connector.getSpec().getDeployment().getConnectorTypeId());
@@ -333,9 +320,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_CLUSTER_ID, connector.getSpec().getClusterId());
             labels.put(LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
             labels.put(LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
-
-            final Map<String, String> annotations = KubernetesResourceUtil.getOrCreateAnnotations(resource);
-            annotations.put(ANNOTATION_DEPLOYMENT_RESOURCE_VERSION, rv);
+            labels.put(LABEL_DEPLOYMENT_RESOURCE_VERSION, rv);
 
             resource.getMetadata().setOwnerReferences(List.of(
                 new OwnerReferenceBuilder()
@@ -346,16 +331,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            final DeployedResource res = Resources.asDeployedResource(
-                uc.createOrReplace(
-                    connector.getMetadata().getNamespace(),
-                    resource));
+            LOGGER.debug("Updating resource resource {}:{}:{}@{}",
+                resource.getApiVersion(),
+                resource.getKind(),
+                resource.getMetadata().getName(),
+                resource.getMetadata().getNamespace());
 
-            connector.getStatus().getConnectorStatus().addOrUpdateResource(res);
-
-            if (!DELETION_MODE_CONNECTOR.equals(deletionMode)) {
-                res.setDeploymentRevision(ref.getDeploymentResourceVersion());
-            }
+            uc.createOrReplace(
+                connector.getMetadata().getNamespace(),
+                resource);
         }
 
         connector.getStatus().setDeployment(connector.getSpec().getDeployment());
@@ -367,7 +351,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
         operandController.status(connector);
-        operandController.gc(connector);
 
         //
         // Search for newly installed ManagedOperators
@@ -485,53 +468,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             throw Drifted.of("Drift detected on connector deployment %s: %s",
                 connector.getSpec().getDeploymentId(),
                 JsonDiff.asJson(statusNode, specNode));
-        }
-
-        if (connector.getStatus().getConnectorStatus() != null
-            && connector.getStatus().getConnectorStatus().getResources() != null
-            && connector.getStatus().getDeployment().getDeploymentResourceVersion() != null) {
-
-            final Long cdrv = connector.getSpec().getDeployment().getDeploymentResourceVersion();
-
-            for (DeployedResource dr : connector.getStatus().getConnectorStatus().getResources()) {
-                if (dr.getDeploymentRevision() != null && !Objects.equals(cdrv, dr.getDeploymentRevision())) {
-                    continue;
-                }
-                if (dr.getGeneration() == null && dr.getResourceVersion() == null) {
-                    continue;
-                }
-
-                final GenericKubernetesResource res = uc.get(dr);
-                if (res == null) {
-                    continue;
-                }
-
-                if (dr.getGeneration() != null) {
-                    // custom resource
-                    if (!Objects.equals(dr.getGeneration(), res.getMetadata().getGeneration())) {
-                        throw Drifted.of(
-                            "Drift detected on resource %s:%s:%s@%s (observed_generation: %d, resource_generation: %d)",
-                            dr.getApiVersion(),
-                            dr.getKind(),
-                            dr.getName(),
-                            dr.getNamespace(),
-                            dr.getGeneration(),
-                            res.getMetadata().getGeneration());
-                    }
-                } else if (dr.getResourceVersion() != null) {
-                    // secret, configmap etc
-                    if (!Objects.equals(dr.getResourceVersion(), res.getMetadata().getResourceVersion())) {
-                        throw Drifted.of(
-                            "Drift detected on resource %s:%s:%s@%s (observed_resource_version: %s, resource_version: %s)",
-                            dr.getApiVersion(),
-                            dr.getKind(),
-                            dr.getName(),
-                            dr.getNamespace(),
-                            dr.getResourceVersion(),
-                            res.getMetadata().getResourceVersion());
-                    }
-                }
-            }
         }
     }
 }

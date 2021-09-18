@@ -27,8 +27,6 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 
-import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
@@ -83,44 +81,15 @@ public class FleetShardClient {
     }
 
     public Optional<Secret> getSecret(ConnectorDeployment deployment) {
-        var items = kubernetesClient.secrets()
-            .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(Resources.LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deployment.getId())
-            .withLabel(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion())
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple secret with id: " + deployment.getSpec().getConnectorId());
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return Optional.of(items.getItems().get(0));
-        }
-
-        return Optional.empty();
+        return getSecretByDeploymentId(deployment.getId());
     }
 
-    public Optional<Secret> getSecretByDeploymentIdAndRevision(String deploymentId, long revision) {
-        var items = kubernetesClient.secrets()
-            .inNamespace(connectorsNamespace)
-            .withLabel(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
-            .withLabel(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
-            .withLabel(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + revision)
-            .list();
-
-        if (items.getItems() != null && items.getItems().size() > 1) {
-            throw new IllegalArgumentException(
-                "Multiple secret with id: " + deploymentId);
-        }
-        if (items.getItems() != null && items.getItems().size() == 1) {
-            return Optional.of(items.getItems().get(0));
-        }
-
-        return Optional.empty();
+    public Optional<Secret> getSecretByDeploymentId(String deploymentId) {
+        return Optional.ofNullable(
+            kubernetesClient.secrets()
+                .inNamespace(connectorsNamespace)
+                .withName(Connectors.generateConnectorId(deploymentId))
+                .get());
     }
 
     public Optional<ManagedConnector> getConnectorByName(String name) {

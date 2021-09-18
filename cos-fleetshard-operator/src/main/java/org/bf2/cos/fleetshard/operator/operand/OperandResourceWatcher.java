@@ -50,14 +50,12 @@ public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetes
             return getClient()
                 .genericKubernetesResources(context)
                 .inNamespace(namespace)
-                .withLabel(Resources.LABEL_WATCH, "true")
                 .withLabel(Resources.LABEL_OPERATOR_OWNER, operator.getMetadata().getName())
                 .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
                 .watch(this);
         } else {
             return getClient()
                 .genericKubernetesResources(context)
-                .withLabel(Resources.LABEL_WATCH, "true")
                 .withLabel(Resources.LABEL_OPERATOR_OWNER, operator.getMetadata().getName())
                 .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
                 .watch(this);

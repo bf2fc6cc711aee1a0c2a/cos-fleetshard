@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class ConnectorSteps {
@@ -213,20 +212,6 @@ public class ConnectorSteps {
             return Objects.equals(
                 phase,
                 c.getStatus().getConnectorStatus().getPhase());
-        });
-    }
-
-    @Then("the connector has {int} resources")
-    public void connector_has_n_resources(int resourceCount) {
-        var res = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .get();
-
-        assertThat(res).isNotNull();
-        assertThat(res).satisfies(c -> {
-            assertThat(c.getStatus().getConnectorStatus()).isNotNull();
-            assertThat(c.getStatus().getConnectorStatus().getResources()).hasSize(resourceCount);
         });
     }
 

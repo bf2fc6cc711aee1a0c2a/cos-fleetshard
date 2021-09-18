@@ -7,6 +7,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.junit.jupiter.api.Test;
@@ -59,8 +60,7 @@ public class ConnectorProvisionerTest {
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .startsWith(CONNECTOR_PREFIX)
-                .endsWith("-" + deployment.getMetadata().getResourceVersion());
+                .isEqualTo(Connectors.generateConnectorId(deployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -271,7 +271,7 @@ public class ConnectorProvisionerTest {
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo("old-cid-" + newDeployment.getMetadata().getResourceVersion());
+                .isEqualTo("old-cid");
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
