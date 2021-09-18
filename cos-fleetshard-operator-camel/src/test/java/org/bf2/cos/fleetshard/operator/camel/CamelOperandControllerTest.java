@@ -34,9 +34,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
-import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
-import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_DEPLOYMENT;
 
 public final class CamelOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
@@ -120,7 +117,6 @@ public final class CamelOperandControllerTest {
                 assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
 
                 assertThat(resource.getMetadata().getAnnotations())
-                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_DEPLOYMENT)
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, DEFAULT_CONNECTOR_IMAGE)
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
@@ -182,8 +178,7 @@ public final class CamelOperandControllerTest {
                 assertThat(resource.getApiVersion()).isEqualTo("v1");
                 assertThat(resource.getKind()).isEqualTo("Secret");
 
-                assertThat(resource.getMetadata().getAnnotations())
-                    .containsEntry(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR);
+                assertThat(resource.getMetadata().getAnnotations());
 
                 Secret secret = Serialization.jsonMapper().convertValue(resource, Secret.class);
                 String encoded = secret.getData().get("application.properties");

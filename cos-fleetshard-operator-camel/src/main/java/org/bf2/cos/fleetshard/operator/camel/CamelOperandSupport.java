@@ -16,13 +16,12 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static java.lang.String.format;
@@ -153,7 +152,11 @@ public final class CamelOperandSupport {
         return props;
     }
 
-    public static ObjectNode createIntegrationSpec(String secretName, CamelOperandConfiguration cfg) {
+    public static ObjectNode createIntegrationSpec(
+        String secretName,
+        CamelOperandConfiguration cfg,
+        Map<String, String> envVars) {
+
         ObjectNode integration = Serialization.jsonMapper().createObjectNode();
         ArrayNode configuration = integration.withArray("configuration");
 
@@ -161,10 +164,11 @@ public final class CamelOperandSupport {
             .put("type", "secret")
             .put("value", secretName);
 
-        // TODO relates to https://github.com/apache/camel-k/issues/2539
-        // TODO remove once fixed
-        configuration.addObject().put("type", "env")
-            .put("value", "QUARKUS_LOG_CONSOLE_JSON=false");
+        envVars.forEach((k, v) -> {
+            configuration.addObject()
+                .put("type", "env")
+                .put("value", k + "=" + v);
+        });
 
         if (cfg.configurations() != null) {
             for (var c : cfg.configurations()) {
@@ -177,11 +181,12 @@ public final class CamelOperandSupport {
         return integration;
     }
 
-    public static Optional<GenericKubernetesResource> lookupBinding(UnstructuredClient uc, ManagedConnector connector) {
-        return Optional.ofNullable(uc.get(
-            connector.getMetadata().getNamespace(),
-            connector.getMetadata().getName(),
-            KameletBinding.RESOURCE_DEFINITION));
+    public static Optional<KameletBinding> lookupBinding(KubernetesClient client, ManagedConnector connector) {
+        return Optional.ofNullable(
+            client.resources(KameletBinding.class)
+                .inNamespace(connector.getMetadata().getNamespace())
+                .withName(connector.getMetadata().getName())
+                .get());
     }
 
     public static void computeStatus(ConnectorStatusSpec statusSpec, KameletBindingStatus kameletBindingStatus) {

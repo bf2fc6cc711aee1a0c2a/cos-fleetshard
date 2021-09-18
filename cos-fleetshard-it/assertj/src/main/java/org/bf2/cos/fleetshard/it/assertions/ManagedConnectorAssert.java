@@ -20,18 +20,6 @@ public class ManagedConnectorAssert extends AbstractAssert<ManagedConnectorAsser
         return this;
     }
 
-    public ManagedConnectorAssert hasResources() {
-        isNotNull();
-        hasStatus();
-
-        if (actual.getStatus().getConnectorStatus().getResources() == null) {
-            failWithMessage(
-                "Expected managed connector to have resources");
-        }
-
-        return this;
-    }
-
     public ManagedConnectorAssert isInPhase(ManagedConnectorStatus.PhaseType phase) {
         isNotNull();
         hasStatus();

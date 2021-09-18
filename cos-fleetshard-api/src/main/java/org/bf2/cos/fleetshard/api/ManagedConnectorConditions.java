@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.api;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Objects;
 
 import io.fabric8.kubernetes.api.model.Condition;
@@ -43,11 +44,14 @@ public final class ManagedConnectorConditions {
                     connector.getStatus().getConditions().set(i, condition);
                 }
 
+                connector.getStatus().getConditions().sort(Comparator.comparing(Condition::getLastTransitionTime));
+
                 return update;
             }
         }
 
         connector.getStatus().getConditions().add(condition);
+        connector.getStatus().getConditions().sort(Comparator.comparing(Condition::getLastTransitionTime));
 
         return true;
     }

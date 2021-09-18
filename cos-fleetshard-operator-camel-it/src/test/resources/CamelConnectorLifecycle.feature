@@ -43,7 +43,6 @@ Feature: Camel Connector Lifecycle
 
     When the connector desired status is set to "deleted"
     Then the connector is in phase "Deleted"
-    Then the connector has 0 resources
-    Then the secret does not exists
+    Then the connector secret exists
     Then the klb does not exists
     Then the klb secret does not exists

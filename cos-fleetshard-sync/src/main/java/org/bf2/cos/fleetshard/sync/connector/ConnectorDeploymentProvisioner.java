@@ -30,9 +30,6 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
-import static org.bf2.cos.fleetshard.support.resources.Resources.CONTEXT_DEPLOYMENT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_RESOURCE_CONTEXT;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_WATCH;
 
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {
@@ -84,7 +81,10 @@ public class ConnectorDeploymentProvisioner {
                 Secret secret = createManagedConnectorSecret(deployment, base);
                 ManagedConnector connector = fleetShard.editConnector(
                     base.getMetadata().getName(),
-                    c -> c.getSpec().getDeployment().setSecret(secret.getMetadata().getName()));
+                    c -> {
+                        c.getSpec().getDeployment().setSecret(secret.getMetadata().getName());
+                        c.getSpec().getDeployment().setSecretVersion(secret.getMetadata().getResourceVersion());
+                    });
 
                 LOGGER.info("CreateOrReplace - managed_connector: {}/{}, managed_connector_secret: {}/{}",
                     connector.getMetadata().getNamespace(), connector.getMetadata().getName(),
@@ -105,7 +105,7 @@ public class ConnectorDeploymentProvisioner {
                 fleetShard.getClusterId(),
                 deployment.getSpec().getConnectorId(),
                 deployment.getId(),
-                Map.of(LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT));
+                Map.of());
         });
 
         // TODO: change APIs to include a single operator
@@ -178,14 +178,12 @@ public class ConnectorDeploymentProvisioner {
                     deployment.getMetadata().getResourceVersion());
 
                 return Secrets.newSecret(
-                    owner.getMetadata().getName() + "-" + deployment.getMetadata().getResourceVersion(),
+                    owner.getMetadata().getName(),
                     fleetShard.getClusterId(),
                     deployment.getSpec().getConnectorId(),
                     deployment.getId(),
                     deployment.getMetadata().getResourceVersion(),
-                    Map.of(
-                        LABEL_RESOURCE_CONTEXT, CONTEXT_DEPLOYMENT,
-                        LABEL_WATCH, "true"));
+                    Map.of());
             });
 
         secret.getMetadata().setOwnerReferences(List.of(

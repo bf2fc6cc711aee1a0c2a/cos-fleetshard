@@ -11,6 +11,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -50,8 +51,6 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.cr
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
-import static org.bf2.cos.fleetshard.support.resources.Resources.ANNOTATION_DELETION_MODE;
-import static org.bf2.cos.fleetshard.support.resources.Resources.DELETION_MODE_CONNECTOR;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
@@ -80,7 +79,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
-                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(secretsData))
             .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
@@ -98,9 +96,13 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .build())
             .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
             .addToConfig("group.id", connector.getMetadata().getName())
+            // topics
             .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
             .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
+            // added to trigger a re-deployment if the secret changes
+            .addToConfig("connector.secret.name", secret.getMetadata())
+            .addToConfig("connector.secret.checksum", Secrets.computeChecksum(secret))
             .withTls(new KafkaConnectTlsBuilder()
                 .withTrustedCertificates(Collections.emptyList())
                 .build())
@@ -140,7 +142,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName())
                 .addToAnnotations(STRIMZI_IO_USE_CONNECTOR_RESOURCES, "true")
-                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .withSpec(kcsb.build())
             .build();
@@ -150,7 +151,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName())
                 .addToLabels(STRIMZI_DOMAIN + "cluster", connector.getMetadata().getName())
-                .addToAnnotations(ANNOTATION_DELETION_MODE, DELETION_MODE_CONNECTOR)
                 .build())
             .withSpec(new KafkaConnectorSpecBuilder()
                 .withClassName(shardMetadata.getConnectorClass())
@@ -185,5 +185,25 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
             return false;
         }).orElse(true);
+    }
+
+    @Override
+    public boolean delete(ManagedConnector connector) {
+        Boolean kctr = getKubernetesClient().resources(KafkaConnector.class)
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(connector.getMetadata().getName())
+            .delete();
+
+        Boolean kc = getKubernetesClient().resources(KafkaConnect.class)
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(connector.getMetadata().getName())
+            .delete();
+
+        Boolean secret = getKubernetesClient().resources(Secret.class)
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+            .delete();
+
+        return (kctr == null || !kctr) && (kc == null || !kc) && (secret == null || !secret);
     }
 }

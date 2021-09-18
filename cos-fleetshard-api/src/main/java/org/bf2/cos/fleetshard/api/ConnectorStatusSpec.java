@@ -33,9 +33,6 @@ public class ConnectorStatusSpec {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions = new ArrayList<>();
 
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private List<DeployedResource> resources = new ArrayList<>();
-
     private Operator assignedOperator;
     private Operator availableOperator;
 
@@ -81,32 +78,6 @@ public class ConnectorStatusSpec {
     @JsonProperty
     public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
-    }
-
-    @JsonProperty
-    public List<DeployedResource> getResources() {
-        return resources;
-    }
-
-    @JsonProperty
-    public void setResources(List<DeployedResource> resources) {
-        this.resources = resources;
-    }
-
-    @JsonIgnore
-    public void addOrUpdateResource(DeployedResource ref) {
-        if (resources == null) {
-            this.resources = new ArrayList<>();
-        }
-
-        for (int i = 0; i < this.resources.size(); i++) {
-            if (ref.is(this.resources.get(i))) {
-                this.resources.set(i, ref);
-                return;
-            }
-        }
-
-        this.resources.add(ref);
     }
 
     @JsonProperty
