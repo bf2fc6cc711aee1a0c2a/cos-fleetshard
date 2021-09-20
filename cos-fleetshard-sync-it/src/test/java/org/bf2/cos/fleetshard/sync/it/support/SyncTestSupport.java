@@ -2,12 +2,10 @@ package org.bf2.cos.fleetshard.sync.it.support;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -17,10 +15,11 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
-import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,20 +27,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
-
 public class SyncTestSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SyncTestSupport.class);
+
     @Inject
     protected KubernetesClient kubernetesClient;
 
-    @ConfigProperty(name = "cluster-id")
+    @ConfigProperty(name = "cos.cluster.id")
     protected String clusterId;
 
-    @ConfigProperty(name = "kubernetes.namespace")
+    @ConfigProperty(name = "test.namespace")
     protected String namespace;
 
     protected FleetShardClient fleetShardClient;
+
+    @BeforeEach
+    public void setUp() {
+        this.fleetShardClient = new FleetShardClient(kubernetesClient, clusterId, namespace, namespace, Duration.ZERO);
+    }
 
     public static JsonNode deploymentList(ConnectorDeployment... deployments) {
         var items = new ConnectorDeploymentList();
@@ -74,33 +77,6 @@ public class SyncTestSupport {
         return answer;
     }
 
-    public static ConnectorDeployment createDeployment(
-        long deploymentRevision,
-        Supplier<JsonNode> connectorSpec,
-        Supplier<JsonNode> connectorMeta) {
-
-        final String deploymentId = "did";
-        final String connectorId = "cid";
-        final String connectorTypeId = "ctid";
-
-        return new ConnectorDeployment()
-            .kind("ConnectorDeployment")
-            .id(deploymentId)
-            .metadata(new ConnectorDeploymentAllOfMetadata()
-                .resourceVersion(deploymentRevision))
-            .spec(new ConnectorDeploymentSpec()
-                .connectorId(connectorId)
-                .connectorTypeId(connectorTypeId)
-                .connectorResourceVersion(1L)
-                .kafka(new KafkaConnectionSettings()
-                    .bootstrapServer("kafka.acme.com:2181")
-                    .clientId(UUID.randomUUID().toString())
-                    .clientSecret(toBase64(UUID.randomUUID().toString())))
-                .connectorSpec(connectorSpec.get())
-                .shardMetadata(connectorMeta.get())
-                .desiredState(DESIRED_STATE_READY));
-    }
-
     public static <T> T until(Callable<Optional<T>> supplier, Predicate<? super T> predicate) {
         return Awaitility.await()
             .atMost(30, TimeUnit.SECONDS)
@@ -116,10 +92,5 @@ public class SyncTestSupport {
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
             .untilAsserted(runnable);
-    }
-
-    @BeforeEach
-    public void setUp() {
-        this.fleetShardClient = new FleetShardClient(kubernetesClient, clusterId, namespace, namespace, Duration.ZERO);
     }
 }

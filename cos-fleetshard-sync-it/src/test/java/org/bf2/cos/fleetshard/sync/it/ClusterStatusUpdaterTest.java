@@ -6,9 +6,7 @@ import java.util.Map;
 import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
-import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -30,8 +28,6 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 public class ClusterStatusUpdaterTest extends SyncTestSupport {
     @WireMockTestInstance
     com.github.tomakehurst.wiremock.WireMockServer server;
-    @ConfigProperty(name = "cluster-id")
-    String clusterId;
 
     @Test
     void statusIsUpdated() {
@@ -48,8 +44,13 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
     public static class Profile extends BaseTestProfile {
         @Override
         protected Map<String, String> additionalConfigOverrides() {
+            final String ns = "cos-" + uid();
+
             return Map.of(
-                "cluster-id", uid(),
+                "cos.cluster.id", uid(),
+                "test.namespace", ns,
+                "cos.connectors.namespace", ns,
+                "cos.operators.namespace", ns,
                 "cos.cluster.status.sync.interval", "1s",
                 "cos.connectors.poll.interval", "disabled",
                 "cos.connectors.poll.resync.interval", "disabled",
@@ -60,7 +61,6 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
             return List.of(
-                new TestResourceEntry(KubernetesTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

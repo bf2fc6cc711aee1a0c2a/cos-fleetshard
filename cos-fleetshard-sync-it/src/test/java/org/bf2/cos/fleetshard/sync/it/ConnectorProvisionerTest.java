@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.sync.it;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
@@ -10,8 +11,8 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             Secret s1 = until(
                 () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
-                item -> true);
+                item -> Objects.equals(
+                    "1",
+                    item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedConnector mc = until(
                 () -> fleetShardClient.getConnectorByDeploymentId(DEPLOYMENT_ID),
@@ -113,11 +116,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             Secret s1 = until(
                 () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
-                item -> true);
-
-            Secret s2 = until(
-                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
-                item -> true);
+                item -> Objects.equals(
+                    "2",
+                    item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedConnector mc = until(
                 () -> fleetShardClient.getConnectorByDeploymentId(DEPLOYMENT_ID),
@@ -127,25 +128,6 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 });
 
             assertThat(s1).satisfies(item -> {
-                assertThat(item.getMetadata().getName())
-                    .isEqualTo(mc.getMetadata().getName());
-
-                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
-                    .isObject()
-                    .containsEntry("bootstrap_server", KAFKA_URL)
-                    .containsEntry("client_id", KAFKA_CLIENT_ID)
-                    .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
-
-                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
-                    .inPath("connector")
-                    .isObject()
-                    .containsEntry("foo", "connector-foo");
-                assertThatJson(Secrets.extract(item, SECRET_ENTRY_CONNECTOR))
-                    .inPath("kafka")
-                    .isObject()
-                    .containsEntry("topic", "kafka-foo");
-            });
-            assertThat(s2).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
                     .isEqualTo(mc.getMetadata().getName());
 
@@ -173,15 +155,20 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX);
-            assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s2.getMetadata().getName());
+            assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
     }
 
     public static class Profile extends BaseTestProfile {
         @Override
         protected Map<String, String> additionalConfigOverrides() {
+            final String ns = "cos-" + uid();
+
             return Map.of(
-                "cluster-id", uid(),
+                "cos.cluster.id", uid(),
+                "test.namespace", ns,
+                "cos.connectors.namespace", ns,
+                "cos.operators.namespace", ns,
                 "cos.cluster.status.sync.interval", "disabled",
                 "cos.connectors.poll.interval", "disabled",
                 "cos.connectors.poll.resync.interval", "disabled",
@@ -191,7 +178,6 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
             return List.of(
-                new TestResourceEntry(KubernetesTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
@@ -199,7 +185,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
         protected Map<String, String> doStart(WireMockServer server) {
-            final String clusterId = ConfigProvider.getConfig().getValue("cluster-id", String.class);
+            final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
             final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
             final String deploymentsUrl = clusterUrl + "/deployments";
             final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";

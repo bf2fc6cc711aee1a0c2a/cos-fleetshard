@@ -11,9 +11,7 @@ import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
-import org.bf2.cos.fleetshard.sync.it.support.KubernetesTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -43,7 +41,6 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String clusterId = ConfigProvider.getConfig().getValue("cluster-id", String.class);
         final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
 
@@ -88,8 +85,13 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
     public static class Profile extends BaseTestProfile {
         @Override
         protected Map<String, String> additionalConfigOverrides() {
+            final String ns = "cos-" + uid();
+
             return Map.of(
-                "cluster-id", uid(),
+                "cos.cluster.id", uid(),
+                "test.namespace", ns,
+                "cos.connectors.namespace", ns,
+                "cos.operators.namespace", ns,
                 "cos.cluster.status.sync.interval", "disabled",
                 "cos.connectors.poll.interval", "disabled",
                 "cos.connectors.poll.resync.interval", "disabled",
@@ -99,7 +101,6 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         @Override
         protected List<TestResourceEntry> additionalTestResources() {
             return List.of(
-                new TestResourceEntry(KubernetesTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
