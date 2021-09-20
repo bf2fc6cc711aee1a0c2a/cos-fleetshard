@@ -151,10 +151,17 @@ public class ConnectorDeploymentProvisioner {
             Resources.ANNOTATION_UPDATED_TIMESTAMP,
             ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
+        // add resource version to label
+        KubernetesResourceUtil.getOrCreateLabels(connector).put(
+            Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION,
+            "" + deployment.getMetadata().getResourceVersion());
+
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().getDeployment().setConnectorTypeId(deployment.getSpec().getConnectorTypeId());
         connector.getSpec().getDeployment().setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
+        connector.getSpec().getDeployment().setSecret(null);
+        connector.getSpec().getDeployment().setSecretVersion(null);
         connector.getSpec().setOperatorSelector(operatorSelector);
 
         LOGGER.info("Provisioning connector id={} rv={} - {}/{}: {}",
@@ -199,6 +206,11 @@ public class ConnectorDeploymentProvisioner {
         KubernetesResourceUtil.getOrCreateAnnotations(secret).put(
             Resources.ANNOTATION_UPDATED_TIMESTAMP,
             ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+
+        // add resource version to label
+        KubernetesResourceUtil.getOrCreateLabels(secret).put(
+            Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION,
+            "" + deployment.getMetadata().getResourceVersion());
 
         Secrets.set(secret, Secrets.SECRET_ENTRY_CONNECTOR, deployment.getSpec().getConnectorSpec());
         Secrets.set(secret, Secrets.SECRET_ENTRY_KAFKA, deployment.getSpec().getKafka());

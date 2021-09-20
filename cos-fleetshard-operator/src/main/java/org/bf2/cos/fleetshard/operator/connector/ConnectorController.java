@@ -9,7 +9,6 @@ import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.api.DeploymentSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
@@ -89,20 +88,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     kubernetesClient,
                     managedConnectorOperator,
                     fleetShard.getOperatorNamespace()));
-            eventSourceManager.registerEventSource(
-                "_secrets",
-                new OperandResourceWatcher(
-                    kubernetesClient,
-                    managedConnectorOperator,
-                    "v1",
-                    "Secret",
-                    fleetShard.getConnectorsNamespace()));
 
             for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
-                if ("v1".equals(res.getVersion()) && "Secret".equals(res.getKind())) {
-                    continue;
-                }
-
                 eventSourceManager.registerEventSource(
                     "_" + res.getGroup() + "/" + res.getVersion() + ":" + res.getKind(),
                     new OperandResourceWatcher(
@@ -249,12 +236,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
-        final DeploymentSpec ref = connector.getSpec().getDeployment();
-
         if (connector.getSpec().getDeployment().getSecret() == null) {
-            LOGGER.info("Secret {} not found, retry in 1s", connector.getSpec().getDeployment().getSecret());
-            getRetryTimer().scheduleOnce(connector, 1000);
-
+            LOGGER.info("Secret for deployment not defines");
             return UpdateControl.noUpdate();
         }
 

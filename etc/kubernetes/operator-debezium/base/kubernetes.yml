@@ -3,11 +3,11 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
   name: cos-fleetshard-operator-debezium
 imagePullSecrets:
@@ -17,8 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -43,11 +43,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
   name: cos-fleetshard-operator-debezium
 rules:
@@ -98,11 +98,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
   name: cos-fleetshard-operator-debezium
 roleRef:
@@ -129,36 +129,36 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
   name: cos-fleetshard-operator-debezium
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
+      app.kubernetes.io/version: latest
       app.kubernetes.io/part-of: cos
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-        app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+        app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+        app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-        app.kubernetes.io/version: latest
         app.kubernetes.io/name: cos-fleetshard-operator-debezium
+        app.kubernetes.io/version: latest
         app.kubernetes.io/part-of: cos
     spec:
       containers:
@@ -218,11 +218,11 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 5b5cb0d7404603b982d455e8b9dcce254078c414
-    app.quarkus.io/build-timestamp: 2021-09-18 - 14:39:04 +0000
+    app.quarkus.io/commit-id: cdfc38b23924003bfe9dfa1ea63a34a57e9eb426
+    app.quarkus.io/build-timestamp: 2021-09-20 - 10:20:04 +0000
   labels:
-    app.kubernetes.io/version: latest
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
   name: cos-fleetshard-operator-debezium
 spec:
@@ -233,6 +233,6 @@ spec:
       scheme: http
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
+      app.kubernetes.io/version: latest
       app.kubernetes.io/part-of: cos
