@@ -63,7 +63,7 @@ public class ConnectorDeploymentSync {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOGGER.warn("interrupted, message: {}", e.getMessage());
+            LOGGER.debug("interrupted, message: {}", e.getMessage());
         } finally {
             if (!executor.isShutdown()) {
                 future = executor.submit(this::run);
