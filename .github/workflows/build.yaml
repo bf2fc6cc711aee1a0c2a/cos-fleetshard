@@ -111,4 +111,5 @@ jobs:
         env:
           KUSTOMIZE_PROFILE: ${{ secrets.KUSTOMIZE_PROFILE }}
         run: |
+          kubectl delete mctr --all -n ${OC_PROJECT}
           ./etc/scripts/deploy_fleetshard.sh
