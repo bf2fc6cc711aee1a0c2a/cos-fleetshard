@@ -18,6 +18,7 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
@@ -88,7 +89,7 @@ public class FleetShardClient {
         return Optional.ofNullable(
             kubernetesClient.secrets()
                 .inNamespace(connectorsNamespace)
-                .withName(Connectors.generateConnectorId(deploymentId))
+                .withName(Secrets.generateConnectorSecretId(deploymentId))
                 .get());
     }
 

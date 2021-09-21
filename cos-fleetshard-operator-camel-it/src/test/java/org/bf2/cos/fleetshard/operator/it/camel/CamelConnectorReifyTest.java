@@ -28,7 +28,7 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
             return Map.of(
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
-                "cos.operator.namespace", ns,
+                "cos.operators.namespace", ns,
                 "cos.cluster.id", uid());
         }
     }

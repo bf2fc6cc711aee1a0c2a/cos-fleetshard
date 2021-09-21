@@ -15,7 +15,7 @@ import org.bf2.cos.fleetshard.it.cucumber.Awaiter;
 import org.bf2.cos.fleetshard.it.cucumber.ConnectorContext;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
@@ -141,7 +141,7 @@ public class KameletBindingSecretSteps {
     private Secret secret() {
         return kubernetesClient.secrets()
             .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+            .withName(ctx.connector().getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
             .get();
     }
 }

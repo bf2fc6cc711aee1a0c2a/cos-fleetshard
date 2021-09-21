@@ -10,7 +10,7 @@ import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -78,7 +78,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+                .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
                 .build())
             .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(secretsData))
             .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
@@ -90,18 +90,21 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withKafkaClientAuthenticationPlain(new KafkaClientAuthenticationPlainBuilder()
                 .withUsername(kafkaSpec.getClientId())
                 .withPasswordSecret(new PasswordSecretSourceBuilder()
-                    .withSecretName(connector.getMetadata().getName())
+                    .withSecretName(secret.getMetadata().getName())
                     .withPassword(KAFKA_PASSWORD_SECRET_KEY)
                     .build())
                 .build())
             .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
             .addToConfig("group.id", connector.getMetadata().getName())
+            // converters
+            .addToConfig("key.converter", configuration.keyConverter())
+            .addToConfig("value.converter", configuration.valueConverter())
             // topics
             .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
             .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
             // added to trigger a re-deployment if the secret changes
-            .addToConfig("connector.secret.name", secret.getMetadata())
+            .addToConfig("connector.secret.name", secret.getMetadata().getName())
             .addToConfig("connector.secret.checksum", Secrets.computeChecksum(secret))
             .withTls(new KafkaConnectTlsBuilder()
                 .withTrustedCertificates(Collections.emptyList())
@@ -110,7 +113,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .addToVolumes(new ExternalConfigurationVolumeSourceBuilder()
                     .withName(EXTERNAL_CONFIG_DIRECTORY)
                     .withSecret(new SecretVolumeSourceBuilder()
-                        .withSecretName(connector.getMetadata().getName())
+                        .withSecretName(secret.getMetadata().getName())
                         .build())
                     .build())
                 .build());
@@ -181,7 +184,10 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
             kc.getSpec().setPause(true);
 
-            getKubernetesClient().resources(KafkaConnector.class).patch(kc);
+            getKubernetesClient()
+                .resources(KafkaConnector.class)
+                .inNamespace(connector.getMetadata().getNamespace())
+                .patch(kc);
 
             return false;
         }).orElse(true);
@@ -201,7 +207,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
         Boolean secret = getKubernetesClient().resources(Secret.class)
             .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+            .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
             .delete();
 
         return (kctr == null || !kctr) && (kc == null || !kc) && (secret == null || !secret);

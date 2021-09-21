@@ -185,7 +185,7 @@ public class ConnectorDeploymentProvisioner {
                     deployment.getMetadata().getResourceVersion());
 
                 return Secrets.newSecret(
-                    owner.getMetadata().getName(),
+                    Secrets.generateConnectorSecretId(deployment.getId()),
                     fleetShard.getClusterId(),
                     deployment.getSpec().getConnectorId(),
                     deployment.getId(),

@@ -21,7 +21,6 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.support.resources.Connectors.CONNECTOR_PREFIX;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
@@ -60,7 +59,7 @@ public class ConnectorProvisionerTest {
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo(Connectors.generateConnectorId(deployment.getId()));
+                .isEqualTo(Secrets.generateConnectorSecretId(deployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -98,7 +97,7 @@ public class ConnectorProvisionerTest {
 
         assertThat(mcc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .startsWith(CONNECTOR_PREFIX);
+                .isEqualTo(Connectors.generateConnectorId(deployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -121,7 +120,7 @@ public class ConnectorProvisionerTest {
         final List<ManagedConnector> connectors = List.of(
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
-                    .withName("old-cid")
+                    .withName(Connectors.generateConnectorId(oldDeployment.getId()))
                     .addToLabels(LABEL_CLUSTER_ID, CLUSTER_ID)
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
@@ -130,7 +129,7 @@ public class ConnectorProvisionerTest {
         final List<Secret> secrets = List.of(
             new SecretBuilder()
                 .withMetadata(new ObjectMetaBuilder()
-                    .withName("old-sid")
+                    .withName(Secrets.generateConnectorSecretId(oldDeployment.getId()))
                     .addToLabels(LABEL_CLUSTER_ID, CLUSTER_ID)
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
@@ -166,7 +165,7 @@ public class ConnectorProvisionerTest {
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo("old-sid");
+                .isEqualTo(Secrets.generateConnectorSecretId(oldDeployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -203,7 +202,7 @@ public class ConnectorProvisionerTest {
 
         assertThat(mcc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo("old-cid");
+                .isEqualTo(Connectors.generateConnectorId(oldDeployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -228,7 +227,7 @@ public class ConnectorProvisionerTest {
         final List<ManagedConnector> connectors = List.of(
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
-                    .withName("old-cid")
+                    .withName(Connectors.generateConnectorId(oldDeployment.getId()))
                     .addToLabels(LABEL_CLUSTER_ID, CLUSTER_ID)
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
@@ -237,7 +236,7 @@ public class ConnectorProvisionerTest {
         final List<Secret> secrets = List.of(
             new SecretBuilder()
                 .withMetadata(new ObjectMetaBuilder()
-                    .withName("old-sid")
+                    .withName(Secrets.generateConnectorSecretId(oldDeployment.getId()))
                     .addToLabels(LABEL_CLUSTER_ID, CLUSTER_ID)
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
@@ -267,11 +266,11 @@ public class ConnectorProvisionerTest {
 
         //
         // Then the managed connector resource is expected to be updated to reflect the
-        // changes made to the deployment but a new secret should be created.
+        // changes made to the deployment
         //
         assertThat(sc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo("old-cid");
+                .isEqualTo(Secrets.generateConnectorSecretId(oldDeployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
@@ -308,7 +307,7 @@ public class ConnectorProvisionerTest {
 
         assertThat(mcc.getValue()).satisfies(val -> {
             assertThat(val.getMetadata().getName())
-                .isEqualTo("old-cid");
+                .isEqualTo(Connectors.generateConnectorId(oldDeployment.getId()));
 
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)

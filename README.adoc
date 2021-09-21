@@ -91,13 +91,6 @@ kubectl apply -k etc/kubernetes/operator-debezium/local
 kubectl apply -k etc/kubernetes/sync/local
 ----
 +
-We need to patch the cos-fleetshard-operator-debezium deployment to point to the right registry
-+
-[source,shell]
-----
-kubectl set env deployment/cos-fleetshard-operator-debezium COS_OPERATOR_DEBEZIUM_CONTAINER_IMAGE_REGISTRY=$(kubectl get svc registry -n kube-system -o=jsonpath='{.spec.clusterIP}')
-----
-+
 At this point, operators and sync are deployed, but they are not running as replica is set to 0 by default because some resources have to be configured.
 +
 [source,shell]

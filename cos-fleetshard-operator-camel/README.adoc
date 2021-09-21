@@ -74,7 +74,7 @@ To change the default values, use the following system properties:
 | true
 | if the operator has to watch for generated resources changes
 
-| cos.operator.namespace
+| cos.operators.namespace
 | ${kubernetes.namespace}
 | the namespace where operator related resources are created
 |===

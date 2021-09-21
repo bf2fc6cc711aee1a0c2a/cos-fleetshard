@@ -11,6 +11,7 @@ import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
+import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -89,9 +90,6 @@ public class DebeziumOperandSupport {
             }
         }
 
-        config.putIfAbsent("key.converter", configuration.keyConverter());
-        config.putIfAbsent("value.converter", configuration.valueConverter());
-
         config.putIfAbsent(
             "database.password",
             "${file:/opt/kafka/external-configuration/"
@@ -169,6 +167,7 @@ public class DebeziumOperandSupport {
         connector(kafkaConnector)
             .map(KafkaConnectorStatus::getState)
             .ifPresent(state -> {
+                System.err.println(JacksonUtil.asPrettyPrintedYaml(state));
                 switch (state) {
                     case KafkaConnectorStatus.STATE_FAILED:
                         statusSpec.setPhase(ManagedConnector.STATE_FAILED);
