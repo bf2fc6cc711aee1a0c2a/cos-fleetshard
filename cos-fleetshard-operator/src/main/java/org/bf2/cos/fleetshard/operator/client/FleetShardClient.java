@@ -24,7 +24,7 @@ public class FleetShardClient {
 
     public FleetShardClient(
         KubernetesClient kubernetesClient,
-        @ConfigProperty(name = "cos.operator.namespace") String operatorNamespace,
+        @ConfigProperty(name = "cos.operators.namespace") String operatorNamespace,
         @ConfigProperty(name = "cos.connectors.namespace") String connectorsNamespace) {
 
         this.kubernetesClient = kubernetesClient;

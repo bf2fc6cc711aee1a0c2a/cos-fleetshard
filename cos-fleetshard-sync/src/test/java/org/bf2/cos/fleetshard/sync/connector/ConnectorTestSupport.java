@@ -18,7 +18,9 @@ import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
+import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.mockito.Mockito;
 
@@ -47,28 +49,18 @@ public final class ConnectorTestSupport {
 
         return connectors.stream().filter(
             entry -> {
-                var labels = entry.getMetadata().getLabels();
-
-                return Objects.equals(clusterId, labels.get(Resources.LABEL_CLUSTER_ID))
-                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(Resources.LABEL_CONNECTOR_ID))
-                    && Objects.equals(deployment.getId(), labels.get(Resources.LABEL_DEPLOYMENT_ID));
+                return Objects.equals(Connectors.generateConnectorId(deployment.getId()), entry.getMetadata().getName());
             }).findFirst();
     }
 
     public static Optional<Secret> lookupSecret(
-        Collection<Secret> connectors,
+        Collection<Secret> secrets,
         String clusterId,
         ConnectorDeployment deployment) {
 
-        return connectors.stream().filter(
+        return secrets.stream().filter(
             entry -> {
-                var labels = entry.getMetadata().getLabels();
-                var rv = "" + deployment.getMetadata().getResourceVersion();
-
-                return Objects.equals(clusterId, labels.get(Resources.LABEL_CLUSTER_ID))
-                    && Objects.equals(deployment.getSpec().getConnectorId(), labels.get(Resources.LABEL_CONNECTOR_ID))
-                    && Objects.equals(deployment.getId(), labels.get(Resources.LABEL_DEPLOYMENT_ID))
-                    && Objects.equals(rv, labels.get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION));
+                return Objects.equals(Secrets.generateConnectorSecretId(deployment.getId()), entry.getMetadata().getName());
             }).findFirst();
     }
 

@@ -39,6 +39,7 @@
         <bson.version>4.3.1</bson.version>
         <cucumber.version>6.11.0</cucumber.version>
         <json-path.version>2.6.0</json-path.version>
+        <commons-text.version>1.9</commons-text.version>
 
         <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -69,6 +70,7 @@
         <module>cos-fleetshard-operator-camel</module>
         <module>cos-fleetshard-operator-camel-it</module>
         <module>cos-fleetshard-operator-debezium</module>
+        <module>cos-fleetshard-operator-debezium-it</module>
     </modules>
 
     <dependencyManagement>
@@ -181,6 +183,11 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-operator-debezium</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-debezium-it</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

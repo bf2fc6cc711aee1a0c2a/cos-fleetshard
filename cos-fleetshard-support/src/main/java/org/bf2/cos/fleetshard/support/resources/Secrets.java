@@ -118,4 +118,12 @@ public final class Secrets {
                 .build())
             .build();
     }
+
+    public static String generateConnectorSecretId(String deploymentId) {
+        return Resources.CONNECTOR_PREFIX + deploymentId + Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;
+    }
+
+    public static String generateSecretId(String deploymentId) {
+        return Resources.CONNECTOR_PREFIX + deploymentId + Resources.CONNECTOR_SECRET_SUFFIX;
+    }
 }

@@ -14,7 +14,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -85,7 +85,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
 
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+                .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
                 .build())
             .addToData(APPLICATION_PROPERTIES, asBytesBase64(secretsData))
             .build();
@@ -149,7 +149,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
 
         Boolean secret = getKubernetesClient().resources(Secret.class)
             .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName() + Connectors.CONNECTOR_SECRET_SUFFIX)
+            .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
             .delete();
 
         return (klb == null || !klb) && (secret == null || !secret);

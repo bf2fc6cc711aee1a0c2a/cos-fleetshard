@@ -10,7 +10,6 @@ import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -75,7 +74,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .isEqualTo(mc.getMetadata().getName());
+                    .isEqualTo(Secrets.generateConnectorSecretId(mc.getSpec().getDeploymentId()));
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
@@ -100,7 +99,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX);
+            assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
         {
@@ -129,7 +128,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                    .isEqualTo(mc.getMetadata().getName());
+                    .isEqualTo(Secrets.generateConnectorSecretId(mc.getSpec().getDeploymentId()));
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
                     .isObject()
@@ -154,7 +153,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
             });
 
-            assertThat(mc.getMetadata().getName()).startsWith(Connectors.CONNECTOR_PREFIX);
+            assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
     }

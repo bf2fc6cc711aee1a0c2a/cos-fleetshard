@@ -26,6 +26,10 @@ public final class Resources {
 
     public static final String ANNOTATION_UPDATED_TIMESTAMP = "cos.bf2.org/update.timestamp";
 
+    public static final String CONNECTOR_PREFIX = "mctr-";
+    public static final String CONNECTOR_SECRET_SUFFIX = "-config";
+    public static final String CONNECTOR_SECRET_DEPLOYMENT_SUFFIX = "-deploy";
+
     private Resources() {
     }
 

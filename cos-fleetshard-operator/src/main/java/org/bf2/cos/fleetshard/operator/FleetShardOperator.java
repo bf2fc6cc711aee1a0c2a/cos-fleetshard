@@ -22,7 +22,7 @@ public class FleetShardOperator {
     @Inject
     Operator operator;
 
-    @ConfigProperty(name = "cos.operator.namespace")
+    @ConfigProperty(name = "cos.operators.namespace")
     String operatorNamespace;
 
     public void start() {
