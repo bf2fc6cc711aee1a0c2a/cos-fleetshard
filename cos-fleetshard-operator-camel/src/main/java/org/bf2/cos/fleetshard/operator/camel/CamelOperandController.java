@@ -16,7 +16,6 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -24,6 +23,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
@@ -46,8 +46,8 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {
     private final CamelOperandConfiguration configuration;
 
-    public CamelOperandController(UnstructuredClient uc, CamelOperandConfiguration configuration) {
-        super(uc, CamelShardMetadata.class, ObjectNode.class);
+    public CamelOperandController(KubernetesClient kubernetesClient, CamelOperandConfiguration configuration) {
+        super(kubernetesClient, CamelShardMetadata.class, ObjectNode.class);
 
         this.configuration = configuration;
     }

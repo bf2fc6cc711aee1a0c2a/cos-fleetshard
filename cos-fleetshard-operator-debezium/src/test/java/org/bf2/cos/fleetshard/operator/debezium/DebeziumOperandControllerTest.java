@@ -11,7 +11,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,6 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
@@ -106,8 +106,8 @@ public class DebeziumOperandControllerTest {
 
     @Test
     void declaresExpectedResourceTypes() {
-        UnstructuredClient uc = Mockito.mock(UnstructuredClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(uc, CONFIGURATION);
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
+        DebeziumOperandController controller = new DebeziumOperandController(kubernetesClient, CONFIGURATION);
 
         assertThat(controller.getResourceTypes())
             .hasSize(2)
@@ -125,8 +125,8 @@ public class DebeziumOperandControllerTest {
 
     @Test
     void reify() {
-        UnstructuredClient uc = Mockito.mock(UnstructuredClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(uc, CONFIGURATION);
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
+        DebeziumOperandController controller = new DebeziumOperandController(kubernetesClient, CONFIGURATION);
 
         final String kcsB64 = Base64.getEncoder().encodeToString("kcs".getBytes(StandardCharsets.UTF_8));
         final String pwdB64 = Base64.getEncoder().encodeToString("orderpw".getBytes(StandardCharsets.UTF_8));

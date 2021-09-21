@@ -4,7 +4,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.bf2.cos.fleetshard.support.resources.Resources;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,13 +20,22 @@ public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetes
     private final String contextApiVersion;
     private final String namespace;
 
-    public OperandResourceWatcher(KubernetesClient client, ManagedConnectorOperator operator, String apiVersion, String kind,
+    public OperandResourceWatcher(
+        KubernetesClient client,
+        ManagedConnectorOperator operator,
+        String apiVersion,
+        String kind,
         String namespace) {
-        this(client, operator, UnstructuredSupport.asResourceDefinitionContext(apiVersion, kind), namespace);
+
+        this(client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace);
     }
 
-    public OperandResourceWatcher(KubernetesClient client, ManagedConnectorOperator operator, ResourceDefinitionContext context,
+    public OperandResourceWatcher(
+        KubernetesClient client,
+        ManagedConnectorOperator operator,
+        ResourceDefinitionContext context,
         String namespace) {
+
         super(client);
 
         this.operator = operator;

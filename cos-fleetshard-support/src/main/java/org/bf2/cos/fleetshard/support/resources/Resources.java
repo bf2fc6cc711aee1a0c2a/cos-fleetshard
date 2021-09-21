@@ -1,12 +1,15 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
 
+import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 public final class Resources {
@@ -55,5 +58,27 @@ public final class Resources {
 
     public static void setAnnotation(HasMetadata metadata, String name, String value) {
         KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+    }
+
+    public static ResourceDefinitionContext asResourceDefinitionContext(String apiVersion, String kind) {
+        ResourceDefinitionContext.Builder builder = new ResourceDefinitionContext.Builder();
+        builder.withNamespaced(true);
+
+        if (apiVersion != null) {
+            String[] items = apiVersion.split("/");
+            if (items.length == 1) {
+                builder.withVersion(items[0]);
+            }
+            if (items.length == 2) {
+                builder.withGroup(items[0]);
+                builder.withVersion(items[1]);
+            }
+        }
+        if (kind != null) {
+            builder.withKind(kind);
+            builder.withPlural(Pluralize.toPlural(kind.toLowerCase(Locale.US)));
+        }
+
+        return builder.build();
     }
 }
