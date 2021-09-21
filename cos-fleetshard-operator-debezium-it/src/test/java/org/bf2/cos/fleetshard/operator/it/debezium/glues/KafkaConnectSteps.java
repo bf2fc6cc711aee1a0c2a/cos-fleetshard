@@ -1,49 +1,25 @@
 package org.bf2.cos.fleetshard.operator.it.debezium.glues;
 
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-import org.assertj.core.util.Strings;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.it.cucumber.Awaiter;
-import org.bf2.cos.fleetshard.it.cucumber.ConnectorContext;
+import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.ParseContext;
-import com.jayway.jsonpath.spi.json.JacksonJsonNodeJsonProvider;
-import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.KafkaConnect;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.it.cucumber.assertions.CucumberAssertions.assertThatDataTable;
 
-public class KafkaConnectSteps {
-    private static final ParseContext PARSER = JsonPath.using(
-        Configuration.builder()
-            .jsonProvider(new JacksonJsonNodeJsonProvider())
-            .mappingProvider(new JacksonMappingProvider())
-            .build());
-
-    @Inject
-    KubernetesClient kubernetesClient;
-    @Inject
-    Awaiter awaiter;
-    @Inject
-    ConnectorContext ctx;
-
+public class KafkaConnectSteps extends StepsSupport {
     @Then("the kc exists")
     public void exists() {
         awaiter.until(() -> kc() != null);
@@ -70,8 +46,9 @@ public class KafkaConnectSteps {
     @And("the kc has an entry at path {string} with value {string}")
     public void kc_has_a_path_matching_value(String path, String value) {
         KafkaConnect res = kc();
-        assertThat(res).isNotNull();
 
+        assertThat(res)
+            .isNotNull();
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isString()
@@ -81,7 +58,9 @@ public class KafkaConnectSteps {
     @And("the kc has an entry at path {string} with value {int}")
     public void kc_has_a_path_matching_value(String path, int value) {
         KafkaConnect res = kc();
-        assertThat(res).isNotNull();
+
+        assertThat(res)
+            .isNotNull();
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isNumber()
@@ -91,7 +70,9 @@ public class KafkaConnectSteps {
     @And("the kc has an entry at path {string} with value {bool}")
     public void kc_has_a_path_matching_value(String path, Boolean value) {
         KafkaConnect res = kc();
-        assertThat(res).isNotNull();
+
+        assertThat(res)
+            .isNotNull();
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isBoolean()
@@ -103,7 +84,8 @@ public class KafkaConnectSteps {
         KafkaConnect res = kc();
         content = ctx.resolvePlaceholders(content);
 
-        assertThat(res).isNotNull();
+        assertThat(res)
+            .isNotNull();
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isObject()
@@ -113,13 +95,15 @@ public class KafkaConnectSteps {
     @And("the kc has an array at path {string} containing:")
     public void kc_has_a_path_containing_object(String path, DataTable elements) {
         KafkaConnect res = kc();
-        assertThat(res).isNotNull();
 
+        assertThat(res)
+            .isNotNull();
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isArray()
             .containsAll(
                 elements.asList().stream()
+                    .map(e -> ctx.resolvePlaceholders(e))
                     .map(e -> Serialization.unmarshal(e, JsonNode.class))
                     .collect(Collectors.toList()));
     }
@@ -127,47 +111,31 @@ public class KafkaConnectSteps {
     @And("the kc has annotations containing:")
     public void kc_annotation_contains(DataTable table) {
         KafkaConnect res = kc();
-        assertThat(res).isNotNull();
 
-        Map<String, String> entries = ctx.resolvePlaceholders(table);
-        entries.forEach((k, v) -> {
-            if (Strings.isNullOrEmpty(v) || "${cos.ignore}".equals(v)) {
-                assertThat(res.getMetadata().getAnnotations()).containsKey(k);
-            } else {
-                assertThat(res.getMetadata().getAnnotations()).containsEntry(k, v);
-            }
-        });
+        assertThat(res)
+            .isNotNull();
+        assertThatDataTable(table, ctx::resolvePlaceholders)
+            .matches(res.getMetadata().getAnnotations());
     }
 
     @And("the kc has labels containing:")
     public void kc_label_contains(DataTable table) {
-        var res = kc();
-        assertThat(res).isNotNull();
+        KafkaConnect res = kc();
 
-        Map<String, String> entries = ctx.resolvePlaceholders(table);
-        entries.forEach((k, v) -> {
-            if (Strings.isNullOrEmpty(v) || "${cos.ignore}".equals(v)) {
-                assertThat(res.getMetadata().getLabels()).containsKey(k);
-            } else {
-                assertThat(res.getMetadata().getLabels()).containsEntry(k, v);
-            }
-        });
+        assertThat(res)
+            .isNotNull();
+        assertThatDataTable(table, ctx::resolvePlaceholders)
+            .matches(res.getMetadata().getLabels());
     }
 
     @And("the kc has config containing:")
     public void kc_config_contains(DataTable table) {
-        var res = kc();
-        assertThat(res).isNotNull();
+        KafkaConnect res = kc();
 
-        Map<String, String> entries = ctx.resolvePlaceholders(table);
-        entries.forEach((k, v) -> {
-            if (Strings.isNullOrEmpty(v) || "${cos.ignore}".equals(v)) {
-                assertThat(res.getSpec().getConfig()).containsKey(k);
-            } else {
-                assertThat(res.getSpec().getConfig()).containsKey(k);
-                assertThat(res.getSpec().getConfig().get(k)).hasToString(v);
-            }
-        });
+        assertThat(res)
+            .isNotNull();
+        assertThatDataTable(table, ctx::resolvePlaceholders)
+            .matches(res.getSpec().getConfig());
     }
 
     @Then("the kc path {string} matches json:")
@@ -194,12 +162,5 @@ public class KafkaConnectSteps {
             assertThat(res).isNotNull();
             assertThat(res).satisfies(predicate);
         });
-    }
-
-    private ManagedConnector connector() {
-        return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .get();
     }
 }

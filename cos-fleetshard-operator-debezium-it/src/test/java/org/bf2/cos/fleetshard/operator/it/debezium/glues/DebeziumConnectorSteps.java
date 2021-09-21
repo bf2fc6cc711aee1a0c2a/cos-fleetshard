@@ -1,18 +1,13 @@
 package org.bf2.cos.fleetshard.operator.it.debezium.glues;
 
-import javax.inject.Inject;
-
-import org.bf2.cos.fleetshard.it.cucumber.ConnectorContext;
+import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.And;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-public class DebeziumConnectorSteps {
-    @Inject
-    ConnectorContext ctx;
-
+public class DebeziumConnectorSteps extends StepsSupport {
     @ParameterType("true|false")
     public Boolean bool(String value) {
         return Boolean.valueOf(value);
