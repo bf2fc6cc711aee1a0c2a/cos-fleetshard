@@ -24,7 +24,6 @@ import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +68,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     ManagedConnectorOperator managedConnectorOperator;
     @Inject
     KubernetesClient kubernetesClient;
-    @Inject
-    UnstructuredClient uc;
     @Inject
     FleetShardClient fleetShard;
     @Inject
@@ -314,15 +311,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            LOGGER.debug("Updating resource resource {}:{}:{}@{}",
+            resource = kubernetesClient.resource(resource)
+                .inNamespace(connector.getMetadata().getNamespace())
+                .createOrReplace();
+
+            LOGGER.debug("Resource {}:{}:{}@{} updated/created",
                 resource.getApiVersion(),
                 resource.getKind(),
                 resource.getMetadata().getName(),
                 resource.getMetadata().getNamespace());
-
-            uc.createOrReplace(
-                connector.getMetadata().getNamespace(),
-                resource);
         }
 
         connector.getStatus().setDeployment(connector.getSpec().getDeployment());

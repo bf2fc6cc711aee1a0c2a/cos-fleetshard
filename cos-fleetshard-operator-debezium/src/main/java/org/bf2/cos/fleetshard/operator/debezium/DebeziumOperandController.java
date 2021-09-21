@@ -12,7 +12,6 @@ import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -21,6 +20,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
@@ -56,8 +56,8 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
     private final DebeziumOperandConfiguration configuration;
 
-    public DebeziumOperandController(UnstructuredClient uc, DebeziumOperandConfiguration configuration) {
-        super(uc, DebeziumShardMetadata.class, ObjectNode.class);
+    public DebeziumOperandController(KubernetesClient kubernetesClient, DebeziumOperandConfiguration configuration) {
+        super(kubernetesClient, DebeziumShardMetadata.class, ObjectNode.class);
 
         this.configuration = configuration;
     }

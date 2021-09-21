@@ -12,7 +12,6 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.support.resources.UnstructuredClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -21,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ConditionBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,9 +47,9 @@ public final class CamelOperandControllerTest {
 
     @Test
     void declaresExpectedResourceTypes() {
-        UnstructuredClient uc = Mockito.mock(UnstructuredClient.class);
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
         CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
-        CamelOperandController controller = new CamelOperandController(uc, configuration);
+        CamelOperandController controller = new CamelOperandController(kubernetesClient, configuration);
 
         assertThat(controller.getResourceTypes())
             .hasSize(1)
@@ -63,9 +63,9 @@ public final class CamelOperandControllerTest {
 
     @Test
     void reify() {
-        UnstructuredClient uc = Mockito.mock(UnstructuredClient.class);
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
         CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
-        CamelOperandController controller = new CamelOperandController(uc, configuration);
+        CamelOperandController controller = new CamelOperandController(kubernetesClient, configuration);
 
         final String barB64 = Secrets.toBase64("bar");
         final String kcsB64 = Secrets.toBase64("kcs");
