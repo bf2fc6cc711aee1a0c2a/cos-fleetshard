@@ -2,14 +2,14 @@
 
 == requirements
 
-* jq
+* https://stedolan.github.io/jq/[jq]
 * curl
-* stern
-* ocm
-* kubectl
+* https://github.com/stern/stern[stern]
+* https://github.com/openshift-online/ocm-cli[ocm]
+* https://kubernetes.io/docs/tasks/tools/[kubectl]
 * uuidgen
-* https://github.com/bf2fc6cc711aee1a0c2a/cos-tools
-* minikube
+* https://github.com/bf2fc6cc711aee1a0c2a/cos-tools[cos-tools]
+* https://minikube.sigs.k8s.io[minikube]
 
 define the following env vars:
 
