@@ -46,7 +46,7 @@ This is an example installation that consists in:
 [source,shell]
 ----
 # you may need to tune this command
-minikube start --profile cos --insecure-registry 10.0.0.0/24 --cpus=4 --memory=4096
+minikube start --profile cos --cpus=4 --memory=4096
 ----
 
 * *install camel-k 1.6.x*
