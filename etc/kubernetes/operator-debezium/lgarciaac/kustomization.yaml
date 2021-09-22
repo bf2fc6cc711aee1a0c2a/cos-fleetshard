@@ -8,10 +8,6 @@ configMapGenerator:
   - name: cos-fleetshard-operator-debezium-config
     files:
       - application.properties=app-config/application.properties
-secretGenerator:
-  - name: cos-fleetshard-operator-debezium-config
-    files:
-      - application.properties=app-secret/application.properties
 
 patchesJson6902:
   - target:

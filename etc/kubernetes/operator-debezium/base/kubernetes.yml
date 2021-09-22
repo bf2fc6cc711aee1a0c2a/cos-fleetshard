@@ -3,12 +3,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 imagePullSecrets:
   - name: cos-pull-secret
@@ -17,8 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -43,12 +43,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 rules:
   - apiGroups:
@@ -98,12 +98,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 roleRef:
   kind: Role
@@ -129,37 +129,37 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
-      app.kubernetes.io/part-of: cos
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
+      app.kubernetes.io/part-of: cos
+      app.kubernetes.io/version: latest
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-        app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+        app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+        app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-        app.kubernetes.io/version: latest
-        app.kubernetes.io/part-of: cos
         app.kubernetes.io/name: cos-fleetshard-operator-debezium
+        app.kubernetes.io/part-of: cos
+        app.kubernetes.io/version: latest
     spec:
       containers:
         - env:
@@ -168,7 +168,7 @@ spec:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: SMALLRYE_CONFIG_LOCATIONS
-              value: "/mnt/app-config-map,/mnt/app-secret"
+              value: /mnt/app-config-map
           image: quay.io/rhoas/cos-fleetshard-operator-debezium:latest
           imagePullPolicy: Always
           livenessProbe:
@@ -197,18 +197,11 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
           volumeMounts:
-            - mountPath: /mnt/app-secret
-              name: app-secret
-              readOnly: false
             - mountPath: /mnt/app-config-map
               name: app-config-map
               readOnly: false
       serviceAccount: cos-fleetshard-operator-debezium
       volumes:
-        - name: app-secret
-          secret:
-            optional: false
-            secretName: cos-fleetshard-operator-debezium-config
         - configMap:
             name: cos-fleetshard-operator-debezium-config
             optional: false
@@ -218,12 +211,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   annotations:
-    app.quarkus.io/commit-id: a7f3f7553bd6685b5f43a37bad573e035a2fe962
-    app.quarkus.io/build-timestamp: 2021-09-22 - 04:40:33 +0000
+    app.quarkus.io/commit-id: 1124305a294b93c27107508cdc115405fbe5cea7
+    app.quarkus.io/build-timestamp: 2021-09-22 - 10:53:15 +0000
   labels:
-    app.kubernetes.io/version: latest
-    app.kubernetes.io/part-of: cos
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 spec:
   endpoints:
@@ -233,6 +226,6 @@ spec:
       scheme: http
   selector:
     matchLabels:
-      app.kubernetes.io/version: latest
-      app.kubernetes.io/part-of: cos
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
+      app.kubernetes.io/part-of: cos
+      app.kubernetes.io/version: latest
