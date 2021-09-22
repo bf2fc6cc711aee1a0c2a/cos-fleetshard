@@ -66,7 +66,8 @@ jobs:
           kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
           kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
           kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
-          kubectl apply -f 'https://strimzi.io/install/latest?namespace=default'
+          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
+          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
       - name: Build container image and push it
         env:
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}

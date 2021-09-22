@@ -13,8 +13,8 @@
 
 define the following env vars:
 
-* COS_BASE_PATH -> base URL for the managed connector service
-* KAS_BASE_PATH -> base URL for the managed kafka service
+* COS_BASE_PATH -> base URL for the managed connector service control plane
+* KAS_BASE_PATH -> base URL for the managed kafka service control plane
 
 
 [TIP]
@@ -41,27 +41,26 @@ This is an example installation that consists in:
 - 1 debezium connector operator
 ====
 
-* *install minikbe*
+* *set-up minikube*
 +
 [source,shell]
 ----
 # you may need to tune this command
 minikube start --profile cos --insecure-registry 10.0.0.0/24 --cpus=4 --memory=4096
-minikube addons --profile cos enable registry
 ----
 
-* *install camel-k*
+* *install camel-k 1.6.x*
 +
 [source,shell]
 ----
-kamel install --olm=false
+kamel install --olm=false --skip-registry-setup
 ----
 
-* *install strimzi*
+* *install strimzi 0.25.0*
 +
 [source,shell]
 ----
-kubectl create -f 'https://strimzi.io/install/latest?namespace=default'
+kubectl apply -f https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.25.0/strimzi-cluster-operator-0.25.0.yaml
 ----
 
 
@@ -108,7 +107,7 @@ strimzi-cluster-operator           1/1     1            1           2d3h
 +
 [NOTE]
 ====
-This creates two new cluster on the fleet manager, remember to delete them once done
+This creates a new cluster on the fleet manager, remember to delete it once done
 ====
 +
 [source,shell]
@@ -126,18 +125,31 @@ kubectl scale deployment -l "app.kubernetes.io/part-of=cos" --replicas=1
 
 == testing
 
+* *set-up minikube*
++
 [source,shell]
 ----
-# run minikube
+# you may need to tune this command
 minikube start --profile cos-testing
+----
 
+* *install CRDs*
++
+[source,shell]
+----
 # install custom resources
 kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
 kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
 kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
 kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
+kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
+kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
+----
 
-# run tests
+* *run tests*
++
+[source,shell]
+----
 mvn clean install
 ----
 
