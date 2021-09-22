@@ -1,22 +1,22 @@
 = cos-fleetshard
 
-== requirements
+== set-up
 
-* https://stedolan.github.io/jq/[jq]
-* curl
-* https://github.com/stern/stern[stern]
-* https://github.com/openshift-online/ocm-cli[ocm]
-* https://kubernetes.io/docs/tasks/tools/[kubectl]
-* uuidgen
-* https://github.com/bf2fc6cc711aee1a0c2a/cos-tools[cos-tools]
-* https://minikube.sigs.k8s.io[minikube]
+* requirements:
+** https://stedolan.github.io/jq/[jq]
+** curl
+** https://github.com/stern/stern[stern]
+** https://github.com/openshift-online/ocm-cli[ocm]
+** https://kubernetes.io/docs/tasks/tools/[kubectl]
+** uuidgen
+** https://github.com/bf2fc6cc711aee1a0c2a/cos-tools[cos-tools]
+** https://minikube.sigs.k8s.io[minikube]
 
-define the following env vars:
-
-* COS_BASE_PATH -> base URL for the managed connector service control plane
-* KAS_BASE_PATH -> base URL for the managed kafka service control plane
-
-
+* define the following env vars:
++
+** COS_BASE_PATH -> base URL for the managed connector service control plane
+** KAS_BASE_PATH -> base URL for the managed kafka service control plane
++
 [TIP]
 ====
 I use https://direnv.net[direnv] with the following set-up
@@ -29,6 +29,17 @@ export COS_BASE_PATH=https://cos-fleet-manager-cos.rh-fuse-153f1de160110098c1928
 export KAS_BASE_PATH=https://api.openshift.com
 ----
 ====
+
+* add a server section to ~/.m2/settings.xml, like:
++
+[source,xml]
+----
+<server>
+    <id>github</id>
+    <username>USERNAME</username>
+    <password>TOKEN</password>
+</server>
+----
 
 == local installation
 

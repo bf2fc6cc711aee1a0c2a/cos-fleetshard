@@ -11,7 +11,7 @@ for env_var in IMAGE_REPO_USERNAME IMAGE_REPO_PASSWORD IMAGE_REPO_NAMESPACE; do
   [ -z "${!env_var}" ] && print_exit "Make sure to set the ${env_var} environment variable."
 done
 
-export MAVEN_ARGS="-V -ntp -Dhttp.keepAlive=false -e"
+#export MAVEN_ARGS="-V -ntp -Dhttp.keepAlive=false -e"
 
 # CONTAINER_VERSION can be set to the release tag so an extra image is pushed
 # for the current build. When in CI, we also want a separate image for each commit

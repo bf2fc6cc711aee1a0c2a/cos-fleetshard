@@ -2,7 +2,8 @@ name: Integration Tests
 
 on:
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
@@ -11,7 +12,6 @@ concurrency:
 
 env:
   LANG: en_US.UTF-8
-  MAVEN_OPTS: -Xmx3000m
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
@@ -22,31 +22,19 @@ jobs:
         kubernetes:
         - 'v1.22.1'
         - 'v1.21.1'
-
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v2
-
-      - name: 'SetUp Java'
+      - name: Set up JDK 11
         uses: actions/setup-java@v2
         with:
           java-version: '11'
           distribution: 'temurin'
-
-      - name: 'SetUp Maven repo cache'
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
       - name: 'SetUp KinD'
         uses: container-tools/kind-action@v1
         with:
           registry: false
           node_image: kindest/node:${{ matrix.kubernetes }}
-
       - name: 'SetUp Kubernetes Cluster'
         run: |
           kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
@@ -55,7 +43,11 @@ jobs:
           kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
           kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
           kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
-
       - name: "Build"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
+          COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
+          MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e -s .github/settings.xml
         run: |
           ./etc/scripts/build.sh
