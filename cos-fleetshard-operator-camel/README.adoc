@@ -13,20 +13,7 @@ kubectl create configmap cos-fleetshard-operator-camel-config \
 +
 [IMPORTANT]
 ====
-the provided `application.properties` is only a template, copy it somewhere and adapt the command below
-====
-
-* create application secret
-+
-[source,shell]
-----
-kubectl create secret generic cos-fleetshard-operator-camel-config \
-    --from-file=../etc/kubernetes/operator-camel/base/app-secret/application.properties
-----
-+
-[IMPORTANT]
-====
-the provided `application.properties` is only a template, copy it somewhere and adapt the command below
+the provided `application.properties` is only a template, copy it somewhere and adapt the command above
 ====
 
 == local profile
@@ -44,12 +31,10 @@ mvn -Dlocal
 
 By default, the application searches for:
 
-* **Secret**: cos-fleetshard-operator-camel-config
 * **ConfigMap**: cos-fleetshard-operator-camel-config
 
 To change the default values, use the following system properties:
 - quarkus.kubernetes-config.namespace
-- quarkus.kubernetes-config.secrets
 - quarkus.kubernetes-config.config-maps
 
 == configuration options
