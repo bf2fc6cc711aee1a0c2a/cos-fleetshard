@@ -69,7 +69,7 @@ kubectl apply -f 'https://strimzi.io/install/latest?namespace=default'
 [source,shell]
 ----
 eval $(minikube --profile cos docker-env)
-mvn clean install -DskipTests=true -Pcontainer-build
+./mvnw clean install -DskipTests=true -Pcontainer-build
 ----
 
 * *install CRDs*
@@ -150,7 +150,7 @@ kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operato
 +
 [source,shell]
 ----
-mvn clean install
+./mvnw clean install
 ----
 
 == components
