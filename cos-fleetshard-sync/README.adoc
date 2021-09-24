@@ -103,6 +103,10 @@ To change the default values, use the following system properties:
 | 60s
 | the interval between cluster status sync
 
+| cos.operators.observe
+| true
+| enable/disable observing resources to trigger status update
+
 | mas-sso-base-url
 |
 | sso base url

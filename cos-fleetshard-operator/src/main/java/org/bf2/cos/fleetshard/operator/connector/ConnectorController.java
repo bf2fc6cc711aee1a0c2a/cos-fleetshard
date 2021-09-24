@@ -350,6 +350,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 maybeAvailable.get());
 
             connector.getStatus().getConnectorStatus().setAvailableOperator(maybeAvailable.get());
+        } else {
+            connector.getStatus().getConnectorStatus().setAvailableOperator(null);
         }
 
         ManagedConnectorConditions.setCondition(

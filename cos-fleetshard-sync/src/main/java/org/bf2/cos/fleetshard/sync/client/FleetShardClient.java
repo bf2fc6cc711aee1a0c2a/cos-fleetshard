@@ -19,14 +19,14 @@ import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
+import io.fabric8.kubernetes.client.Watch;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
@@ -123,37 +123,46 @@ public class FleetShardClient {
         return answer != null ? answer : Collections.emptyList();
     }
 
-    public AutoCloseable watchAllConnectors(Watcher<ManagedConnector> watcher) {
-        return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
-            .watch(watcher);
-    }
-
-    public AutoCloseable watchAllConnectors(ResourceEventHandler<ManagedConnector> handler) {
-        return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
-            .inform(handler, informerSyncInterval.toMillis());
-    }
-
     public AutoCloseable watchAllConnectors(Consumer<ManagedConnector> handler) {
-        return watchAllConnectors(new ResourceEventHandler<>() {
+        var answer = new AbstractWatcher<ManagedConnector>() {
             @Override
-            public void onAdd(ManagedConnector connector) {
-                handler.accept(connector);
+            protected Watch doWatch() {
+                return kubernetesClient.resources(ManagedConnector.class)
+                    .inNamespace(connectorsNamespace)
+                    .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+                    .watch(this);
             }
 
             @Override
-            public void onUpdate(ManagedConnector oldConnector, ManagedConnector newConnector) {
-                handler.accept(newConnector);
+            protected void onEventReceived(Action action, ManagedConnector resource) {
+                handler.accept(resource);
+            }
+        };
+
+        answer.start();
+
+        return answer;
+    }
+
+    public AutoCloseable watchAllOperators(Consumer<ManagedConnectorOperator> handler) {
+        var answer = new AbstractWatcher<ManagedConnectorOperator>() {
+            @Override
+            protected Watch doWatch() {
+                return kubernetesClient.resources(ManagedConnectorOperator.class)
+                    .inNamespace(operatorsNamespace)
+                    .watch(this);
             }
 
             @Override
-            public void onDelete(ManagedConnector connector, boolean b) {
-                handler.accept(connector);
+            protected void onEventReceived(Action action, ManagedConnectorOperator resource) {
+                handler.accept(resource);
             }
-        });
+        };
+
+        answer.start();
+
+        return answer;
+
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {
