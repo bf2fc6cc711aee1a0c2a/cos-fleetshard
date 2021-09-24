@@ -80,7 +80,8 @@ spec:
                 - Deleted
                 - Stopping
                 - Stopped
-                - Upgrade
+                - Transferring
+                - Transferred
                 - Error
                 type: string
               conditions:

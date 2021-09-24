@@ -33,8 +33,8 @@ public class ConnectorStatusSpec {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Condition> conditions = new ArrayList<>();
 
-    private Operator assignedOperator;
-    private Operator availableOperator;
+    private Operator assignedOperator = new Operator();
+    private Operator availableOperator = new Operator();
 
     public ConnectorStatusSpec() {
     }

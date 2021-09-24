@@ -122,9 +122,16 @@ public class ConnectorDeploymentProvisioner {
             operatorsMeta.get(0).requiredAt("/version").asText());
 
         if (operatorSelector.getId() == null) {
-            OperatorSelectorUtil.assign(operatorSelector, fleetShard.lookupOperators())
-                .map(Operator::getId)
-                .ifPresent(operatorSelector::setId);
+            final OperatorSelector currentSelector = connector.getSpec().getOperatorSelector();
+
+            // don't select a new operator if previously set.
+            if (currentSelector != null && currentSelector.getId() != null) {
+                operatorSelector.setId(currentSelector.getId());
+            } else {
+                OperatorSelectorUtil.assign(operatorSelector, fleetShard.lookupOperators())
+                    .map(Operator::getId)
+                    .ifPresent(operatorSelector::setId);
+            }
         }
         if (operatorSelector.getId() != null) {
             KubernetesResourceUtil.getOrCreateLabels(connector).put(

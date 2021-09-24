@@ -81,7 +81,8 @@ public final class ManagedConnectorConditions {
         Augmentation,
         Monitor,
         Delete,
-        Stop
+        Stop,
+        Migrate,
     }
 
     public enum Status {

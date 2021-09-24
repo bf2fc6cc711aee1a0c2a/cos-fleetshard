@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javax.inject.Inject;
@@ -103,39 +104,46 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector,
         Context<ManagedConnector> context) {
 
-        final String selfId = managedConnectorOperator.getMetadata().getName();
+        final boolean selected = selected(connector);
+        final boolean assigned = assigned(connector);
 
-        if (!Objects.equals(selfId, connector.getSpec().getOperatorSelector().getId())) {
-            if (connector.getSpec().getOperatorSelector().getId() != null) {
-                LOGGER.debug("Skip connector: {} as assigned to operator: {}",
-                    connector.getMetadata().getName(),
-                    connector.getSpec().getOperatorSelector().getId());
+        final UpdateControl<ManagedConnector> answer;
+
+        if (!selected && !assigned) {
+            LOGGER.debug("Skip connector: {} as not owning it (assigned={}, operating={})",
+                connector.getMetadata().getName(),
+                connector.getSpec().getOperatorSelector().getId(),
+                connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
+
+            answer = UpdateControl.noUpdate();
+        } else if (!selected) {
+            //
+            // TODO: perform upgrade
+            //
+            answer = UpdateControl.noUpdate();
+        } else if (!assigned) {
+            if (connector.getStatus().getConnectorStatus().getAssignedOperator().getId() == null) {
+                answer = reconcile(connector);
             } else {
-                LOGGER.debug("Skip connector: {} as no operator has been selected",
-                    connector.getMetadata().getName());
-            }
-
-            return UpdateControl.noUpdate();
-
-        } else if (connector.getStatus().getConnectorStatus().getAssignedOperator() != null) {
-            //
-            // This is not fully implemented yet but the rationale here is that when a connector get moved
-            // between fleets-shard operators, then:
-            //
-            // - the connector need to be stopped
-            // - the owner of the operator should release the connector
-            // - only at that point, the new fleet-shard can start reconciling the connector
-            //
-            if (!Objects.equals(selfId, connector.getStatus().getConnectorStatus().getAssignedOperator().getId())) {
+                //
+                // This is not fully implemented yet but the rationale here is that when a connector get moved
+                // between fleets-shard operators, then:
+                //
+                // - the connector need to be stopped
+                // - the owner of the operator should release the connector
+                // - only at that point, the new fleet-shard can start reconciling the connector
+                //
                 LOGGER.debug("Skip connector: {} as still handled by operator: {}",
                     connector.getMetadata().getName(),
                     connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
 
-                return UpdateControl.noUpdate();
+                answer = UpdateControl.noUpdate();
             }
+        } else {
+            answer = reconcile(connector);
         }
 
-        return reconcile(connector);
+        return answer;
     }
 
     private UpdateControl<ManagedConnector> reconcile(ManagedConnector connector) {
@@ -168,6 +176,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 return handleStopping(connector);
             case Stopped:
                 return validate(connector, this::handleStopped);
+            case Transferring:
+                return handleTransferring(connector);
+            case Transferred:
+                return handleTransferred(connector);
             case Error:
                 return validate(connector, this::handleError);
             default:
@@ -339,19 +351,24 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final Operator assignedOperator = connector.getStatus().getConnectorStatus().getAssignedOperator();
         final Operator availableOperator = connector.getStatus().getConnectorStatus().getAvailableOperator();
         final OperatorSelector selector = connector.getSpec().getOperatorSelector();
+        final Optional<Operator> available = available(selector, operators);
 
-        var maybeAvailable = available(selector, operators)
-            .filter(operator -> !Objects.equals(operator, assignedOperator) && !Objects.equals(operator, availableOperator));
+        if (available.isPresent()) {
+            Operator instance = available.get();
+            if (!Objects.equals(instance, availableOperator)) {
+                LOGGER.info("deployment (upd): {} -> from:{}, to: {}",
+                    connector.getSpec().getDeployment(),
+                    assignedOperator,
+                    instance);
 
-        if (maybeAvailable.isPresent()) {
-            LOGGER.info("deployment (upd): {} -> from:{}, to: {}",
-                connector.getSpec().getDeployment(),
-                assignedOperator,
-                maybeAvailable.get());
-
-            connector.getStatus().getConnectorStatus().setAvailableOperator(maybeAvailable.get());
+                if (!Objects.equals(instance, assignedOperator)) {
+                    connector.getStatus().getConnectorStatus().setAvailableOperator(instance);
+                } else {
+                    connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
+                }
+            }
         } else {
-            connector.getStatus().getConnectorStatus().setAvailableOperator(null);
+            connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
         }
 
         ManagedConnectorConditions.setCondition(
@@ -423,6 +440,20 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate();
     }
 
+    private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
+        return UpdateControl.noUpdate();
+    }
+
+    private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
+        return UpdateControl.noUpdate();
+    }
+
+    // **************************************************
+    //
+    // Helpers
+    //
+    // **************************************************
+
     private UpdateControl<ManagedConnector> validate(
         ManagedConnector connector,
         Function<ManagedConnector, UpdateControl<ManagedConnector>> okAction) {
@@ -451,5 +482,19 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getSpec().getDeploymentId(),
                 JsonDiff.asJson(statusNode, specNode));
         }
+    }
+
+    private boolean selected(ManagedConnector connector) {
+        return connector.getSpec().getOperatorSelector() != null
+            && Objects.equals(
+                managedConnectorOperator.getMetadata().getName(),
+                connector.getSpec().getOperatorSelector().getId());
+    }
+
+    private boolean assigned(ManagedConnector connector) {
+        return connector.getStatus().getConnectorStatus().getAssignedOperator() != null
+            && Objects.equals(
+                managedConnectorOperator.getMetadata().getName(),
+                connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
     }
 }
