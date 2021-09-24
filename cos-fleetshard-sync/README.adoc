@@ -37,7 +37,7 @@ Start Quarkus in dev mode and read the application configuration from the curren
 ----
 export KUBERNETES_NAMESPACE=$(oc project -q)
 
-mvn -Plocal
+./mvnw -Plocal
 ----
 
 To use a different set of configmaps/secrets:
@@ -46,7 +46,7 @@ To use a different set of configmaps/secrets:
 ----
 export KUBERNETES_NAMESPACE=$(oc project -q)
 
-mvn -Plocal \
+./mvnw -Plocal \
   -Dquarkus.kubernetes-config.secrets=cos-fleetshard-sync-config-1 \
   -Dquarkus.kubernetes-config.config-maps=cos-fleetshard-sync-config-1
 ----
