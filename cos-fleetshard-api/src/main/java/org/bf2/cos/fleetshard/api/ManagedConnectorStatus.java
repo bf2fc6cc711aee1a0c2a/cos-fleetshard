@@ -92,7 +92,8 @@ public class ManagedConnectorStatus {
         Deleted,
         Stopping,
         Stopped,
-        Upgrade,
+        Transferring,
+        Transferred,
         Error,
     }
 }

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
@@ -112,6 +113,11 @@ public class ConnectorStatusExtractorTest {
 
         assertThat(status)
             .extracting(ConnectorDeploymentStatus::getOperators)
+            .extracting(ConnectorDeploymentStatusOperators::getAssigned)
+            .hasAllNullFieldsOrProperties();
+        assertThat(status)
+            .extracting(ConnectorDeploymentStatus::getOperators)
+            .extracting(ConnectorDeploymentStatusOperators::getAvailable)
             .hasAllNullFieldsOrProperties();
     }
 
@@ -158,6 +164,11 @@ public class ConnectorStatusExtractorTest {
 
         assertThat(status)
             .extracting(ConnectorDeploymentStatus::getOperators)
+            .extracting(ConnectorDeploymentStatusOperators::getAssigned)
+            .hasAllNullFieldsOrProperties();
+        assertThat(status)
+            .extracting(ConnectorDeploymentStatus::getOperators)
+            .extracting(ConnectorDeploymentStatusOperators::getAvailable)
             .hasAllNullFieldsOrProperties();
     }
 

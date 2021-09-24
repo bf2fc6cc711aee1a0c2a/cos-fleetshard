@@ -33,7 +33,7 @@ public class ManagedConnectorSpec {
 
     private DeploymentSpec deployment = new DeploymentSpec();
 
-    private OperatorSelector operatorSelector;
+    private OperatorSelector operatorSelector = new OperatorSelector();
 
     @JsonProperty
     public String getClusterId() {
