@@ -60,7 +60,7 @@ kamel install --olm=false --skip-registry-setup
 +
 [source,shell]
 ----
-kubectl apply -f https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.25.0/strimzi-cluster-operator-0.25.0.yaml
+kubectl apply -f 'https://strimzi.io/install/latest?namespace=default'
 ----
 
 

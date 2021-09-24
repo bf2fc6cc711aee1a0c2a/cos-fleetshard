@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.interceptor.Interceptor;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
@@ -24,15 +25,21 @@ import io.quarkus.runtime.StartupEvent;
 public class ConnectorDeploymentSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentSync.class);
 
+    AutoCloseable operatorsObserver;
+
     @Inject
     ConnectorDeploymentQueue queue;
     @Inject
     ConnectorDeploymentProvisioner provisioner;
     @Inject
     ManagedExecutor executor;
+    @Inject
+    FleetShardClient connectorClient;
 
     @ConfigProperty(name = "cos.connectors.provisioner.queue.timeout", defaultValue = "15s")
     Duration timeout;
+    @ConfigProperty(name = "cos.operators.observe", defaultValue = "true")
+    boolean observeOperators;
 
     private volatile Future<?> future;
 
@@ -42,10 +49,22 @@ public class ConnectorDeploymentSync {
             LOGGER.info("Starting deployment sync");
             future = executor.submit(this::run);
         }
+
+        if (observeOperators) {
+            LOGGER.info("Starting operators observer");
+            operatorsObserver = connectorClient.watchAllOperators(operator -> queue.submitPoisonPill());
+        }
     }
 
     void onStop(
         @Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) ShutdownEvent ignored) {
+        if (this.operatorsObserver != null) {
+            try {
+                this.operatorsObserver.close();
+            } catch (Exception e) {
+                LOGGER.debug("", e);
+            }
+        }
         if (future != null) {
             future.cancel(true);
         }

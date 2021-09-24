@@ -25,7 +25,7 @@ import io.quarkus.runtime.StartupEvent;
 public class ConnectorStatusSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusSync.class);
 
-    AutoCloseable observer;
+    AutoCloseable connectorsObserver;
 
     @Inject
     ConnectorStatusUpdater updater;
@@ -39,7 +39,7 @@ public class ConnectorStatusSync {
     @ConfigProperty(name = "cos.connectors.status.queue.timeout", defaultValue = "15s")
     Duration timeout;
     @ConfigProperty(name = "cos.connectors.status.sync.observe", defaultValue = "true")
-    boolean observe;
+    boolean observeConnectors;
 
     private volatile Future<?> future;
 
@@ -48,17 +48,18 @@ public class ConnectorStatusSync {
         LOGGER.info("Starting connector status sync");
         future = executor.submit(this::run);
 
-        if (observe) {
+        if (observeConnectors) {
             LOGGER.info("Starting connector status observer");
-            observer = connectorClient.watchAllConnectors(connector -> queue.submit(connector.getMetadata().getName()));
+            connectorsObserver = connectorClient.watchAllConnectors(
+                connector -> queue.submit(connector.getMetadata().getName()));
         }
     }
 
     void onStop(
         @Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) ShutdownEvent ignored) {
-        if (this.observer != null) {
+        if (this.connectorsObserver != null) {
             try {
-                this.observer.close();
+                this.connectorsObserver.close();
             } catch (Exception e) {
                 LOGGER.debug("", e);
             }
