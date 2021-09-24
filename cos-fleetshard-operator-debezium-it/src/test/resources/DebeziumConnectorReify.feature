@@ -30,6 +30,7 @@ Feature: Camel Connector Reify
     And the kc has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
     And the kc has an entry at path "$.spec.authentication.passwordSecret.secretName" with value "${cos.managed.connector.name}-config"
     And the kc has an entry at path "$.spec.authentication.passwordSecret.password" with value "_kafka.client.secret"
+    And the kc has an entry at path "$.spec.image" with value "quay.io/asansari/debezium-connector-postgres:1.5.3.Final"
     And the kc has config containing:
       | config.providers                  | file                                 |
       | config.storage.replication.factor | 2                                    |
