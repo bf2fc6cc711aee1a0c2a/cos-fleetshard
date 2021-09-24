@@ -21,9 +21,9 @@
         <jackson-databind-nullable.version>0.2.1</jackson-databind-nullable.version>
         <jakarta-annotation-api.version>1.3.5</jakarta-annotation-api.version>
         <jandex.version>2.3.1.Final</jandex.version>
-        <josdk.version>1.9.6</josdk.version>
+        <josdk.version>1.9.7</josdk.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <kubernetes-client.version>5.7.3</kubernetes-client.version>
+        <kubernetes-client.version>5.8.0</kubernetes-client.version>
         <lombok.version>1.18.20</lombok.version>
         <quarkus.version>2.2.3.Final</quarkus.version>
         <quarkus-cucumber.version>0.4.0</quarkus-cucumber.version>
