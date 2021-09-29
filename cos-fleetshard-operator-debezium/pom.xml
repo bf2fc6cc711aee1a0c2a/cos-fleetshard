@@ -141,30 +141,42 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${gmavenplus-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>copy-k8s</id>
+                        <id>execute</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>copy-resources</goal>
+                            <goal>execute</goal>
                         </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/../etc/kubernetes/operator-debezium/base</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/target/kubernetes</directory>
-                                    <filtering>true</filtering>
-                                    <includes>
-                                        <include>kubernetes.yml</include>
-                                        <include>kubernetes.yaml</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>inputFile</name>
+                            <value>${project.basedir}/target/kubernetes/kubernetes.yml</value>
+                        </property>
+                        <property>
+                            <name>outputFile</name>
+                            <value>${project.basedir}/../etc/kubernetes/operator-debezium/base/kubernetes.yml</value>
+                        </property>
+                    </properties>
+                    <scripts>
+                        <script>${project.basedir}/../cos-build-tools/src/main/resources/cleanup-generated-kubernetes-resources.groovy</script>
+                    </scripts>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <artifactId>groovy-all</artifactId>
+                        <version>${groovy.version}</version>
+                        <type>pom</type>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>

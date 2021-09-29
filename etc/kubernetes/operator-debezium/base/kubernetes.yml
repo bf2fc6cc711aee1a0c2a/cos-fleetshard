@@ -1,231 +1,217 @@
 ---
-apiVersion: v1
-kind: ServiceAccount
+apiVersion: "v1"
+kind: "ServiceAccount"
 metadata:
-  annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
+  annotations: {}
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 imagePullSecrets:
-  - name: cos-pull-secret
+- name: "cos-pull-secret"
 ---
-apiVersion: v1
-kind: Service
+apiVersion: "v1"
+kind: "Service"
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
-    prometheus.io/scrape: "true"
-    prometheus.io/path: /q/metrics
+    prometheus.io/path: "/q/metrics"
     prometheus.io/port: "8080"
-    prometheus.io/scheme: http
+    prometheus.io/scheme: "http"
+    prometheus.io/scrape: "true"
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 spec:
   ports:
-    - name: http
-      port: 80
-      targetPort: 8080
+  - name: "http"
+    port: 80
+    targetPort: 8080
   selector:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  type: ClusterIP
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  type: "ClusterIP"
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
 metadata:
-  annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
+  annotations: {}
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 rules:
-  - apiGroups:
-      - cos.bf2.org
-    resources:
-      - managedconnectors
-      - managedconnectors/status
-      - managedconnectors/finalizers
-      - managedconnectoroperators
-      - managedconnectoroperators/status
-      - managedconnectoroperators/finalizers
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - kafka.strimzi.io
-    resources:
-      - kafkaconnects
-      - kafkaconnectors
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
+- apiGroups:
+  - "cos.bf2.org"
+  resources:
+  - "managedconnectors"
+  - "managedconnectors/status"
+  - "managedconnectors/finalizers"
+  - "managedconnectoroperators"
+  - "managedconnectoroperators/status"
+  - "managedconnectoroperators/finalizers"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+- apiGroups:
+  - ""
+  resources:
+  - "secrets"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+- apiGroups:
+  - "kafka.strimzi.io"
+  resources:
+  - "kafkaconnects"
+  - "kafkaconnectors"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
 metadata:
-  annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
+  annotations: {}
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 roleRef:
-  kind: Role
-  apiGroup: rbac.authorization.k8s.io
-  name: cos-fleetshard-operator-debezium
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "cos-fleetshard-operator-debezium"
 subjects:
-  - kind: ServiceAccount
-    name: cos-fleetshard-operator-debezium
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-debezium"
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
 metadata:
-  name: cos-fleetshard-operator-debezium-view
+  name: "cos-fleetshard-operator-debezium-view"
 roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: view
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "view"
 subjects:
-  - kind: ServiceAccount
-    name: cos-fleetshard-operator-debezium
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-debezium"
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: "apps/v1"
+kind: "Deployment"
 metadata:
   annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
-    prometheus.io/scrape: "true"
-    prometheus.io/path: /q/metrics
+    prometheus.io/path: "/q/metrics"
     prometheus.io/port: "8080"
-    prometheus.io/scheme: http
+    prometheus.io/scheme: "http"
+    prometheus.io/scrape: "true"
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: cos-fleetshard-operator-debezium
-      app.kubernetes.io/part-of: cos
-      app.kubernetes.io/version: latest
+      app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+      app.kubernetes.io/part-of: "cos"
+      app.kubernetes.io/version: "latest"
   template:
     metadata:
       annotations:
-        app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-        app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
-        prometheus.io/scrape: "true"
-        prometheus.io/path: /q/metrics
+        prometheus.io/path: "/q/metrics"
         prometheus.io/port: "8080"
-        prometheus.io/scheme: http
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
       labels:
-        app.kubernetes.io/name: cos-fleetshard-operator-debezium
-        app.kubernetes.io/part-of: cos
-        app.kubernetes.io/version: latest
+        app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+        app.kubernetes.io/part-of: "cos"
+        app.kubernetes.io/version: "latest"
     spec:
       containers:
-        - env:
-            - name: KUBERNETES_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: SMALLRYE_CONFIG_LOCATIONS
-              value: /mnt/app-config-map
-          image: quay.io/rhoas/cos-fleetshard-operator-debezium:latest
-          imagePullPolicy: Always
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /q/health/live
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 10
-          name: cos-fleetshard-operator-debezium
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /q/health/ready
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 10
-          volumeMounts:
-            - mountPath: /mnt/app-config-map
-              name: app-config-map
-              readOnly: false
-      serviceAccount: cos-fleetshard-operator-debezium
+      - env:
+        - name: "KUBERNETES_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config-map"
+        image: "quay.io/rhoas/cos-fleetshard-operator-debezium:latest"
+        imagePullPolicy: "Always"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/q/health/live"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: "cos-fleetshard-operator-debezium"
+        ports:
+        - containerPort: 8080
+          name: "http"
+          protocol: "TCP"
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/q/health/ready"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        volumeMounts:
+        - mountPath: "/mnt/app-config-map"
+          name: "app-config-map"
+          readOnly: false
+      serviceAccount: "cos-fleetshard-operator-debezium"
       volumes:
-        - configMap:
-            name: cos-fleetshard-operator-debezium-config
-            optional: false
-          name: app-config-map
+      - configMap:
+          name: "cos-fleetshard-operator-debezium-config"
+          optional: false
+        name: "app-config-map"
 ---
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+apiVersion: "monitoring.coreos.com/v1"
+kind: "ServiceMonitor"
 metadata:
-  annotations:
-    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
-    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
+  annotations: {}
   labels:
-    app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/part-of: cos
-    app.kubernetes.io/version: latest
-  name: cos-fleetshard-operator-debezium
+    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-debezium"
 spec:
   endpoints:
-    - interval: 30s
-      path: /q/metrics
-      port: http
-      scheme: http
+  - interval: "30s"
+    path: "/q/metrics"
+    port: "http"
+    scheme: "http"
   selector:
     matchLabels:
-      app.kubernetes.io/name: cos-fleetshard-operator-debezium
-      app.kubernetes.io/part-of: cos
-      app.kubernetes.io/version: latest
+      app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
+      app.kubernetes.io/part-of: "cos"
+      app.kubernetes.io/version: "latest"
