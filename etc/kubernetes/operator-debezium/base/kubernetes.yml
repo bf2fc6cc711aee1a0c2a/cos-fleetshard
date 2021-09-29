@@ -3,24 +3,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
   labels:
-    app.kubernetes.io/part-of: cos
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
-  labels:
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 imagePullSecrets:
   - name: cos-pull-secret
@@ -29,18 +17,8 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
@@ -65,24 +43,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
   labels:
-    app.kubernetes.io/part-of: cos
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
-  labels:
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 rules:
   - apiGroups:
@@ -132,24 +98,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
   labels:
-    app.kubernetes.io/part-of: cos
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
-  labels:
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 roleRef:
   kind: Role
@@ -175,69 +129,37 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
     prometheus.io/scrape: "true"
     prometheus.io/path: /q/metrics
     prometheus.io/port: "8080"
     prometheus.io/scheme: http
   labels:
-<<<<<<< HEAD
-    app.kubernetes.io/part-of: cos
-=======
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 spec:
   replicas: 1
   selector:
     matchLabels:
-<<<<<<< HEAD
-      app.kubernetes.io/part-of: cos
-=======
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
-      app.kubernetes.io/version: latest
       app.kubernetes.io/part-of: cos
+      app.kubernetes.io/version: latest
   template:
     metadata:
       annotations:
-<<<<<<< HEAD
-        app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-        app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-        app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-        app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
-=======
-        app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-        app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+        app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+        app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
         prometheus.io/scrape: "true"
         prometheus.io/path: /q/metrics
         prometheus.io/port: "8080"
         prometheus.io/scheme: http
       labels:
-<<<<<<< HEAD
-        app.kubernetes.io/part-of: cos
-=======
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
         app.kubernetes.io/name: cos-fleetshard-operator-debezium
-        app.kubernetes.io/version: latest
         app.kubernetes.io/part-of: cos
+        app.kubernetes.io/version: latest
     spec:
       containers:
         - env:
@@ -289,24 +211,12 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   annotations:
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: e795ff094364226b7d06f6a6e25c7f138c2d012b
-    app.quarkus.io/build-timestamp: 2021-09-29 - 04:12:08 +0000
-=======
-<<<<<<< HEAD
-    app.quarkus.io/commit-id: 6cfd206c488348f8cb60fc72f603496b16f79879
-    app.quarkus.io/build-timestamp: 2021-09-24 - 14:17:27 +0000
->>>>>>> 82dc854 (feat: leverage cos-fleet-manager-api)
+    app.quarkus.io/commit-id: 7f615cda9910ec9e4c9b02db2fee22da49315dbc
+    app.quarkus.io/build-timestamp: 2021-09-29 - 13:07:35 +0000
   labels:
-    app.kubernetes.io/part-of: cos
-=======
-    app.quarkus.io/commit-id: dff50f812612e95bc49d2de50532b865da540969
-    app.quarkus.io/build-timestamp: 2021-09-22 - 14:21:40 +0000
-  labels:
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
     app.kubernetes.io/name: cos-fleetshard-operator-debezium
-    app.kubernetes.io/version: latest
     app.kubernetes.io/part-of: cos
+    app.kubernetes.io/version: latest
   name: cos-fleetshard-operator-debezium
 spec:
   endpoints:
@@ -316,10 +226,6 @@ spec:
       scheme: http
   selector:
     matchLabels:
-<<<<<<< HEAD
-      app.kubernetes.io/part-of: cos
-=======
->>>>>>> c265cca (feat: leverage cos-fleet-manager-api)
       app.kubernetes.io/name: cos-fleetshard-operator-debezium
-      app.kubernetes.io/version: latest
       app.kubernetes.io/part-of: cos
+      app.kubernetes.io/version: latest
