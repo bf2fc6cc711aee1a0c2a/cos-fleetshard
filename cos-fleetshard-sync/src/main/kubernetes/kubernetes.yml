@@ -38,6 +38,7 @@ rules:
   verbs:
     - get
     - list
+    - watch
 # managed connector resources
 - apiGroups:
     - ""
