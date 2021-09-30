@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.connectoroperator;
+package org.bf2.cos.fleetshard.operator.connector;
 
 import java.util.Objects;
 
