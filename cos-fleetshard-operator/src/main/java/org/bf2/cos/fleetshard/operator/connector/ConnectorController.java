@@ -3,11 +3,13 @@ package org.bf2.cos.fleetshard.operator.connector;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -42,6 +44,10 @@ import io.javaoperatorsdk.operator.api.Context;
 import io.javaoperatorsdk.operator.api.Controller;
 import io.javaoperatorsdk.operator.api.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -73,9 +79,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     FleetShardClient fleetShard;
     @Inject
     OperandController operandController;
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "cos.connectors.watch.resources", defaultValue = "true")
     boolean watchResource;
+
+    @ConfigProperty(name = "cos.metrics.base.name", defaultValue = "cos.fleetshard")
+    boolean baseMetricsPrefix;
+
+    private List<Tag> tags;
+
+    @PostConstruct
+    protected void setUp() {
+        this.tags = List.of(
+            Tag.of("cos.fleetshard.operator.type", managedConnectorOperator.getSpec().getType()),
+            Tag.of("cos.fleetshard.operator.version", managedConnectorOperator.getSpec().getVersion()));
+    }
 
     @Override
     public void registerEventSources(EventSourceManager eventSourceManager) {
@@ -146,46 +166,75 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return answer;
     }
 
-    private UpdateControl<ManagedConnector> reconcile(ManagedConnector connector) {
+    private UpdateControl<ManagedConnector> reconcile(ManagedConnector resource) {
         LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
-            connector.getApiVersion(),
-            connector.getKind(),
-            connector.getMetadata().getName(),
-            connector.getMetadata().getNamespace(),
-            connector.getStatus().getPhase());
+            resource.getApiVersion(),
+            resource.getKind(),
+            resource.getMetadata().getName(),
+            resource.getMetadata().getNamespace(),
+            resource.getStatus().getPhase());
 
-        if (connector.getStatus().getPhase() == null) {
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-            connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-            return UpdateControl.updateStatusSubResource(connector);
+        if (resource.getStatus().getPhase() == null) {
+            resource.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+            resource.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+            resource.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+            return UpdateControl.updateStatusSubResource(resource);
         }
 
-        switch (connector.getStatus().getPhase()) {
-            case Initialization:
-                return handleInitialization(connector);
-            case Augmentation:
-                return handleAugmentation(connector);
-            case Monitor:
-                return validate(connector, this::handleMonitor);
-            case Deleting:
-                return handleDeleting(connector);
-            case Deleted:
-                return handleDeleted(connector);
-            case Stopping:
-                return handleStopping(connector);
-            case Stopped:
-                return validate(connector, this::handleStopped);
-            case Transferring:
-                return handleTransferring(connector);
-            case Transferred:
-                return handleTransferred(connector);
-            case Error:
-                return validate(connector, this::handleError);
-            default:
-                throw new UnsupportedOperationException("Unsupported phase: " + connector.getStatus().getPhase());
-        }
+        return measure(
+            baseMetricsPrefix + ".controller.connectors.reconcile."
+                + resource.getStatus().getPhase().name().toLowerCase(Locale.US),
+            resource,
+            connector -> {
+                switch (connector.getStatus().getPhase()) {
+                    case Initialization:
+                        return handleInitialization(connector);
+                    case Augmentation:
+                        return handleAugmentation(connector);
+                    case Monitor:
+                        return validate(connector, this::handleMonitor);
+                    case Deleting:
+                        return handleDeleting(connector);
+                    case Deleted:
+                        return handleDeleted(connector);
+                    case Stopping:
+                        return handleStopping(connector);
+                    case Stopped:
+                        return validate(connector, this::handleStopped);
+                    case Transferring:
+                        return handleTransferring(connector);
+                    case Transferred:
+                        return handleTransferred(connector);
+                    case Error:
+                        return validate(connector, this::handleError);
+                    default:
+                        throw new UnsupportedOperationException(
+                            "Unsupported phase: " + connector.getStatus().getPhase());
+                }
+            });
     }
+
+    private UpdateControl<ManagedConnector> measure(
+        String id,
+        ManagedConnector connector,
+        Function<ManagedConnector, UpdateControl<ManagedConnector>> action) {
+
+        Counter.builder(id + ".count")
+            .tags(tags)
+            .register(registry)
+            .increment();
+
+        try {
+            return Timer.builder(id + ".time")
+                .tags(tags)
+                .publishPercentiles(0.3, 0.5, 0.95)
+                .publishPercentileHistogram()
+                .register(registry)
+                .recordCallable(() -> action.apply(connector));
+        } catch (Exception e) {
+            throw new RuntimeException("Failure recording method execution (id: " + id + ")", e);
+        }
+    };
 
     // **************************************************
     //
