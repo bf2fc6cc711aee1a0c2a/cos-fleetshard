@@ -13,14 +13,12 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.sundr</groupId>
             <artifactId>builder-annotations</artifactId>
-            <version>${sundrio.version}</version>
         </dependency>
         <dependency>
             <groupId>io.fabric8</groupId>
@@ -46,7 +44,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.30</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
