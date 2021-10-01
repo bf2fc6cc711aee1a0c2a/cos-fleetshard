@@ -22,6 +22,8 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
+     And the klb has annotations containing:
+          | trait.camel.apache.org/container.image | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
      And the klb has labels containing:
           | cos.bf2.org/cluster.id    |      |
           | cos.bf2.org/connector.id  |      |
