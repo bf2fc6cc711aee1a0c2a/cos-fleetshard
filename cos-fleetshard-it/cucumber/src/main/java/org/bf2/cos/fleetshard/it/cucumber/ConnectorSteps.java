@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.it.cucumber;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -14,11 +17,14 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
+import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -30,8 +36,10 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
+import static org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport.PARSER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class ConnectorSteps {
@@ -142,15 +150,37 @@ public class ConnectorSteps {
 
     @When("^deploy$")
     public void deploy() {
-        ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.namespace())
-                .createOrReplace(ctx.connector()));
+        deploy_secret();
+        deploy_connector();
+    }
+
+    @When("^deploy secret$")
+    public void deploy_secret() {
+        KubernetesResourceUtil.getOrCreateAnnotations(ctx.secret())
+            .put(
+                Resources.ANNOTATION_UPDATED_TIMESTAMP,
+                ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
 
         ctx.secret(
             kubernetesClient.resources(Secret.class)
                 .inNamespace(ctx.namespace())
                 .createOrReplace(ctx.secret()));
+    }
+
+    @When("^deploy connector$")
+    public void deploy_connector() {
+        KubernetesResourceUtil.getOrCreateAnnotations(ctx.connector())
+            .put(
+                Resources.ANNOTATION_UPDATED_TIMESTAMP,
+                ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+
+        ctx.connector().getSpec().getDeployment().setSecretVersion(
+            ctx.secret().getMetadata().getResourceVersion());
+
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.namespace())
+                .createOrReplace(ctx.connector()));
     }
 
     @Then("the connector exists")
@@ -177,7 +207,7 @@ public class ConnectorSteps {
         });
     }
 
-    @And("the secret does not exists")
+    @And("the connector secret does not exists")
     public void secret_does_not_exists() {
         until(() -> {
             var res = kubernetesClient.resources(Secret.class)
@@ -213,6 +243,43 @@ public class ConnectorSteps {
                 phase,
                 c.getStatus().getConnectorStatus().getPhase());
         });
+    }
+
+    @When("the connector path {string} is set to json:")
+    public void connector_pointer(String path, String payload) {
+        var result = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .edit(res -> {
+                JsonNode replacement = Serialization.unmarshal(payload, JsonNode.class);
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, replacement).json();
+
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            });
+    }
+
+    @When("the connector path {string} is set to {string}")
+    public void connector_pointer_set_to_string(String path, String value) {
+        var result = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .edit(res -> {
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            });
+    }
+
+    @When("the connector path {string} is set to {int}")
+    public void connector_pointer_set_to_int(String path, int value) {
+        var result = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .edit(res -> {
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            });
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {

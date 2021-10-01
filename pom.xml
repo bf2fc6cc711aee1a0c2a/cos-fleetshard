@@ -67,6 +67,7 @@
         <module>cos-fleetshard-sync</module>
         <module>cos-fleetshard-sync-it</module>
         <module>cos-fleetshard-operator</module>
+        <module>cos-fleetshard-operator-it</module>
         <module>cos-fleetshard-operator-camel</module>
         <module>cos-fleetshard-operator-camel-it</module>
         <module>cos-fleetshard-operator-debezium</module>
@@ -258,6 +259,11 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-operator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-it</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
