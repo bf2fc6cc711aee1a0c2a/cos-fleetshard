@@ -321,6 +321,29 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
 
             return UpdateControl.updateStatusSubResource(connector);
+        } else {
+            final String expected = connector.getSpec().getDeployment().getSecretVersion();
+            final String current = secret.getMetadata().getResourceVersion();
+
+            if (!Objects.equals(expected, current)) {
+                ManagedConnectorConditions.setCondition(
+                    connector,
+                    ManagedConnectorConditions.Type.Augmentation,
+                    ManagedConnectorConditions.Status.False,
+                    "SecretVersionMismatch",
+                    "Expected secret version (expected: " + expected + ", current: " + current + ")");
+                ManagedConnectorConditions.setCondition(
+                    connector,
+                    ManagedConnectorConditions.Type.Ready,
+                    ManagedConnectorConditions.Status.False,
+                    "AugmentationError",
+                    "AugmentationError");
+
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
+                connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
+
+                return UpdateControl.updateStatusSubResource(connector);
+            }
         }
 
         ManagedConnectorConditions.setCondition(
