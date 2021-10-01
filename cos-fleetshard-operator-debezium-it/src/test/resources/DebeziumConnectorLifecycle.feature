@@ -23,7 +23,7 @@ Feature: Camel Connector Lifecycle
     Then the kctr exists
 
     When the connector desired status is set to "stopped"
-    When the kctr status is "PAUSED"
+    When the kctr status is set to "PAUSED"
     Then the connector is in phase "Stopped"
     Then the kc exists
     Then the kctr exists
