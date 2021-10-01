@@ -18,7 +18,8 @@ Feature: Camel Connector Reify
 
     When deploy
     Then the connector exists
-    Then the connector secret exists
+     And the connector secret exists
+     And the connector is in phase "Monitor"
 
     Then the klb exists
      And the klb has labels containing:
@@ -30,7 +31,6 @@ Feature: Camel Connector Reify
 
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
-
 
     Then the klb secret exists
      And the klb secret contains:

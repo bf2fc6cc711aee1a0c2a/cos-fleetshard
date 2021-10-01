@@ -85,7 +85,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     boolean watchResource;
 
     @ConfigProperty(name = "cos.metrics.base.name", defaultValue = "cos.fleetshard")
-    boolean baseMetricsPrefix;
+    String baseMetricsPrefix;
 
     private List<Tag> tags;
 

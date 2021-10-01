@@ -18,7 +18,8 @@ Feature: Camel Connector Reify
 
     When deploy
     Then the connector exists
-    Then the connector secret exists
+     And the connector secret exists
+     And the connector is in phase "Monitor"
 
     Then the kc exists
      And the kc has labels containing:

@@ -154,7 +154,7 @@ public class KafkaConnectorSteps extends StepsSupport {
         });
     }
 
-    @When("the kctr status is {string}")
+    @When("the kctr status is set to {string}")
     public void kctr_status_is(String phase) {
         kubernetesClient.resources(KafkaConnector.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
