@@ -18,7 +18,6 @@
         <dependency>
             <groupId>io.quarkiverse.cucumber</groupId>
             <artifactId>quarkus-cucumber</artifactId>
-            <version>${quarkus-cucumber.version}</version>
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
@@ -42,7 +41,6 @@
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
-            <version>${json-path.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
