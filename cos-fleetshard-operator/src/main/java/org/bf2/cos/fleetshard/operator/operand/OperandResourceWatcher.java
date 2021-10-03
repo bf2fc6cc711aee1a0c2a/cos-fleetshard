@@ -1,8 +1,9 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.operator.support.InstrumentedWatcherEventSource;
+import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
 import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
-import org.bf2.cos.fleetshard.operator.support.WatcherEventSource;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
-public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetesResource> {
+public class OperandResourceWatcher extends InstrumentedWatcherEventSource<GenericKubernetesResource> {
     private static final Logger LOGGER = LoggerFactory.getLogger(OperandResourceWatcher.class);
 
     private final ManagedConnectorOperator operator;
@@ -25,18 +26,19 @@ public class OperandResourceWatcher extends WatcherEventSource<GenericKubernetes
         ManagedConnectorOperator operator,
         String apiVersion,
         String kind,
-        String namespace) {
-
-        this(client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace);
+        String namespace,
+        MetricsRecorder recorder) {
+        this(client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace, recorder);
     }
 
     public OperandResourceWatcher(
         KubernetesClient client,
         ManagedConnectorOperator operator,
         ResourceDefinitionContext context,
-        String namespace) {
+        String namespace,
+        MetricsRecorder recorder) {
 
-        super(client);
+        super(client, recorder);
 
         this.operator = operator;
         this.namespace = namespace;

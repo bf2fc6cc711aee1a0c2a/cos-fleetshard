@@ -25,6 +25,7 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_I
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_UOW;
 import static org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport.createDeployment;
 import static org.mockito.Mockito.verify;
 
@@ -65,7 +66,8 @@ public class ConnectorProvisionerTest {
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
                 .containsEntry(LABEL_DEPLOYMENT_ID, deployment.getId())
-                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion());
+                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
@@ -102,10 +104,14 @@ public class ConnectorProvisionerTest {
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, deployment.getSpec().getConnectorId())
-                .containsEntry(LABEL_DEPLOYMENT_ID, deployment.getId());
+                .containsEntry(LABEL_DEPLOYMENT_ID, deployment.getId())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getSpec().getDeployment()).satisfies(d -> {
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
+                assertThat(d.getUnitOfWork())
+                    .isNotEmpty()
+                    .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
             });
         });
     }
@@ -171,7 +177,8 @@ public class ConnectorProvisionerTest {
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, newDeployment.getSpec().getConnectorId())
                 .containsEntry(LABEL_DEPLOYMENT_ID, newDeployment.getId())
-                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + newDeployment.getMetadata().getResourceVersion());
+                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + newDeployment.getMetadata().getResourceVersion())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
@@ -207,12 +214,16 @@ public class ConnectorProvisionerTest {
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
-                .containsEntry(LABEL_DEPLOYMENT_ID, oldDeployment.getId());
+                .containsEntry(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getSpec().getDeployment()).satisfies(d -> {
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(oldDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(newDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
+                assertThat(d.getUnitOfWork())
+                    .isNotEmpty()
+                    .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
             });
         });
     }
@@ -276,7 +287,8 @@ public class ConnectorProvisionerTest {
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, newDeployment.getSpec().getConnectorId())
                 .containsEntry(LABEL_DEPLOYMENT_ID, newDeployment.getId())
-                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + newDeployment.getMetadata().getResourceVersion());
+                .containsEntry(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + newDeployment.getMetadata().getResourceVersion())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
                 .containsKey(Secrets.SECRET_ENTRY_KAFKA)
@@ -312,12 +324,16 @@ public class ConnectorProvisionerTest {
             assertThat(val.getMetadata().getLabels())
                 .containsEntry(LABEL_CLUSTER_ID, CLUSTER_ID)
                 .containsEntry(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
-                .containsEntry(LABEL_DEPLOYMENT_ID, oldDeployment.getId());
+                .containsEntry(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
+                .containsKey(LABEL_UOW);
 
             assertThat(val.getSpec().getDeployment()).satisfies(d -> {
                 assertThat(d.getDeploymentResourceVersion()).isEqualTo(newDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getDeploymentResourceVersion()).isNotEqualTo(oldDeployment.getMetadata().getResourceVersion());
                 assertThat(d.getSecret()).isEqualTo(sc.getValue().getMetadata().getName());
+                assertThat(d.getUnitOfWork())
+                    .isNotEmpty()
+                    .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
             });
         });
     }

@@ -16,7 +16,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -34,6 +36,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -62,6 +65,20 @@ public final class ConnectorTestSupport {
             entry -> {
                 return Objects.equals(Secrets.generateConnectorSecretId(deployment.getId()), entry.getMetadata().getName());
             }).findFirst();
+    }
+
+    public static ManagedConnectorCluster createCluster() {
+        final String clusterId = uid();
+
+        return new ManagedConnectorClusterBuilder()
+            .withMetadata(new ObjectMetaBuilder()
+                .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + clusterId)
+                .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
+                .build())
+            .withSpec(new ManagedConnectorClusterSpecBuilder()
+                .withClusterId(clusterId)
+                .build())
+            .build();
     }
 
     public static ConnectorDeployment createDeployment(long deploymentRevision) {
@@ -168,12 +185,15 @@ public final class ConnectorTestSupport {
                 return arg;
             });
 
-        when(fleetShard.createManagedConnectorCluster())
+        when(fleetShard.getOrCreateManagedConnectorCluster())
             .thenAnswer(invocation -> {
                 return new ManagedConnectorClusterBuilder()
                     .withMetadata(new ObjectMetaBuilder()
-                        .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-1")
+                        .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + clusterId)
                         .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
+                        .build())
+                    .withSpec(new ManagedConnectorClusterSpecBuilder()
+                        .withClusterId(clusterId)
                         .build())
                     .build();
             });

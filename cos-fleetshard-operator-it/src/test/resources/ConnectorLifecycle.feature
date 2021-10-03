@@ -6,7 +6,7 @@ Feature: Connector Lifecycle
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
-    Scenario: error because secret is missing
+    Scenario: augmentation because secret is missing
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |
@@ -18,9 +18,10 @@ Feature: Connector Lifecycle
     When deploy connector
     Then the connector exists
      And the connector secret does not exists
-     And the connector is in phase "Error"
+     And the connector is in phase "Augmentation"
+     And the meters does not have any counter with name "cos.fleetshard.controller.connectors.reconcile.monitor.count"
 
-  Scenario: error because secret version is wrong
+  Scenario: augmentation because secret UoW is out of sync
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |
@@ -29,10 +30,10 @@ Feature: Connector Lifecycle
       | operator.type               | connector-operator-it           |
       | operator.version            | [1.0.0,2.0.0)                   |
 
-    When deploy secret
-     And deploy connector
+    When deploy connector
      And deploy secret
      And the connector path ".spec.deployment.connectorResourceVersion" is set to 100
     Then the connector exists
      And the connector secret exists
-     And the connector is in phase "Error"
+     And the connector is in phase "Augmentation"
+     And the meters does not have any counter with name "cos.fleetshard.controller.connectors.reconcile.monitor.count"

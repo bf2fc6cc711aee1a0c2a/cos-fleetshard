@@ -23,6 +23,7 @@ public final class Resources {
     public static final String LABEL_OPERATOR_ASSIGNED = "cos.bf2.org/operator.assigned";
     public static final String LABEL_OPERATOR_TYPE = "cos.bf2.org/operator.type";
     public static final String LABEL_OPERATOR_VERSION = "cos.bf2.org/operator.version";
+    public static final String LABEL_UOW = "cos.bf2.org/uow";
 
     public static final String ANNOTATION_UPDATED_TIMESTAMP = "cos.bf2.org/update.timestamp";
 
