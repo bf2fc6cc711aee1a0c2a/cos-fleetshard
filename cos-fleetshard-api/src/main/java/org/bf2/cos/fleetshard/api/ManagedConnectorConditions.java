@@ -71,7 +71,19 @@ public final class ManagedConnectorConditions {
         }
 
         return connector.getStatus().getConditions().stream().anyMatch(
-            c -> Objects.equals(c.getType(), type.name()) && Objects.equals(c.getStatus(), status.name()));
+            c -> Objects.equals(c.getType(), type.name())
+                && Objects.equals(c.getStatus(), status.name()));
+    }
+
+    public static boolean hasCondition(ManagedConnector connector, Type type, Status status, String reason) {
+        if (connector.getStatus().getConditions() == null) {
+            return false;
+        }
+
+        return connector.getStatus().getConditions().stream().anyMatch(
+            c -> Objects.equals(c.getType(), type.name())
+                && Objects.equals(c.getStatus(), status.name())
+                && Objects.equals(c.getReason(), reason));
     }
 
     public enum Type {

@@ -25,6 +25,7 @@ import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
@@ -56,6 +57,8 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnectorConditions.hasCondition;
+import static org.bf2.cos.fleetshard.api.ManagedConnectorConditions.setCondition;
 import static org.bf2.cos.fleetshard.support.OperatorSelectorUtil.available;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
@@ -98,22 +101,34 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @Override
     public void registerEventSources(EventSourceManager eventSourceManager) {
+        eventSourceManager.registerEventSource(
+            "_secrets",
+            new ConnectorSecretEventSource(
+                kubernetesClient,
+                managedConnectorOperator,
+                fleetShard.getOperatorNamespace(),
+                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.secrets", tags)));
+
         if (watchResource) {
             eventSourceManager.registerEventSource(
                 "_operators",
                 new ConnectorOperatorEventSource(
                     kubernetesClient,
                     managedConnectorOperator,
-                    fleetShard.getOperatorNamespace()));
+                    fleetShard.getOperatorNamespace(),
+                    MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators", tags)));
 
             for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
+                final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
+
                 eventSourceManager.registerEventSource(
-                    "_" + res.getGroup() + "/" + res.getVersion() + ":" + res.getKind(),
+                    id,
                     new OperandResourceWatcher(
                         kubernetesClient,
                         managedConnectorOperator,
                         res,
-                        fleetShard.getConnectorsNamespace()));
+                        fleetShard.getConnectorsNamespace(),
+                        MetricsRecorder.of(registry, id, tags)));
             }
         }
     }
@@ -243,13 +258,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     private UpdateControl<ManagedConnector> handleInitialization(ManagedConnector connector) {
         ManagedConnectorConditions.clearConditions(connector);
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Initialization,
             ManagedConnectorConditions.Status.True,
             "Initialization",
             "Initialization");
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Ready,
             ManagedConnectorConditions.Status.False,
@@ -304,35 +319,21 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             .get();
 
         if (secret == null) {
-            ManagedConnectorConditions.setCondition(
+
+            boolean retry = hasCondition(
                 connector,
                 ManagedConnectorConditions.Type.Augmentation,
                 ManagedConnectorConditions.Status.False,
-                "SecretNotFound",
-                "Unable to find secret with name: " + connector.getSpec().getDeployment().getSecret());
-            ManagedConnectorConditions.setCondition(
-                connector,
-                ManagedConnectorConditions.Type.Ready,
-                ManagedConnectorConditions.Status.False,
-                "AugmentationError",
-                "AugmentationError");
+                "SecretNotFound");
 
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
-            connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
-
-            return UpdateControl.updateStatusSubResource(connector);
-        } else {
-            final String expected = connector.getSpec().getDeployment().getSecretVersion();
-            final String current = secret.getMetadata().getResourceVersion();
-
-            if (!Objects.equals(expected, current)) {
-                ManagedConnectorConditions.setCondition(
+            if (!retry) {
+                setCondition(
                     connector,
                     ManagedConnectorConditions.Type.Augmentation,
                     ManagedConnectorConditions.Status.False,
-                    "SecretVersionMismatch",
-                    "Expected secret version (expected: " + expected + ", current: " + current + ")");
-                ManagedConnectorConditions.setCondition(
+                    "SecretNotFound",
+                    "Unable to find secret with name: " + connector.getSpec().getDeployment().getSecret());
+                setCondition(
                     connector,
                     ManagedConnectorConditions.Type.Ready,
                     ManagedConnectorConditions.Status.False,
@@ -343,27 +344,55 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
 
                 return UpdateControl.updateStatusSubResource(connector);
+            } else {
+                getRetryTimer().scheduleOnce(connector, 1500);
+                return UpdateControl.noUpdate();
+            }
+        } else {
+            final String connectorUow = connector.getSpec().getDeployment().getUnitOfWork();
+            final String secretUow = secret.getMetadata().getLabels().get(Resources.LABEL_UOW);
+
+            if (!Objects.equals(connectorUow, secretUow)) {
+                boolean retry = hasCondition(
+                    connector,
+                    ManagedConnectorConditions.Type.Augmentation,
+                    ManagedConnectorConditions.Status.False,
+                    "SecretUoWMismatch");
+
+                if (!retry) {
+                    setCondition(
+                        connector,
+                        ManagedConnectorConditions.Type.Augmentation,
+                        ManagedConnectorConditions.Status.False,
+                        "SecretUoWMismatch",
+                        "Secret and Connector UoW mismatch (connector: " + connectorUow + ", secret: " + secretUow + ")");
+                    setCondition(
+                        connector,
+                        ManagedConnectorConditions.Type.Ready,
+                        ManagedConnectorConditions.Status.False,
+                        "AugmentationError",
+                        "AugmentationError");
+
+                    return UpdateControl.updateStatusSubResource(connector);
+                } else {
+                    getRetryTimer().scheduleOnce(connector, 1500);
+                    return UpdateControl.noUpdate();
+                }
             }
         }
 
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Augmentation,
             ManagedConnectorConditions.Status.True,
             "Augmentation",
             "Augmentation");
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Ready,
             ManagedConnectorConditions.Status.False,
             "Augmentation",
             "Augmentation");
-
-        // update the secret to reclaim ownership
-        Resources.setLabel(secret, LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
-        Resources.setLabel(secret, LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
-
-        secret = kubernetesClient.resource(secret).createOrReplace();
 
         for (var resource : operandController.reify(connector, secret)) {
             if (resource.getMetadata().getLabels() == null) {
@@ -442,13 +471,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
         }
 
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Monitor,
             ManagedConnectorConditions.Status.True,
             "Monitor",
             "Monitor");
-        ManagedConnectorConditions.setCondition(
+        setCondition(
             connector,
             ManagedConnectorConditions.Type.Ready,
             ManagedConnectorConditions.Status.True,

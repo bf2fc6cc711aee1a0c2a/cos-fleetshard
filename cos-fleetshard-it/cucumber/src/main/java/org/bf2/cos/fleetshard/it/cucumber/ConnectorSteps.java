@@ -36,7 +36,6 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport.PARSER;
@@ -150,37 +149,19 @@ public class ConnectorSteps {
 
     @When("^deploy$")
     public void deploy() {
-        deploy_secret();
-        deploy_connector();
+        final String uow = uid();
+        deploy_connector_with_uow(uow);
+        deploy_secret_with_uow(uow);
     }
 
     @When("^deploy secret$")
     public void deploy_secret() {
-        KubernetesResourceUtil.getOrCreateAnnotations(ctx.secret())
-            .put(
-                Resources.ANNOTATION_UPDATED_TIMESTAMP,
-                ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-
-        ctx.secret(
-            kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.namespace())
-                .createOrReplace(ctx.secret()));
+        deploy_secret_with_uow(uid());
     }
 
     @When("^deploy connector$")
     public void deploy_connector() {
-        KubernetesResourceUtil.getOrCreateAnnotations(ctx.connector())
-            .put(
-                Resources.ANNOTATION_UPDATED_TIMESTAMP,
-                ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
-
-        ctx.connector().getSpec().getDeployment().setSecretVersion(
-            ctx.secret().getMetadata().getResourceVersion());
-
-        ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.namespace())
-                .createOrReplace(ctx.connector()));
+        deploy_connector_with_uow(uid());
     }
 
     @Then("the connector exists")
@@ -299,5 +280,39 @@ public class ConnectorSteps {
 
             return predicate.test(res);
         });
+    }
+
+    public void deploy_secret_with_uow(String uow) {
+        Resources.setAnnotation(
+            ctx.secret(),
+            Resources.ANNOTATION_UPDATED_TIMESTAMP,
+            ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        Resources.setLabel(
+            ctx.secret(),
+            Resources.LABEL_UOW,
+            uow);
+
+        ctx.secret(
+            kubernetesClient.resources(Secret.class)
+                .inNamespace(ctx.namespace())
+                .createOrReplace(ctx.secret()));
+    }
+
+    public void deploy_connector_with_uow(String uow) {
+        Resources.setAnnotation(
+            ctx.connector(),
+            Resources.ANNOTATION_UPDATED_TIMESTAMP,
+            ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        Resources.setLabel(
+            ctx.connector(),
+            Resources.LABEL_UOW,
+            uow);
+
+        ctx.connector().getSpec().getDeployment().setUnitOfWork(uow);
+
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.namespace())
+                .createOrReplace(ctx.connector()));
     }
 }

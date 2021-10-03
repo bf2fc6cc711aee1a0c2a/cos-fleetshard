@@ -5,11 +5,8 @@ import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Priority;
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.interceptor.Interceptor;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -17,9 +14,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
 
 @ApplicationScoped
 public class ConnectorStatusSync {
@@ -43,8 +37,7 @@ public class ConnectorStatusSync {
 
     private volatile Future<?> future;
 
-    void onStart(
-        @Observes @Priority(Interceptor.Priority.PLATFORM_AFTER) StartupEvent ignored) {
+    public void start() {
         LOGGER.info("Starting connector status sync");
         future = executor.submit(this::run);
 
@@ -55,8 +48,7 @@ public class ConnectorStatusSync {
         }
     }
 
-    void onStop(
-        @Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) ShutdownEvent ignored) {
+    public void stop() {
         if (this.connectorsObserver != null) {
             try {
                 this.connectorsObserver.close();

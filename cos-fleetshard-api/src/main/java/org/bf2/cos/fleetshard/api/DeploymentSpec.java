@@ -27,7 +27,7 @@ public class DeploymentSpec {
     private Long deploymentResourceVersion;
     private String desiredState;
     private String secret;
-    private String secretVersion;
+    private String unitOfWork;
 
     @JsonProperty
     public String getConnectorTypeId() {
@@ -80,13 +80,13 @@ public class DeploymentSpec {
     }
 
     @JsonProperty
-    public String getSecretVersion() {
-        return secretVersion;
+    public String getUnitOfWork() {
+        return unitOfWork;
     }
 
     @JsonProperty
-    public void setSecretVersion(String secretVersion) {
-        this.secretVersion = secretVersion;
+    public void setUnitOfWork(String unitOfWork) {
+        this.unitOfWork = unitOfWork;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class DeploymentSpec {
             && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
             && Objects.equals(getDesiredState(), spec.getDesiredState())
             && Objects.equals(getSecret(), spec.getSecret())
-            && Objects.equals(getSecretVersion(), spec.getSecretVersion());
+            && Objects.equals(getUnitOfWork(), spec.getUnitOfWork());
     }
 
     @Override
@@ -114,7 +114,7 @@ public class DeploymentSpec {
             getDeploymentResourceVersion(),
             getDesiredState(),
             getSecret(),
-            getSecretVersion());
+            getUnitOfWork());
     }
 
     @Override
@@ -123,9 +123,9 @@ public class DeploymentSpec {
             "connectorTypeId=" + connectorTypeId +
             ", connectorResourceVersion=" + connectorResourceVersion +
             ", deploymentResourceVersion=" + deploymentResourceVersion +
-            ", desiredState='" + desiredState +
-            ", secret='" + secret +
-            ", secretVersion='" + secretVersion +
+            ", desiredState=" + desiredState +
+            ", secret=" + secret +
+            ", unitOfWork='" + unitOfWork +
             '}';
     }
 }

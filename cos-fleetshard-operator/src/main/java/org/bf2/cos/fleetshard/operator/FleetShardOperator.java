@@ -26,7 +26,6 @@ public class FleetShardOperator {
     String operatorNamespace;
 
     public void start() {
-
         LOGGER.info("Starting operator (id: {}, type: {}, version: {})",
             managedConnectorOperator.getMetadata().getName(),
             managedConnectorOperator.getSpec().getType(),

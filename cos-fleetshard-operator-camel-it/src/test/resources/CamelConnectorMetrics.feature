@@ -23,9 +23,9 @@ Feature: Camel Connector Metrics
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.initialization.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.augmentation.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.monitor.count" with value greater than or equal to 1
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.initialization.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.monitor.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.initialization.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.monitor.time"
 
   Scenario: stop
     Given a Connector with:
@@ -47,10 +47,10 @@ Feature: Camel Connector Metrics
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.augmentation.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.stopping.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.stopped.count" with value greater than or equal to 1
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.initialization.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.stopping.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.stopped.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.initialization.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.stopping.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.stopped.time"
 
   Scenario: delete
     Given a Connector with:
@@ -77,8 +77,8 @@ Feature: Camel Connector Metrics
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.augmentation.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.deleting.count" with value greater than or equal to 1
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.deleted.count" with value greater than or equal to 1
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.initialization.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.deleting.time"
-     And the meters has timer "cos.fleetshard.controller.connectors.reconcile.deleted.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.initialization.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.deleting.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.deleted.time"
 

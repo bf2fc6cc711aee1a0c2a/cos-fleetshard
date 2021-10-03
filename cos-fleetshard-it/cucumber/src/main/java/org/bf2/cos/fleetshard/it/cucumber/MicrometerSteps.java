@@ -18,6 +18,18 @@ public class MicrometerSteps {
     //
     // ***********************************
 
+    @And("the meters has counter with name {string}")
+    public void counter_exists(String name) {
+        assertThat(registry.find(name).counter())
+            .isNotNull();
+    }
+
+    @And("the meters does not have any counter with name {string}")
+    public void counter_doesNotExists(String name) {
+        assertThat(registry.find(name).counter())
+            .isNull();
+    }
+
     @And("the meters has counter {string} with value greater than {int}")
     public void counter_isGreaterThan(String name, int expected) {
         assertThat(registry.find(name).counter())
@@ -59,10 +71,16 @@ public class MicrometerSteps {
     //
     // ***********************************
 
-    @And("the meters has timer {string}")
+    @And("the meters has timer with name {string}")
     public void timer_exists(String name) {
         assertThat(registry.find(name).timer())
             .isNotNull();
+    }
+
+    @And("the meters does not have any timer with name {string}")
+    public void timer_doesNotExists(String name) {
+        assertThat(registry.find(name).counter())
+            .isNull();
     }
 
 }
