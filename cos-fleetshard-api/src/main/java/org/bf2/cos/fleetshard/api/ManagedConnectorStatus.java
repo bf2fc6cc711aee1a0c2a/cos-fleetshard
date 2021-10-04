@@ -24,7 +24,7 @@ import lombok.ToString;
 })
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ManagedConnectorStatus {
+public class ManagedConnectorStatus implements DeploymentSpecAware {
     @PrinterColumn
     private PhaseType phase = PhaseType.Initialization;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -33,11 +33,13 @@ public class ManagedConnectorStatus {
     private DeploymentSpec deployment = new DeploymentSpec();
     private ConnectorStatusSpec connectorStatus = new ConnectorStatusSpec();
 
+    @Override
     @JsonProperty
     public DeploymentSpec getDeployment() {
         return deployment;
     }
 
+    @Override
     @JsonProperty
     public void setDeployment(DeploymentSpec deployment) {
         this.deployment = deployment;

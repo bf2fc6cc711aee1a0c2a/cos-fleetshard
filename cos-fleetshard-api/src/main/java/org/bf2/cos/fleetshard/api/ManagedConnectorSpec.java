@@ -21,7 +21,7 @@ import lombok.ToString;
     "operatorSelector"
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ManagedConnectorSpec {
+public class ManagedConnectorSpec implements DeploymentSpecAware {
     @PrinterColumn(name = "CLUSTER_ID")
     private String clusterId;
 
@@ -65,11 +65,13 @@ public class ManagedConnectorSpec {
         this.deploymentId = deploymentId;
     }
 
+    @Override
     @JsonProperty
     public DeploymentSpec getDeployment() {
         return deployment;
     }
 
+    @Override
     @JsonProperty
     public void setDeployment(DeploymentSpec deployment) {
         this.deployment = deployment;

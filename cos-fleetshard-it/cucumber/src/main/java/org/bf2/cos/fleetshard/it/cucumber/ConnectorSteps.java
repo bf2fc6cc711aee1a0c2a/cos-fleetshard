@@ -96,6 +96,7 @@ public class ConnectorSteps {
                 .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
                 .addToLabels(Resources.LABEL_CONNECTOR_ID, connectorId)
                 .addToLabels(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get("operator.type"))
                 .withName(Connectors.generateConnectorId(deploymentId))
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
@@ -119,6 +120,7 @@ public class ConnectorSteps {
 
         var secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get("operator.type"))
                 .withName(connector.getMetadata().getName()
                     + "-"
                     + connector.getSpec().getDeployment().getDeploymentResourceVersion())
@@ -260,6 +262,17 @@ public class ConnectorSteps {
                 JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
 
                 return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            });
+    }
+
+    @When("the connector secret has labels:")
+    public void connector_secret_has_labels(Map<String, String> entry) {
+        var result = kubernetesClient.resources(Secret.class)
+            .inNamespace(ctx.secret().getMetadata().getNamespace())
+            .withName(ctx.secret().getMetadata().getName())
+            .edit(res -> {
+                entry.forEach((k, v) -> Resources.setLabel(res, k, ctx.resolvePlaceholders(v)));
+                return res;
             });
     }
 

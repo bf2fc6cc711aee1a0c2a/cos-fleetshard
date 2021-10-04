@@ -2,12 +2,15 @@ package org.bf2.cos.fleetshard.it.cucumber;
 
 import javax.inject.Inject;
 
+import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
+
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Then;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class MicrometerSteps {
+public class MicrometerSteps extends StepsSupport {
 
     @Inject
     MeterRegistry registry;
@@ -51,6 +54,13 @@ public class MicrometerSteps {
             .satisfies(counter -> assertThat(counter.count()).isEqualTo(expected));
     }
 
+    @Then("wait till meters has counter {string} with value equal to {int}")
+    public void until_counter_isEqualTo(String name, int expected) {
+        awaiter.untilAsserted(() -> {
+            counter_isEqualTo(name, expected);
+        });
+    }
+
     @And("the meters has counter {string} with value less than or equal to {int}")
     public void counter_isLessThanOrEqualTo(String name, int expected) {
         assertThat(registry.find(name).counter())
@@ -67,7 +77,7 @@ public class MicrometerSteps {
 
     // ***********************************
     //
-    // Counters
+    // timers
     //
     // ***********************************
 
