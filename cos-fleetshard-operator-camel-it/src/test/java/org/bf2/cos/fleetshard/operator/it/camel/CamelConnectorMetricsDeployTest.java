@@ -11,14 +11,14 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @CucumberOptions(
     features = {
-        "classpath:CamelConnectorReify.feature"
+        "classpath:CamelConnectorMetricsDeploy.feature"
     },
     glue = {
         "org.bf2.cos.fleetshard.it.cucumber",
         "org.bf2.cos.fleetshard.operator.it.camel.glues"
     })
-@TestProfile(CamelConnectorReifyTest.Profile.class)
-public class CamelConnectorReifyTest extends CucumberQuarkusTest {
+@TestProfile(CamelConnectorMetricsDeployTest.Profile.class)
+public class CamelConnectorMetricsDeployTest extends CucumberQuarkusTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
