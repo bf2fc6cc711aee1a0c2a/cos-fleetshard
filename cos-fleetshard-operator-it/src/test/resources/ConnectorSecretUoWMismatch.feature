@@ -1,4 +1,4 @@
-Feature: Connector Lifecycle
+Feature: Connector Secret UoW Mismatch
 
   Background:
     Given Await configuration
@@ -6,7 +6,7 @@ Feature: Connector Lifecycle
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
-    Scenario: augmentation because secret is missing
+  Scenario: augmentation because secret is missing
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |

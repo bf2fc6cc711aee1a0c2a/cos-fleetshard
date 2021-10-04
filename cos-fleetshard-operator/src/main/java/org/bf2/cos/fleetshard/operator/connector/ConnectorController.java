@@ -18,7 +18,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
-import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.ConnectorControllerException;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
@@ -54,7 +53,6 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.api.ManagedConnectorConditions.hasCondition;
@@ -108,16 +106,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
                 MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.secrets", tags)));
+        eventSourceManager.registerEventSource(
+            "_operators",
+            new ConnectorOperatorEventSource(
+                kubernetesClient,
+                managedConnectorOperator,
+                fleetShard.getOperatorNamespace(),
+                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators", tags)));
 
         if (watchResource) {
-            eventSourceManager.registerEventSource(
-                "_operators",
-                new ConnectorOperatorEventSource(
-                    kubernetesClient,
-                    managedConnectorOperator,
-                    fleetShard.getOperatorNamespace(),
-                    MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators", tags)));
-
             for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
                 final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
 
@@ -138,13 +135,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector,
         Context<ManagedConnector> context) {
 
+        getRetryTimer().cancelOnceSchedule(connector.getMetadata().getUid());
+
         final boolean selected = selected(connector);
         final boolean assigned = assigned(connector);
 
         final UpdateControl<ManagedConnector> answer;
 
         if (!selected && !assigned) {
-            LOGGER.debug("Skip connector: {} as not owning it (assigned={}, operating={})",
+            LOGGER.debug("Skip connector: {}/{} as not owning it (assigned={}, operating={})",
+                connector.getMetadata().getNamespace(),
                 connector.getMetadata().getName(),
                 connector.getSpec().getOperatorSelector().getId(),
                 connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
@@ -319,7 +319,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             .get();
 
         if (secret == null) {
-
             boolean retry = hasCondition(
                 connector,
                 ManagedConnectorConditions.Type.Augmentation,
@@ -339,9 +338,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     ManagedConnectorConditions.Status.False,
                     "AugmentationError",
                     "AugmentationError");
-
-                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
-                connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
 
                 return UpdateControl.updateStatusSubResource(connector);
             } else {
@@ -450,22 +446,21 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final List<Operator> operators = fleetShard.lookupOperators();
         final Operator assignedOperator = connector.getStatus().getConnectorStatus().getAssignedOperator();
         final Operator availableOperator = connector.getStatus().getConnectorStatus().getAvailableOperator();
-        final OperatorSelector selector = connector.getSpec().getOperatorSelector();
-        final Optional<Operator> available = available(selector, operators);
+        final Optional<Operator> selected = available(connector.getSpec().getOperatorSelector(), operators);
 
-        if (available.isPresent()) {
-            Operator instance = available.get();
-            if (!Objects.equals(instance, availableOperator)) {
+        if (selected.isPresent()) {
+            Operator selectedInstance = selected.get();
+
+            // if the selected operator does match the operator preciously selected
+            if (!Objects.equals(selectedInstance, availableOperator) && !Objects.equals(selectedInstance, assignedOperator)) {
+                // and it is not the currently assigned one
                 LOGGER.info("deployment (upd): {} -> from:{}, to: {}",
                     connector.getSpec().getDeployment(),
                     assignedOperator,
-                    instance);
+                    selectedInstance);
 
-                if (!Objects.equals(instance, assignedOperator)) {
-                    connector.getStatus().getConnectorStatus().setAvailableOperator(instance);
-                } else {
-                    connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
-                }
+                // then we can signal that an upgrade is possible
+                connector.getStatus().getConnectorStatus().setAvailableOperator(selectedInstance);
             }
         } else {
             connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());

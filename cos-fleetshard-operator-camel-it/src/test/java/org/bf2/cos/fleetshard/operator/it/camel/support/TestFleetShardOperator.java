@@ -23,7 +23,7 @@ public class TestFleetShardOperator extends FleetShardOperator {
     @ConfigProperty(name = "test.namespace")
     String namespace;
 
-    @ConfigProperty(name = "test.namespace.delete", defaultValue = "true")
+    @ConfigProperty(name = "test.namespace.delete", defaultValue = "false")
     boolean namespaceDelete;
 
     @Override
