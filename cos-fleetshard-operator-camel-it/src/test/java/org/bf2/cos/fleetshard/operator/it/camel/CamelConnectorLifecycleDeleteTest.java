@@ -2,27 +2,26 @@ package org.bf2.cos.fleetshard.operator.it.camel;
 
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
-
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @CucumberOptions(
     features = {
-        "classpath:CamelConnectorMetrics.feature"
+        "classpath:CamelConnectorLifecycleDelete.feature"
     },
     glue = {
         "org.bf2.cos.fleetshard.it.cucumber",
         "org.bf2.cos.fleetshard.operator.it.camel.glues"
     })
-@TestProfile(CamelConnectorMetricsTest.Profile.class)
-public class CamelConnectorMetricsTest extends CucumberQuarkusTest {
-    public static class Profile extends BaseTestProfile {
+@TestProfile(CamelConnectorLifecycleDeleteTest.Profile.class)
+public class CamelConnectorLifecycleDeleteTest extends CucumberQuarkusTest {
+    public static class Profile implements QuarkusTestProfile {
         @Override
-        protected Map<String, String> additionalConfigOverrides() {
+        public Map<String, String> getConfigOverrides() {
             final String ns = "cos-" + uid();
 
             return Map.of(
