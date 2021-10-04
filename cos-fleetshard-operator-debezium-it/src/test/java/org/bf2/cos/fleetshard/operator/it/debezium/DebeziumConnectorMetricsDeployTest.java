@@ -11,14 +11,14 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @CucumberOptions(
     features = {
-        "classpath:DebeziumConnectorEvents.feature"
+        "classpath:DebeziumConnectorMetricsDeploy.feature"
     },
     glue = {
         "org.bf2.cos.fleetshard.it.cucumber",
         "org.bf2.cos.fleetshard.operator.it.debezium.glues"
     })
-@TestProfile(DebeziumConnectorEventsTest.Profile.class)
-public class DebeziumConnectorEventsTest extends CucumberQuarkusTest {
+@TestProfile(DebeziumConnectorMetricsDeployTest.Profile.class)
+public class DebeziumConnectorMetricsDeployTest extends CucumberQuarkusTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {

@@ -2,27 +2,26 @@ package org.bf2.cos.fleetshard.operator.it.debezium;
 
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
-
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @CucumberOptions(
     features = {
-        "classpath:DebeziumConnectorLifecycle.feature"
+        "classpath:DebeziumConnectorMetricsStop.feature"
     },
     glue = {
         "org.bf2.cos.fleetshard.it.cucumber",
         "org.bf2.cos.fleetshard.operator.it.debezium.glues"
     })
-@TestProfile(DebeziumConnectorLifecycleTest.Profile.class)
-public class DebeziumConnectorLifecycleTest extends CucumberQuarkusTest {
-    public static class Profile extends BaseTestProfile {
+@TestProfile(DebeziumConnectorMetricsStopTest.Profile.class)
+public class DebeziumConnectorMetricsStopTest extends CucumberQuarkusTest {
+    public static class Profile implements QuarkusTestProfile {
         @Override
-        protected Map<String, String> additionalConfigOverrides() {
+        public Map<String, String> getConfigOverrides() {
             final String ns = "cos-" + uid();
 
             return Map.of(
