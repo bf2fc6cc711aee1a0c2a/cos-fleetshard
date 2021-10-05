@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 
 import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
@@ -85,5 +86,15 @@ public final class Resources {
         }
 
         return builder.build();
+    }
+
+    public static <T extends HasMetadata> boolean delete(KubernetesClient client, Class<T> type, String namespace,
+        String name) {
+        Boolean result = client.resources(type)
+            .inNamespace(namespace)
+            .withName(name)
+            .delete();
+
+        return result == null || result;
     }
 }

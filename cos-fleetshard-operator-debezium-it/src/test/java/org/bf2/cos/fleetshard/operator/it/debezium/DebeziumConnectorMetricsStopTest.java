@@ -22,7 +22,7 @@ public class DebeziumConnectorMetricsStopTest extends CucumberQuarkusTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            final String ns = "cos-" + uid();
+            final String ns = "cos-debezium-" + uid();
 
             return Map.of(
                 "test.namespace", ns,

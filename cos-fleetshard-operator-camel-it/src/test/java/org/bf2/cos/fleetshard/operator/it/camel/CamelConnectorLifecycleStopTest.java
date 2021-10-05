@@ -22,7 +22,7 @@ public class CamelConnectorLifecycleStopTest extends CucumberQuarkusTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            final String ns = "cos-" + uid();
+            final String ns = "cos-camel-" + uid();
 
             return Map.of(
                 "test.namespace", ns,
