@@ -12,6 +12,8 @@ import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -54,6 +56,8 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumOperandController.class);
+
     private final DebeziumOperandConfiguration configuration;
 
     public DebeziumOperandController(KubernetesClient kubernetesClient, DebeziumOperandConfiguration configuration) {
@@ -210,6 +214,14 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
             .delete();
 
-        return (kctr == null || !kctr) && (kc == null || !kc) && (secret == null || !secret);
+        LOGGER.debug("deleting connector {}/{} (KafkaConnector: {}, KafkaConnect: {}, Secret: {})",
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName(),
+            kctr,
+            kc,
+            secret);
+
+        return ((kctr != null && kctr) && (kc != null && kc) && (secret != null && secret))
+            || ((kctr == null || !kctr) && (kc == null || !kc) && (secret == null || !secret));
     }
 }
