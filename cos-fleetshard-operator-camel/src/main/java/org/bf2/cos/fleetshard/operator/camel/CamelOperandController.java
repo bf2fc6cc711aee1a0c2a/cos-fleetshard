@@ -16,6 +16,8 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -44,6 +46,8 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandController.class);
+
     private final CamelOperandConfiguration configuration;
 
     public CamelOperandController(KubernetesClient kubernetesClient, CamelOperandConfiguration configuration) {
@@ -142,16 +146,23 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             return true;
         }
 
-        Boolean klb = getKubernetesClient().resources(KameletBinding.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName())
-            .delete();
+        Boolean klb = Resources.delete(
+            getKubernetesClient(),
+            KameletBinding.class,
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName());
+        Boolean secret = Resources.delete(
+            getKubernetesClient(),
+            Secret.class,
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX);
 
-        Boolean secret = getKubernetesClient().resources(Secret.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
-            .delete();
+        LOGGER.debug("deleting connector {}/{} (KameletBinding: {}, Secret: {})",
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName(),
+            klb,
+            secret);
 
-        return (klb == null || !klb) && (secret == null || !secret);
+        return klb && secret;
     }
 }
