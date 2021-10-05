@@ -151,7 +151,7 @@
                     <properties>
                         <property>
                             <name>inputFile</name>
-                            <value>${project.basedir}/target/kubernetes/kubernetes.yml</value>
+                            <value>${project.build.directory}/kubernetes/kubernetes.yml</value>
                         </property>
                         <property>
                             <name>outputFile</name>
