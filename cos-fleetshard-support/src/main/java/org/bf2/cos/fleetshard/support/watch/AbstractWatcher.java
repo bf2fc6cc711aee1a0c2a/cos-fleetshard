@@ -53,7 +53,7 @@ public abstract class AbstractWatcher<T> implements Watcher<T>, AutoCloseable {
             return;
         }
         if (e.isHttpGone()) {
-            logger.warn("Received error for watch, will try to reconnect.", e);
+            logger.info("Received recoverable error for watch, will try to reconnect (message: {})", e.getMessage());
             close();
             start();
         } else {
