@@ -161,7 +161,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
     public static class Profile extends BaseTestProfile {
         @Override
         protected Map<String, String> additionalConfigOverrides() {
-            final String ns = "cos-" + uid();
+            final String ns = "cos-sync-" + uid();
 
             return Map.of(
                 "cos.cluster.id", uid(),
