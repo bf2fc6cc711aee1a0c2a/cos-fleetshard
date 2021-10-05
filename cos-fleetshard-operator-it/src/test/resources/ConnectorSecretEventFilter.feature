@@ -20,9 +20,9 @@ Feature: Connector Event Filter
     Then the connector secret exists
     Then wait till meters has counter "cos.fleetshard.controller.event.secrets.count" with value equal to 1
      And the connector is in phase "Monitor"
-     And the meters has counter "cos.fleetshard.controller.connectors.reconcile.monitor.count" with value equal to 2
+     And save the meters value of counter "cos.fleetshard.controller.connectors.reconcile.monitor.count"
 
     When the connector secret has labels:
       | foo | bar |
     Then wait till meters has counter "cos.fleetshard.controller.event.secrets.count" with value equal to 2
-     And the meters has counter "cos.fleetshard.controller.connectors.reconcile.monitor.count" with value equal to 2
+     And the meters value of counter "cos.fleetshard.controller.connectors.reconcile.monitor.count" has not changed
