@@ -4,6 +4,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource
 
+if (!(inputFile as File).exists()) {
+    return
+}
+
 def factory = new YAMLFactory().disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
 def mapper = new ObjectMapper(factory).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 def parser = factory.createParser(inputFile as File)

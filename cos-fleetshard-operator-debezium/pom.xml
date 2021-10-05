@@ -18,6 +18,8 @@
         <!-- CRD -->
         <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
         <quarkus.kubernetes.app-config-map>${project.artifactId}-config</quarkus.kubernetes.app-config-map>
+        <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
+        <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
 
         <!-- operator sdk -->
         <quarkus.operator-sdk.crd.generate>false</quarkus.operator-sdk.crd.generate>
