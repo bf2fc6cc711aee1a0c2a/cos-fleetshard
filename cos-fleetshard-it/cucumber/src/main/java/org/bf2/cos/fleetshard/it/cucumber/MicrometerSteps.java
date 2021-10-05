@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.it.cucumber;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
@@ -7,6 +10,7 @@ import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,9 +20,12 @@ public class MicrometerSteps extends StepsSupport {
     @Inject
     MeterRegistry registry;
 
+    private final Map<String, Double> counters = new HashMap<>();
+
     @Before
     public void setUp() {
         registry.clear();
+        counters.clear();
     }
 
     // ***********************************
@@ -79,6 +86,21 @@ public class MicrometerSteps extends StepsSupport {
         assertThat(registry.find(name).counter())
             .isNotNull()
             .satisfies(counter -> assertThat(counter.count()).isLessThan(expected));
+    }
+
+    @Then("save the meters value of counter {string}")
+    public void counter_storeValue(String name) {
+        Counter counter = registry.find(name).counter();
+        if (counter != null) {
+            counters.put(name, counter.count());
+        }
+    }
+
+    @Then("the meters value of counter {string} has not changed")
+    public void counter_valueHasNotChanged(String name) {
+        assertThat(registry.find(name).counter())
+            .isNotNull()
+            .satisfies(counter -> assertThat(counter.count()).isEqualTo(counters.get(name)));
     }
 
     // ***********************************

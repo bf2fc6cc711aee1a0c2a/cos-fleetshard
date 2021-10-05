@@ -27,7 +27,9 @@ public class ConnectorSecretEventFilterTest extends CucumberQuarkusTest {
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns,
-                "cos.cluster.id", uid());
+                "cos.cluster.id", uid(),
+                // disable monitoring to avoid flaky tests
+                "cos.connectors.monitor", "false");
         }
     }
 }
