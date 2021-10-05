@@ -3,7 +3,7 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -14,6 +14,7 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -41,9 +42,9 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
         });
     }
 
-    public static class Profile extends BaseTestProfile {
+    public static class Profile implements QuarkusTestProfile {
         @Override
-        protected Map<String, String> additionalConfigOverrides() {
+        public Map<String, String> getConfigOverrides() {
             final String ns = "cos-sync-" + uid();
 
             return Map.of(
@@ -59,8 +60,9 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
         }
 
         @Override
-        protected List<TestResourceEntry> additionalTestResources() {
+        public List<TestResourceEntry> testResources() {
             return List.of(
+                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
