@@ -22,6 +22,10 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kubernetes:
+        - 'v1.22.1'
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
@@ -49,6 +53,7 @@ jobs:
         uses: container-tools/kind-action@v1
         with:
           registry: false
+          node_image: kindest/node:${{ matrix.kubernetes }}
       - name: "Install CRDs"
         run: |
           kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
