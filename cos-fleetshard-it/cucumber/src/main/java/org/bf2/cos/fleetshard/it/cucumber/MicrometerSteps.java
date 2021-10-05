@@ -4,6 +4,7 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 
+import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -14,6 +15,11 @@ public class MicrometerSteps extends StepsSupport {
 
     @Inject
     MeterRegistry registry;
+
+    @Before
+    public void setUp() {
+        registry.clear();
+    }
 
     // ***********************************
     //
