@@ -30,6 +30,8 @@ export KAS_BASE_PATH=https://api.openshift.com
 ----
 ====
 
+* retrieve your ocm-offline-token from https://qaprodauth.cloud.redhat.com/openshift/token using the *__kafka_supporting_* account
+
 * add a server section to ~/.m2/settings.xml, like:
 +
 [source,xml]
