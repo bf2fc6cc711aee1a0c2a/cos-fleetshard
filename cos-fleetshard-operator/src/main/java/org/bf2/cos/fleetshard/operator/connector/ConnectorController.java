@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
@@ -84,7 +85,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @ConfigProperty(name = "cos.connectors.watch.resources", defaultValue = "true")
     boolean watchResource;
-
     @ConfigProperty(name = "cos.metrics.base.name", defaultValue = "cos.fleetshard")
     String baseMetricsPrefix;
 
@@ -131,11 +131,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     @Override
-    public UpdateControl<ManagedConnector> createOrUpdateResource(
+    protected UpdateControl<ManagedConnector> reconcile(
         ManagedConnector connector,
         Context<ManagedConnector> context) {
-
-        getRetryTimer().cancelOnceSchedule(connector.getMetadata().getUid());
 
         final boolean selected = selected(connector);
         final boolean assigned = assigned(connector);
@@ -307,6 +305,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
+    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
         if (connector.getSpec().getDeployment().getSecret() == null) {
             LOGGER.info("Secret for deployment not defines");
@@ -341,8 +340,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 return UpdateControl.updateStatusSubResource(connector);
             } else {
-                getRetryTimer().scheduleOnce(connector, 1500);
-                return UpdateControl.noUpdate();
+                return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
             }
         } else {
             final String connectorUow = connector.getSpec().getDeployment().getUnitOfWork();
@@ -371,8 +369,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                     return UpdateControl.updateStatusSubResource(connector);
                 } else {
-                    getRetryTimer().scheduleOnce(connector, 1500);
-                    return UpdateControl.noUpdate();
+                    return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -482,6 +479,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
+    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleDeleting(ManagedConnector connector) {
         if (operandController.delete(connector)) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleted);
@@ -495,16 +493,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        // TODO: reschedule a cleanup with backoff
-        getRetryTimer().scheduleOnce(connector, 1500);
-
-        return UpdateControl.noUpdate();
+        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
         return UpdateControl.noUpdate();
     }
 
+    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleStopping(ManagedConnector connector) {
         if (operandController.stop(connector)) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopped);
@@ -518,21 +514,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        // TODO: reschedule a cleanup with backoff
-        getRetryTimer().scheduleOnce(connector, 1500);
-
-        return UpdateControl.noUpdate();
+        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
         return UpdateControl.noUpdate();
     }
 
+    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
-        // TODO: retry with backoff
-        getRetryTimer().scheduleOnce(connector, 1500);
-
-        return UpdateControl.noUpdate();
+        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
