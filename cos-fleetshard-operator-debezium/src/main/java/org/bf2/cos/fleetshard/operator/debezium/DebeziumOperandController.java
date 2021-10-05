@@ -199,20 +199,21 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     @Override
     public boolean delete(ManagedConnector connector) {
-        Boolean kctr = getKubernetesClient().resources(KafkaConnector.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName())
-            .delete();
-
-        Boolean kc = getKubernetesClient().resources(KafkaConnect.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName())
-            .delete();
-
-        Boolean secret = getKubernetesClient().resources(Secret.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
-            .delete();
+        Boolean kctr = Resources.delete(
+            getKubernetesClient(),
+            KafkaConnector.class,
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName());
+        Boolean kc = Resources.delete(
+            getKubernetesClient(),
+            KafkaConnect.class,
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName());
+        Boolean secret = Resources.delete(
+            getKubernetesClient(),
+            Secret.class,
+            connector.getMetadata().getNamespace(),
+            connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX);
 
         LOGGER.debug("deleting connector {}/{} (KafkaConnector: {}, KafkaConnect: {}, Secret: {})",
             connector.getMetadata().getNamespace(),
@@ -221,7 +222,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             kc,
             secret);
 
-        return ((kctr != null && kctr) && (kc != null && kc) && (secret != null && secret))
-            || ((kctr == null || !kctr) && (kc == null || !kc) && (secret == null || !secret));
+        return kctr && kc && secret;
     }
 }
