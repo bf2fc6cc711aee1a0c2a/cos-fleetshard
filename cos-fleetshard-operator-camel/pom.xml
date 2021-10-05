@@ -21,7 +21,6 @@
         <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
         <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
 
-
         <!-- operator sdk -->
         <quarkus.operator-sdk.crd.generate>false</quarkus.operator-sdk.crd.generate>
         <quarkus.operator-sdk.crd.validate>false</quarkus.operator-sdk.crd.validate>
@@ -156,7 +155,7 @@
                     <properties>
                         <property>
                             <name>inputFile</name>
-                            <value>${project.basedir}/target/kubernetes/kubernetes.yml</value>
+                            <value>${project.build.directory}/kubernetes/kubernetes.yml</value>
                         </property>
                         <property>
                             <name>outputFile</name>
