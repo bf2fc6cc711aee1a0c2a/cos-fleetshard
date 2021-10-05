@@ -8,7 +8,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.it.resources.BaseTestProfile;
+import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 
@@ -158,9 +159,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         }
     }
 
-    public static class Profile extends BaseTestProfile {
+    public static class Profile implements QuarkusTestProfile {
         @Override
-        protected Map<String, String> additionalConfigOverrides() {
+        public Map<String, String> getConfigOverrides() {
             final String ns = "cos-sync-" + uid();
 
             return Map.of(
@@ -175,8 +176,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         }
 
         @Override
-        protected List<TestResourceEntry> additionalTestResources() {
+        public List<TestResourceEntry> testResources() {
             return List.of(
+                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
