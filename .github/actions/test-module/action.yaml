@@ -1,0 +1,33 @@
+# .github/actions/test-module/action.yaml
+
+name: "Test module"
+description: "Test a single module"
+
+inputs:
+  module-name:
+    description: "The name of the module to build"
+    required: true
+  kubernetes-version:
+    description: "The kubernetes version"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: 'SetUp KinD'
+      uses: container-tools/kind-action@v1
+      with:
+        registry: false
+        node_image: kindest/node:${{ inputs.kubernetes-version }}
+    - name: 'SetUp Kubernetes Cluster'
+      shell: bash
+      run: |
+        kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
+        kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
+        kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
+        kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
+        kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
+        kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
+    - name: "Build"
+      shell: bash
+      run: |
+        ./etc/scripts/build.sh -pl :${{ inputs.module-name }} --also-make

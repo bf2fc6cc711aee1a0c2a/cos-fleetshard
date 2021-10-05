@@ -15,12 +15,8 @@ env:
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
-  build:
+  cos-fleetshard-operator:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        kubernetes:
-        - 'v1.22.1'
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v2
@@ -32,23 +28,77 @@ jobs:
           server-id: github
           server-username: COS_PACKAGES_USERNAME
           server-password: COS_PACKAGES_TOKEN
-      - name: 'SetUp KinD'
-        uses: container-tools/kind-action@v1
-        with:
-          registry: false
-          node_image: kindest/node:${{ matrix.kubernetes }}
-      - name: 'SetUp Kubernetes Cluster'
-        run: |
-          kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
-          kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
-          kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
-          kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
-          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
-          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
-      - name: "Build"
+      - uses: ./.github/actions/test-module
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
           COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
-        run: |
-          ./etc/scripts/build.sh
+        with:
+          kubernetes-version: 'v1.22.1'
+          module-name: 'cos-fleetshard-operator-it'
+
+  cos-fleetshard-operator-camel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+          server-username: COS_PACKAGES_USERNAME
+          server-password: COS_PACKAGES_TOKEN
+      - uses: ./.github/actions/test-module
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
+          COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
+        with:
+          kubernetes-version: 'v1.22.1'
+          module-name: 'cos-fleetshard-operator-camel-it'
+
+  cos-fleetshard-operator-debezium:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+          server-username: COS_PACKAGES_USERNAME
+          server-password: COS_PACKAGES_TOKEN
+      - uses: ./.github/actions/test-module
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
+          COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
+        with:
+          kubernetes-version: 'v1.22.1'
+          module-name: 'cos-fleetshard-operator-debezium-it'
+
+  cos-fleetshard-operator-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+          server-username: COS_PACKAGES_USERNAME
+          server-password: COS_PACKAGES_TOKEN
+      - uses: ./.github/actions/test-module
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
+          COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
+        with:
+          kubernetes-version: 'v1.22.1'
+          module-name: 'cos-fleetshard-sync-it'
