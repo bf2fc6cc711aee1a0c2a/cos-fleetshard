@@ -27,9 +27,9 @@ jobs:
         kubernetes:
         - 'v1.22.1'
     steps:
-      - name: Checkout Project
+      - name: 'Checkout Project'
         uses: actions/checkout@v2
-      - name: Set up JDK 11
+      - name: 'Set up JDK 11'
         uses: actions/setup-java@v2
         with:
           java-version: '11'
@@ -37,32 +37,29 @@ jobs:
           server-id: github
           server-username: COS_PACKAGES_USERNAME
           server-password: COS_PACKAGES_TOKEN
-      - name: Retrieve Project Metadata
+      - name: 'Retrieve Project Metadata'
         uses: radcortez/project-metadata-action@243817f1e0f2b4df4e012fc17efc45cff166425d
         id: metadata
         with:
           metadata-file-path: '.github/project.yaml'
           local-file: true
-      - name: Login to quay.io
+      - name: 'Login to quay.io'
         uses: docker/login-action@v1
         with:
           registry: quay.io
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
-      - name: Kubernetes KinD Cluster
+      - name: 'SetUp KinD'
         uses: container-tools/kind-action@v1
         with:
           registry: false
           node_image: kindest/node:${{ matrix.kubernetes }}
-      - name: "Install CRDs"
+      - name: 'SetUp Kubernetes Cluster'
         run: |
-          kubectl apply -f etc/kubernetes/managedconnectorclusters.cos.bf2.org-v1.yml
-          kubectl apply -f etc/kubernetes/managedconnectoroperators.cos.bf2.org-v1.yml
-          kubectl apply -f etc/kubernetes/managedconnectors.cos.bf2.org-v1.yml
-          kubectl apply -f https://raw.githubusercontent.com/apache/camel-k/release-1.6.x/config/crd/bases/camel.apache.org_kameletbindings.yaml
-          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/041-Crd-kafkaconnect.yaml
-          kubectl apply -f https://raw.githubusercontent.com/strimzi/strimzi-kafka-operator/0.25.0/install/cluster-operator/047-Crd-kafkaconnector.yaml
-      - name: Build container image and push it
+          ./etc/scripts/deploy_fleetshard_crds.sh
+          ./etc/scripts/deploy_camel-k_crds.sh
+          ./etc/scripts/deploy_strimzi_crds.sh
+      - name: 'Build and push container images'
         env:
           CONTAINER_VERSION: ${{steps.metadata.outputs.current-version}}
           QUARKUS_BASE_IMAGE: ${{ secrets.QUARKUS_BASE_IMAGE }}
@@ -81,32 +78,32 @@ jobs:
     runs-on: ubuntu-latest
     container: openshift/origin-cli:latest
     steps:
-      - name: Checkout Project
+      - name: 'Checkout Project'
         uses: actions/checkout@v2
-      - name: Install OpenShift CLI tools
+      - name: 'Install OpenShift CLI tools'
         uses: redhat-actions/openshift-tools-installer@v1
         with:
           source: "mirror"
           skip_cache: "true"
           oc: "latest"
-      - name: Verify OpenShift CLI tools
+      - name: 'Verify OpenShift CLI tools'
         run: |
           oc version
           kubectl version
-      - name: Log in and set context
+      - name: 'Log-in to OpenShift cluster and set context'
         uses: redhat-actions/oc-login@v1
         with:
           openshift_server_url: ${{ secrets.K8S_CLUSTER_DEV }}
           openshift_token: ${{ secrets.K8S_CLUSTER_DEV_TOKEN }}
           insecure_skip_tls_verify: false
           namespace: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
-      - name: Create Pull Secret
+      - name: 'Create Pull Secret'
         run: |
           ./etc/scripts/create_pull_secret.sh
-      - name: Deploy FleetShard CRDs
+      - name: 'Deploy FleetShard CRDs'
         run: |
           ./etc/scripts/deploy_fleetshard_crds.sh
-      - name: Deploy FleetShard
+      - name: 'Deploy FleetShard'
         env:
           KUSTOMIZE_PROFILE: ${{ secrets.KUSTOMIZE_PROFILE }}
         run: |
