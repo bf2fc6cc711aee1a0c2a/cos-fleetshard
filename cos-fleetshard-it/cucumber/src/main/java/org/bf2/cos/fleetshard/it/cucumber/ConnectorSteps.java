@@ -16,6 +16,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
+import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -38,6 +39,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport.PARSER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
@@ -52,14 +54,8 @@ public class ConnectorSteps {
     ConnectorContext ctx;
 
     @Before
-    public void setUp() {
-        ctx.clear();
-    }
-
     @After
     public void cleanUp() {
-        ctx.clear();
-
         if (ctx.connector() != null) {
             LOGGER.info("Deleting connector: {} in namespace {}",
                 ctx.connector().getMetadata().getName(),
@@ -81,6 +77,8 @@ public class ConnectorSteps {
                 .withName(ctx.secret().getMetadata().getName())
                 .delete();
         }
+
+        ctx.clear();
     }
 
     @Given("^a Connector with:$")
@@ -274,6 +272,43 @@ public class ConnectorSteps {
                 entry.forEach((k, v) -> Resources.setLabel(res, k, ctx.resolvePlaceholders(v)));
                 return res;
             });
+    }
+
+    @Then("the connector's assignedOperator exists with:")
+    public void connector_assignedOperator_exists_with(Map<String, String> expected) {
+        untilConnector(c -> {
+            Operator op = c.getStatus().getConnectorStatus().getAssignedOperator();
+            return expected.get("operator.id").equals(op.getId())
+                && expected.get("operator.type").equals(op.getType())
+                && expected.get("operator.version").equals(op.getVersion());
+        });
+    }
+
+    @Then("the connector's availableOperator exists with:")
+    public void connector_availableOperator_exists_with(Map<String, String> expected) {
+        var res = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .get();
+
+        Operator op = res.getStatus().getConnectorStatus().getAvailableOperator();
+        assertThat(op).isNotNull();
+        assertThat(op.getId()).isEqualTo(expected.get("operator.id"));
+        assertThat(op.getType()).isEqualTo(expected.get("operator.type"));
+        assertThat(op.getVersion()).isEqualTo(expected.get("operator.version"));
+    }
+
+    @Then("the connector's availableOperator does not exist")
+    public void connector_availableOperator_not_exists() {
+        var res = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .get();
+        Operator op = res.getStatus().getConnectorStatus().getAvailableOperator();
+        assertThat(op).isNotNull();
+        assertThat(op.getId()).isEqualTo(null);
+        assertThat(op.getType()).isEqualTo(null);
+        assertThat(op.getVersion()).isEqualTo(null);
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {

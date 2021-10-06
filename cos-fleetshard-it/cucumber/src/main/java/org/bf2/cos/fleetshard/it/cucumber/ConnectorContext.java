@@ -10,7 +10,6 @@ import javax.inject.Inject;
 import org.apache.commons.text.StringSubstitutor;
 import org.assertj.core.util.Strings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.cucumber.datatable.DataTable;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -18,17 +17,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 @ApplicationScoped
 public class ConnectorContext {
     @Inject
-    @ConfigProperty(name = "cos.cluster.id")
-    String clusterId;
-    @Inject
-    @ConfigProperty(name = "cos.operator.id")
-    String operatorId;
-    @Inject
-    @ConfigProperty(name = "cos.operator.version")
-    String operatorVersion;
-    @Inject
-    @ConfigProperty(name = "test.namespace")
-    String namespace;
+    private CosFeatureContext cosCtx;
 
     private volatile ManagedConnector connector;
     private volatile Secret secret;
@@ -55,27 +44,27 @@ public class ConnectorContext {
     }
 
     public String clusterId() {
-        return clusterId;
+        return cosCtx.getClusterId();
     }
 
     public String operatorId() {
-        return operatorId;
+        return cosCtx.getOperatorId();
     }
 
     public String operatorVersion() {
-        return operatorVersion;
+        return cosCtx.getOperatorVersion();
     }
 
     public String namespace() {
-        return namespace;
+        return cosCtx.getNamespace();
     }
 
     public String resolvePlaceholders(String in) {
         StringSubstitutor sub = new StringSubstitutor(Map.of(
-            "namespace", namespace,
-            "cos.cluster.id", clusterId,
-            "cos.operator.id", operatorId,
-            "cos.operator.version", operatorVersion,
+            "namespace", namespace(),
+            "cos.cluster.id", clusterId(),
+            "cos.operator.id", operatorId(),
+            "cos.operator.version", operatorVersion(),
             "cos.deployment.id", connector().getSpec().getDeploymentId(),
             "cos.deployment.resource-version", connector().getSpec().getDeployment().getDeploymentResourceVersion(),
             "cos.connector.id", connector().getSpec().getConnectorId(),
