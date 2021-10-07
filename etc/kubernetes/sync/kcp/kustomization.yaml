@@ -1,0 +1,11 @@
+generatorOptions:
+  disableNameSuffixHash: true
+  
+configMapGenerator:
+  - name: cos-fleetshard-sync-config
+    files:
+      - application.properties=app-config/application.properties
+secretGenerator:
+  - name: cos-fleetshard-sync-config
+    files:
+      - application.properties=app-secret/application.properties
