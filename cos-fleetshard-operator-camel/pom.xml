@@ -281,7 +281,6 @@
                                 <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
 
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
-                                <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
                                 <quarkus.kubernetes-config.config-maps>${quarkus.kubernetes.app-config-map}</quarkus.kubernetes-config.config-maps>
                                 <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
                                 <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>

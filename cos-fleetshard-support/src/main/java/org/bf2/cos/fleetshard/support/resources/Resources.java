@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
 
@@ -32,6 +33,8 @@ public final class Resources {
     public static final String CONNECTOR_SECRET_SUFFIX = "-config";
     public static final String CONNECTOR_SECRET_DEPLOYMENT_SUFFIX = "-deploy";
 
+    public static final String LABEL_KCP_TARGET_CLUSTER_ID = "kcp.dev/cluster";
+
     private Resources() {
     }
 
@@ -57,6 +60,15 @@ public final class Resources {
         KubernetesResourceUtil.getOrCreateLabels(metadata).put(name, value);
     }
 
+    public static String getLabel(HasMetadata metadata, String name) {
+        Map<String, String> labels = metadata.getMetadata().getLabels();
+        if (labels != null) {
+            return labels.get(name);
+        }
+
+        return null;
+    }
+
     public static boolean hasAnnotation(HasMetadata metadata, String name, String value) {
         Map<String, String> elements = metadata.getMetadata().getAnnotations();
         return elements != null && Objects.equals(value, elements.get(name));
@@ -64,6 +76,22 @@ public final class Resources {
 
     public static void setAnnotation(HasMetadata metadata, String name, String value) {
         KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+    }
+
+    public static String getAnnotation(HasMetadata metadata, String name) {
+        Map<String, String> annotations = metadata.getMetadata().getAnnotations();
+        if (annotations != null) {
+            return annotations.get(name);
+        }
+
+        return null;
+    }
+
+    public static void setKcpCluster(ManagedConnector connector, HasMetadata resource) {
+        String cluster = Resources.getLabel(connector, Resources.LABEL_KCP_TARGET_CLUSTER_ID);
+        if (cluster != null) {
+            Resources.setLabel(resource, LABEL_KCP_TARGET_CLUSTER_ID, cluster);
+        }
     }
 
     public static ResourceDefinitionContext asResourceDefinitionContext(String apiVersion, String kind) {

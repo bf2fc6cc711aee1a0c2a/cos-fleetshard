@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.sync.connector;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -15,6 +16,7 @@ import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,9 @@ public class ConnectorDeploymentProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
 
     private final FleetShardClient fleetShard;
+
+    @ConfigProperty(name = "kcp.cluster.id")
+    Optional<String> kcpClusterId;
 
     public ConnectorDeploymentProvisioner(FleetShardClient connectorClient) {
         this.fleetShard = connectorClient;
@@ -112,6 +117,15 @@ public class ConnectorDeploymentProvisioner {
                 connector,
                 Resources.LABEL_OPERATOR_TYPE,
                 operatorSelector.getType());
+        }
+
+        if (kcpClusterId != null) {
+            kcpClusterId.ifPresent(clusterId -> {
+                Resources.setLabel(
+                    connector,
+                    Resources.LABEL_KCP_TARGET_CLUSTER_ID,
+                    clusterId);
+            });
         }
 
         connector.getMetadata().setOwnerReferences(List.of(

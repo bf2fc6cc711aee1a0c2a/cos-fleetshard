@@ -1,0 +1,58 @@
+= kcp
+
+- set-up
++
+From etc/kcp/
++
+[source,shell]
+----
+./start-kcp.sh
+./start-cluster-controller.sh
+./start-kind.sh
+./start-kamel-k.sh
+----
+
+- set-up data plane
++
+From the project root
++
+[source,shell]
+----
+export KUBECONFIG="${PWD}/etc/kcp/.kcp/data/admin.kubeconfig"
+export KUBERNETES_NAMESPACE="cos"
+
+./etc/scripts/deploy_fleetshard_crds.sh
+
+kubectl apply -k etc/kubernetes/operator-camel/kcp -n ${KUBERNETES_NAMESPACE}
+kubectl apply -k etc/kubernetes/sync/kcp -n ${KUBERNETES_NAMESPACE}
+
+SUFFIX=$(uuidgen | tr -d '-')
+create-cluster-secret $(create-cluster "$USER-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config ${KUBERNETES_NAMESPACE}
+----
+
+- fleetshard
++
+From the project root
++
+[source,shell]
+----
+export KUBECONFIG="${PWD}/etc/kcp/.kcp/data/admin.kubeconfig"
+export KUBERNETES_NAMESPACE="cos"
+export COS_OPERATOR_ID="cos-fleetshard-operator-came"
+export COS_OPERATOR_VERSION="1.5.0"
+export COS_OPERATOR_CAMEL_KCP_CLUSTER="connectors"
+
+./mvnw -Plocal -pl :cos-fleetshard-operator-camel -Ddebug=false
+----
+
+- sync
++
+From the project root
++
+[source,shell]
+----
+export KUBECONFIG="${PWD}/etc/kcp/.kcp/data/admin.kubeconfig"
+export KUBERNETES_NAMESPACE="cos"
+
+./mvnw -Plocal -pl :cos-fleetshard-sync -Ddebug=false
+----

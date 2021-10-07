@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
@@ -26,7 +27,8 @@ public final class CamelConstants {
     public static final String LABELS_TO_TRANSFER = JacksonUtil.asArrayString(
         LABEL_DEPLOYMENT_ID,
         LABEL_CONNECTOR_ID,
-        LABEL_CONNECTOR_TYPE_ID);
+        LABEL_CONNECTOR_TYPE_ID,
+        Resources.LABEL_KCP_TARGET_CLUSTER_ID);
 
     private CamelConstants() {
     }

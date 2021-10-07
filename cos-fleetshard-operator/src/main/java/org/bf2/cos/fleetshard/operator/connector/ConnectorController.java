@@ -67,6 +67,7 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMEN
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_OWNER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_TYPE;
+import static org.bf2.cos.fleetshard.support.resources.Resources.setKcpCluster;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
@@ -411,6 +412,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
             labels.put(LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
             labels.put(LABEL_DEPLOYMENT_RESOURCE_VERSION, rv);
+
+            setKcpCluster(connector, resource);
 
             resource.getMetadata().setOwnerReferences(List.of(
                 new OwnerReferenceBuilder()

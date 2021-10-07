@@ -1,0 +1,7 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: cos-fleetshard-operator-camel-config
+    files:
+      - application.properties=app-config/application.properties
