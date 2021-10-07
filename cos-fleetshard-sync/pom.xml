@@ -22,6 +22,10 @@
         <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
         <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
 
+        <!-- kubernetes -->
+        <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
+        <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
+
         <!-- container image -->
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
@@ -57,6 +61,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-kubernetes-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-config</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -234,12 +242,6 @@
                     <name>local</name>
                 </property>
             </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>io.quarkus</groupId>
-                    <artifactId>quarkus-kubernetes-config</artifactId>
-                </dependency>
-            </dependencies>
             <build>
                 <defaultGoal>quarkus:dev</defaultGoal>
                 <plugins>
