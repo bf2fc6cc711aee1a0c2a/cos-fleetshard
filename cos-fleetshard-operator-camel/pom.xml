@@ -26,6 +26,10 @@
         <quarkus.operator-sdk.crd.validate>false</quarkus.operator-sdk.crd.validate>
         <quarkus.operator-sdk.crd.apply>false</quarkus.operator-sdk.crd.apply>
 
+        <!-- kubernetes -->
+        <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
+        <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
+
         <!-- container image -->
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
@@ -69,6 +73,10 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-kubernetes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-config</artifactId>
         </dependency>
 
         <!-- test -->
@@ -227,12 +235,6 @@
                     <name>local</name>
                 </property>
             </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>io.quarkus</groupId>
-                    <artifactId>quarkus-kubernetes-config</artifactId>
-                </dependency>
-            </dependencies>
             <build>
                 <defaultGoal>quarkus:dev</defaultGoal>
                 <plugins>
