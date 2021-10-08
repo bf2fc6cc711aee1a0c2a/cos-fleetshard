@@ -39,8 +39,6 @@ public final class Secrets {
                 crc32.update(v, 0, v.length);
             });
 
-        crc32.getValue();
-
         return Long.toHexString(crc32.getValue());
     }
 
@@ -71,7 +69,9 @@ public final class Secrets {
             return null;
         }
 
-        return Serialization.unmarshal(new String(Base64.getDecoder().decode(val)), type);
+        return Serialization.unmarshal(
+            new String(Base64.getDecoder().decode(val), StandardCharsets.UTF_8),
+            type);
     }
 
     public static Secret set(Secret secret, String key, String val) {
