@@ -93,8 +93,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @PostConstruct
     protected void setUp() {
         this.tags = List.of(
-            Tag.of("cos.fleetshard.operator.type", managedConnectorOperator.getSpec().getType()),
-            Tag.of("cos.fleetshard.operator.version", managedConnectorOperator.getSpec().getVersion()));
+            Tag.of("cos.operator.id", managedConnectorOperator.getMetadata().getName()),
+            Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()),
+            Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
     }
 
     @Override
@@ -233,12 +234,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         Counter.builder(id + ".count")
             .tags(tags)
+            .tag("cos.connector.id", connector.getSpec().getConnectorId())
+            .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
             .register(registry)
             .increment();
 
         try {
             return Timer.builder(id + ".time")
                 .tags(tags)
+                .tag("cos.connector.id", connector.getSpec().getConnectorId())
+                .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
                 .publishPercentiles(0.3, 0.5, 0.95)
                 .publishPercentileHistogram()
                 .register(registry)
