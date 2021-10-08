@@ -76,7 +76,10 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
         try {
             if (events.isEmpty() && !poison) {
-                this.condition.await(time, unit);
+                boolean elapsed = this.condition.await(time, unit);
+                if (elapsed) {
+                    logger.debug("TaskQueue: await elapsed");
+                }
             }
 
             Collection<R> answer;

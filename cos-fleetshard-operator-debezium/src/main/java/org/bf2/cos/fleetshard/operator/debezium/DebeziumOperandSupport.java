@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Map;
@@ -118,7 +119,7 @@ public class DebeziumOperandSupport {
 
                     props.put(
                         property.getKey(),
-                        new String(Base64.getDecoder().decode(value.asText())));
+                        new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8));
                 }
             }
         }
@@ -175,6 +176,8 @@ public class DebeziumOperandSupport {
                         break;
                     case KafkaConnectorStatus.STATE_PAUSED:
                         statusSpec.setPhase(ManagedConnector.STATE_STOPPED);
+                        break;
+                    default:
                         break;
                 }
             });

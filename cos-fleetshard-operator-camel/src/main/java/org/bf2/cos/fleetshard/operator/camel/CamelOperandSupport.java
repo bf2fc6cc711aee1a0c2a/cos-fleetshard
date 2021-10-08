@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -54,7 +55,7 @@ public final class CamelOperandSupport {
                         "Unsupported field kind " + kind + " (key=" + pkey + ")");
                 }
 
-                props.put(pkey, new String(Base64.getDecoder().decode(value.asText())));
+                props.put(pkey, new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8));
             } else {
                 props.put(pkey, pval.asText());
             }
@@ -80,7 +81,7 @@ public final class CamelOperandSupport {
                         "Unsupported field kind " + kind + " (key=" + pkey + ")");
                 }
 
-                props.put(pkey, new String(Base64.getDecoder().decode(value.asText())));
+                props.put(pkey, new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8));
             } else {
                 props.put(pkey, pval.asText());
             }
@@ -131,7 +132,7 @@ public final class CamelOperandSupport {
                 kafkaSpec.getClientId());
             props.put(
                 format("camel.kamelet.%s.password", kafkaKameletId),
-                new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret())));
+                new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
             props.put(
                 format("camel.kamelet.%s.bootstrapServers", kafkaKameletId),
                 kafkaSpec.getBootstrapServers());

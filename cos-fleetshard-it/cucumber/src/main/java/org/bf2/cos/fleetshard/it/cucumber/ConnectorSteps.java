@@ -228,7 +228,7 @@ public class ConnectorSteps {
 
     @When("the connector path {string} is set to json:")
     public void connector_pointer(String path, String payload) {
-        var result = kubernetesClient.resources(ManagedConnector.class)
+        kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(ctx.connector().getMetadata().getName())
             .edit(res -> {
@@ -241,7 +241,7 @@ public class ConnectorSteps {
 
     @When("the connector path {string} is set to {string}")
     public void connector_pointer_set_to_string(String path, String value) {
-        var result = kubernetesClient.resources(ManagedConnector.class)
+        kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(ctx.connector().getMetadata().getName())
             .edit(res -> {
@@ -253,7 +253,7 @@ public class ConnectorSteps {
 
     @When("the connector path {string} is set to {int}")
     public void connector_pointer_set_to_int(String path, int value) {
-        var result = kubernetesClient.resources(ManagedConnector.class)
+        kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(ctx.connector().getMetadata().getName())
             .edit(res -> {
@@ -265,7 +265,7 @@ public class ConnectorSteps {
 
     @When("the connector secret has labels:")
     public void connector_secret_has_labels(Map<String, String> entry) {
-        var result = kubernetesClient.resources(Secret.class)
+        kubernetesClient.resources(Secret.class)
             .inNamespace(ctx.secret().getMetadata().getNamespace())
             .withName(ctx.secret().getMetadata().getName())
             .edit(res -> {
