@@ -58,6 +58,7 @@
         <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
         <spotbugs-maven-plugin.version>4.4.1</spotbugs-maven-plugin.version>
+        <maven-pmd-plugin-version>3.14.0</maven-pmd-plugin-version>
     </properties>
 
     <modules>
@@ -429,6 +430,31 @@
                     <version>${spotbugs-maven-plugin.version}</version>
                     <configuration>
                         <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.bf2</groupId>
+                            <artifactId>cos-build-tools</artifactId>
+                            <version>${project.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-pmd-plugin</artifactId>
+                    <version>${maven-pmd-plugin-version}</version>
+                    <configuration>
+                        <rulesets>
+                            <ruleset>pmd-rules.xml</ruleset>
+                        </rulesets>
+                        <analysisCache>false</analysisCache>
+                        <printFailingErrors>true</printFailingErrors>
+                        <failOnViolation>true</failOnViolation>
+                        <linkXRef>false</linkXRef>
+                        <excludeRoots>
+                            <excludeRoot>${project.basedir}/src/generated</excludeRoot>
+                            <excludeRoot>${project.build.directory}/generated-sources</excludeRoot>
+                        </excludeRoots>
                     </configuration>
                     <dependencies>
                         <dependency>

@@ -30,7 +30,7 @@ public class FleetManagerClientHelper {
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage());
+                throw new FleetManagerClientException(e.getMessage(), e);
             } else {
                 throw new FleetManagerClientException(e);
             }
@@ -55,7 +55,7 @@ public class FleetManagerClientHelper {
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage());
+                throw new FleetManagerClientException(e.getMessage(), e);
             } else {
                 throw new FleetManagerClientException(e);
             }

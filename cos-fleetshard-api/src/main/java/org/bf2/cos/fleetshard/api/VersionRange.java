@@ -30,7 +30,7 @@ public class VersionRange {
 
         this.leftIndicator = matcher.group(1).charAt(0);
         this.leftVersion = new Version(matcher.group(2));
-        this.rightVersion = (matcher.group(3) == null || "0".equals(matcher.group(3))) ? null : new Version(matcher.group(3));
+        this.rightVersion = matcher.group(3) == null || "0".equals(matcher.group(3)) ? null : new Version(matcher.group(3));
         this.rightIndicator = matcher.group(4).charAt(0);
     }
 
