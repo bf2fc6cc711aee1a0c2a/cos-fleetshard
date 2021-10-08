@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.it.cucumber;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
@@ -96,20 +95,5 @@ public class ManagedConnectorOperatorSteps {
 
     private void until(Callable<Boolean> conditionEvaluator) {
         awaiter.until(conditionEvaluator);
-    }
-
-    private void untilManagedConnectorOperator(Predicate<ManagedConnectorOperator> predicate) {
-        awaiter.until(() -> {
-            var res = kubernetesClient.resources(ManagedConnectorOperator.class)
-                .inNamespace(ctx.managedConnectorOperator().getMetadata().getNamespace())
-                .withName(ctx.managedConnectorOperator().getMetadata().getName())
-                .get();
-
-            if (res == null) {
-                return false;
-            }
-
-            return predicate.test(res);
-        });
     }
 }

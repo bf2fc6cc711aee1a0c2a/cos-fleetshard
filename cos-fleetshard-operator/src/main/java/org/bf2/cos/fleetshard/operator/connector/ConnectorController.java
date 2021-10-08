@@ -501,7 +501,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
-    private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
+    @SuppressWarnings("PMD.UnusedFormalParameter")
+    private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector conenctor) {
         return UpdateControl.noUpdate();
     }
 
@@ -522,19 +523,22 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
-    private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
+    @SuppressWarnings("PMD.UnusedFormalParameter")
+    private UpdateControl<ManagedConnector> handleStopped(ManagedConnector ignored) {
         return UpdateControl.noUpdate();
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "PMD.UnusedFormalParameter" })
     private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
         return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
         return UpdateControl.noUpdate();
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
         return UpdateControl.noUpdate();
     }

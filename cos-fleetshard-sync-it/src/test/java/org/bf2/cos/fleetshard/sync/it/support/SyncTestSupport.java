@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +42,7 @@ public class SyncTestSupport {
 
     @BeforeEach
     public void setUp() {
-        this.fleetShardClient = new FleetShardClient(kubernetesClient, clusterId, namespace, namespace, Duration.ZERO);
+        this.fleetShardClient = new FleetShardClient(kubernetesClient, clusterId, namespace, namespace);
     }
 
     public static JsonNode deploymentList(ConnectorDeployment... deployments) {

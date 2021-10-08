@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.client;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -35,20 +34,17 @@ public class FleetShardClient {
     private final String clusterId;
     private final String connectorsNamespace;
     private final String operatorsNamespace;
-    private final Duration informerSyncInterval;
 
     public FleetShardClient(
         KubernetesClient kubernetesClient,
         @ConfigProperty(name = "cos.cluster.id") String clusterId,
         @ConfigProperty(name = "cos.connectors.namespace") String connectorsNamespace,
-        @ConfigProperty(name = "cos.operators.namespace") String operatorsNamespace,
-        @ConfigProperty(name = "cos.connectors.informer.sync.interval", defaultValue = "1h") Duration informerSyncInterval) {
+        @ConfigProperty(name = "cos.operators.namespace") String operatorsNamespace) {
 
         this.kubernetesClient = kubernetesClient;
         this.clusterId = clusterId;
         this.connectorsNamespace = connectorsNamespace;
         this.operatorsNamespace = operatorsNamespace;
-        this.informerSyncInterval = informerSyncInterval;
     }
 
     public String getConnectorsNamespace() {
