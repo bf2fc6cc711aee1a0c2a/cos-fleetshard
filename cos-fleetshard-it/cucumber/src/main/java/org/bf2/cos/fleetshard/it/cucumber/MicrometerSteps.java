@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.it.cucumber;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -12,6 +13,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -103,6 +105,23 @@ public class MicrometerSteps extends StepsSupport {
             .satisfies(counter -> assertThat(counter.count()).isEqualTo(counters.get(name)));
     }
 
+    @And("the meters has counter with name {string} and tag {string}")
+    public void counter_existsWithTag(String name, String tagName) {
+        assertThat(registry.find(name).tagKeys(tagName).counter())
+            .isNotNull();
+    }
+
+    @And("the meters has counter with name {string} and tags:")
+    public void counter_existsWithTags(String name, Map<String, String> entry) {
+        var tags = entry.entrySet().stream()
+            .map(e -> Tag.of(e.getKey(), ctx.resolvePlaceholders(e.getValue())))
+            .collect(Collectors.toList());
+
+        assertThat(registry.find(name).tags(tags).counter())
+            .withFailMessage(() -> String.format("Counter with id '%s' and tags '%s' not found", name, entry))
+            .isNotNull();
+    }
+
     // ***********************************
     //
     // timers
@@ -115,9 +134,27 @@ public class MicrometerSteps extends StepsSupport {
             .isNotNull();
     }
 
+    @And("the meters has timer with name {string} and tag {string}")
+    public void timer_existsWithTag(String name, String tagName) {
+        assertThat(registry.find(name).tagKeys(tagName).timer())
+            .isNotNull();
+    }
+
+    @And("the meters has timer with name {string} and tags:")
+    public void timer_existsWithTags(String name, Map<String, String> entry) {
+
+        var tags = entry.entrySet().stream()
+            .map(e -> Tag.of(e.getKey(), ctx.resolvePlaceholders(e.getValue())))
+            .collect(Collectors.toList());
+
+        assertThat(registry.find(name).tags(tags).timer())
+            .withFailMessage(() -> String.format("Timer with id '%s' and tags '%s' not found", name, entry))
+            .isNotNull();
+    }
+
     @And("the meters does not have any timer with name {string}")
     public void timer_doesNotExists(String name) {
-        assertThat(registry.find(name).counter())
+        assertThat(registry.find(name).timer())
             .isNull();
     }
 
