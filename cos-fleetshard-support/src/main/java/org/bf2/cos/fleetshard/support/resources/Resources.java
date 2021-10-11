@@ -88,13 +88,24 @@ public final class Resources {
         return builder.build();
     }
 
-    public static <T extends HasMetadata> boolean delete(KubernetesClient client, Class<T> type, String namespace,
+    public static <T extends HasMetadata> boolean delete(
+        KubernetesClient client,
+        Class<T> type,
+        String namespace,
         String name) {
+
         Boolean result = client.resources(type)
             .inNamespace(namespace)
             .withName(name)
             .delete();
 
-        return result == null || result;
+        if (result == null || result) {
+            return true;
+        }
+
+        return client.resources(type)
+            .inNamespace(namespace)
+            .withName(name)
+            .get() == null;
     }
 }
