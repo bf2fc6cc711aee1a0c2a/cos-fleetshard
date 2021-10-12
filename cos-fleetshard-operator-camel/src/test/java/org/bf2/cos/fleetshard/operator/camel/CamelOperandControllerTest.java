@@ -7,6 +7,7 @@ import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadataBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
@@ -123,19 +124,6 @@ public final class CamelOperandControllerTest {
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false")
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
 
-                /*
-                 * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_MANAGED_CONNECTOR_ID")).asText())
-                 * .isEqualTo(DEFAULT_MANAGED_CONNECTOR_ID);
-                 * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_DEPLOYMENT_ID")).asText())
-                 * .isEqualTo(DEFAULT_DEPLOYMENT_ID);
-                 * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_DEPLOYMENT_REVISION")).asLong())
-                 * .isEqualTo(DEFAULT_DEPLOYMENT_REVISION);
-                 * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_CONNECTOR_ID")).asText())
-                 * .isEqualTo(DEFAULT_CONNECTOR_ID);
-                 * assertThat(annotation(node, format(TRAIT_CAMEL_APACHE_ORG_ENV, "COS_CONNECTOR_REVISION")).asLong())
-                 * .isEqualTo(DEFAULT_CONNECTOR_REVISION);
-                 */
-
                 assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
                     assertThat(binding.getSpec().getSource().getRef())
                         .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
@@ -196,6 +184,78 @@ public final class CamelOperandControllerTest {
                     .contains("camel.kamelet.insert-field-action.insert-field-action-1.value=a-value")
                     .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=b-field")
                     .contains("camel.kamelet.insert-field-action.insert-field-action-2.value=b-value");
+            });
+    }
+
+    @Test
+    void reifyWithAnnotationFromDefinition() {
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
+        CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
+        CamelOperandController controller = new CamelOperandController(kubernetesClient, configuration);
+
+        final String barB64 = Secrets.toBase64("bar");
+        final String kcsB64 = Secrets.toBase64("kcs");
+        final String image = "quay.io/foo/bar";
+
+        final ObjectNode spec = Serialization.jsonMapper().createObjectNode();
+        spec.with("kafka").put("topic", "kafka-foo");
+        spec.with("connector").with("bar").put("kind", "base64").put("value", barB64);
+        spec.with("connector").put("foo", "connector-foo");
+
+        var resources = controller.doReify(
+            new ManagedConnectorBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .build())
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
+                    .withDeployment(new DeploymentSpecBuilder()
+                        .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
+                        .withSecret("secret")
+                        .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
+                        .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
+                        .withDesiredState(DESIRED_STATE_READY)
+                        .build())
+                    .build())
+                .build(),
+            new CamelShardMetadataBuilder()
+                .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
+                .withConnectorRevision("" + DEFAULT_CONNECTOR_REVISION)
+                .withConnectorType(CONNECTOR_TYPE_SOURCE)
+                .addToKamelets("connector", "aws-kinesis-source")
+                .addToKamelets("kafka", "managed-kafka-sink")
+                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, image)
+                .build(),
+            spec,
+            new KafkaSpecBuilder()
+                .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+                .withClientId(DEFAULT_KAFKA_CLIENT_ID)
+                .withClientSecret(kcsB64)
+                .build());
+
+        assertThat(resources)
+            .anySatisfy(resource -> {
+                assertThat(resource.getApiVersion()).isEqualTo(KameletBinding.RESOURCE_API_VERSION);
+                assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
+
+                assertThat(resource.getMetadata().getAnnotations())
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, image)
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false")
+                    .containsEntry(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
+
+                assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+                    assertThat(binding.getSpec().getSource().getRef())
+                        .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                        .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                        .hasFieldOrPropertyWithValue("name", "aws-kinesis-source");
+                    assertThat(binding.getSpec().getSink().getRef())
+                        .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                        .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                        .hasFieldOrPropertyWithValue("name", "managed-kafka-sink");
+                });
             });
     }
 
