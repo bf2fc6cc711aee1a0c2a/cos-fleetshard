@@ -15,6 +15,7 @@ import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 

@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
@@ -27,6 +28,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
@@ -97,11 +99,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         final KameletBinding binding = new KameletBindingBuilder()
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName())
-                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage())
-                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false")
-                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false")
-                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false")
-                .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER)
                 .build())
             .withSpec(new KameletBindingSpecBuilder()
                 .withIntegration(createIntegrationSpec(
@@ -122,6 +119,17 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         .collect(Collectors.toList()))
                 .build())
             .build();
+
+        Map<String, String> annotations = KubernetesResourceUtil.getOrCreateAnnotations(binding);
+        if (shardMetadata.getAnnotations() != null) {
+            annotations.putAll(shardMetadata.getAnnotations());
+        }
+
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage());
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
 
         return List.of(secret, binding);
     }

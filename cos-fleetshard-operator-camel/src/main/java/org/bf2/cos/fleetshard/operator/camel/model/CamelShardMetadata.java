@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.operator.camel;
+package org.bf2.cos.fleetshard.operator.camel.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +33,9 @@ public class CamelShardMetadata {
     @JsonProperty("kamelets")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> kamelets = new HashMap<>();
+    @JsonProperty("annotations")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> annotations = new HashMap<>();
 
     public String getConnectorImage() {
         return connectorImage;
@@ -72,6 +75,14 @@ public class CamelShardMetadata {
 
     public void setKamelets(Map<String, String> kamelets) {
         this.kamelets = kamelets;
+    }
+
+    public Map<String, String> getAnnotations() {
+        return annotations;
+    }
+
+    public void setAnnotations(Map<String, String> annotations) {
+        this.annotations = annotations;
     }
 
     @Override
