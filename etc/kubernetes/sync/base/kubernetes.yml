@@ -153,7 +153,9 @@ spec:
             fieldRef:
               fieldPath: "metadata.namespace"
         - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config-map,/mnt/app-secret"
+          value: "/mnt/app-config"
+        - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
+          value: "/mnt/app-secret"
         image: "quay.io/rhoas/cos-fleetshard-sync:latest"
         imagePullPolicy: "Always"
         livenessProbe:
@@ -182,22 +184,24 @@ spec:
           successThreshold: 1
           timeoutSeconds: 10
         volumeMounts:
+        - mountPath: "/mnt/app-config"
+          name: "app-config"
+          readOnly: false
         - mountPath: "/mnt/app-secret"
           name: "app-secret"
-          readOnly: false
-        - mountPath: "/mnt/app-config-map"
-          name: "app-config-map"
           readOnly: false
       serviceAccount: "cos-fleetshard-sync"
       volumes:
       - name: "app-secret"
         secret:
+          defaultMode: 384
           optional: false
           secretName: "cos-fleetshard-sync-config"
       - configMap:
+          defaultMode: 384
           name: "cos-fleetshard-sync-config"
           optional: false
-        name: "app-config-map"
+        name: "app-config"
 ---
 apiVersion: "monitoring.coreos.com/v1"
 kind: "ServiceMonitor"

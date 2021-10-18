@@ -42,6 +42,7 @@
         <json-path.version>2.6.0</json-path.version>
         <commons-text.version>1.9</commons-text.version>
         <slf4j.version>1.7.32</slf4j.version>
+        <smallrye.version>2.5.1</smallrye.version>
 
         <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -196,6 +197,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>${commons-text.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.smallrye.config</groupId>
+                <artifactId>smallrye-config-source-file-system</artifactId>
+                <version>${smallrye.version}</version>
             </dependency>
 
             <!-- deps :: cos -->

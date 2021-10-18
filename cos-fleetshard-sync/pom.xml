@@ -17,8 +17,24 @@
     <properties>
         <!-- CRD -->
         <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
+
+        <!-- secret -->
+        <quarkus.kubernetes.secret-volumes.app-secret.secret-name>cos-fleetshard-sync-config</quarkus.kubernetes.secret-volumes.app-secret.secret-name>
+        <quarkus.kubernetes.mounts.app-secret.path>/mnt/app-secret</quarkus.kubernetes.mounts.app-secret.path>
+
+        <!-- config map -->
+        <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>cos-fleetshard-sync-config</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
+        <quarkus.kubernetes.mounts.app-config.path>/mnt/app-config</quarkus.kubernetes.mounts.app-config.path>
+
+        <!-- smallrye -->
+        <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>/mnt/app-config</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>
+        <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>/mnt/app-secret</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>
+
+        <!--
         <quarkus.kubernetes.app-secret>cos-fleetshard-sync-config</quarkus.kubernetes.app-secret>
         <quarkus.kubernetes.app-config-map>cos-fleetshard-sync-config</quarkus.kubernetes.app-config-map>
+        -->
+
         <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
         <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
 
@@ -107,6 +123,11 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.smallrye.config</groupId>
+            <artifactId>smallrye-config-source-file-system</artifactId>
         </dependency>
 
         <!-- test -->
