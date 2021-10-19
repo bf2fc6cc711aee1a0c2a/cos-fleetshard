@@ -38,4 +38,3 @@ Feature: Connector Multiple Operators
       | operator.id      | cos-fleetshard-operator-2-it |
       | operator.type    | connector-operator-it        |
       | operator.version | 1.6.0                        |
-

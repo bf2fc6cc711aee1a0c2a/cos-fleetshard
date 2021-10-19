@@ -23,6 +23,7 @@ import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.ConnectorControllerException;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
+import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
@@ -79,11 +80,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardClient fleetShard;
-    @Inject
+
     OperandController operandController;
+    @Inject
+    OperandController wrappedOperandController;
+
     @Inject
     MeterRegistry registry;
 
+    @ConfigProperty(name = "cos.connectors.metrics.connectoroperand.enabled", defaultValue = "false")
+    boolean connectorOperandMetricsEnabled;
     @ConfigProperty(name = "cos.connectors.watch.resources", defaultValue = "true")
     boolean watchResource;
     @ConfigProperty(name = "cos.metrics.base.name", defaultValue = "cos.fleetshard")
@@ -97,6 +103,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             Tag.of("cos.operator.id", managedConnectorOperator.getMetadata().getName()),
             Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()),
             Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
+
+        if (connectorOperandMetricsEnabled) {
+            operandController = new OperandControllerMetricsWrapper(wrappedOperandController,
+                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators.operand", tags));
+        } else {
+            operandController = wrappedOperandController;
+        }
     }
 
     @Override
@@ -143,7 +156,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         final UpdateControl<ManagedConnector> answer;
 
         if (!selected && !assigned) {
-            LOGGER.debug("Skip connector: {}/{} as not owning it (assigned={}, operating={})",
+            // not selected, nor assigned: this connector is managed by another operator
+            LOGGER.debug("Connector {}/{} is not managed by this operator (assigned={}, operating={}).",
                 connector.getMetadata().getNamespace(),
                 connector.getMetadata().getName(),
                 connector.getSpec().getOperatorSelector().getId(),
@@ -151,29 +165,62 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             answer = UpdateControl.noUpdate();
         } else if (!selected) {
-            //
-            // TODO: perform upgrade
-            //
-            answer = UpdateControl.noUpdate();
+            // not selected, but assigned: this connector needs to be handed to another operator
+            LOGGER.debug("Connector {}/{} not selected but assigned: this connector needs to be handed to {} operator.",
+                connector.getMetadata().getNamespace(),
+                connector.getMetadata().getName(),
+                connector.getSpec().getOperatorSelector().getId());
+
+            if (!ManagedConnectorStatus.PhaseType.Error.equals(connector.getStatus().getPhase())
+                && !ManagedConnectorStatus.PhaseType.Transferring.equals(connector.getStatus().getPhase())
+                && !ManagedConnectorStatus.PhaseType.Transferred.equals(connector.getStatus().getPhase())) {
+                // the connector needs to be transferred to another operator
+                LOGGER.debug("Connector {}/{} needs to be transferred to {} operator.",
+                    connector.getMetadata().getNamespace(),
+                    connector.getMetadata().getName(),
+                    connector.getSpec().getOperatorSelector().getId());
+
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Transferring);
+                answer = UpdateControl.updateStatusSubResource(connector);
+            } else {
+                // the connector is transferring to another operator, just reconcile and wait.
+                LOGGER.debug("Connector {}/{}, is transferring to {} operator, reconcile and wait.",
+                    connector.getMetadata().getNamespace(),
+                    connector.getMetadata().getName(),
+                    connector.getSpec().getOperatorSelector().getId());
+
+                answer = reconcile(connector);
+            }
         } else if (!assigned) {
+            // not assigned, but selected: this connector is being transferred to this operator.
+            LOGGER.debug("Connector {}/{} not assigned, but selected.",
+                connector.getMetadata().getNamespace(),
+                connector.getMetadata().getName());
+
             if (connector.getStatus().getConnectorStatus().getAssignedOperator().getId() == null) {
+                // this operator can start to manage this connector.
+                LOGGER.debug("Connector {}/{} has just being assigned to this operator ({}), starting to manage it.",
+                    connector.getMetadata().getNamespace(),
+                    connector.getMetadata().getName(),
+                    connector.getSpec().getOperatorSelector().getId());
                 answer = reconcile(connector);
             } else {
-                //
-                // This is not fully implemented yet but the rationale here is that when a connector get moved
-                // between fleets-shard operators, then:
-                //
-                // - the connector need to be stopped
-                // - the owner of the operator should release the connector
-                // - only at that point, the new fleet-shard can start reconciling the connector
-                //
-                LOGGER.debug("Skip connector: {} as still handled by operator: {}",
+                // transferring to this operator is still in progress, let's wait.
+                LOGGER.debug("Skip connector: waiting for connector {}/{} to be transferred from operator: {}.",
+                    connector.getMetadata().getNamespace(),
                     connector.getMetadata().getName(),
                     connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
 
                 answer = UpdateControl.noUpdate();
             }
         } else {
+            // connector is assigned to this operator, reconcile it.
+            LOGGER.debug("Connector: {}/{} is managed by this operator (assigned={}, operating={}).",
+                connector.getMetadata().getNamespace(),
+                connector.getMetadata().getName(),
+                connector.getSpec().getOperatorSelector().getId(),
+                connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
+
             answer = reconcile(connector);
         }
 
@@ -538,12 +585,29 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
-        return UpdateControl.noUpdate();
+        if (operandController.stop(connector)) {
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Transferred);
+            connector.getStatus().getConnectorStatus().setPhase(STATE_STOPPED);
+            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+            LOGGER.info("Connector {} transferred, move to phase: {}",
+                connector.getMetadata().getName(),
+                connector.getStatus().getPhase());
+
+            return UpdateControl.updateStatusSubResource(connector);
+        }
+
+        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
-        return UpdateControl.noUpdate();
+        LOGGER.info("Connector {} complete, it can now be handled by another operator.",
+            connector.getMetadata().getName());
+        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+        connector.getStatus().getConnectorStatus().setAssignedOperator(null);
+        connector.getStatus().getConnectorStatus().setAvailableOperator(null);
+        return UpdateControl.updateStatusSubResource(connector);
     }
 
     // **************************************************
