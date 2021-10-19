@@ -284,6 +284,17 @@ public class ConnectorSteps {
         });
     }
 
+    @And("the connector's assignedOperator does not exist")
+    public void connector_assignedOperator_not_exists() {
+        untilConnector(c -> {
+            Operator op = c.getStatus().getConnectorStatus().getAssignedOperator();
+            return op != null
+                && op.getId() == null
+                && op.getType() == null
+                && op.getVersion() == null;
+        });
+    }
+
     @Then("the connector's availableOperator exists with:")
     public void connector_availableOperator_exists_with(Map<String, String> expected) {
         var res = kubernetesClient.resources(ManagedConnector.class)
@@ -309,6 +320,13 @@ public class ConnectorSteps {
         assertThat(op.getId()).isEqualTo(null);
         assertThat(op.getType()).isEqualTo(null);
         assertThat(op.getVersion()).isEqualTo(null);
+    }
+
+    @Then("the connector operatorSelector id is {string}")
+    public void connector_operator_selector_id(String selectorId) {
+        untilConnector(c -> {
+            return selectorId.equals(c.getSpec().getOperatorSelector().getId());
+        });
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {

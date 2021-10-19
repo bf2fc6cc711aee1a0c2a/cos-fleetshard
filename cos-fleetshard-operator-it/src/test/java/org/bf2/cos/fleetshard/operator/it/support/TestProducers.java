@@ -63,12 +63,12 @@ public class TestProducers {
 
             @Override
             public boolean stop(ManagedConnector connector) {
-                return false;
+                return true;
             }
 
             @Override
             public boolean delete(ManagedConnector connector) {
-                return false;
+                return true;
             }
         };
     }
