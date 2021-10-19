@@ -4,6 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.operator.FleetShardOperator;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,21 +20,20 @@ public class TestFleetShardOperator extends FleetShardOperator {
 
     @Inject
     KubernetesClient client;
-
-    @ConfigProperty(name = "test.namespace")
-    String namespace;
+    @Inject
+    FleetShardOperatorConfig config;
 
     @ConfigProperty(name = "test.namespace.delete", defaultValue = "true")
     boolean namespaceDelete;
 
     @Override
     public void start() {
-        LOGGER.info("Creating namespace {}", namespace);
+        LOGGER.info("Creating namespace {}", config.connectors().namespace());
 
         client.namespaces().create(
             new NamespaceBuilder()
                 .withNewMetadata()
-                .withName(namespace)
+                .withName(config.connectors().namespace())
                 .endMetadata()
                 .build());
 
@@ -45,9 +45,11 @@ public class TestFleetShardOperator extends FleetShardOperator {
         super.stop();
 
         if (namespaceDelete) {
-            LOGGER.info("Deleting namespace {}", namespace);
+            LOGGER.info("Deleting namespace {}", config.connectors().namespace());
 
-            client.namespaces().withName(namespace).delete();
+            client.namespaces()
+                .withName(config.connectors().namespace())
+                .delete();
         }
     }
 }

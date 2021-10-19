@@ -360,7 +360,7 @@ public class ConnectorSteps {
 
         ctx.secret(
             kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.namespace())
+                .inNamespace(ctx.connectorsNamespace())
                 .createOrReplace(ctx.secret()));
     }
 
@@ -378,7 +378,7 @@ public class ConnectorSteps {
 
         ctx.connector(
             kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.namespace())
+                .inNamespace(ctx.connectorsNamespace())
                 .createOrReplace(ctx.connector()));
     }
 }

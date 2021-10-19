@@ -19,6 +19,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.ConnectorControllerException;
 import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
@@ -26,9 +27,8 @@ import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
-import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,21 +80,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardClient fleetShard;
-
-    OperandController operandController;
     @Inject
     OperandController wrappedOperandController;
 
     @Inject
     MeterRegistry registry;
+    @Inject
+    FleetShardOperatorConfig config;
 
-    @ConfigProperty(name = "cos.connectors.metrics.connectoroperand.enabled", defaultValue = "false")
-    boolean connectorOperandMetricsEnabled;
-    @ConfigProperty(name = "cos.connectors.watch.resources", defaultValue = "true")
-    boolean watchResource;
-    @ConfigProperty(name = "cos.metrics.base.name", defaultValue = "cos.fleetshard")
-    String baseMetricsPrefix;
-
+    private OperandController operandController;
     private List<Tag> tags;
 
     @PostConstruct
@@ -104,9 +98,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()),
             Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
 
-        if (connectorOperandMetricsEnabled) {
-            operandController = new OperandControllerMetricsWrapper(wrappedOperandController,
-                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators.operand", tags));
+        if (config.metrics().connectorOperand().enabled()) {
+            operandController = new OperandControllerMetricsWrapper(
+                wrappedOperandController,
+                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators.operand", tags));
         } else {
             operandController = wrappedOperandController;
         }
@@ -120,28 +115,26 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
-                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.secrets", tags)));
+                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
         eventSourceManager.registerEventSource(
             "_operators",
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
-                MetricsRecorder.of(registry, baseMetricsPrefix + ".controller.event.operators", tags)));
+                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators", tags)));
 
-        if (watchResource) {
-            for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
-                final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
+        for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
+            final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
 
-                eventSourceManager.registerEventSource(
-                    id,
-                    new OperandResourceWatcher(
-                        kubernetesClient,
-                        managedConnectorOperator,
-                        res,
-                        fleetShard.getConnectorsNamespace(),
-                        MetricsRecorder.of(registry, id, tags)));
-            }
+            eventSourceManager.registerEventSource(
+                id,
+                new OperandResourceWatcher(
+                    kubernetesClient,
+                    managedConnectorOperator,
+                    res,
+                    fleetShard.getConnectorsNamespace(),
+                    MetricsRecorder.of(registry, id, tags)));
         }
     }
 
@@ -243,7 +236,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         }
 
         return measure(
-            baseMetricsPrefix + ".controller.connectors.reconcile."
+            config.metrics().baseName()
+                + ".controller.connectors.reconcile."
                 + resource.getStatus().getPhase().name().toLowerCase(Locale.US),
             resource,
             connector -> {

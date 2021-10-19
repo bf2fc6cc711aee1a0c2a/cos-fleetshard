@@ -14,11 +14,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,23 +24,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 public class SyncTestSupport {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SyncTestSupport.class);
-
     @Inject
     protected KubernetesClient kubernetesClient;
-
-    @ConfigProperty(name = "cos.cluster.id")
-    protected String clusterId;
-
-    @ConfigProperty(name = "test.namespace")
-    protected String namespace;
-
+    @Inject
+    protected FleetShardSyncConfig config;
+    @Inject
     protected FleetShardClient fleetShardClient;
-
-    @BeforeEach
-    public void setUp() {
-        this.fleetShardClient = new FleetShardClient(kubernetesClient, clusterId, namespace, namespace);
-    }
 
     public static JsonNode deploymentList(ConnectorDeployment... deployments) {
         var items = new ConnectorDeploymentList();

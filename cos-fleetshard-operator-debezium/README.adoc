@@ -51,14 +51,6 @@ To change the default values, use the following system properties:
 |
 | the version of the operator
 
-| cos.connectors.resync.interval
-| off
-| the interval between forces reconcile loop
-
-| cos.connectors.watch.resources
-| true
-| if the operator has to watch for generated resources changes
-
 | cos.operators.namespace
 | ${kubernetes.namespace}
 | the namespace where operator related resources are created

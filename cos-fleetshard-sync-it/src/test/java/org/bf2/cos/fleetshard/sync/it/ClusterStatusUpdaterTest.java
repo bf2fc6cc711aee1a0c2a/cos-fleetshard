@@ -32,7 +32,7 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String statusUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + config.cluster().id() + "/status";
 
         untilAsserted(() -> {
             server.verify(putRequestedFor(urlEqualTo(statusUrl))
@@ -52,11 +52,11 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns,
-                "cos.cluster.status.sync.interval", "1s",
-                "cos.connectors.poll.interval", "disabled",
-                "cos.connectors.poll.resync.interval", "disabled",
-                "cos.connectors.status.resync.interval", "disabled",
-                "cos.connectors.status.sync.observe", "false");
+                "cos.cluster.status.sync-interval", "1s",
+                "cos.connectors.poll-interval", "disabled",
+                "cos.connectors.resync-interval", "disabled",
+                "cos.connectors.status.resync-interval", "disabled",
+                "cos.connectors.watch", "false");
         }
 
         @Override

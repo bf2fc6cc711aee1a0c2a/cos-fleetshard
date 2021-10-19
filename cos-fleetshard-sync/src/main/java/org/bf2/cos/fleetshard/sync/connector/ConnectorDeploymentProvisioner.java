@@ -2,9 +2,9 @@ package org.bf2.cos.fleetshard.sync.connector;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -15,8 +15,8 @@ import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,10 +33,10 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 public class ConnectorDeploymentProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
 
-    private final FleetShardClient fleetShard;
+    @Inject
+    FleetShardSyncConfig config;
 
-    @ConfigProperty(name = "kcp.cluster.id")
-    Optional<String> kcpClusterId;
+    private final FleetShardClient fleetShard;
 
     public ConnectorDeploymentProvisioner(FleetShardClient connectorClient) {
         this.fleetShard = connectorClient;
@@ -119,8 +119,8 @@ public class ConnectorDeploymentProvisioner {
                 operatorSelector.getType());
         }
 
-        if (kcpClusterId != null) {
-            kcpClusterId.ifPresent(clusterId -> {
+        if (config != null) {
+            config.connectors().kcp().clusterId().ifPresent(clusterId -> {
                 Resources.setLabel(
                     connector,
                     Resources.LABEL_KCP_TARGET_CLUSTER_ID,

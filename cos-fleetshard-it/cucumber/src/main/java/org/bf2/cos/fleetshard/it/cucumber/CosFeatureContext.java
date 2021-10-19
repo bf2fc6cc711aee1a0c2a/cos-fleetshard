@@ -5,11 +5,12 @@ import javax.inject.Inject;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+
 @ApplicationScoped
 public class CosFeatureContext {
-    @Inject
-    @ConfigProperty(name = "cos.cluster.id")
-    String clusterId;
+    final String clusterId = uid();
+
     @Inject
     @ConfigProperty(name = "cos.operator.id")
     String operatorId;
@@ -17,8 +18,11 @@ public class CosFeatureContext {
     @ConfigProperty(name = "cos.operator.version")
     String operatorVersion;
     @Inject
-    @ConfigProperty(name = "test.namespace")
-    String namespace;
+    @ConfigProperty(name = "cos.connectors.namespace")
+    String connectorsNamespace;
+    @Inject
+    @ConfigProperty(name = "cos.operators.namespace")
+    String operatorsNamespace;
 
     public String getClusterId() {
         return clusterId;
@@ -32,7 +36,11 @@ public class CosFeatureContext {
         return operatorVersion;
     }
 
-    public String getNamespace() {
-        return namespace;
+    public String getConnectorsNamespace() {
+        return connectorsNamespace;
+    }
+
+    public String getOperatorsNamespace() {
+        return operatorsNamespace;
     }
 }

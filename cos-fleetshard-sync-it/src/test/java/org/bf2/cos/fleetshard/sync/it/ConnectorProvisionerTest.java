@@ -169,10 +169,10 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns,
-                "cos.cluster.status.sync.interval", "disabled",
-                "cos.connectors.poll.interval", "disabled",
-                "cos.connectors.poll.resync.interval", "disabled",
-                "cos.connectors.status.resync.interval", "disabled");
+                "cos.cluster.status.sync-interval", "disabled",
+                "cos.connectors.poll-interval", "disabled",
+                "cos.connectors.resync-interval", "disabled",
+                "cos.connectors.status.resync-interval", "disabled");
         }
 
         @Override

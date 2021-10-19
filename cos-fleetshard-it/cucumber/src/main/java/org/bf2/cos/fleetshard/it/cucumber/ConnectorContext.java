@@ -55,24 +55,29 @@ public class ConnectorContext {
         return cosCtx.getOperatorVersion();
     }
 
-    public String namespace() {
-        return cosCtx.getNamespace();
+    public String connectorsNamespace() {
+        return cosCtx.getConnectorsNamespace();
+    }
+
+    public String operatorsNamespace() {
+        return cosCtx.getOperatorsNamespace();
     }
 
     public String resolvePlaceholders(String in) {
-        StringSubstitutor sub = new StringSubstitutor(Map.of(
-            "namespace", namespace(),
-            "cos.cluster.id", clusterId(),
-            "cos.operator.id", operatorId(),
-            "cos.operator.version", operatorVersion(),
-            "cos.deployment.id", connector().getSpec().getDeploymentId(),
-            "cos.deployment.resource-version", connector().getSpec().getDeployment().getDeploymentResourceVersion(),
-            "cos.connector.id", connector().getSpec().getConnectorId(),
-            "cos.connector.resource-version", connector().getSpec().getDeployment().getConnectorResourceVersion(),
-            "cos.managed.connector.name", connector().getMetadata().getName(),
-            "cos.managed.connector.secret.name", secret().getMetadata().getName()));
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("cos.operators.namespace", cosCtx.getOperatorsNamespace());
+        properties.put("cos.connectors.namespace", cosCtx.getConnectorsNamespace());
+        properties.put("cos.cluster.id", clusterId());
+        properties.put("cos.operator.id", operatorId());
+        properties.put("cos.operator.version", operatorVersion());
+        properties.put("cos.deployment.id", connector().getSpec().getDeploymentId());
+        properties.put("cos.deployment.resource-version", connector().getSpec().getDeployment().getDeploymentResourceVersion());
+        properties.put("cos.connector.id", connector().getSpec().getConnectorId());
+        properties.put("cos.connector.resource-version", connector().getSpec().getDeployment().getConnectorResourceVersion());
+        properties.put("cos.managed.connector.name", connector().getMetadata().getName());
+        properties.put("cos.managed.connector.secret.name", secret().getMetadata().getName());
 
-        return sub.replace(in);
+        return new StringSubstitutor(properties).replace(in);
     }
 
     public Map<String, String> resolvePlaceholders(DataTable in) {
