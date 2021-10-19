@@ -4,7 +4,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +20,8 @@ public class FleetShardOperator {
     KubernetesClient client;
     @Inject
     Operator operator;
-
-    @ConfigProperty(name = "cos.operators.namespace")
-    String operatorNamespace;
+    @Inject
+    FleetShardOperatorConfig config;
 
     public void start() {
         LOGGER.info("Starting operator (id: {}, type: {}, version: {})",
@@ -32,7 +30,7 @@ public class FleetShardOperator {
             managedConnectorOperator.getSpec().getVersion());
 
         client.resources(ManagedConnectorOperator.class)
-            .inNamespace(operatorNamespace)
+            .inNamespace(config.operators().namespace())
             .createOrReplace(managedConnectorOperator);
 
         operator.start();

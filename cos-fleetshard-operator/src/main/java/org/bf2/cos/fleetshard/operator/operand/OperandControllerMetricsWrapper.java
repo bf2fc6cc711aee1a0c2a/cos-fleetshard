@@ -3,7 +3,7 @@ package org.bf2.cos.fleetshard.operator.operand;
 import java.util.List;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;

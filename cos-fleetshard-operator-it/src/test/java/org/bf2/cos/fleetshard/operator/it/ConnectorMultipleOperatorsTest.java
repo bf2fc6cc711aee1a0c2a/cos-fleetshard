@@ -26,8 +26,7 @@ public class ConnectorMultipleOperatorsTest extends CucumberQuarkusTest {
             return Map.of(
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
-                "cos.operators.namespace", ns,
-                "cos.cluster.id", uid());
+                "cos.operators.namespace", ns);
         }
     }
 }

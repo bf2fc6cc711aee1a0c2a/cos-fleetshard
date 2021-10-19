@@ -1,13 +1,10 @@
 package org.bf2.cos.fleetshard.sync.client;
 
-import java.net.URI;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.api.ConnectorClustersAgentApi;
@@ -16,7 +13,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,29 +25,18 @@ import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
 public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
 
-    ConnectorClustersAgentApi controlPlane;
+    final FleetShardSyncConfig config;
+    final ConnectorClustersAgentApi controlPlane;
 
-    @ConfigProperty(name = "cos.cluster.id")
-    String clusterId;
+    public FleetManagerClient(FleetShardSyncConfig config) {
+        this.config = config;
 
-    @ConfigProperty(name = "control-plane-base-url")
-    URI controlPlaneUri;
-
-    @ConfigProperty(name = "cos.manager.connect.timeout", defaultValue = "5s")
-    Duration connectTimeout;
-
-    @ConfigProperty(name = "cos.manager.read.timeout", defaultValue = "10s")
-    Duration readTimeout;
-
-    @PostConstruct
-    void setUpClientClient() {
-        RestClientBuilder builder = RestClientBuilder.newBuilder();
-        builder.baseUri(controlPlaneUri);
-        builder.register(OidcClientRequestFilter.class);
-        builder.connectTimeout(connectTimeout.toMillis(), TimeUnit.MILLISECONDS);
-        builder.readTimeout(readTimeout.toMillis(), TimeUnit.MILLISECONDS);
-
-        this.controlPlane = builder.build(ConnectorClustersAgentApi.class);
+        this.controlPlane = RestClientBuilder.newBuilder()
+            .baseUri(config.manager().uri())
+            .register(OidcClientRequestFilter.class)
+            .connectTimeout(config.manager().connectTimeout().toMillis(), TimeUnit.MILLISECONDS)
+            .readTimeout(config.manager().readTimeout().toMillis(), TimeUnit.MILLISECONDS)
+            .build(ConnectorClustersAgentApi.class);
     }
 
     public List<ConnectorDeployment> getDeployments(long gv) {
@@ -61,7 +47,7 @@ public class FleetManagerClient {
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 ConnectorDeploymentList list = controlPlane.getClusterAssignedConnectorDeployments(
-                    clusterId,
+                    config.cluster().id(),
                     Integer.toString(i),
                     null,
                     gv,
@@ -79,7 +65,7 @@ public class FleetManagerClient {
             }
 
             if (answer.isEmpty()) {
-                LOGGER.info("No connectors for agent {}", clusterId);
+                LOGGER.info("No connectors for agent {}", config.cluster().id());
             }
 
             answer.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
@@ -105,7 +91,7 @@ public class FleetManagerClient {
     public void updateClusterStatus() {
         FleetManagerClientHelper.run(() -> {
             controlPlane.updateKafkaConnectorClusterStatus(
-                this.clusterId,
+                config.cluster().id(),
                 new ConnectorClusterStatus()
                     .phase("ready"));
         });

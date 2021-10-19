@@ -2,7 +2,7 @@ package org.bf2.cos.fleetshard.operator.connector;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.InstrumentedWatcherEventSource;
-import org.bf2.cos.fleetshard.operator.support.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

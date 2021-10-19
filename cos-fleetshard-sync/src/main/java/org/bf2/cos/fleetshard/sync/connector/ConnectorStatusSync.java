@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -9,8 +8,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +28,8 @@ public class ConnectorStatusSync {
     ConnectorStatusQueue queue;
     @Inject
     ManagedExecutor executor;
-
-    @ConfigProperty(name = "cos.connectors.status.queue.timeout", defaultValue = "15s")
-    Duration timeout;
-    @ConfigProperty(name = "cos.connectors.status.sync.observe", defaultValue = "true")
-    boolean observeConnectors;
+    @Inject
+    FleetShardSyncConfig config;
 
     private volatile Future<?> future;
 
@@ -41,7 +37,7 @@ public class ConnectorStatusSync {
         LOGGER.info("Starting connector status sync");
         future = executor.submit(this::run);
 
-        if (observeConnectors) {
+        if (config.connectors().watch()) {
             LOGGER.info("Starting connector status observer");
             connectorsObserver = connectorClient.watchAllConnectors(
                 connector -> queue.submit(connector.getMetadata().getName()));
@@ -64,7 +60,8 @@ public class ConnectorStatusSync {
     private void run() {
         try {
             while (!executor.isShutdown()) {
-                final Collection<ManagedConnector> connectors = queue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                final long timeout = config.connectors().status().queueTimeout().toMillis();
+                final Collection<ManagedConnector> connectors = queue.poll(timeout, TimeUnit.MILLISECONDS);
                 LOGGER.debug("connectors to update: {}", connectors.size());
 
                 for (ManagedConnector connector : connectors) {

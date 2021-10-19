@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -20,7 +21,7 @@ import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -30,29 +31,18 @@ import io.fabric8.kubernetes.client.Watch;
 
 @ApplicationScoped
 public class FleetShardClient {
-    private final KubernetesClient kubernetesClient;
-    private final String clusterId;
-    private final String connectorsNamespace;
-    private final String operatorsNamespace;
 
-    public FleetShardClient(
-        KubernetesClient kubernetesClient,
-        @ConfigProperty(name = "cos.cluster.id") String clusterId,
-        @ConfigProperty(name = "cos.connectors.namespace") String connectorsNamespace,
-        @ConfigProperty(name = "cos.operators.namespace") String operatorsNamespace) {
-
-        this.kubernetesClient = kubernetesClient;
-        this.clusterId = clusterId;
-        this.connectorsNamespace = connectorsNamespace;
-        this.operatorsNamespace = operatorsNamespace;
-    }
+    @Inject
+    KubernetesClient kubernetesClient;
+    @Inject
+    FleetShardSyncConfig config;
 
     public String getConnectorsNamespace() {
-        return connectorsNamespace;
+        return config.connectors().namespace();
     }
 
     public String getClusterId() {
-        return clusterId;
+        return config.cluster().id();
     }
 
     public KubernetesClient getKubernetesClient() {
@@ -61,7 +51,7 @@ public class FleetShardClient {
 
     public Boolean delete(ManagedConnector managedConnector) {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
+            .inNamespace(getConnectorsNamespace())
             .withName(managedConnector.getMetadata().getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
             .delete();
@@ -69,8 +59,8 @@ public class FleetShardClient {
 
     public long getMaxDeploymentResourceRevision() {
         final List<ManagedConnector> managedConnectors = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .inNamespace(getConnectorsNamespace())
+            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
             .list()
             .getItems();
 
@@ -87,7 +77,7 @@ public class FleetShardClient {
     public Optional<Secret> getSecretByDeploymentId(String deploymentId) {
         return Optional.ofNullable(
             kubernetesClient.secrets()
-                .inNamespace(connectorsNamespace)
+                .inNamespace(getConnectorsNamespace())
                 .withName(Secrets.generateConnectorSecretId(deploymentId))
                 .get());
     }
@@ -95,7 +85,7 @@ public class FleetShardClient {
     public Optional<ManagedConnector> getConnectorByName(String name) {
         return Optional.ofNullable(
             kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(this.connectorsNamespace)
+                .inNamespace(getConnectorsNamespace())
                 .withName(name)
                 .get());
     }
@@ -107,15 +97,15 @@ public class FleetShardClient {
     public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
         return Optional.ofNullable(
             kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(connectorsNamespace)
+                .inNamespace(getConnectorsNamespace())
                 .withName(Connectors.generateConnectorId(deployment.getId()))
                 .get());
     }
 
     public List<ManagedConnector> getAllConnectors() {
         List<ManagedConnector> answer = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
-            .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+            .inNamespace(getConnectorsNamespace())
+            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
             .list()
             .getItems();
 
@@ -127,8 +117,8 @@ public class FleetShardClient {
             @Override
             protected Watch doWatch() {
                 return kubernetesClient.resources(ManagedConnector.class)
-                    .inNamespace(connectorsNamespace)
-                    .withLabel(Resources.LABEL_CLUSTER_ID, clusterId)
+                    .inNamespace(getConnectorsNamespace())
+                    .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
                     .watch(this);
             }
 
@@ -148,7 +138,7 @@ public class FleetShardClient {
             @Override
             protected Watch doWatch() {
                 return kubernetesClient.resources(ManagedConnectorOperator.class)
-                    .inNamespace(operatorsNamespace)
+                    .inNamespace(getConnectorsNamespace())
                     .watch(this);
             }
 
@@ -166,26 +156,26 @@ public class FleetShardClient {
 
     public ManagedConnector createConnector(ManagedConnector connector) {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
+            .inNamespace(getConnectorsNamespace())
             .createOrReplace(connector);
     }
 
     public ManagedConnector editConnector(String name, Consumer<ManagedConnector> editor) {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
+            .inNamespace(getConnectorsNamespace())
             .withName(name)
             .accept(editor);
     }
 
     public Secret createSecret(Secret secret) {
         return this.kubernetesClient.secrets()
-            .inNamespace(connectorsNamespace)
+            .inNamespace(getConnectorsNamespace())
             .createOrReplace(secret);
     }
 
     public List<Operator> lookupOperators() {
         return kubernetesClient.resources(ManagedConnectorOperator.class)
-            .inNamespace(this.operatorsNamespace)
+            .inNamespace(this.getConnectorsNamespace())
             .list()
             .getItems()
             .stream()
@@ -199,8 +189,8 @@ public class FleetShardClient {
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
         return Optional.ofNullable(
             kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(connectorsNamespace)
-                .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + clusterId)
+                .inNamespace(getConnectorsNamespace())
+                .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + getClusterId())
                 .get());
     }
 
@@ -208,16 +198,16 @@ public class FleetShardClient {
         return getConnectorCluster().orElseGet(() -> {
             var cluster = new ManagedConnectorClusterBuilder()
                 .withMetadata(new ObjectMetaBuilder()
-                    .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + clusterId)
-                    .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
+                    .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + getClusterId())
+                    .addToLabels(Resources.LABEL_CLUSTER_ID, getClusterId())
                     .build())
                 .withSpec(new ManagedConnectorClusterSpecBuilder()
-                    .withClusterId(clusterId)
+                    .withClusterId(getClusterId())
                     .build())
                 .build();
 
             return kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(connectorsNamespace)
+                .inNamespace(getConnectorsNamespace())
                 .withName(cluster.getMetadata().getName())
                 .createOrReplace(cluster);
         });

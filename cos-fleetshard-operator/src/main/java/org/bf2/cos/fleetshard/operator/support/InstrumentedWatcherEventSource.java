@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.support;
 
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 public abstract class InstrumentedWatcherEventSource<T> extends WatcherEventSource<T> {

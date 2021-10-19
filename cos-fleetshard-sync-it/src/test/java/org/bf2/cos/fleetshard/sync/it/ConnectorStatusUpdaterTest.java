@@ -42,14 +42,14 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
+        final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + config.cluster().id();
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
         final Operator operator = new Operator(uid(), "operator-type", "1.2.3");
 
         final ManagedConnector connector = Connectors.newConnector(
-            clusterId,
+            config.cluster().id(),
             "connector-1",
             DEPLOYMENT_ID,
             Map.of());
@@ -58,7 +58,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         kubernetesClient
             .resources(ManagedConnector.class)
-            .inNamespace(namespace)
+            .inNamespace(config.connectors().namespace())
             .create(connector);
 
         connector.getStatus().setConnectorStatus(new ConnectorStatusSpecBuilder()
@@ -69,7 +69,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         kubernetesClient
             .resources(ManagedConnector.class)
-            .inNamespace(namespace)
+            .inNamespace(config.connectors().namespace())
             .withName(connector.getMetadata().getName())
             .replaceStatus(connector);
 
@@ -93,10 +93,10 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 "test.namespace", ns,
                 "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns,
-                "cos.cluster.status.sync.interval", "disabled",
-                "cos.connectors.poll.interval", "disabled",
-                "cos.connectors.poll.resync.interval", "disabled",
-                "cos.connectors.status.resync.interval", "1s");
+                "cos.cluster.status.sync-interval", "disabled",
+                "cos.connectors.poll-interval", "disabled",
+                "cos.connectors.resync-interval", "disabled",
+                "cos.connectors.status.resync-interval", "1s");
         }
 
         @Override

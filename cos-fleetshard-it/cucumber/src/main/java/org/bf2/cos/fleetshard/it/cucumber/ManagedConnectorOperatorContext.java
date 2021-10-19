@@ -25,6 +25,6 @@ public class ManagedConnectorOperatorContext {
     }
 
     public String namespace() {
-        return cosCtx.getNamespace();
+        return cosCtx.getConnectorsNamespace();
     }
 }

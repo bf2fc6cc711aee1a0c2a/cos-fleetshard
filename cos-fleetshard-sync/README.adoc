@@ -75,37 +75,33 @@ To change the default values, use the following system properties:
 | ${kubernetes.namespace}
 | the namespace where connectors should be created
 
-| cos.connectors.poll.interval
+| cos.connectors.poll-interval
 | 15s
 | the interval between pool for new deployments
 
-| cos.connectors.poll.resync.interval
+| cos.connectors.resync-interval
 | 60s
 | the interval between full deployments re-sync
 
-| cos.connectors.provisioner.queue.timeout
+| cos.connectors.provisioner.queue-timeout
 | 15s
 | the wait timeout for the internal event queue
 
-| cos.connectors.status.sync.observe
+| cos.connectors.watch
 | true
 | enable/disable observing resources to trigger status update
 
-| cos.connectors.status.resync.interval
+| cos.connectors.status.resync-interval
 | 60s
 | the interval between full connector status re-sync
 
-| cos.connectors.status.queue.timeout
+| cos.connectors.status.queue-timeout
 | 15s
 | the wait timeout for the internal event queue
 
-| cos.cluster.status.sync.interval
+| cos.cluster.status.sync-interval
 | 60s
 | the interval between cluster status sync
-
-| cos.operators.observe
-| true
-| enable/disable observing resources to trigger status update
 
 | mas-sso-base-url
 |
