@@ -43,6 +43,7 @@
         <commons-text.version>1.9</commons-text.version>
         <slf4j.version>1.7.32</slf4j.version>
         <smallrye.version>2.5.1</smallrye.version>
+        <pmd.asm.version>9.2</pmd.asm.version>
 
         <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -467,6 +468,11 @@
                             <groupId>org.bf2</groupId>
                             <artifactId>cos-build-tools</artifactId>
                             <version>${project.version}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.ow2.asm</groupId>
+                            <artifactId>asm</artifactId>
+                            <version>${pmd.asm.version}</version>
                         </dependency>
                     </dependencies>
                 </plugin>
