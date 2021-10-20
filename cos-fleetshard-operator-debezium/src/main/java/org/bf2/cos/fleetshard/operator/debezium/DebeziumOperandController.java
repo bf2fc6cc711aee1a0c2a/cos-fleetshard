@@ -24,11 +24,11 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.strimzi.api.kafka.model.ClientTlsBuilder;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnectBuilder;
 import io.strimzi.api.kafka.model.KafkaConnectSpecBuilder;
-import io.strimzi.api.kafka.model.KafkaConnectTlsBuilder;
 import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
 import io.strimzi.api.kafka.model.KafkaConnectorSpecBuilder;
@@ -110,7 +110,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             // added to trigger a re-deployment if the secret changes
             .addToConfig("connector.secret.name", secret.getMetadata().getName())
             .addToConfig("connector.secret.checksum", Secrets.computeChecksum(secret))
-            .withTls(new KafkaConnectTlsBuilder()
+            .withTls(new ClientTlsBuilder()
                 .withTrustedCertificates(Collections.emptyList())
                 .build())
             .withExternalConfiguration(new ExternalConfigurationBuilder()
