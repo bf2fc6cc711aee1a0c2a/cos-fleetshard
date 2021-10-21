@@ -32,11 +32,9 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
-
+    private final FleetShardClient fleetShard;
     @Inject
     FleetShardSyncConfig config;
-
-    private final FleetShardClient fleetShard;
 
     public ConnectorDeploymentProvisioner(FleetShardClient connectorClient) {
         this.fleetShard = connectorClient;
@@ -120,11 +118,11 @@ public class ConnectorDeploymentProvisioner {
         }
 
         if (config != null) {
-            config.connectors().kcp().clusterId().ifPresent(clusterId -> {
-                Resources.setLabel(
-                    connector,
-                    Resources.LABEL_KCP_TARGET_CLUSTER_ID,
-                    clusterId);
+            config.connectors().labels().forEach((k, v) -> {
+                Resources.setLabel(connector, k, v);
+            });
+            config.connectors().annotations().forEach((k, v) -> {
+                Resources.setAnnotation(connector, k, v);
             });
         }
 

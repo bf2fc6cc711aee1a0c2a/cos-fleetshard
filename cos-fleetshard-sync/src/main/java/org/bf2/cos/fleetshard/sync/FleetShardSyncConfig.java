@@ -2,7 +2,7 @@ package org.bf2.cos.fleetshard.sync;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
@@ -123,7 +123,19 @@ public interface FleetShardSyncConfig {
 
         Provisioner provisioner();
 
-        Kcp kcp();
+        /**
+         * An optional map of additional labels to be added to the generated {@link ManagedConnector}.
+         *
+         * @return the additional labels
+         */
+        Map<String, String> labels();
+
+        /**
+         * An optional map of additional annotations to be added to the generated {@link ManagedConnector}.
+         *
+         * @return the additional annotations
+         */
+        Map<String, String> annotations();
 
         interface Status {
             /**
@@ -155,17 +167,6 @@ public interface FleetShardSyncConfig {
             @WithDefault("15s")
             @WithConverter(DurationConverter.class)
             Duration queueTimeout();
-        }
-
-        interface Kcp {
-            /**
-             * Configure the kcp cluster where the deployment have to be synced.
-             * </p>
-             * Note: this is an experimental option.
-             *
-             * @return the cluster.
-             */
-            Optional<String> clusterId();
         }
     }
 
