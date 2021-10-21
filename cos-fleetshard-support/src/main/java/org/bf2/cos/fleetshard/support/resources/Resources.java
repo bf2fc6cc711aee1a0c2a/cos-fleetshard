@@ -4,7 +4,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
 
@@ -57,7 +56,9 @@ public final class Resources {
     }
 
     public static void setLabel(HasMetadata metadata, String name, String value) {
-        KubernetesResourceUtil.getOrCreateLabels(metadata).put(name, value);
+        if (value != null) {
+            KubernetesResourceUtil.getOrCreateLabels(metadata).put(name, value);
+        }
     }
 
     public static String getLabel(HasMetadata metadata, String name) {
@@ -69,13 +70,19 @@ public final class Resources {
         return null;
     }
 
+    public static void copyLabel(String name, HasMetadata source, HasMetadata target) {
+        setLabel(target, name, getLabel(source, name));
+    }
+
     public static boolean hasAnnotation(HasMetadata metadata, String name, String value) {
         Map<String, String> elements = metadata.getMetadata().getAnnotations();
         return elements != null && Objects.equals(value, elements.get(name));
     }
 
     public static void setAnnotation(HasMetadata metadata, String name, String value) {
-        KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+        if (value != null) {
+            KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+        }
     }
 
     public static String getAnnotation(HasMetadata metadata, String name) {
@@ -87,11 +94,8 @@ public final class Resources {
         return null;
     }
 
-    public static void setKcpCluster(ManagedConnector connector, HasMetadata resource) {
-        String cluster = Resources.getLabel(connector, Resources.LABEL_KCP_TARGET_CLUSTER_ID);
-        if (cluster != null) {
-            Resources.setLabel(resource, LABEL_KCP_TARGET_CLUSTER_ID, cluster);
-        }
+    public static void copyAnnotation(String name, HasMetadata source, HasMetadata target) {
+        setAnnotation(target, name, getAnnotation(source, name));
     }
 
     public static ResourceDefinitionContext asResourceDefinitionContext(String apiVersion, String kind) {

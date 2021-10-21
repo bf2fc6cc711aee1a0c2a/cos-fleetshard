@@ -37,6 +37,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -135,6 +136,16 @@ public class ConnectorSteps {
 
         ctx.connector(connector);
         ctx.secret(secret);
+    }
+
+    @And("set connector annotation {string} to {string}")
+    public void set_connector_annotation(String key, String val) {
+        KubernetesResourceUtil.getOrCreateAnnotations(ctx.connector()).put(key, val);
+    }
+
+    @And("set connector label {string} to {string}")
+    public void set_connector_label(String key, String val) {
+        KubernetesResourceUtil.getOrCreateLabels(ctx.connector()).put(key, val);
     }
 
     @And("with connector spec:")
