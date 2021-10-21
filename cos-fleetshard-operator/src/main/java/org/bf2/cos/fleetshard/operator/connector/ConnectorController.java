@@ -68,7 +68,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMEN
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_OWNER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_TYPE;
-import static org.bf2.cos.fleetshard.support.resources.Resources.setKcpCluster;
+import static org.bf2.cos.fleetshard.support.resources.Resources.copyAnnotation;
+import static org.bf2.cos.fleetshard.support.resources.Resources.copyLabel;
 
 @Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
@@ -454,7 +455,16 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
             labels.put(LABEL_DEPLOYMENT_RESOURCE_VERSION, rv);
 
-            setKcpCluster(connector, resource);
+            config.connectors().targetLabels().ifPresent(items -> {
+                for (String item : items) {
+                    copyLabel(item, connector, resource);
+                }
+            });
+            config.connectors().targetAnnotations().ifPresent(items -> {
+                for (String item : items) {
+                    copyAnnotation(item, connector, resource);
+                }
+            });
 
             resource.getMetadata().setOwnerReferences(List.of(
                 new OwnerReferenceBuilder()
@@ -465,15 +475,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            resource = kubernetesClient.resource(resource)
+            var result = kubernetesClient.resource(resource)
                 .inNamespace(connector.getMetadata().getNamespace())
                 .createOrReplace();
 
             LOGGER.debug("Resource {}:{}:{}@{} updated/created",
-                resource.getApiVersion(),
-                resource.getKind(),
-                resource.getMetadata().getName(),
-                resource.getMetadata().getNamespace());
+                result.getApiVersion(),
+                result.getKind(),
+                result.getMetadata().getName(),
+                result.getMetadata().getNamespace());
         }
 
         connector.getStatus().setDeployment(connector.getSpec().getDeployment());

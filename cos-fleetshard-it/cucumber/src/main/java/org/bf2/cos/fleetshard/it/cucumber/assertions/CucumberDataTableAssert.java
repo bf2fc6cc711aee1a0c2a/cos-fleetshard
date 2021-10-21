@@ -27,9 +27,14 @@ public class CucumberDataTableAssert extends AbstractAssert<CucumberDataTableAss
             v = resolver.apply(v);
 
             if (Strings.isNullOrEmpty(v) || "${cos.ignore}".equals(v)) {
-                assertThat(elements).containsKey(k);
+                assertThat(elements)
+                    .describedAs("The key %s exists with any value", k)
+                    .containsKey(k);
             } else {
-                assertThat(elements.get(k)).isNotNull().hasToString(v);
+                assertThat(elements.get(k))
+                    .describedAs("The key %s exists with value %s", k, v)
+                    .isNotNull()
+                    .hasToString(v);
             }
         });
 

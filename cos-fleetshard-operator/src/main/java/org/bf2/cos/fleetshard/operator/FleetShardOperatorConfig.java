@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.operator;
 
+import java.util.Optional;
+import java.util.Set;
+
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 
@@ -72,6 +75,20 @@ public interface FleetShardOperatorConfig {
          * @return the namespace.
          */
         String namespace();
+
+        /**
+         * An optional set of labels to be transferred to the generated resources
+         *
+         * @return the list fo labels
+         */
+        Optional<Set<String>> targetLabels();
+
+        /**
+         * An optional set of annotations to be transferred to the generated resources
+         *
+         * @return the list fo annotations
+         */
+        Optional<Set<String>> targetAnnotations();
     }
 
     interface Metrics {
