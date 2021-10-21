@@ -1,4 +1,5 @@
 #!/bin/bash
 
-rm -f "${PWD}/.kcp"
+rm -rf "${PWD}/.kcp"
+
 exec "${KCP_ROOT}"/bin/kcp start

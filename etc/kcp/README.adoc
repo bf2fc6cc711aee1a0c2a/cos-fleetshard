@@ -40,7 +40,6 @@ export KUBECONFIG="${PWD}/etc/kcp/.kcp/data/admin.kubeconfig"
 export KUBERNETES_NAMESPACE="cos"
 export COS_OPERATOR_ID="cos-fleetshard-operator-came"
 export COS_OPERATOR_VERSION="1.5.0"
-export COS_OPERATOR_CAMEL_KCP_CLUSTER="connectors"
 
 ./mvnw -Plocal -pl :cos-fleetshard-operator-camel -Ddebug=false
 ----
