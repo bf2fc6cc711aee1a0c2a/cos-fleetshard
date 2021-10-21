@@ -1,7 +1,7 @@
 {
     "kind": "Connector",
     "metadata": {
-        "name": "lb-logger-2",
+        "name": "cos_logger",
         "kafka_id": ""
     },
     "deployment_location": {
@@ -20,7 +20,7 @@
             "multiLine": true
         },
         "kafka": {
-            "topic": "lb-log"
+            "topic": "cos_log"
         }
     }
 }
