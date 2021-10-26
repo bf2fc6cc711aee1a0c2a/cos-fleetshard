@@ -1,0 +1,28 @@
+= OSD Add-on
+
+== Repositories
+
+Main Configuration::
+  https://gitlab.cee.redhat.com/service/managed-tenants/-/tree/main/addons/connectors-operator
+
+Operator Bundles::
+  https://gitlab.cee.redhat.com/service/managed-tenants-bundles/-/tree/main/addons/connectors-operator
+
+Test Harness::
+  https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard-test-harness
+
+== Release Procedure
+
+. Release the Operator images:
+* https://quay.io/repository/rhoas/cos-fleetshard
+* https://quay.io/repository/rhoas/cos-fleetshard-operator-camel
+* https://quay.io/repository/rhoas/cos-fleetshard-operator-debezium
+
+. Release the Operator Bundles
+.. In the `managed-tenants-bundles` repository, for each Operator, create a new set of bundle files in a directory that matches the released version.
+.. Send a merge request and approve it with a `/lgtm` comment.
+. Release the Add-on
+.. Look for a merge request called `connectors-operator-<version>` in the `managed-tenants` repository. This merge request is automatically created after the changes to the `managed-tenants-bundles` repository are merged.
+.. Approve the merge request with a `/lgtm` comment.
+
+
