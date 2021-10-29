@@ -1,9 +1,12 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -57,6 +60,7 @@ public final class Secrets {
         return extract(secret, key, ObjectNode.class);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T extract(Secret secret, String key, Class<T> type) {
         if (secret == null) {
             return null;
@@ -69,9 +73,23 @@ public final class Secrets {
             return null;
         }
 
-        return Serialization.unmarshal(
-            new String(Base64.getDecoder().decode(val), StandardCharsets.UTF_8),
-            type);
+        String decoded = new String(Base64.getDecoder().decode(val), StandardCharsets.UTF_8);
+
+        if (type.isAssignableFrom(String.class)) {
+            return (T) decoded;
+        }
+
+        if (type.isAssignableFrom(Properties.class)) {
+            Properties result = new Properties();
+            try {
+                result.load(new StringReader(decoded));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return (T) result;
+        }
+
+        return Serialization.unmarshal(decoded, type);
     }
 
     public static Secret set(Secret secret, String key, String val) {
