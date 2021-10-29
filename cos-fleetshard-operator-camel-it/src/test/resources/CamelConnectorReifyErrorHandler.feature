@@ -14,6 +14,7 @@ Feature: Camel Connector Reify
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
       | operator.version            | [1.0.0,2.0.0)                   |
+    And with sample camel connector
     And with error handling configuration:
       | type  | log |
 
@@ -34,20 +35,21 @@ Feature: Camel Connector Reify
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
       | operator.version            | [1.0.0,2.0.0)                   |
+    And with sample camel connector
     And with error handling configuration:
       | type  | dead_letter_queue |
       | topic | dlq               |
 
     When deploy
     Then the connector exists
-    And the connector secret exists
-    And the connector is in phase "Monitor"
+     And the connector secret exists
+     And the connector is in phase "Monitor"
 
     Then the klb exists
-    And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "kamelet://managed-kafka-sink/error"
+     And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "kamelet://managed-kafka-sink/error"
 
     Then the klb secret exists
-    And the klb secret contains:
+     And the klb secret contains:
       | camel.kamelet.log-sink.multiLine                        | true                       |
       | camel.kamelet.log-sink.showAll                          | true                       |
       | camel.kamelet.managed-kafka-source.bootstrapServers     | kafka.acme.com:443         |
@@ -67,13 +69,14 @@ Feature: Camel Connector Reify
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
       | operator.version            | [1.0.0,2.0.0)                   |
+    And with sample camel connector
     And with error handling configuration:
       | type  | stop |
 
     When deploy
     Then the connector exists
-    And the connector secret exists
-    And the connector is in phase "Monitor"
+     And the connector secret exists
+     And the connector is in phase "Monitor"
 
     Then the klb exists
-    And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "controlbus:route?routeId=current&action=stop"
+     And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "controlbus:route?routeId=current&action=stop"

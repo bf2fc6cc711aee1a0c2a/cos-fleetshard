@@ -17,7 +17,6 @@ import io.sundr.builder.annotations.Buildable;
 /**
  * Class representing the camel specific shard metadata object.
  */
-
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CamelShardMetadata {
@@ -31,11 +30,19 @@ public class CamelShardMetadata {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Operator> operators = new ArrayList<>();
     @JsonProperty("kamelets")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Map<String, String> kamelets = new HashMap<>();
+    private Kamelets kamelets = new Kamelets();
     @JsonProperty("annotations")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> annotations = new HashMap<>();
+    @JsonProperty("consumes")
+    private String consumes;
+    @JsonProperty("produces")
+    private String produces;
+
+    @JsonProperty("consumes_class")
+    private String consumesClass;
+    @JsonProperty("produces_class")
+    private String producesClass;
 
     public String getConnectorImage() {
         return connectorImage;
@@ -69,11 +76,11 @@ public class CamelShardMetadata {
         this.operators = operators;
     }
 
-    public Map<String, String> getKamelets() {
+    public Kamelets getKamelets() {
         return kamelets;
     }
 
-    public void setKamelets(Map<String, String> kamelets) {
+    public void setKamelets(Kamelets kamelets) {
         this.kamelets = kamelets;
     }
 
@@ -83,6 +90,38 @@ public class CamelShardMetadata {
 
     public void setAnnotations(Map<String, String> annotations) {
         this.annotations = annotations;
+    }
+
+    public String getConsumes() {
+        return consumes;
+    }
+
+    public void setConsumes(String consumes) {
+        this.consumes = consumes;
+    }
+
+    public String getProduces() {
+        return produces;
+    }
+
+    public void setProduces(String produces) {
+        this.produces = produces;
+    }
+
+    public String getConsumesClass() {
+        return consumesClass;
+    }
+
+    public void setConsumesClass(String consumesClass) {
+        this.consumesClass = consumesClass;
+    }
+
+    public String getProducesClass() {
+        return producesClass;
+    }
+
+    public void setProducesClass(String producesClass) {
+        this.producesClass = producesClass;
     }
 
     @Override
@@ -98,7 +137,11 @@ public class CamelShardMetadata {
             && Objects.equals(getConnectorType(), metadata.getConnectorType())
             && Objects.equals(getConnectorRevision(), metadata.getConnectorRevision())
             && Objects.equals(getOperators(), metadata.getOperators())
-            && Objects.equals(getKamelets(), metadata.getKamelets());
+            && Objects.equals(getKamelets(), metadata.getKamelets())
+            && Objects.equals(getConsumes(), metadata.getConsumes())
+            && Objects.equals(getConsumesClass(), metadata.getConsumesClass())
+            && Objects.equals(getProduces(), metadata.getProduces())
+            && Objects.equals(getProducesClass(), metadata.getProducesClass());
     }
 
     @Override
@@ -108,7 +151,11 @@ public class CamelShardMetadata {
             getConnectorType(),
             getConnectorRevision(),
             getOperators(),
-            getKamelets());
+            getKamelets(),
+            getConsumes(),
+            getConsumesClass(),
+            getProduces(),
+            getProducesClass());
     }
 
     @Override
@@ -117,6 +164,10 @@ public class CamelShardMetadata {
             "connectorImage='" + connectorImage + '\'' +
             ", connectorType='" + connectorType + '\'' +
             ", connectorRevision='" + connectorRevision + '\'' +
+            ", consumes='" + consumes + '\'' +
+            ", consumesClass='" + consumesClass + '\'' +
+            ", produces='" + produces + '\'' +
+            ", producesClass='" + producesClass + '\'' +
             ", operators=" + operators +
             ", kamelets=" + kamelets +
             '}';

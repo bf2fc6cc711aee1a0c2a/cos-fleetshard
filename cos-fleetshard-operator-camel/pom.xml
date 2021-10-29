@@ -86,6 +86,11 @@
             <artifactId>quarkus-kubernetes-config</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+        </dependency>
+
         <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -117,6 +122,32 @@
             <artifactId>json-unit-assertj</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -124,7 +155,6 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.version}</version>
                 <executions>
                     <execution>
                         <id>build</id>
@@ -156,8 +186,14 @@
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
-                <version>${gmavenplus-plugin.version}</version>
                 <executions>
+                    <execution>
+                        <id>sources</id>
+                        <goals>
+                            <goal>addTestSources</goal>
+                            <goal>compileTests</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>execute</id>
                         <phase>package</phase>

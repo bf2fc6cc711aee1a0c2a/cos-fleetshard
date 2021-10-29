@@ -11,10 +11,12 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadataBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.EndpointKameletBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder;
+import org.bf2.cos.fleetshard.operator.camel.model.KameletsBuilder;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -85,12 +87,21 @@ public final class CamelOperandControllerTest {
         final String kcsB64 = Secrets.toBase64("kcs");
 
         final ObjectNode spec = Serialization.jsonMapper().createObjectNode();
-        spec.with("kafka").put("topic", "kafka-foo");
-        spec.with("connector").with("bar").put("kind", "base64").put("value", barB64);
-        spec.with("connector").put("foo", "connector-foo");
-        spec.withArray("steps").addObject().with("extract-field").put("field", "field");
-        spec.withArray("steps").addObject().with("insert-field").put("field", "a-field").put("value", "a-value");
-        spec.withArray("steps").addObject().with("insert-field").put("field", "b-field").put("value", "b-value");
+        spec.put("kafka_topic", "kafka-foo");
+        spec.with("aws_bar").put("kind", "base64").put("value", barB64);
+        spec.put("aws_foo", "aws-foo");
+        spec.put("aws_foo_bar", "aws-foo-bar");
+
+        spec.withArray("processors").addObject().with("extract_field")
+            .put("field", "field")
+            .put("foo-field", "foo")
+            .put("bar_field", "bar");
+        spec.withArray("processors").addObject().with("insert_field")
+            .put("field", "a-field")
+            .put("value", "a-value");
+        spec.withArray("processors").addObject().with("insert_field")
+            .put("field", "b-field")
+            .put("value", "b-value");
 
         var resources = controller.doReify(
             new ManagedConnectorBuilder()
@@ -113,10 +124,18 @@ public final class CamelOperandControllerTest {
                 .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorRevision("" + DEFAULT_CONNECTOR_REVISION)
                 .withConnectorType(CONNECTOR_TYPE_SOURCE)
-                .addToKamelets("connector", "aws-kinesis-source")
-                .addToKamelets("kafka", "managed-kafka-sink")
-                .addToKamelets("insert-field", "insert-field-action")
-                .addToKamelets("extract-field", "extract-field-action")
+                .withKamelets(new KameletsBuilder()
+                    .withAdapter(new EndpointKameletBuilder()
+                        .withName("aws-kinesis-source")
+                        .withPrefix("aws")
+                        .build())
+                    .withKafka(new EndpointKameletBuilder()
+                        .withName("managed-kafka-sink")
+                        .withPrefix("kafka")
+                        .build())
+                    .addToProcessors("insert_field", "insert-field-action")
+                    .addToProcessors("extract_field", "extract-field-action")
+                    .build())
                 .build(),
             spec,
             new KafkaSpecBuilder()
@@ -184,8 +203,6 @@ public final class CamelOperandControllerTest {
                 assertThat(resource.getApiVersion()).isEqualTo("v1");
                 assertThat(resource.getKind()).isEqualTo("Secret");
 
-                assertThat(resource.getMetadata().getAnnotations());
-
                 Secret secret = Serialization.jsonMapper().convertValue(resource, Secret.class);
                 String encoded = secret.getData().get("application.properties");
                 byte[] decoded = Base64.getDecoder().decode(encoded);
@@ -196,8 +213,11 @@ public final class CamelOperandControllerTest {
                     .contains("camel.kamelet.managed-kafka-sink.user=kcid")
                     .contains("camel.kamelet.managed-kafka-sink.password=kcs")
                     .contains("camel.kamelet.aws-kinesis-source.bar=bar")
-                    .contains("camel.kamelet.aws-kinesis-source.foo=connector-foo")
+                    .contains("camel.kamelet.aws-kinesis-source.foo=aws-foo")
+                    .contains("camel.kamelet.aws-kinesis-source.fooBar=aws-foo-bar")
                     .contains("camel.kamelet.extract-field-action.extract-field-action-0.field=field")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.foo-field=foo")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.barField=bar")
                     .contains("camel.kamelet.insert-field-action.insert-field-action-1.field=a-field")
                     .contains("camel.kamelet.insert-field-action.insert-field-action-1.value=a-value")
                     .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=b-field")
@@ -216,9 +236,9 @@ public final class CamelOperandControllerTest {
         final String image = "quay.io/foo/bar";
 
         final ObjectNode spec = Serialization.jsonMapper().createObjectNode();
-        spec.with("kafka").put("topic", "kafka-foo");
-        spec.with("connector").with("bar").put("kind", "base64").put("value", barB64);
-        spec.with("connector").put("foo", "connector-foo");
+        spec.put("kafka_topic", "kafka-foo");
+        spec.with("aws_bar").put("kind", "base64").put("value", barB64);
+        spec.put("aws_foo", "aws-foo");
 
         var resources = controller.doReify(
             new ManagedConnectorBuilder()
@@ -241,8 +261,16 @@ public final class CamelOperandControllerTest {
                 .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorRevision("" + DEFAULT_CONNECTOR_REVISION)
                 .withConnectorType(CONNECTOR_TYPE_SOURCE)
-                .addToKamelets("connector", "aws-kinesis-source")
-                .addToKamelets("kafka", "managed-kafka-sink")
+                .withKamelets(new KameletsBuilder()
+                    .withAdapter(new EndpointKameletBuilder()
+                        .withName("aws-kinesis-source")
+                        .withPrefix("aws")
+                        .build())
+                    .withKafka(new EndpointKameletBuilder()
+                        .withName("managed-kafka-sink")
+                        .withPrefix("kafka")
+                        .build())
+                    .build())
                 .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, image)
                 .build(),
             spec,
@@ -328,7 +356,7 @@ public final class CamelOperandControllerTest {
 
     @Test
     void reifyErrorHandlerLog() {
-        var resources = buildTestResourcesWithSpec(spec -> {
+        var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
             spec.with("error_handling").with("log");
         });
 
@@ -348,7 +376,7 @@ public final class CamelOperandControllerTest {
 
     @Test
     void reifyErrorHandlerDLQ() {
-        var resources = buildTestResourcesWithSpec(spec -> {
+        var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
             spec.with("error_handling").with("dead_letter_queue").put("topic", "dlq");
         });
 
@@ -387,7 +415,7 @@ public final class CamelOperandControllerTest {
 
     @Test
     void reifyErrorHandlerStop() {
-        var resources = buildTestResourcesWithSpec(spec -> {
+        var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
             spec.with("error_handling").with("stop");
         });
 
@@ -406,7 +434,7 @@ public final class CamelOperandControllerTest {
             });
     }
 
-    private List<HasMetadata> buildTestResourcesWithSpec(Consumer<ObjectNode> customizer) {
+    private List<HasMetadata> buildErrorHandlerTestResourcesWithSpec(Consumer<ObjectNode> customizer) {
         KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
         CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
         CamelOperandController controller = new CamelOperandController(kubernetesClient, configuration);
@@ -414,8 +442,10 @@ public final class CamelOperandControllerTest {
         final String kcsB64 = Secrets.toBase64("kcs");
 
         final ObjectNode spec = Serialization.jsonMapper().createObjectNode();
-        spec.with("kafka").put("topic", "kafka-foo");
-        spec.with("connector").put("foo", "connector-foo");
+        spec.put("kafka_topic", "kafka-foo");
+        spec.with("aws_bar").put("kind", "base64").put("value", kcsB64);
+        spec.put("aws_foo", "aws-foo");
+
         customizer.accept(spec);
 
         return controller.doReify(
@@ -445,8 +475,16 @@ public final class CamelOperandControllerTest {
                 .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorRevision("" + DEFAULT_CONNECTOR_REVISION)
                 .withConnectorType(CONNECTOR_TYPE_SOURCE)
-                .addToKamelets("connector", "aws-kinesis-source")
-                .addToKamelets("kafka", "managed-kafka-sink")
+                .withKamelets(new KameletsBuilder()
+                    .withAdapter(new EndpointKameletBuilder()
+                        .withName("aws-kinesis-source")
+                        .withPrefix("aws")
+                        .build())
+                    .withKafka(new EndpointKameletBuilder()
+                        .withName("managed-kafka-sink")
+                        .withPrefix("kafka")
+                        .build())
+                    .build())
                 .build(),
             spec,
             new KafkaSpecBuilder()

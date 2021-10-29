@@ -3,21 +3,22 @@ package org.bf2.cos.fleetshard.operator.camel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.commons.text.CaseUtils;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
+import org.bf2.cos.fleetshard.operator.camel.model.Kamelets;
+import org.bf2.cos.fleetshard.operator.camel.model.ProcessorKamelet;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -27,8 +28,8 @@ import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static java.lang.String.format;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
@@ -37,80 +38,248 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
+    private static final Set<String> RESERVED_PROPERTIES = Set.of("processors", "data_shape", "error_handling");
+
     private CamelOperandSupport() {
     }
 
-    public static boolean isKameletBinding(ResourceRef ref) {
-        return Objects.equals(KameletBinding.RESOURCE_API_VERSION, ref.getApiVersion())
-            && Objects.equals(KameletBinding.RESOURCE_KIND, ref.getKind());
+    public static String kameletProperty(String templateId, String property) {
+        return String.format("camel.kamelet.%s.%s", templateId, property);
     }
 
-    public static void configureEndpoint(Map<String, String> props, ObjectNode node, String templateId) {
-        for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
-            final var property = cit.next();
-            final JsonNode pval = property.getValue();
-            final String pkey = format(
-                "camel.kamelet.%s.%s",
-                templateId,
-                property.getKey());
+    public static String kameletProperty(String templateId, String instanceName, String property) {
+        return String.format("camel.kamelet.%s.%s.%s", templateId, instanceName, property);
+    }
 
-            if (pval.isObject()) {
-                JsonNode kind = pval.requiredAt("/kind");
-                JsonNode value = pval.requiredAt("/value");
+    public static String asPropertyValue(JsonNode node) {
+        if (node.isObject()) {
+            JsonNode kind = node.requiredAt("/kind");
+            JsonNode value = node.requiredAt("/value");
 
-                if (!"base64".equals(kind.textValue())) {
-                    throw new RuntimeException(
-                        "Unsupported field kind " + kind + " (key=" + pkey + ")");
-                }
-
-                props.put(pkey, new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8));
-            } else {
-                props.put(pkey, pval.asText());
+            if (!"base64".equals(kind.textValue())) {
+                throw new IllegalArgumentException("Unsupported kind: " + kind);
             }
+
+            return new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8);
+        } else {
+            return node.asText();
         }
     }
 
-    public static void configureStep(Map<String, String> props, ObjectNode node, int index, String templateId) {
-        for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
-            final var property = cit.next();
-            final JsonNode pval = property.getValue();
-            final String pkey = format(
-                "camel.kamelet.%s.%s.%s",
-                templateId,
-                stepName(index, templateId),
-                property.getKey());
+    public static String asPropertyKey(String key, String prefix) {
+        String answer = key.substring(prefix.length() + 1);
+        return asPropertyKey(answer);
+    }
 
-            if (pval.isObject()) {
-                JsonNode kind = pval.requiredAt("/kind");
-                JsonNode value = pval.requiredAt("/value");
-
-                if (!"base64".equals(kind.textValue())) {
-                    throw new RuntimeException(
-                        "Unsupported field kind " + kind + " (key=" + pkey + ")");
-                }
-
-                props.put(pkey, new String(Base64.getDecoder().decode(value.asText()), StandardCharsets.UTF_8));
-            } else {
-                props.put(pkey, pval.asText());
-            }
+    public static String asPropertyKey(String key) {
+        if (!key.contains("_")) {
+            return key;
         }
+        return CaseUtils.toCamelCase(key, false, '_');
     }
 
     public static String stepName(int index, String templateId) {
         return templateId + "-" + index;
     }
 
-    public static List<Step> createSteps(JsonNode connectorSpec, CamelShardMetadata shardMetadata) {
-        final List<Step> stepDefinitions = new ArrayList<>();
+    public static void configureEndpoint(
+        Map<String, String> props,
+        ObjectNode node,
+        Kamelets mapping) {
 
-        JsonNode steps = connectorSpec.at("/steps");
-        for (int i = 0; i < steps.size(); i++) {
-            var element = steps.get(i).fields().next();
-            var templateId = shardMetadata.getKamelets().get(element.getKey());
+        for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
+            final var property = cit.next();
+            final String key = property.getKey();
 
-            stepDefinitions.add(new Step(
+            if (RESERVED_PROPERTIES.contains(key)) {
+                continue;
+            }
+
+            final String templateId;
+            final String prefix;
+
+            if (key.startsWith(mapping.getAdapter().getPrefix() + "_")) {
+                templateId = mapping.getAdapter().getName();
+                prefix = mapping.getAdapter().getPrefix();
+            } else if (key.startsWith(mapping.getKafka().getPrefix() + "_")) {
+                templateId = mapping.getKafka().getName();
+                prefix = mapping.getKafka().getPrefix();
+            } else {
+                throw new IllegalArgumentException("Unknown property: " + key);
+            }
+
+            String propertyName = asPropertyKey(key, prefix);
+
+            props.put(
+                kameletProperty(templateId, propertyName),
+                asPropertyValue(property.getValue()));
+        }
+    }
+
+    public static void configureStep(
+        Map<String, String> props,
+        ObjectNode node,
+        int index,
+        String templateId) {
+
+        for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
+            final var property = cit.next();
+
+            if (templateId == null) {
+                throw new IllegalArgumentException("Unknown processor: " + property.getKey());
+            }
+
+            String propertyName = asPropertyKey(property.getKey());
+
+            props.put(
+                kameletProperty(templateId, stepName(index, templateId), propertyName),
+                asPropertyValue(property.getValue()));
+        }
+    }
+
+    public static List<ProcessorKamelet> createSteps(JsonNode connectorSpec, CamelShardMetadata shardMetadata,
+        Map<String, String> props) {
+        final JsonNode steps = connectorSpec.at("/processors");
+
+        String consumes = Optional.of(connectorSpec.at("/data_shape/consumes/format"))
+            .filter(node -> !node.isMissingNode())
+            .map(JsonNode::asText)
+            .orElse(shardMetadata.getConsumes());
+        String produces = Optional.of(connectorSpec.at("/data_shape/produces/format"))
+            .filter(node -> !node.isMissingNode())
+            .map(JsonNode::asText)
+            .orElse(shardMetadata.getProduces());
+
+        final List<ProcessorKamelet> stepDefinitions = new ArrayList<>(steps.size() + 2);
+
+        int i = 0;
+
+        if (consumes != null) {
+            switch (consumes) {
+                case "application/json": {
+                    String stepName = stepName(i, "cos-decoder-json-action");
+                    stepDefinitions.add(new ProcessorKamelet("cos-decoder-json-action", stepName));
+                    if (shardMetadata.getConsumesClass() != null) {
+                        props.put(
+                            kameletProperty("cos-decoder-json-action", stepName, "contentClass"),
+                            shardMetadata.getConsumesClass());
+                    }
+                    i++;
+                }
+                    break;
+                case "avro/binary": {
+                    String stepName = stepName(i, "cos-decoder-avro-action");
+                    stepDefinitions.add(new ProcessorKamelet("cos-decoder-avro-action", stepName));
+                    if (shardMetadata.getConsumesClass() != null) {
+                        props.put(
+                            kameletProperty("cos-decoder-avro-action", stepName, "contentClass"),
+                            shardMetadata.getConsumesClass());
+                    }
+                    i++;
+                }
+                    break;
+                case "application/x-java-object": {
+                    String stepName = stepName(i, "cos-decoder-pojo-action");
+                    stepDefinitions.add(new ProcessorKamelet("cos-decoder-pojo-action", stepName));
+                    if (produces != null) {
+                        props.put(
+                            kameletProperty("cos-decoder-pojo-action", stepName, "mimeType"),
+                            produces);
+                    }
+                    i++;
+                }
+                    break;
+                case "text/plain":
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported value format " + consumes);
+            }
+        }
+
+        for (JsonNode step : steps) {
+            var element = step.fields().next();
+
+            String templateId = shardMetadata.getKamelets().getProcessors().get(element.getKey());
+            if (templateId == null) {
+                throw new IllegalArgumentException("Unknown processor: " + element.getKey());
+            }
+
+            stepDefinitions.add(new ProcessorKamelet(
                 templateId,
                 stepName(i, templateId)));
+
+            configureStep(
+                props,
+                (ObjectNode) element.getValue(),
+                i,
+                shardMetadata.getKamelets().getProcessors().get(element.getKey()));
+
+            i++;
+        }
+
+        if (produces != null) {
+            switch (produces) {
+                case "application/json": {
+                    String stepName = stepName(i, "cos-encoder-json-action");
+                    stepDefinitions.add(new ProcessorKamelet("cos-encoder-json-action", stepName));
+                    if (shardMetadata.getProducesClass() != null) {
+                        props.put(
+                            kameletProperty("cos-encoder-json-action", stepName, "contentClass"),
+                            shardMetadata.getProducesClass());
+                    }
+                }
+                    break;
+                case "avro/binary": {
+                    String stepName = stepName(i, "cos-encoder-avro-action");
+                    stepDefinitions.add(new ProcessorKamelet("cos-encoder-avro-action", stepName));
+                    if (shardMetadata.getProducesClass() != null) {
+                        props.put(
+                            kameletProperty("cos-encoder-avro-action", stepName, "contentClass"),
+                            shardMetadata.getProducesClass());
+                    }
+                }
+                    break;
+                case "text/plain": {
+                    stepDefinitions.add(new ProcessorKamelet(
+                        "cos-encoder-string-action",
+                        stepName(i, "cos-encoder-string-action")));
+                }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unsupported value format " + produces);
+            }
+        }
+
+        //
+        // TODO: refactor
+        //
+        // The code below is a POC (well, almost all this class looks like a POC)
+        //
+
+        // If it is a sink, then it consumes from kafka
+        if (isSink(shardMetadata)) {
+            props.put(
+                String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
+                "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+
+            if ("application/json".equals(consumes) && hasSchemaRegistry(connectorSpec)) {
+                props.put(
+                    String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
+                    "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer");
+            }
+        }
+
+        // If it is a source, then it produces to kafka
+        if (isSource(shardMetadata)) {
+            props.put(
+                String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
+                "org.apache.kafka.common.serialization.ByteArraySerializer");
+
+            if ("application/json".equals(produces) && hasSchemaRegistry(connectorSpec)) {
+                props.put(
+                    String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
+                    "org.bf2.cos.connector.camel.serdes.json.JsonSerializer");
+            }
         }
 
         return stepDefinitions;
@@ -125,73 +294,51 @@ public final class CamelOperandSupport {
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
         KafkaSpec kafkaSpec,
-        CamelOperandConfiguration cfg) {
+        CamelOperandConfiguration cfg,
+        Map<String, String> props) {
 
-        final String connectorKameletId = shardMetadata.getKamelets().get("connector");
-        final String kafkaKameletId = shardMetadata.getKamelets().get("kafka");
-
-        final Map<String, String> props = new HashMap<>();
         if (connectorSpec != null) {
             configureEndpoint(
                 props,
-                (ObjectNode) connectorSpec.get("connector"),
-                connectorKameletId);
-            configureEndpoint(
-                props,
-                (ObjectNode) connectorSpec.get("kafka"),
-                kafkaKameletId);
+                connectorSpec,
+                shardMetadata.getKamelets());
 
             props.put(
-                format("camel.kamelet.%s.user", kafkaKameletId),
+                String.format("camel.kamelet.%s.user", shardMetadata.getKamelets().getKafka().getName()),
                 kafkaSpec.getClientId());
             props.put(
-                format("camel.kamelet.%s.password", kafkaKameletId),
+                String.format("camel.kamelet.%s.password", shardMetadata.getKamelets().getKafka().getName()),
                 new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
             props.put(
-                format("camel.kamelet.%s.bootstrapServers", kafkaKameletId),
+                String.format("camel.kamelet.%s.bootstrapServers", shardMetadata.getKamelets().getKafka().getName()),
                 kafkaSpec.getBootstrapServers());
 
             if (CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType())) {
                 props.put(
-                    format("camel.kamelet.%s.consumerGroup", kafkaKameletId),
+                    String.format("camel.kamelet.%s.consumerGroup", shardMetadata.getKamelets().getKafka().getName()),
                     connector.getSpec().getDeploymentId());
             }
 
-            var steps = connectorSpec.at("/steps");
-            for (int i = 0; i < steps.size(); i++) {
-                var element = steps.get(i).fields().next();
-                var templateId = shardMetadata.getKamelets().get(element.getKey());
-
-                configureStep(
-                    props,
-                    (ObjectNode) element.getValue(),
-                    i,
-                    templateId);
-            }
-
-            var errorHandler = (ObjectNode) connectorSpec.get("error_handling");
-            if (errorHandler != null) {
-                var dlq = (ObjectNode) errorHandler.get("dead_letter_queue");
-                if (dlq != null) {
-                    String errorKamelet = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
-                    String errorKameletId = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
-                    JsonNode dlTopic = dlq.get("topic");
-                    if (dlTopic == null) {
-                        throw new RuntimeException("Missing topic property in dead_letter_queue error handler");
-                    }
-                    props.put(
-                        format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
-                        kafkaSpec.getClientId());
-                    props.put(
-                        format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
-                        new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
-                    props.put(
-                        format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
-                        kafkaSpec.getBootstrapServers());
-                    props.put(
-                        format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
-                        dlTopic.asText());
+            var dlq = connectorSpec.at("/error_handling/dead_letter_queue");
+            if (!dlq.isMissingNode()) {
+                String errorKamelet = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
+                String errorKameletId = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
+                JsonNode dlTopic = dlq.get("topic");
+                if (dlTopic == null) {
+                    throw new RuntimeException("Missing topic property in dead_letter_queue error handler");
                 }
+                props.put(
+                    String.format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
+                    kafkaSpec.getClientId());
+                props.put(
+                    String.format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
+                    new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
+                props.put(
+                    String.format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
+                    kafkaSpec.getBootstrapServers());
+                props.put(
+                    String.format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
+                    dlTopic.asText());
             }
         }
 
@@ -327,19 +474,27 @@ public final class CamelOperandSupport {
         var errorHandler = Serialization.jsonMapper().createObjectNode();
         var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
         var endpoint = dlq.putObject("endpoint");
-        endpoint.put("uri",
-            format("kamelet://%s/%s", ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET, ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID));
+
+        endpoint.put(
+            "uri",
+            String.format(
+                "kamelet://%s/%s",
+                ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET,
+                ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID));
+
         return errorHandler;
     }
 
-    public static class Step {
-        final String templateId;
-        final String id;
-
-        public Step(String templateId, String id) {
-            this.templateId = templateId;
-            this.id = id;
-        }
+    public static boolean isSource(CamelShardMetadata shardMetadata) {
+        return CONNECTOR_TYPE_SOURCE.equals(shardMetadata.getConnectorType());
     }
 
+    public static boolean isSink(CamelShardMetadata shardMetadata) {
+        return CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType());
+    }
+
+    public static boolean hasSchemaRegistry(JsonNode connectorSpec) {
+        // TODO: remove once moving to the new APIs
+        return !connectorSpec.at("/kafka_registry_url").isMissingNode();
+    }
 }
