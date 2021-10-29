@@ -8,6 +8,7 @@ import org.bf2.cos.fleetshard.api.ResourceRef;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.sundr.builder.annotations.Buildable;
@@ -18,12 +19,14 @@ import lombok.ToString;
 @EqualsAndHashCode
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonPropertyOrder({ "ref", "properties" })
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class KameletEndpoint implements KubernetesResource {
-    @JsonProperty("properties")
-    private Map<String, Object> properties = new TreeMap<>();
     @JsonProperty("ref")
     private ResourceRef ref;
+    @JsonProperty("properties")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, Object> properties = new TreeMap<>();
 
     public KameletEndpoint() {
     }

@@ -21,8 +21,14 @@ Feature: Camel Connector Reify With Annotations
           "connector_image": "quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1",
           "connector_type": "sink",
           "kamelets": {
-            "connector": "log-sink",
-            "kafka": "managed-kafka-source"
+            "adapter": {
+              "name": "log-sink",
+              "prefix": "log"
+            },
+            "kafka": {
+              "name": "managed-kafka-source",
+              "prefix": "kafka"
+            }
           },
           "annotations": {
             "trait.camel.apache.org/container.image": "quay.io/foo/bar",

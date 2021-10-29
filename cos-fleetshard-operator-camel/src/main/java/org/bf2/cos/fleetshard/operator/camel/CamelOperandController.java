@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -15,6 +16,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
+import org.bf2.cos.fleetshard.operator.camel.model.ProcessorKamelet;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -83,25 +85,29 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         ObjectNode connectorSpec,
         KafkaSpec kafkaSpec) {
 
-        final List<CamelOperandSupport.Step> stepDefinitions = createSteps(connectorSpec, shardMetadata);
-        final Map<String, String> secretsData = createSecretsData(
+        final Map<String, String> properties = createSecretsData(
             connector,
             shardMetadata,
             connectorSpec,
             kafkaSpec,
-            configuration);
+            configuration,
+            new TreeMap<>());
+        final List<ProcessorKamelet> stepDefinitions = createSteps(
+            connectorSpec,
+            shardMetadata,
+            properties);
 
         final String source;
         final String sink;
 
         switch (shardMetadata.getConnectorType()) {
             case CONNECTOR_TYPE_SOURCE:
-                source = shardMetadata.getKamelets().get("connector");
-                sink = shardMetadata.getKamelets().get("kafka");
+                source = shardMetadata.getKamelets().getAdapter().getName();
+                sink = shardMetadata.getKamelets().getKafka().getName();
                 break;
             case CONNECTOR_TYPE_SINK:
-                source = shardMetadata.getKamelets().get("kafka");
-                sink = shardMetadata.getKamelets().get("connector");
+                source = shardMetadata.getKamelets().getKafka().getName();
+                sink = shardMetadata.getKamelets().getAdapter().getName();
                 break;
             default:
                 throw new IllegalArgumentException("Unknown connector type: " + shardMetadata.getConnectorType());
@@ -111,7 +117,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
                 .build())
-            .addToData(APPLICATION_PROPERTIES, asBytesBase64(secretsData))
+            .addToData(APPLICATION_PROPERTIES, asBytesBase64(properties))
             .build();
 
         final KameletBinding binding = new KameletBindingBuilder()
@@ -133,8 +139,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         .map(s -> new KameletEndpoint(
                             Kamelet.RESOURCE_API_VERSION,
                             Kamelet.RESOURCE_KIND,
-                            s.templateId,
-                            Map.of("id", s.id)))
+                            s.getTemplateId(),
+                            Map.of("id", s.getId())))
                         .collect(Collectors.toList()))
                 .build())
             .build();
