@@ -1,7 +1,11 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.Base64;
+import java.util.List;
+import java.util.function.Consumer;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
@@ -25,10 +29,14 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
@@ -307,4 +315,149 @@ public final class CamelOperandControllerTest {
             });
         }
     }
+
+    @Test
+    void reifyErrorHandlerNone() {
+        var resources = buildTestResourcesWithSpec(spec -> {
+            spec.with("error_handling").with("ignore");
+        });
+
+        assertThat(resources)
+                .anySatisfy(resource -> {
+                    assertThat(resource.getApiVersion()).isEqualTo(KameletBinding.RESOURCE_API_VERSION);
+                    assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
+
+                    assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+
+                        assertThatObject(binding.getSpec().getErrorHandler())
+                                .extracting(h -> h.get("none"))
+                                .isNotNull();
+                    });
+                });
+    }
+
+    @Test
+    void reifyErrorHandlerLog() {
+        var resources = buildTestResourcesWithSpec(spec -> {
+            spec.with("error_handling").with("log");
+        });
+
+        assertThat(resources)
+                .anySatisfy(resource -> {
+                    assertThat(resource.getApiVersion()).isEqualTo(KameletBinding.RESOURCE_API_VERSION);
+                    assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
+
+                    assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+
+                        assertThatObject(binding.getSpec().getErrorHandler())
+                                .extracting(h -> h.get("log"))
+                                .isNotNull();
+                    });
+                });
+    }
+
+    @Test
+    void reifyErrorHandlerDLQ() {
+        var resources = buildTestResourcesWithSpec(spec -> {
+            spec.with("error_handling").with("dead_letter_queue").put("topic", "dlq");
+        });
+
+        assertThat(resources)
+                .anySatisfy(resource -> {
+                    assertThat(resource.getApiVersion()).isEqualTo(KameletBinding.RESOURCE_API_VERSION);
+                    assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
+
+                    assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+
+                        assertThatObject(binding.getSpec().getErrorHandler())
+                                .extracting(h -> h.at("/dead-letter-channel/endpoint/uri"))
+                                .extracting(JsonNode::asText)
+                                .isEqualTo("kamelet://managed-kafka-sink/error");
+                    });
+                });
+
+        assertThat(resources)
+                .anySatisfy(resource -> {
+                    assertThat(resource.getApiVersion()).isEqualTo("v1");
+                    assertThat(resource.getKind()).isEqualTo("Secret");
+
+                    assertThat(resource.getMetadata().getAnnotations());
+
+                    Secret secret = Serialization.jsonMapper().convertValue(resource, Secret.class);
+                    String encoded = secret.getData().get("application.properties");
+                    byte[] decoded = Base64.getDecoder().decode(encoded);
+
+                    assertThat(new String(decoded))
+                            .contains("camel.kamelet.managed-kafka-sink.error.topic=dlq")
+                            .contains("camel.kamelet.managed-kafka-sink.error.bootstrapServers=kafka.acme.com:2181")
+                            .contains("camel.kamelet.managed-kafka-sink.error.user=kcid")
+                            .contains("camel.kamelet.managed-kafka-sink.error.password=kcs");
+                });
+    }
+
+    @Test
+    void reifyErrorHandlerStop() {
+        var resources = buildTestResourcesWithSpec(spec -> {
+            spec.with("error_handling").with("stop");
+        });
+
+        assertThat(resources)
+                .anySatisfy(resource -> {
+                    assertThat(resource.getApiVersion()).isEqualTo(KameletBinding.RESOURCE_API_VERSION);
+                    assertThat(resource.getKind()).isEqualTo(KameletBinding.RESOURCE_KIND);
+
+                    assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+
+                        assertThatObject(binding.getSpec().getErrorHandler())
+                                .extracting(h -> h.at("/dead-letter-channel/endpoint/uri"))
+                                .extracting(JsonNode::asText)
+                                .isEqualTo("controlbus:route?routeId=current&action=stop");
+                    });
+                });
+    }
+
+    private List<HasMetadata> buildTestResourcesWithSpec(Consumer<ObjectNode> customizer) {
+        KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
+        CamelOperandConfiguration configuration = Mockito.mock(CamelOperandConfiguration.class);
+        CamelOperandController controller = new CamelOperandController(kubernetesClient, configuration);
+
+        final String kcsB64 = Secrets.toBase64("kcs");
+
+        final ObjectNode spec = Serialization.jsonMapper().createObjectNode();
+        spec.with("kafka").put("topic", "kafka-foo");
+        spec.with("connector").put("foo", "connector-foo");
+        customizer.accept(spec);
+
+        return controller.doReify(
+                new ManagedConnectorBuilder()
+                        .withMetadata(new ObjectMetaBuilder()
+                                .withName(DEFAULT_MANAGED_CONNECTOR_ID)
+                                .build())
+                        .withSpec(new ManagedConnectorSpecBuilder()
+                                .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
+                                .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
+                                .withDeployment(new DeploymentSpecBuilder()
+                                        .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
+                                        .withSecret("secret")
+                                        .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
+                                        .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
+                                        .withDesiredState(DESIRED_STATE_READY)
+                                        .build())
+                                .build())
+                        .build(),
+                new CamelShardMetadataBuilder()
+                        .withConnectorImage(DEFAULT_CONNECTOR_IMAGE)
+                        .withConnectorRevision("" + DEFAULT_CONNECTOR_REVISION)
+                        .withConnectorType(CONNECTOR_TYPE_SOURCE)
+                        .addToKamelets("connector", "aws-kinesis-source")
+                        .addToKamelets("kafka", "managed-kafka-sink")
+                        .build(),
+                spec,
+                new KafkaSpecBuilder()
+                        .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+                        .withClientId(DEFAULT_KAFKA_CLIENT_ID)
+                        .withClientSecret(kcsB64)
+                        .build());
+    }
+
 }
