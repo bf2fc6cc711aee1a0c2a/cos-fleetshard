@@ -27,6 +27,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static java.lang.String.format;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_LOG_TYPE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_NONE_TYPE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_STOP_URI;
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
@@ -149,6 +155,31 @@ public final class CamelOperandSupport {
                     i,
                     templateId);
             }
+
+            var errorHandler = (ObjectNode) connectorSpec.get("error_handling");
+            if (errorHandler != null) {
+                var dlq = (ObjectNode) errorHandler.get("dead_letter_queue");
+                if (dlq != null) {
+                    String errorKamelet = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
+                    String errorKameletId = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
+                    JsonNode dlTopic = dlq.get("topic");
+                    if (dlTopic == null) {
+                        throw new RuntimeException("Missing topic property in dead_letter_queue error handler");
+                    }
+                    props.put(
+                        format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
+                        kafkaSpec.getClientId());
+                    props.put(
+                        format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
+                        new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
+                    props.put(
+                        format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
+                        kafkaSpec.getBootstrapServers());
+                    props.put(
+                        format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
+                        dlTopic.asText());
+                }
+            }
         }
 
         return props;
@@ -209,6 +240,57 @@ public final class CamelOperandSupport {
         if (kameletBindingStatus.conditions != null) {
             statusSpec.setConditions(kameletBindingStatus.conditions);
         }
+    }
+
+    public static ObjectNode createErrorHandler(ObjectNode connectorSpec) {
+        if (connectorSpec != null) {
+            var errorHandling = (JsonNode) connectorSpec.get("error_handling");
+            if (errorHandling != null) {
+                // Assume only one is populated because of prior validation
+                if (errorHandling.get("log") != null) {
+                    return createLogErrorHandler();
+                } else if (errorHandling.get("stop") != null) {
+                    return createStopErrorHandler();
+                } else if (errorHandling.get("ignore") != null) {
+                    return createIgnoreErrorHandler();
+                } else if (errorHandling.get("dead_letter_queue") != null) {
+                    return createDeadLetterQueueErrorHandler();
+                } else {
+                    throw new RuntimeException("Invalid error handling specification: " + errorHandling.asText());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static ObjectNode createLogErrorHandler() {
+        var errorHandler = Serialization.jsonMapper().createObjectNode();
+        errorHandler.putObject(ERROR_HANDLER_LOG_TYPE);
+        return errorHandler;
+    }
+
+    public static ObjectNode createStopErrorHandler() {
+        var errorHandler = Serialization.jsonMapper().createObjectNode();
+        var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
+        var endpoint = dlq.putObject("endpoint");
+        endpoint.put("uri", ERROR_HANDLER_STOP_URI);
+        return errorHandler;
+    }
+
+    public static ObjectNode createIgnoreErrorHandler() {
+        var errorHandler = Serialization.jsonMapper().createObjectNode();
+        errorHandler.putObject(ERROR_HANDLER_NONE_TYPE);
+        return errorHandler;
+    }
+
+    public static ObjectNode createDeadLetterQueueErrorHandler() {
+        var errorHandler = Serialization.jsonMapper().createObjectNode();
+        var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
+        var endpoint = dlq.putObject("endpoint");
+        endpoint.put("uri",
+            format("kamelet://%s/%s", ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET, ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID));
+        return errorHandler;
     }
 
     public static class Step {

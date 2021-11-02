@@ -26,6 +26,8 @@ public class KameletBindingSpec {
     private KameletEndpoint source;
     @JsonProperty("steps")
     private List<KameletEndpoint> steps = new ArrayList<>();
+    @JsonProperty("errorHandler")
+    private ObjectNode errorHandler;
 
     public ObjectNode getIntegration() {
         return integration;
@@ -57,5 +59,13 @@ public class KameletBindingSpec {
 
     public void setSteps(List<KameletEndpoint> steps) {
         this.steps = steps;
+    }
+
+    public ObjectNode getErrorHandler() {
+        return errorHandler;
+    }
+
+    public void setErrorHandler(ObjectNode errorHandler) {
+        this.errorHandler = errorHandler;
     }
 }

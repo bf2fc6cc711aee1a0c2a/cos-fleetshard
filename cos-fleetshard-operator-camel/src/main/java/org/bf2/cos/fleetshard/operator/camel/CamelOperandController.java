@@ -40,6 +40,7 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
+import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createIntegrationSpec;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSecretsData;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSteps;
@@ -109,6 +110,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret))))
                 .withSource(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, source))
                 .withSink(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, sink))
+                .withErrorHandler(createErrorHandler(connectorSpec))
                 .withSteps(
                     stepDefinitions.stream()
                         .map(s -> new KameletEndpoint(
