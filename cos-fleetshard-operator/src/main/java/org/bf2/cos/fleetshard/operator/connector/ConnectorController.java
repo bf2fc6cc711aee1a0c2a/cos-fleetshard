@@ -388,7 +388,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                 return UpdateControl.updateStatusSubResource(connector);
             } else {
-                return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+                return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
             }
         } else {
             final String connectorUow = connector.getSpec().getDeployment().getUnitOfWork();
@@ -417,7 +417,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
                     return UpdateControl.updateStatusSubResource(connector);
                 } else {
-                    return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+                    return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -538,7 +538,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
-    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleDeleting(ManagedConnector connector) {
         if (operandController.delete(connector)) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleted);
@@ -552,15 +551,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
-    private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector conenctor) {
+    private UpdateControl<ManagedConnector> handleDeleted(ManagedConnector connector) {
         return UpdateControl.noUpdate();
     }
 
-    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleStopping(ManagedConnector connector) {
         if (operandController.stop(connector)) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopped);
@@ -574,7 +572,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
@@ -582,12 +580,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.noUpdate();
     }
 
-    @SuppressWarnings({ "unchecked", "PMD.UnusedFormalParameter" })
+    @SuppressWarnings({ "PMD.UnusedFormalParameter" })
     private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
-        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
-    @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
         if (operandController.stop(connector)) {
             connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Transferred);
@@ -601,10 +598,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             return UpdateControl.updateStatusSubResource(connector);
         }
 
-        return UpdateControl.noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
     }
 
-    @SuppressWarnings("PMD.UnusedFormalParameter")
     private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
         LOGGER.info("Connector {} complete, it can now be handled by another operator.",
             connector.getMetadata().getName());
