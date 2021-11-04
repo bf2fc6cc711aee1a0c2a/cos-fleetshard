@@ -25,7 +25,6 @@ public final class CamelConstants {
     public static final String TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS = "trait.camel.apache.org/owner.target-annotations";
 
     public static final String ERROR_HANDLER_LOG_TYPE = "log";
-    public static final String ERROR_HANDLER_NONE_TYPE = "none";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE = "dead-letter-channel";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET = "managed-kafka-sink";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID = "error";

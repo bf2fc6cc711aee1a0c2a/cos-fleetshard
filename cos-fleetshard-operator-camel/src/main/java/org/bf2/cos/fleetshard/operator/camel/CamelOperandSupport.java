@@ -32,7 +32,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_LOG_TYPE;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_NONE_TYPE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_STOP_URI;
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
@@ -148,8 +147,8 @@ public final class CamelOperandSupport {
 
             if (CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType())) {
                 props.put(
-                        format("camel.kamelet.%s.consumerGroup", kafkaKameletId),
-                        connector.getSpec().getDeploymentId());
+                    format("camel.kamelet.%s.consumerGroup", kafkaKameletId),
+                    connector.getSpec().getDeploymentId());
             }
 
             var steps = connectorSpec.at("/steps");
@@ -259,8 +258,6 @@ public final class CamelOperandSupport {
                     return createLogErrorHandler();
                 } else if (errorHandling.get("stop") != null) {
                     return createStopErrorHandler();
-                } else if (errorHandling.get("ignore") != null) {
-                    return createIgnoreErrorHandler();
                 } else if (errorHandling.get("dead_letter_queue") != null) {
                     return createDeadLetterQueueErrorHandler();
                 } else {
@@ -283,12 +280,6 @@ public final class CamelOperandSupport {
         var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
         var endpoint = dlq.putObject("endpoint");
         endpoint.put("uri", ERROR_HANDLER_STOP_URI);
-        return errorHandler;
-    }
-
-    public static ObjectNode createIgnoreErrorHandler() {
-        var errorHandler = Serialization.jsonMapper().createObjectNode();
-        errorHandler.putObject(ERROR_HANDLER_NONE_TYPE);
         return errorHandler;
     }
 
