@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static java.lang.String.format;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
@@ -116,6 +117,7 @@ public final class CamelOperandSupport {
     }
 
     public static Map<String, String> createSecretsData(
+        ManagedConnector connector,
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
         KafkaSpec kafkaSpec) {
@@ -143,6 +145,12 @@ public final class CamelOperandSupport {
             props.put(
                 format("camel.kamelet.%s.bootstrapServers", kafkaKameletId),
                 kafkaSpec.getBootstrapServers());
+
+            if (CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType())) {
+                props.put(
+                        format("camel.kamelet.%s.consumerGroup", kafkaKameletId),
+                        connector.getSpec().getDeploymentId());
+            }
 
             var steps = connectorSpec.at("/steps");
             for (int i = 0; i < steps.size(); i++) {
