@@ -17,3 +17,4 @@ kamel
 .kcp/
 .kube/
 .kind/
+.mvn/mvnd.properties
