@@ -90,6 +90,10 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client</artifactId>
         </dependency>
         <dependency>
@@ -324,16 +328,6 @@
                                 <quarkus.kubernetes-config.config-maps>cos-fleetshard-sync-config</quarkus.kubernetes-config.config-maps>
                                 <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
                                 <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>
-
-                                <!--
-                                 The fabric8 kubernetes client is supposed to properly handle the
-                                 insecure-skip-tls-verify flag from KUBECONFIG file however, it
-                                 does not seem the case, see:
-
-                                   https://github.com/java-operator-sdk/java-operator-sdk/issues/366
-                                   https://github.com/fabric8io/kubernetes-client/issues/2888
-
-                                -->
                                 <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
                             </systemProperties>
                         </configuration>
