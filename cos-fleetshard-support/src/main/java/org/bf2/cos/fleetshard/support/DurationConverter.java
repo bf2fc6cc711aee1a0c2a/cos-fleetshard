@@ -5,6 +5,9 @@ import java.util.Objects;
 
 import org.eclipse.microprofile.config.spi.Converter;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class DurationConverter implements Converter<Duration> {
     @Override
     public Duration convert(String value) throws IllegalArgumentException, NullPointerException {

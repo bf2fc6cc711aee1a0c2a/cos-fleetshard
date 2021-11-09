@@ -211,6 +211,11 @@
                 <artifactId>cos-fleetshard-api</artifactId>
                 <version>${cos-fleetshard-api.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-api-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- deps :: project -->
             <dependency>
@@ -475,6 +480,11 @@
                             <version>${pmd.asm.version}</version>
                         </dependency>
                     </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-bootstrap-maven-plugin</artifactId>
+                    <version>${quarkus.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
