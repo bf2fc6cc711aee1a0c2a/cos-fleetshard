@@ -42,6 +42,12 @@
         <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
         <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
 
+        <!-- kubernetes resources-->
+        <quarkus.kubernetes.resources.requests.memory>256Mi</quarkus.kubernetes.resources.requests.memory>
+        <quarkus.kubernetes.resources.requests.cpu>500m</quarkus.kubernetes.resources.requests.cpu>
+        <quarkus.kubernetes.resources.limits.memory>512Mi</quarkus.kubernetes.resources.limits.memory>
+        <quarkus.kubernetes.resources.limits.cpu>1500m</quarkus.kubernetes.resources.limits.cpu>
+
         <!-- container image -->
         <quarkus.container-image.build>false</quarkus.container-image.build>
         <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
