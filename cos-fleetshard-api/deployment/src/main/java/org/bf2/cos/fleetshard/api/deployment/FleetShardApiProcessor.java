@@ -1,23 +1,28 @@
 package org.bf2.cos.fleetshard.api.deployment;
 
+import java.util.List;
+
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.Type;
+
 import io.quarkus.deployment.annotations.BuildStep;
-import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ReflectiveHierarchyBuildItem;
 
 public class FleetShardApiProcessor {
     @BuildStep
-    ReflectiveClassBuildItem fleetShardReflectiveClasses() {
-        return new ReflectiveClassBuildItem(
-            true,
-            false,
-            org.bf2.cos.fleetshard.api.ManagedConnector.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorStatus.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorSpec.class,
-            org.bf2.cos.fleetshard.api.ManagedConnector.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorCluster.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpec.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorClusterStatus.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorOperator.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpec.class,
-            org.bf2.cos.fleetshard.api.ManagedConnectorOperatorStatus.class);
+    List<ReflectiveHierarchyBuildItem> fleetShardReflectiveClasses() {
+        return List.of(
+            reflectiveHierarchy(org.bf2.cos.fleetshard.api.ManagedConnector.class),
+            reflectiveHierarchy(org.bf2.cos.fleetshard.api.ManagedConnectorCluster.class),
+            reflectiveHierarchy(org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpec.class));
+    }
+
+    private ReflectiveHierarchyBuildItem reflectiveHierarchy(Class<?> type) {
+        final var className = DotName.createSimple(type.getName());
+        final var classType = Type.create(className, Type.Kind.CLASS);
+
+        return new ReflectiveHierarchyBuildItem.Builder()
+            .type(classType)
+            .build();
     }
 }
