@@ -159,6 +159,18 @@ public class KameletBindingSteps extends StepsSupport {
             .containsValue(Serialization.unmarshal(content, JsonNode.class));
     }
 
+    @And("the klb has an empty object at path {string}")
+    public void klb_has_an_empty_object_at_path(String path) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThatJson(JacksonUtil.asJsonNode(res))
+            .inPath(path)
+            .isObject()
+            .isEmpty();
+    }
+
     @And("the klb has an array at path {string} containing:")
     public void klb_has_a_path_containing_object(String path, DataTable elements) {
         KameletBinding res = klb();
