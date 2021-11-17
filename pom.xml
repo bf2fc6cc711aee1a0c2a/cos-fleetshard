@@ -26,7 +26,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <kubernetes-client.version>5.10.1</kubernetes-client.version>
         <lombok.version>1.18.22</lombok.version>
-        <quarkus.version>2.4.2.Final</quarkus.version>
+        <quarkus.version>2.5.0.Final</quarkus.version>
         <quarkus-cucumber.version>0.4.0</quarkus-cucumber.version>
         <quarkus-operator-sdk.version>2.0.1</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
@@ -41,26 +41,23 @@
         <cucumber.version>6.11.0</cucumber.version>
         <json-path.version>2.6.0</json-path.version>
         <commons-text.version>1.9</commons-text.version>
-        <slf4j.version>1.7.32</slf4j.version>
-        <smallrye.version>2.5.1</smallrye.version>
         <pmd.asm.version>9.2</pmd.asm.version>
 
-        <formatter-maven-plugin.version>2.16.0</formatter-maven-plugin.version>
+        <formatter-maven-plugin.version>2.17.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <openapi-generator-maven-plugin.version>5.2.1</openapi-generator-maven-plugin.version>
         <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
         <gmavenplus-plugin.version>1.13.0</gmavenplus-plugin.version>
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
-        <maven-enforcer-plugin-version>3.0.0</maven-enforcer-plugin-version>
+        <maven-enforcer-plugin.version>3.0.0</maven-enforcer-plugin.version>
         <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
         <maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
         <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
-        <spotbugs-maven-plugin.version>4.4.2.1</spotbugs-maven-plugin.version>
-        <maven-pmd-plugin-version>3.15.0</maven-pmd-plugin-version>
+        <spotbugs-maven-plugin.version>4.4.2.2</spotbugs-maven-plugin.version>
+        <maven-pmd-plugin.version>3.15.0</maven-pmd-plugin.version>
     </properties>
 
     <modules>
@@ -128,11 +125,6 @@
                 <version>${sundrio.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-ext-jdk15on</artifactId>
                 <version>${bouncycastle.version}</version>
@@ -198,11 +190,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
                 <version>${commons-text.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.smallrye.config</groupId>
-                <artifactId>smallrye-config-source-file-system</artifactId>
-                <version>${smallrye.version}</version>
             </dependency>
 
             <!-- deps :: cos -->
@@ -331,7 +318,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${maven-enforcer-plugin-version}</version>
+                    <version>${maven-enforcer-plugin.version}</version>
                     <executions>
                         <execution>
                             <id>enforce-maven</id>
@@ -454,7 +441,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
-                    <version>${maven-pmd-plugin-version}</version>
+                    <version>${maven-pmd-plugin.version}</version>
                     <configuration>
                         <rulesets>
                             <ruleset>pmd-rules.xml</ruleset>
