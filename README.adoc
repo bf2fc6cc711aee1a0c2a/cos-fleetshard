@@ -62,7 +62,7 @@ This is an example installation that consists in:
 minikube start --profile cos --cpus=4 --memory=4096
 ----
 
-* *install camel-k 1.6.x*
+* *install camel-k 1.7.x*
 +
 [source,shell]
 ----
