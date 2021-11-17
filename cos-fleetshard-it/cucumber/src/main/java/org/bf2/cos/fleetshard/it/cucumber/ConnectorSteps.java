@@ -84,10 +84,10 @@ public class ConnectorSteps {
 
     @Given("^a Connector with:$")
     public void a_connector(Map<String, String> entry) {
-        final Long drv = Long.parseLong(entry.getOrDefault("deployment.resource.version", "1"));
-        final Long crv = Long.parseLong(entry.getOrDefault("connector.resource.version", "1"));
-        final String connectorId = entry.getOrDefault("connector.id", uid());
-        final String deploymentId = entry.getOrDefault("deployment.id", uid());
+        final Long drv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_DEPLOYMENT_RESOURCE_VERSION, "1"));
+        final Long crv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_CONNECTOR_RESOURCE_VERSION, "1"));
+        final String connectorId = entry.getOrDefault(ConnectorContext.COS_CONNECTOR_ID, uid());
+        final String deploymentId = entry.getOrDefault(ConnectorContext.COS_DEPLOYMENT_ID, uid());
         final String clusterId = ctx.clusterId();
 
         var connector = new ManagedConnectorBuilder()
@@ -95,7 +95,7 @@ public class ConnectorSteps {
                 .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
                 .addToLabels(Resources.LABEL_CONNECTOR_ID, connectorId)
                 .addToLabels(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
-                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get("operator.type"))
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(ConnectorContext.OPERATOR_TYPE))
                 .withName(Connectors.generateConnectorId(deploymentId))
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
@@ -104,22 +104,22 @@ public class ConnectorSteps {
                 .withDeploymentId(deploymentId)
                 .withDeployment(new DeploymentSpecBuilder()
                     .withConnectorResourceVersion(crv)
-                    .withConnectorTypeId(entry.get("connector.type.id"))
+                    .withConnectorTypeId(entry.get(ConnectorContext.CONNECTOR_TYPE_ID))
                     .withDeploymentResourceVersion(drv)
-                    .withDesiredState(entry.get("desired.state"))
+                    .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
                     .withSecret(Connectors.generateConnectorId(deploymentId) + "-" + drv)
                     .build())
                 .withOperatorSelector(new OperatorSelectorBuilder()
-                    .withId(entry.get("operator.id"))
-                    .withType(entry.get("operator.type"))
-                    .withVersion(entry.get("operator.version"))
+                    .withId(entry.get(ConnectorContext.OPERATOR_ID))
+                    .withType(entry.get(ConnectorContext.OPERATOR_TYPE))
+                    .withVersion(entry.get(ConnectorContext.OPERATOR_VERSION))
                     .build())
                 .build())
             .build();
 
         var secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get("operator.type"))
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(ConnectorContext.OPERATOR_TYPE))
                 .withName(connector.getMetadata().getName()
                     + "-"
                     + connector.getSpec().getDeployment().getDeploymentResourceVersion())

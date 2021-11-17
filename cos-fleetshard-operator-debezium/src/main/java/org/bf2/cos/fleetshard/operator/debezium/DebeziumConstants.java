@@ -16,7 +16,7 @@ public final class DebeziumConstants {
 
     public static final String EXTERNAL_CONFIG_DIRECTORY = "connector-configuration";
     public static final String EXTERNAL_CONFIG_FILE = "debezium-connector.properties";
-    public static final String KAFKA_PASSWORD_SECRET_KEY = "_kafka.client.secret";
+    public static final String KAFKA_CLIENT_SECRET_KEY = "_kafka.client.secret";
 
     public static final String STRIMZI_DOMAIN = "strimzi.io/";
     public static final String STRIMZI_IO_USE_CONNECTOR_RESOURCES = STRIMZI_DOMAIN + "use-connector-resources";

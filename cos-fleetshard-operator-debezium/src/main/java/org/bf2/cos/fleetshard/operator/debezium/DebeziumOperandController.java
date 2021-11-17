@@ -43,7 +43,7 @@ import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
 
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_PASSWORD_SECRET_KEY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_CLIENT_SECRET_KEY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
@@ -85,7 +85,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
                 .build())
             .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(secretsData))
-            .addToData(KAFKA_PASSWORD_SECRET_KEY, kafkaSpec.getClientSecret())
+            .addToData(KAFKA_CLIENT_SECRET_KEY, kafkaSpec.getClientSecret())
             .build();
 
         final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
@@ -95,7 +95,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withUsername(kafkaSpec.getClientId())
                 .withPasswordSecret(new PasswordSecretSourceBuilder()
                     .withSecretName(secret.getMetadata().getName())
-                    .withPassword(KAFKA_PASSWORD_SECRET_KEY)
+                    .withPassword(KAFKA_CLIENT_SECRET_KEY)
                     .build())
                 .build())
             .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)

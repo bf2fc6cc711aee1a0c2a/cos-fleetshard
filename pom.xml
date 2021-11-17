@@ -42,6 +42,7 @@
         <json-path.version>2.6.0</json-path.version>
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.2</pmd.asm.version>
+        <findsecbugs.version>1.10.1</findsecbugs.version>
 
         <formatter-maven-plugin.version>2.17.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -429,6 +430,13 @@
                     <version>${spotbugs-maven-plugin.version}</version>
                     <configuration>
                         <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                        <plugins>
+                            <plugin>
+                                <groupId>com.h3xstream.findsecbugs</groupId>
+                                <artifactId>findsecbugs-plugin</artifactId>
+                                <version>${findsecbugs.version}</version>
+                            </plugin>
+                        </plugins>
                     </configuration>
                     <dependencies>
                         <dependency>
