@@ -29,6 +29,7 @@ import io.strimzi.api.kafka.model.status.KafkaConnectorStatusBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class DebeziumOperandControllerTest {
@@ -187,11 +188,27 @@ public class DebeziumOperandControllerTest {
             .anyMatch(DebeziumOperandSupport::isKafkaConnector)
             .anyMatch(DebeziumOperandSupport::isSecret);
 
-        assertThat(resources).anySatisfy(r -> {
-            assertThat(r).isInstanceOfSatisfying(KafkaConnect.class, kc -> {
+        assertThat(resources)
+            .filteredOn(DebeziumOperandSupport::isKafkaConnect)
+            .hasSize(1)
+            .first()
+            .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
                 assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
             });
-        });
+        assertThat(resources)
+            .filteredOn(DebeziumOperandSupport::isKafkaConnector)
+            .hasSize(1)
+            .first()
+            .isInstanceOfSatisfying(KafkaConnector.class, kc -> {
+                assertThat(kc.getSpec().getConfig()).containsEntry(
+                    "database.password",
+                    "${file:/opt/kafka/external-configuration/"
+                        + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
+                        + "/"
+                        + EXTERNAL_CONFIG_FILE
+                        + ":database.password}");
+            });
+
     }
 
     @ParameterizedTest

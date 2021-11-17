@@ -86,17 +86,17 @@ public class DebeziumOperandSupport {
                     config.put(
                         property.getKey(),
                         property.getValue().asText());
+                } else {
+                    config.putIfAbsent(
+                        property.getKey(),
+                        "${file:/opt/kafka/external-configuration/"
+                            + EXTERNAL_CONFIG_DIRECTORY
+                            + "/"
+                            + EXTERNAL_CONFIG_FILE
+                            + ":" + property.getKey() + "}");
                 }
             }
         }
-
-        config.putIfAbsent(
-            "database.password",
-            "${file:/opt/kafka/external-configuration/"
-                + EXTERNAL_CONFIG_DIRECTORY
-                + "/"
-                + EXTERNAL_CONFIG_FILE
-                + ":database.password}");
 
         return config;
     }
