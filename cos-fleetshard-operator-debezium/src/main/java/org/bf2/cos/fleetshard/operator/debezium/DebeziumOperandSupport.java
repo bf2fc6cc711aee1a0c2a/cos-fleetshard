@@ -77,6 +77,11 @@ public class DebeziumOperandSupport {
     public static Map<String, Object> createConfig(DebeziumOperandConfiguration configuration, ObjectNode connectorSpec) {
         Map<String, Object> config = new TreeMap<>();
 
+        // add external configuration
+        if (configuration.kafkaConnector().config() != null) {
+            config.putAll(configuration.kafkaConnector().config());
+        }
+
         if (connectorSpec != null) {
             var cit = connectorSpec.fields();
             while (cit.hasNext()) {

@@ -99,6 +99,8 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                     .build())
                 .build())
             .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
+            // add external configuration
+            .addToConfig((Map) configuration.kafkaConnect().config())
             .addToConfig("group.id", connector.getMetadata().getName())
             // converters
             .addToConfig("key.converter", configuration.keyConverter())

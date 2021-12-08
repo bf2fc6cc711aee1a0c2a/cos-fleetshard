@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
@@ -66,6 +67,26 @@ public class DebeziumOperandControllerTest {
                 @Override
                 public String group() {
                     return "rhoas";
+                }
+            };
+        }
+
+        @Override
+        public KafkaConnect kafkaConnect() {
+            return new KafkaConnect() {
+                @Override
+                public Map<String, String> config() {
+                    return Map.of();
+                }
+            };
+        }
+
+        @Override
+        public KafkaConnector kafkaConnector() {
+            return new KafkaConnector() {
+                @Override
+                public Map<String, String> config() {
+                    return Map.of();
                 }
             };
         }
