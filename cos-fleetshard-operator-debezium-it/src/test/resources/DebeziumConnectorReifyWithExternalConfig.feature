@@ -34,7 +34,7 @@ Feature: Camel Connector Reify
     And the kc has an entry at path "$.spec.image" with value "quay.io/asansari/debezium-connector-postgres:1.5.3.Final"
     And the kc has config containing:
       | config.providers                  | file                                 |
-      | config.storage.replication.factor | -1                                   |
+      | config.storage.replication.factor | 3                                    |
       | config.storage.topic              | ${cos.managed.connector.name}-config |
       | offset.storage.topic              | ${cos.managed.connector.name}-offset |
       | status.storage.topic              | ${cos.managed.connector.name}-status |

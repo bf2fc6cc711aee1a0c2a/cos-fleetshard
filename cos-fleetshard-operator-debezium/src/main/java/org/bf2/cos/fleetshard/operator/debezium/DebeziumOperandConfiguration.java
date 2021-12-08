@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import java.util.Map;
+
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -14,11 +16,23 @@ public interface DebeziumOperandConfiguration {
 
     ContainerImage containerImage();
 
+    KafkaConnect kafkaConnect();
+
+    KafkaConnector kafkaConnector();
+
     interface ContainerImage {
         @WithDefault("image-registry.openshift-image-registry.svc:5000")
         String registry();
 
         @WithDefault("cos")
         String group();
+    }
+
+    interface KafkaConnect {
+        Map<String, String> config();
+    }
+
+    interface KafkaConnector {
+        Map<String, String> config();
     }
 }
