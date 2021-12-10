@@ -197,7 +197,7 @@ spec:
         - mountPath: "/mnt/app-secret"
           name: "app-secret"
           readOnly: false
-      serviceAccount: "cos-fleetshard-sync"
+      serviceAccountName: "cos-fleetshard-sync"
       volumes:
       - name: "app-secret"
         secret:
