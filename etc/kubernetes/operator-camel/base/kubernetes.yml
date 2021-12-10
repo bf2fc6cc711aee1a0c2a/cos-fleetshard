@@ -206,7 +206,7 @@ spec:
         - mountPath: "/mnt/app-config-map"
           name: "app-config-map"
           readOnly: false
-      serviceAccount: "cos-fleetshard-operator-camel"
+      serviceAccountName: "cos-fleetshard-operator-camel"
       volumes:
       - configMap:
           name: "cos-fleetshard-operator-camel-config"

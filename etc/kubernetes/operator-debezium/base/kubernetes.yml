@@ -207,7 +207,7 @@ spec:
         - mountPath: "/mnt/app-config-map"
           name: "app-config-map"
           readOnly: false
-      serviceAccount: "cos-fleetshard-operator-debezium"
+      serviceAccountName: "cos-fleetshard-operator-debezium"
       volumes:
       - configMap:
           name: "cos-fleetshard-operator-debezium-config"
