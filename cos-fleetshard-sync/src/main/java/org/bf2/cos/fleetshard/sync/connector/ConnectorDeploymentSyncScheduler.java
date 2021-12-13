@@ -20,13 +20,9 @@ import io.quarkus.runtime.Startup;
 @ApplicationScoped
 public class ConnectorDeploymentSyncScheduler {
     @Inject
-    ConnectorDeploymentQueue queue;
-    @Inject
     FleetShardSyncScheduler scheduler;
     @Inject
     FleetShardSyncConfig config;
-    @Inject
-    FleetShardClient connectorClient;
 
     @PostConstruct
     void init() throws SchedulerException {
@@ -46,13 +42,17 @@ public class ConnectorDeploymentSyncScheduler {
 
         @Inject
         ConnectorDeploymentQueue queue;
+
+        @Inject
+        FleetShardClient connectorClient;
+
         @MetricsID(ID)
         @Inject
         MetricsRecorder recorder;
 
         @Override
         public void execute(JobExecutionContext context) {
-            recorder.record(queue::submitPoisonPill);
+            recorder.record(() -> this.queue.submit(connectorClient.getMaxDeploymentResourceRevision()));
         }
     }
 
@@ -63,15 +63,13 @@ public class ConnectorDeploymentSyncScheduler {
         @Inject
         ConnectorDeploymentQueue queue;
 
-        @Inject
-        FleetShardClient connectorClient;
         @MetricsID(ID)
         @Inject
         MetricsRecorder recorder;
 
         @Override
         public void execute(JobExecutionContext context) {
-            recorder.record(() -> this.queue.submit(connectorClient.getMaxDeploymentResourceRevision()));
+            recorder.record(queue::submitPoisonPill);
         }
     }
 }
