@@ -18,6 +18,7 @@ public class FleetShardSync {
 
     public void start() {
         fleetShardClient.getOrCreateManagedConnectorCluster();
+        fleetShardClient.start();
 
         deploymentSync.start();
         statusSync.start();
@@ -26,5 +27,7 @@ public class FleetShardSync {
     public void stop() {
         deploymentSync.stop();
         statusSync.stop();
+
+        fleetShardClient.stop();
     }
 }

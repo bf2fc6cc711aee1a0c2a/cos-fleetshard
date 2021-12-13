@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.client;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -20,14 +19,14 @@ import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
+import org.bf2.cos.fleetshard.support.watch.Informers;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
 @ApplicationScoped
 public class FleetShardClient {
@@ -36,6 +35,21 @@ public class FleetShardClient {
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardSyncConfig config;
+
+    private volatile SharedIndexInformer<ManagedConnector> informer;
+
+    public void start() {
+        informer = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(getConnectorsNamespace())
+            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
+            .inform();
+    }
+
+    public void stop() {
+        if (informer != null) {
+            informer.stop();
+        }
+    }
 
     public String getConnectorsNamespace() {
         return config.connectors().namespace();
@@ -49,29 +63,27 @@ public class FleetShardClient {
         return kubernetesClient;
     }
 
-    public Boolean delete(ManagedConnector managedConnector) {
-        return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
-            .withName(managedConnector.getMetadata().getName())
-            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
-            .delete();
-    }
-
     public long getMaxDeploymentResourceRevision() {
-        final List<ManagedConnector> managedConnectors = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
-            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
-            .list()
-            .getItems();
-
-        return managedConnectors.stream()
+        return this.informer.getIndexer().list().stream()
             .mapToLong(c -> c.getSpec().getDeployment().getDeploymentResourceVersion())
             .max()
             .orElse(0);
     }
 
+    // *************************************
+    //
+    // Secrets
+    //
+    // *************************************
+
     public Optional<Secret> getSecret(ConnectorDeployment deployment) {
         return getSecretByDeploymentId(deployment.getId());
+    }
+
+    public Secret createSecret(Secret secret) {
+        return this.kubernetesClient.secrets()
+            .inNamespace(getConnectorsNamespace())
+            .createOrReplace(secret);
     }
 
     public Optional<Secret> getSecretByDeploymentId(String deploymentId) {
@@ -82,12 +94,29 @@ public class FleetShardClient {
                 .get());
     }
 
+    // *************************************
+    //
+    // Connectors
+    //
+    // *************************************
+
+    public Boolean deleteConnector(ManagedConnector managedConnector) {
+        return kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(getConnectorsNamespace())
+            .withName(managedConnector.getMetadata().getName())
+            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
+            .delete();
+    }
+
     public Optional<ManagedConnector> getConnectorByName(String name) {
-        return Optional.ofNullable(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(getConnectorsNamespace())
-                .withName(name)
-                .get());
+        if (informer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = getConnectorsNamespace() + "/" + name;
+        final ManagedConnector val = informer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
     }
 
     public Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
@@ -95,63 +124,23 @@ public class FleetShardClient {
     }
 
     public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
-        return Optional.ofNullable(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(getConnectorsNamespace())
-                .withName(Connectors.generateConnectorId(deployment.getId()))
-                .get());
+        return getConnectorByName(Connectors.generateConnectorId(deployment.getId()));
     }
 
     public List<ManagedConnector> getAllConnectors() {
-        List<ManagedConnector> answer = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
-            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
-            .list()
-            .getItems();
+        if (informer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
 
-        return answer != null ? answer : Collections.emptyList();
+        return informer.getIndexer().list();
     }
 
-    public AutoCloseable watchAllConnectors(Consumer<ManagedConnector> handler) {
-        var answer = new AbstractWatcher<ManagedConnector>() {
-            @Override
-            protected Watch doWatch() {
-                return kubernetesClient.resources(ManagedConnector.class)
-                    .inNamespace(getConnectorsNamespace())
-                    .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
-                    .watch(this);
-            }
+    public void watchConnectors(Consumer<ManagedConnector> handler) {
+        if (informer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
 
-            @Override
-            protected void onEventReceived(Action action, ManagedConnector resource) {
-                handler.accept(resource);
-            }
-        };
-
-        answer.start();
-
-        return answer;
-    }
-
-    public AutoCloseable watchAllOperators(Consumer<ManagedConnectorOperator> handler) {
-        var answer = new AbstractWatcher<ManagedConnectorOperator>() {
-            @Override
-            protected Watch doWatch() {
-                return kubernetesClient.resources(ManagedConnectorOperator.class)
-                    .inNamespace(getConnectorsNamespace())
-                    .watch(this);
-            }
-
-            @Override
-            protected void onEventReceived(Action action, ManagedConnectorOperator resource) {
-                handler.accept(resource);
-            }
-        };
-
-        answer.start();
-
-        return answer;
-
+        informer.addEventHandler(Informers.wrap(handler));
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {
@@ -167,11 +156,11 @@ public class FleetShardClient {
             .accept(editor);
     }
 
-    public Secret createSecret(Secret secret) {
-        return this.kubernetesClient.secrets()
-            .inNamespace(getConnectorsNamespace())
-            .createOrReplace(secret);
-    }
+    // *************************************
+    //
+    // Operators
+    //
+    // *************************************
 
     public List<Operator> lookupOperators() {
         return kubernetesClient.resources(ManagedConnectorOperator.class)
@@ -185,6 +174,12 @@ public class FleetShardClient {
                 mco.getSpec().getVersion()))
             .collect(Collectors.toList());
     }
+
+    // *************************************
+    //
+    // Cluster
+    //
+    // *************************************
 
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
         return Optional.ofNullable(
