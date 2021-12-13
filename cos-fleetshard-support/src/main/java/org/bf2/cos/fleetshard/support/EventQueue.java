@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,39 +72,25 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
         }
     }
 
-    public Collection<R> poll(long time, TimeUnit unit) throws InterruptedException {
+    public void poll(long time, TimeUnit unit, Consumer<Collection<R>> consumer) throws InterruptedException {
         this.lock.lock();
 
         try {
             if (events.isEmpty() && !poison) {
                 boolean elapsed = this.condition.await(time, unit);
                 if (elapsed) {
-                    logger.debug("TaskQueue: await elapsed");
+                    logger.trace("TaskQueue: await elapsed");
                 }
             }
 
-            Collection<R> answer;
+            process(poison ? Collections.emptyList() : events, consumer);
 
-            if (poison) {
-                answer = collectAll();
-                poison = false;
-            } else if (events.isEmpty()) {
-                return Collections.emptyList();
-            } else {
-                answer = collectAll(events);
-            }
-
+            poison = false;
             events.clear();
-
-            logger.debug("TaskQueue: elements={}", answer.size());
-
-            return answer;
         } finally {
             this.lock.unlock();
         }
     }
 
-    protected abstract Collection<R> collectAll();
-
-    protected abstract Collection<R> collectAll(Collection<T> elements);
+    protected abstract void process(Collection<T> elements, Consumer<Collection<R>> consumer);
 }
