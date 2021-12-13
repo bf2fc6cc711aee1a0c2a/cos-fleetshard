@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -52,12 +51,13 @@ public class ConnectorStatusSync {
         try {
             while (!executor.isShutdown()) {
                 final long timeout = config.connectors().status().queueTimeout().toMillis();
-                final Collection<ManagedConnector> connectors = queue.poll(timeout, TimeUnit.MILLISECONDS);
-                LOGGER.debug("connectors to update: {}", connectors.size());
+                queue.poll(timeout, TimeUnit.MILLISECONDS, connectors -> {
+                    LOGGER.debug("connectors to update: {}", connectors.size());
 
-                for (ManagedConnector connector : connectors) {
-                    updater.update(connector);
-                }
+                    for (ManagedConnector connector : connectors) {
+                        updater.update(connector);
+                    }
+                });
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

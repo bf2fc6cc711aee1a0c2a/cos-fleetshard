@@ -1,9 +1,12 @@
 package org.bf2.cos.fleetshard.sync.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -39,11 +42,12 @@ public class FleetManagerClient {
             .build(ConnectorClustersAgentApi.class);
     }
 
-    public List<ConnectorDeployment> getDeployments(long gv) {
-        return FleetManagerClientHelper.call(() -> {
+    public void getDeployments(long gv, Consumer<Collection<ConnectorDeployment>> consumer) {
+        FleetManagerClientHelper.run(() -> {
             LOGGER.debug("polling with gv: {}", gv);
 
-            List<ConnectorDeployment> answer = new ArrayList<>();
+            final AtomicInteger counter = new AtomicInteger();
+            final List<ConnectorDeployment> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 ConnectorDeploymentList list = controlPlane.getClusterAssignedConnectorDeployments(
@@ -53,24 +57,21 @@ public class FleetManagerClient {
                     gv,
                     "false");
 
-                if (list == null || list.getItems() == null) {
+                if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
+                    LOGGER.info("No connectors for cluster {}", config.cluster().id());
                     break;
                 }
 
-                answer.addAll(list.getItems());
+                items.clear();
+                items.addAll(list.getItems());
+                items.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
 
-                if (list.getItems().isEmpty() || answer.size() == list.getTotal()) {
+                consumer.accept(items);
+
+                if (counter.addAndGet(items.size()) == list.getTotal()) {
                     break;
                 }
             }
-
-            if (answer.isEmpty()) {
-                LOGGER.info("No connectors for agent {}", config.cluster().id());
-            }
-
-            answer.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
-
-            return answer;
         });
     }
 

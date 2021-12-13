@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -45,16 +44,19 @@ public class ConnectorDeploymentSync {
         try {
             while (!executor.isShutdown()) {
                 final long timeout = config.connectors().provisioner().queueTimeout().toMillis();
-                final Collection<ConnectorDeployment> deployments = queue.poll(timeout, TimeUnit.MILLISECONDS);
-                LOGGER.debug("connectors to deploy: {}", deployments.size());
+                queue.poll(timeout, TimeUnit.MILLISECONDS, deployments -> {
+                    LOGGER.debug("connectors to deploy: {}", deployments.size());
 
-                for (ConnectorDeployment deployment : deployments) {
-                    provisioner.provision(deployment);
-                }
+                    for (ConnectorDeployment deployment : deployments) {
+                        provisioner.provision(deployment);
+                    }
+                });
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.debug("interrupted, message: {}", e.getMessage());
+        } catch (Exception e) {
+            LOGGER.debug("{}", e.getMessage(), e);
         } finally {
             if (!executor.isShutdown()) {
                 future = executor.submit(this::run);

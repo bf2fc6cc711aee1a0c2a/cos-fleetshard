@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -16,16 +17,16 @@ class ConnectorStatusQueue extends EventQueue<String, ManagedConnector> {
     FleetShardClient connectorClient;
 
     @Override
-    protected Collection<ManagedConnector> collectAll() {
-        return connectorClient.getAllConnectors();
-    }
+    protected void process(Collection<String> elements, Consumer<Collection<ManagedConnector>> consumer) {
+        final Collection<ManagedConnector> connectors = elements.isEmpty()
+            ? connectorClient.getAllConnectors()
+            : elements.stream()
+                .sorted()
+                .distinct()
+                .flatMap(e -> connectorClient.getConnectorByName(e).stream())
+                .collect(Collectors.toList());
 
-    @Override
-    protected Collection<ManagedConnector> collectAll(Collection<String> elements) {
-        return elements.stream()
-            .sorted()
-            .distinct()
-            .flatMap(e -> connectorClient.getConnectorByName(e).stream())
-            .collect(Collectors.toList());
+        consumer.accept(connectors);
+
     }
 }

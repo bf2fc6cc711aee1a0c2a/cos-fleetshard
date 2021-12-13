@@ -1,8 +1,8 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Consumer;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,12 +20,11 @@ public class ConnectorDeploymentQueue extends EventQueue<Long, ConnectorDeployme
     }
 
     @Override
-    protected Collection<ConnectorDeployment> collectAll() {
-        return new ArrayList<>(fleetManager.getDeployments(0));
-    }
+    protected void process(Collection<Long> elements, Consumer<Collection<ConnectorDeployment>> consumer) {
+        final long revision = elements.isEmpty()
+            ? 0
+            : Collections.max(elements);
 
-    @Override
-    protected Collection<ConnectorDeployment> collectAll(Collection<Long> elements) {
-        return new ArrayList<>(fleetManager.getDeployments(Collections.max(elements)));
+        fleetManager.getDeployments(revision, consumer);
     }
 }
