@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 public class ConnectorStatusSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusSync.class);
 
-    AutoCloseable connectorsObserver;
-
     @Inject
     ConnectorStatusUpdater updater;
     @Inject
@@ -39,19 +37,12 @@ public class ConnectorStatusSync {
 
         if (config.connectors().watch()) {
             LOGGER.info("Starting connector status observer");
-            connectorsObserver = connectorClient.watchAllConnectors(
+            connectorClient.watchConnectors(
                 connector -> queue.submit(connector.getMetadata().getName()));
         }
     }
 
     public void stop() {
-        if (this.connectorsObserver != null) {
-            try {
-                this.connectorsObserver.close();
-            } catch (Exception e) {
-                LOGGER.debug("", e);
-            }
-        }
         if (future != null) {
             future.cancel(true);
         }

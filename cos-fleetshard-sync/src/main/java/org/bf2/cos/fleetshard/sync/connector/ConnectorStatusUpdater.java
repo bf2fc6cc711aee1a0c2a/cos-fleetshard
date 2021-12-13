@@ -33,7 +33,7 @@ public class ConnectorStatusUpdater {
             // TODO: remove 404 after https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager/issues/2
             if (e.getStatusCode() == 404 || e.getStatusCode() == 410) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
-                if (connectorClient.delete(connector)) {
+                if (connectorClient.deleteConnector(connector)) {
                     LOGGER.info("Connector " + connector.getMetadata().getName() + " deleted");
                 }
             } else {
