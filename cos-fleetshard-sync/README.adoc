@@ -93,11 +93,11 @@ To change the default values, use the following system properties:
 
 | cos.connectors.status.resync-interval
 | 60s
-| the interval between full connector status re-sync
+| the interval between full connectors status re-sync
 
-| cos.connectors.status.queue-timeout
+| cos.connectors.status.update-interval
 | 15s
-| the wait timeout for the internal event queue
+| the interval between connectors status update
 
 | cos.cluster.status.sync-interval
 | 60s

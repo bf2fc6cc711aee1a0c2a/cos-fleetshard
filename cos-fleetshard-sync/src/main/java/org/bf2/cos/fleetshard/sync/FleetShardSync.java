@@ -17,17 +17,25 @@ public class FleetShardSync {
     ConnectorStatusSync statusSync;
 
     public void start() {
-        fleetShardClient.getOrCreateManagedConnectorCluster();
-        fleetShardClient.start();
+        try {
+            fleetShardClient.getOrCreateManagedConnectorCluster();
+            fleetShardClient.start();
 
-        deploymentSync.start();
-        statusSync.start();
+            deploymentSync.start();
+            statusSync.start();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void stop() {
-        deploymentSync.stop();
-        statusSync.stop();
+        try {
+            deploymentSync.stop();
+            statusSync.stop();
 
-        fleetShardClient.stop();
+            fleetShardClient.stop();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
