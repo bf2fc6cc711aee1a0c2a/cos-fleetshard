@@ -4,6 +4,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
@@ -14,6 +15,7 @@ import javax.inject.Inject;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
@@ -27,8 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -37,6 +41,8 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
@@ -55,8 +61,68 @@ public class ConnectorSteps {
     ConnectorContext ctx;
 
     @Before
+    public void init() {
+        clear();
+
+        kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connectorsNamespace())
+            .watch(new Watcher<>() {
+                @Override
+                public void eventReceived(Action action, ManagedConnector connector) {
+                    switch (action) {
+                        case ADDED:
+                        case MODIFIED:
+                            ctx.history().add(connector);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                @Override
+                public void onClose(WatcherException e) {
+                }
+            });
+    }
+
     @After
-    public void cleanUp() {
+    public void cleanup(Scenario scenario) {
+        if (scenario.isFailed()) {
+            dump(scenario);
+        }
+
+        clear();
+    }
+
+    void dump(Scenario scenario) {
+        scenario.log("============================================");
+
+        if (ctx.connector() != null) {
+            ManagedConnector connector = kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName())
+                .get();
+
+            if (connector != null) {
+                scenario.log("Connector:\n" + JacksonUtil.asPrettyPrintedYaml(connector));
+            }
+        }
+
+        if (ctx.secret() != null) {
+            Secret secret = kubernetesClient.resources(Secret.class)
+                .inNamespace(ctx.secret().getMetadata().getNamespace())
+                .withName(ctx.secret().getMetadata().getName())
+                .get();
+
+            if (secret != null) {
+                scenario.log("Secret:\n" + JacksonUtil.asPrettyPrintedYaml(secret));
+            }
+        }
+
+        scenario.log("============================================");
+    }
+
+    void clear() {
         if (ctx.connector() != null) {
             LOGGER.info("Deleting connector: {} in namespace {}",
                 ctx.connector().getMetadata().getName(),
@@ -338,6 +404,51 @@ public class ConnectorSteps {
         untilConnector(c -> {
             return selectorId.equals(c.getSpec().getOperatorSelector().getId());
         });
+    }
+
+    @Then("wait till the connector has entry in history with conditions:")
+    public void connector_has_conditions(DataTable table) {
+        final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+
+        awaiter.until(() -> {
+            return ctx.history().stream().anyMatch(
+                connector -> rows.stream().allMatch(row -> hasCondition(connector, row)));
+        });
+    }
+
+    @Then("wait till the connector has entry in history with phase {string} and conditions:")
+    public void connector_has_conditions(String phase, DataTable table) {
+        final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+
+        awaiter.until(() -> {
+            return ctx.history().stream()
+                .filter(c -> {
+                    return Objects.equals(
+                        c.getMetadata().getName(),
+                        ctx.connector().getMetadata().getName());
+                })
+                .filter(c -> {
+                    return Objects.equals(
+                        ManagedConnectorStatus.PhaseType.valueOf(phase),
+                        c.getStatus().getPhase());
+                })
+                .filter(c -> {
+                    return Objects.equals(
+                        c.getMetadata().getLabels().get(Resources.LABEL_UOW),
+                        ctx.connector().getMetadata().getLabels().get(Resources.LABEL_UOW));
+                })
+                .anyMatch(c -> {
+                    return rows.stream().allMatch(row -> hasCondition(c, row));
+                });
+        });
+    }
+
+    private boolean hasCondition(ManagedConnector connector, Map<String, String> row) {
+        return ManagedConnectorConditions.hasCondition(
+            connector,
+            ManagedConnectorConditions.Type.valueOf(row.get("type")),
+            ManagedConnectorConditions.Status.valueOf(row.get("status")),
+            row.get("reason"));
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {

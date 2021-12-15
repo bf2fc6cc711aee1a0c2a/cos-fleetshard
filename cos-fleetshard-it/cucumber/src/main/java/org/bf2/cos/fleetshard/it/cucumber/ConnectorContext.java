@@ -2,7 +2,9 @@ package org.bf2.cos.fleetshard.it.cucumber;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -35,11 +37,17 @@ public class ConnectorContext {
     public static final String CONNECTOR_TYPE_ID = "connector.type.id";
     public static final String DESIRED_STATE = "desired.state";
 
+    private final List<ManagedConnector> history = new CopyOnWriteArrayList<>();
+
     @Inject
     private CosFeatureContext cosCtx;
 
     private ManagedConnector connector;
     private Secret secret;
+
+    public List<ManagedConnector> history() {
+        return history;
+    }
 
     public ManagedConnector connector() {
         return connector;
@@ -60,6 +68,7 @@ public class ConnectorContext {
     public synchronized void clear() {
         this.connector = null;
         this.secret = null;
+        this.history.clear();
     }
 
     public String clusterId() {
