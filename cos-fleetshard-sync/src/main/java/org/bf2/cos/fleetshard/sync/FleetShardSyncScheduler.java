@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
@@ -43,5 +44,9 @@ public class FleetShardSyncScheduler {
         quartz.scheduleJob(
             job,
             trigger);
+    }
+
+    public void shutdown(String id) throws SchedulerException {
+        quartz.deleteJob(JobKey.jobKey(id + ".job", id));
     }
 }

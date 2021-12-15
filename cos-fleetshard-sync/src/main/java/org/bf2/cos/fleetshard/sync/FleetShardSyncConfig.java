@@ -149,13 +149,14 @@ public interface FleetShardSyncConfig {
             Duration resyncInterval();
 
             /**
-             * Determine the timeout of the internal status sync queue.
+             * Determine how often the synchronizer should update the status of deployed {@link ManagedConnector} to the
+             * Control Plane.
              *
              * @return the timeout.
              */
-            @WithDefault("15s")
+            @WithDefault("1s")
             @WithConverter(DurationConverter.class)
-            Duration queueTimeout();
+            Duration updateInterval();
         }
 
         interface Provisioner {

@@ -72,6 +72,23 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
         }
     }
 
+    public void run(Consumer<Collection<R>> consumer) {
+        this.lock.lock();
+
+        try {
+            if (events.isEmpty()) {
+                return;
+            }
+
+            process(poison ? Collections.emptyList() : events, consumer);
+
+            poison = false;
+            events.clear();
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
     public void poll(long time, TimeUnit unit, Consumer<Collection<R>> consumer) throws InterruptedException {
         this.lock.lock();
 
