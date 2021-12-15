@@ -122,6 +122,30 @@ public class MicrometerSteps extends StepsSupport {
             .isNotNull();
     }
 
+    @And("wait till the meters has counter {string} with value equal to {int}")
+    public void counter_wait_isEqualTo(String name, int expected) {
+        awaiter.until(() -> {
+            Counter counter = registry.find(name).counter();
+            if (counter == null) {
+                return false;
+            }
+
+            return ((int) counter.count()) == expected;
+        });
+    }
+
+    @And("wait till the meters has counter {string} with value greater than or equal to {int}")
+    public void counter_wait_isGreaterThanOrEqualTo(String name, int expected) {
+        awaiter.until(() -> {
+            Counter counter = registry.find(name).counter();
+            if (counter == null) {
+                return false;
+            }
+
+            return ((int) counter.count()) >= expected;
+        });
+    }
+
     // ***********************************
     //
     // timers
@@ -156,6 +180,11 @@ public class MicrometerSteps extends StepsSupport {
     public void timer_doesNotExists(String name) {
         assertThat(registry.find(name).timer())
             .isNull();
+    }
+
+    @And("wait till the meters has timer with name {string}")
+    public void timer_wait_exists(String name) {
+        awaiter.until(() -> registry.find(name).timer() != null);
     }
 
 }

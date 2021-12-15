@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
@@ -245,6 +246,15 @@ public final class CamelOperandSupport {
         }
 
         if (kameletBindingStatus.conditions != null) {
+            for (Condition condition : kameletBindingStatus.conditions) {
+                // This cleanup is needed as the KameletBinding condition has a field, lastUpdateTime, that
+                // does not map to any field in the Condition class provided by the Fabric8 Kubernetes Client.
+                //
+                // Such field is then kept as an additional property and causes additional reconciliation loops
+                // as the Fabric8 Kubernetes Client generate a wrong JSON patch.
+                condition.setAdditionalProperties(null);
+            }
+
             statusSpec.setConditions(kameletBindingStatus.conditions);
         }
     }

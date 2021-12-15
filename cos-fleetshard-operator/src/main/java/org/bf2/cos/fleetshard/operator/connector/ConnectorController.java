@@ -13,6 +13,7 @@ import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleetshard.api.DeploymentSpecAware;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
@@ -21,8 +22,6 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
-import org.bf2.cos.fleetshard.operator.connector.exceptions.ConnectorControllerException;
-import org.bf2.cos.fleetshard.operator.connector.exceptions.Drifted;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
@@ -71,7 +70,10 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_
 import static org.bf2.cos.fleetshard.support.resources.Resources.copyAnnotation;
 import static org.bf2.cos.fleetshard.support.resources.Resources.copyLabel;
 
-@Controller(name = "connector", finalizerName = Controller.NO_FINALIZER, generationAwareEventProcessing = false)
+@Controller(
+    name = "connector",
+    finalizerName = Controller.NO_FINALIZER,
+    generationAwareEventProcessing = false)
 public class ConnectorController extends AbstractResourceController<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
@@ -143,6 +145,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     protected UpdateControl<ManagedConnector> reconcile(
         ManagedConnector connector,
         Context<ManagedConnector> context) {
+
+        LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
+            connector.getApiVersion(),
+            connector.getKind(),
+            connector.getMetadata().getName(),
+            connector.getMetadata().getNamespace(),
+            connector.getStatus().getPhase());
 
         final boolean selected = selected(connector);
         final boolean assigned = assigned(connector);
@@ -222,18 +231,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     private UpdateControl<ManagedConnector> reconcile(ManagedConnector resource) {
-        LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
-            resource.getApiVersion(),
-            resource.getKind(),
-            resource.getMetadata().getName(),
-            resource.getMetadata().getNamespace(),
-            resource.getStatus().getPhase());
-
         if (resource.getStatus().getPhase() == null) {
             resource.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
             resource.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
             resource.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-            return UpdateControl.updateStatusSubResource(resource);
         }
 
         return measure(
@@ -279,6 +280,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             .tags(tags)
             .tag("cos.connector.id", connector.getSpec().getConnectorId())
             .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
+            .tag("cos.deployment.resync", Boolean.toString(isResync(connector)))
             .register(registry)
             .increment();
 
@@ -287,6 +289,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 .tags(tags)
                 .tag("cos.connector.id", connector.getSpec().getConnectorId())
                 .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
+                .tag("cos.deployment.resync", Boolean.toString(isResync(connector)))
                 .publishPercentiles(0.3, 0.5, 0.95)
                 .publishPercentileHistogram()
                 .register(registry)
@@ -304,18 +307,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     private UpdateControl<ManagedConnector> handleInitialization(ManagedConnector connector) {
         ManagedConnectorConditions.clearConditions(connector);
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Initialization,
-            ManagedConnectorConditions.Status.True,
-            "Initialization",
-            "Initialization");
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Ready,
-            ManagedConnectorConditions.Status.False,
-            "Initialization",
-            "Initialization");
+
+        setCondition(connector, ManagedConnectorConditions.Type.Initialization, true);
+        setCondition(connector, ManagedConnectorConditions.Type.Ready, false, "Initialization");
 
         switch (connector.getSpec().getDeployment().getDesiredState()) {
             case DESIRED_STATE_DELETED: {
@@ -340,9 +334,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         .withVersion(managedConnectorOperator.getSpec().getVersion())
                         .build());
 
+                setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true);
+                setCondition(connector, ManagedConnectorConditions.Type.Ready, false);
+
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
                 connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
                 connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
                 break;
             }
             default:
@@ -353,7 +351,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.updateStatusSubResource(connector);
     }
 
-    @SuppressWarnings("unchecked")
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
         if (connector.getSpec().getDeployment().getSecret() == null) {
             LOGGER.info("Secret for deployment not defines");
@@ -373,6 +370,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 "SecretNotFound");
 
             if (!retry) {
+                LOGGER.debug(
+                    "Unable to find secret with name: {}", connector.getSpec().getDeployment().getSecret());
+
                 setCondition(
                     connector,
                     ManagedConnectorConditions.Type.Augmentation,
@@ -402,6 +402,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     "SecretUoWMismatch");
 
                 if (!retry) {
+                    LOGGER.debug(
+                        "Secret and Connector UoW mismatch (connector: {}, secret: {})", connectorUow, secretUow);
+
                     setCondition(
                         connector,
                         ManagedConnectorConditions.Type.Augmentation,
@@ -421,19 +424,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 }
             }
         }
-
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Augmentation,
-            ManagedConnectorConditions.Status.True,
-            "Augmentation",
-            "Augmentation");
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Ready,
-            ManagedConnectorConditions.Status.False,
-            "Augmentation",
-            "Augmentation");
 
         for (var resource : operandController.reify(connector, secret)) {
             if (resource.getMetadata().getLabels() == null) {
@@ -490,6 +480,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Monitor);
         connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
 
+        setCondition(connector, ManagedConnectorConditions.Type.Resync, false);
+        setCondition(connector, ManagedConnectorConditions.Type.Monitor, true);
+        setCondition(connector, ManagedConnectorConditions.Type.Ready, true);
+        setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true);
+
         return UpdateControl.updateStatusSubResource(connector);
     }
 
@@ -521,19 +516,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         } else {
             connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
         }
-
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Monitor,
-            ManagedConnectorConditions.Status.True,
-            "Monitor",
-            "Monitor");
-        setCondition(
-            connector,
-            ManagedConnectorConditions.Type.Ready,
-            ManagedConnectorConditions.Status.True,
-            "Ready",
-            "Ready");
 
         return UpdateControl.updateStatusSubResource(connector);
     }
@@ -604,9 +586,11 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
         LOGGER.info("Connector {} complete, it can now be handled by another operator.",
             connector.getMetadata().getName());
+
         connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
         connector.getStatus().getConnectorStatus().setAssignedOperator(null);
         connector.getStatus().getConnectorStatus().setAvailableOperator(null);
+
         return UpdateControl.updateStatusSubResource(connector);
     }
 
@@ -620,30 +604,59 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         ManagedConnector connector,
         Function<ManagedConnector, UpdateControl<ManagedConnector>> okAction) {
 
-        try {
-            validate(connector);
-
-            return okAction.apply(connector);
-        } catch (ConnectorControllerException e) {
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
-            connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
-            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
-
-            LOGGER.info("{}, move to phase: {}", e.getMessage(), connector.getStatus().getPhase());
-
-            return UpdateControl.updateStatusSubResource(connector);
-        }
-    }
-
-    private void validate(ManagedConnector connector) throws ConnectorControllerException {
         if (!Objects.equals(connector.getSpec().getDeployment(), connector.getStatus().getDeployment())) {
             JsonNode specNode = Serialization.jsonMapper().valueToTree(connector.getSpec().getDeployment());
             JsonNode statusNode = Serialization.jsonMapper().valueToTree(connector.getStatus().getDeployment());
+            JsonNode diff = JsonDiff.asJson(statusNode, specNode);
 
-            throw Drifted.of("Drift detected on connector deployment %s: %s",
+            if (diff.isArray() && diff.size() == 1 && diff.get(0).at("/path").asText().equals("/unitOfWork")) {
+                final Long specResourceVersion = getDeploymentResourceVersion(connector.getSpec());
+                final Long statResourceVersion = getDeploymentResourceVersion(connector.getStatus());
+
+                if (specResourceVersion != null && specResourceVersion.equals(statResourceVersion)) {
+                    //
+                    // In case of re-sink, the diff should looks like:
+                    //
+                    //   [{
+                    //      "op": "replace",
+                    //      "path": "/unitOfWork",
+                    //      "value": "61ba142d2a83cb1d0cf3dff2"
+                    //   }]
+                    //
+                    // if the only changed element is unitOfWork then this reconcile loop was triggered
+                    // by a re-sink process: to be on the safe side, the Augmentation step is re-executed
+                    // as if it were a new connector so operand's CRs are re-generated.
+                    //
+
+                    setCondition(connector, ManagedConnectorConditions.Type.Resync, true);
+                }
+            }
+
+            if (isResync(connector)) {
+                setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true, "Resync");
+                setCondition(connector, ManagedConnectorConditions.Type.Ready, false, "Resync");
+
+                //
+                // If the managed connector is performing a resync, then we don't change the status
+                // of the connector on the control plane as this is a technical phase. We can then
+                // jump straight to the Augmentation phase
+                //
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
+            } else {
+                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
+                connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
+                connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+            }
+
+            LOGGER.info("Drift detected on connector deployment {}: {} -> move to phase: {}",
                 connector.getSpec().getDeploymentId(),
-                JsonDiff.asJson(statusNode, specNode));
+                diff,
+                connector.getStatus().getPhase());
+
+            return UpdateControl.updateStatusSubResource(connector);
         }
+
+        return okAction.apply(connector);
     }
 
     private boolean selected(ManagedConnector connector) {
@@ -659,4 +672,24 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 managedConnectorOperator.getMetadata().getName(),
                 connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
     }
+
+    private Long getDeploymentResourceVersion(DeploymentSpecAware spec) {
+        if (spec == null) {
+            return null;
+        }
+        if (spec.getDeployment() == null) {
+            return null;
+        }
+
+        return spec.getDeployment().getDeploymentResourceVersion();
+    }
+
+    private boolean isResync(ManagedConnector connector) {
+        return hasCondition(
+            connector,
+            ManagedConnectorConditions.Type.Resync,
+            ManagedConnectorConditions.Status.True,
+            "Resync");
+    }
+
 }

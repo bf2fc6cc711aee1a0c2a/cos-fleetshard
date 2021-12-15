@@ -27,6 +27,33 @@ public final class ManagedConnectorConditions {
         return setCondition(connector, condition);
     }
 
+    public static boolean setCondition(ManagedConnector connector, Type type, boolean status, String reason, String message) {
+        return setCondition(connector, type, status ? Status.True : Status.False, reason, message);
+    }
+
+    public static boolean setCondition(ManagedConnector connector, Type type, Status status, String reason) {
+        return setCondition(connector, type, status, reason, reason);
+    }
+
+    public static boolean setCondition(ManagedConnector connector, Type type, boolean status, String reason) {
+        return setCondition(connector, type, status ? Status.True : Status.False, reason, reason);
+    }
+
+    public static boolean setCondition(ManagedConnector connector, Type type, Status status) {
+        Condition condition = new Condition();
+        condition.setType(type.name());
+        condition.setStatus(status.name());
+        condition.setReason(type.name());
+        condition.setMessage(type.name());
+        condition.setLastTransitionTime(Conditions.now());
+
+        return setCondition(connector, condition);
+    }
+
+    public static boolean setCondition(ManagedConnector connector, Type type, boolean status) {
+        return setCondition(connector, type, status ? Status.True : Status.False);
+    }
+
     public static boolean setCondition(ManagedConnector connector, Condition condition) {
         if (connector.getStatus().getConditions() == null) {
             connector.getStatus().setConditions(new ArrayList<>());
@@ -95,6 +122,7 @@ public final class ManagedConnectorConditions {
         Delete,
         Stop,
         Migrate,
+        Resync,
     }
 
     public enum Status {
