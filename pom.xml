@@ -27,7 +27,7 @@
         <kubernetes-client.version>5.11.0</kubernetes-client.version>
         <lombok.version>1.18.22</lombok.version>
         <quarkus.version>2.6.0.Final</quarkus.version>
-        <quarkus-cucumber.version>0.4.0</quarkus-cucumber.version>
+        <quarkus-cucumber.version>0.5.0</quarkus-cucumber.version>
         <quarkus-operator-sdk.version>2.0.2</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.2</swagger-annotations.version>
         <sundrio.version>0.50.2</sundrio.version>
@@ -38,7 +38,7 @@
         <bouncycastle.version>1.70</bouncycastle.version>
         <strimzi.version>0.26.1</strimzi.version>
         <bson.version>4.4.0</bson.version>
-        <cucumber.version>6.11.0</cucumber.version>
+        <cucumber.version>7.1.0</cucumber.version>
         <json-path.version>2.6.0</json-path.version>
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.2</pmd.asm.version>
