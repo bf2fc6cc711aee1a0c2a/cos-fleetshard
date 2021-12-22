@@ -31,6 +31,8 @@ export KAS_BASE_PATH=https://api.openshift.com
 ====
 
 * retrieve your ocm-offline-token from https://qaprodauth.cloud.redhat.com/openshift/token using the *__kafka_supporting_* account
++
+** follow the steps on that page to download and install the ocm command-line tool, then run the ocm login with the provided token
 
 * add a server section to ~/.m2/settings.xml, like:
 +
@@ -38,10 +40,13 @@ export KAS_BASE_PATH=https://api.openshift.com
 ----
 <server>
     <id>github</id>
-    <username>USERNAME</username>
+    <username>YOUR_GITHUB_USERNAME</username>
     <password>TOKEN</password>
 </server>
 ----
++
+** this ensures maven will be able to download our dependencies
+** if you don't have a github token, https://github.com/settings/tokens[generate one] with the `read:packages` permission
 
 == local installation
 
@@ -58,11 +63,13 @@ This is an example installation that consists in:
 +
 [source,shell]
 ----
-# you may need to tune this command
+# you may need to tune cpus and memory depending on your laptop config
 minikube start --profile cos --cpus=4 --memory=4096
 ----
 
 * *install camel-k 1.7.x*
++
+This will install Camel K in the running cluster, needed to create connectors based on it, so make sure the `minikube start` was successful.
 +
 [source,shell]
 ----
@@ -70,6 +77,8 @@ kamel install --olm=false --skip-registry-setup
 ----
 
 * *install latest strimzi*
++
+This will install strimzi in the running cluster, needed to create connectors based on Debezium, so make sure the `minikube start` was successful.
 +
 [source,shell]
 ----
@@ -79,6 +88,8 @@ kubectl apply -f 'https://strimzi.io/install/latest?namespace=default'
 
 * *install images*
 +
+This step is only necessary if you want to run everything inside the cluster. For developing purposes, if you want to run the synchronizer and operators with `quarkus:dev`, that's not needed.
++
 [source,shell]
 ----
 eval $(minikube --profile cos docker-env)
@@ -86,6 +97,8 @@ eval $(minikube --profile cos docker-env)
 ----
 
 * *install CRDs*
++
+This will install the CRDs for Managed Connectors, it's Operators and Clusters.
 +
 [source,shell]
 ----
@@ -114,11 +127,13 @@ cos-fleetshard-sync                0/0     0            0           4s
 strimzi-cluster-operator           1/1     1            1           2d3h
 ----
 +
-* *configure secrets*
+* *create cluster and configure secrets*
++
+This section expects you to have https://github.com/bf2fc6cc711aee1a0c2a/cos-tools/tree/main/bin[cos-tools/bin] in your PATH, but you may also just run the scripts from inside the bin directory.
 +
 [NOTE]
 ====
-This creates a new cluster on the fleet manager, remember to delete it once done
+This creates a new cluster for you on the fleet manager, remember to delete it once done.
 ====
 +
 [source,shell]
@@ -127,6 +142,8 @@ SUFFIX=$(uuidgen | tr -d '-')
 create-cluster-secret $(create-cluster "$USER-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config
 ----
 +
+When you're done you may query for created clusters with `get-clusters` and delete it with `delete-clusters <cluster id>`.
+
 * *scale deployments*
 +
 [source,shell]
@@ -135,6 +152,11 @@ kubectl scale deployment -l "app.kubernetes.io/part-of=cos" --replicas=1
 ----
 
 == testing
+
+[NOTE]
+====
+Although this section expects you to use a completely new kubernetes cluster, you may also just stop `camel-k-operator` and `strimzi-cluster-operator` and run the tests if you are an experienced user.
+====
 
 * *set-up minikube*
 +
