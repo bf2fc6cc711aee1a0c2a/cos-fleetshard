@@ -25,9 +25,16 @@ Feature: Camel Connector Reify
      And the klb has annotations containing:
           | trait.camel.apache.org/container.image | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
      And the klb has labels containing:
-          | cos.bf2.org/cluster.id    |      |
-          | cos.bf2.org/connector.id  |      |
-          | cos.bf2.org/deployment.id |      |
+          | cos.bf2.org/cluster.id                |                                                           |
+          | cos.bf2.org/connector.id              |                                                           |
+          | cos.bf2.org/deployment.id             |                                                           |
+          | app.kubernetes.io/managed-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
+          | app.kubernetes.io/created-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
+          | app.kubernetes.io/component           | connector                                                 |
+          | app.kubernetes.io/version             | 1                                                         |
+          | app.kubernetes.io/part-of             | ${cos.cluster.id}                                         |
+          | app.kubernetes.io/name                | ${cos.connector.id}                                       |
+          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      |          
      And the klb has an array at path "$.spec.integration.configuration" containing:
           | { "type":"secret" , "value": "${json-unit.ignore}" }            |
 
