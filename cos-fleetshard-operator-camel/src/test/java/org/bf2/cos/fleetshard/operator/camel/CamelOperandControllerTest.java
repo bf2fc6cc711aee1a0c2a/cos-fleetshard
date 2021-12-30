@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
@@ -9,6 +10,7 @@ import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadataBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
@@ -42,6 +44,9 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
 
 public final class CamelOperandControllerTest {
+    private static final String DEFAULT_OPERATOR_ID = "opid";
+    private static final String DEFAULT_OPERATOR_TYPE = "opt";
+    private static final String DEFAULT_OPERATOR_VERSION = "1.0.0";
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
     private static final Long DEFAULT_CONNECTOR_REVISION = 1L;
     private static final String DEFAULT_CONNECTOR_TYPE_ID = "ctid";
@@ -50,6 +55,7 @@ public final class CamelOperandControllerTest {
     private static final Long DEFAULT_DEPLOYMENT_REVISION = 1L;
     private static final String DEFAULT_KAFKA_CLIENT_ID = "kcid";
     private static final String DEFAULT_KAFKA_SERVER = "kafka.acme.com:2181";
+    private static final String DEFAULT_CLUSTER_ID = "1";
 
     @Test
     void declaresExpectedResourceTypes() {
@@ -373,6 +379,28 @@ public final class CamelOperandControllerTest {
     }
 
     @Test
+    void reifyRecommendedLabels() {
+        var resources = buildTestResourcesWithSpec(spec -> {
+        });
+
+        assertThat(resources)
+            .filteredOn(resource -> resource.getMetadata().getLabels() != null)
+            .anySatisfy(resource -> {
+                Map<String, String> labels = resource.getMetadata().getLabels();
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_NAME, DEFAULT_MANAGED_CONNECTOR_ID);
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_INSTANCE, DEFAULT_DEPLOYMENT_ID);
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_VERSION,
+                    DEFAULT_DEPLOYMENT_REVISION.toString());
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_COMPONENT, "connector");
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_PART_OF, "1");
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_MANAGED_BY,
+                    DEFAULT_OPERATOR_TYPE + "-" + DEFAULT_OPERATOR_ID);
+                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_CREATED_BY,
+                    DEFAULT_OPERATOR_TYPE + "-" + DEFAULT_OPERATOR_ID);
+            });
+    }
+
+    @Test
     void reifyErrorHandlerStop() {
         var resources = buildTestResourcesWithSpec(spec -> {
             spec.with("error_handling").with("stop");
@@ -413,6 +441,12 @@ public final class CamelOperandControllerTest {
                 .withSpec(new ManagedConnectorSpecBuilder()
                     .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
                     .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
+                    .withClusterId(DEFAULT_CLUSTER_ID)
+                    .withOperatorSelector(new OperatorSelectorBuilder()
+                        .withId(DEFAULT_OPERATOR_ID)
+                        .withType(DEFAULT_OPERATOR_TYPE)
+                        .withVersion(DEFAULT_OPERATOR_VERSION)
+                        .build())
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
