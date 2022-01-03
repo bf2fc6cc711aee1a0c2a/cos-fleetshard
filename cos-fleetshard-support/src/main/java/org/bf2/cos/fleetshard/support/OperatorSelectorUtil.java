@@ -9,8 +9,12 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.Version;
 import org.bf2.cos.fleetshard.api.VersionRange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class OperatorSelectorUtil {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OperatorSelectorUtil.class);
+
     private OperatorSelectorUtil() {
     }
 
@@ -65,7 +69,18 @@ public final class OperatorSelectorUtil {
         return operators
             .stream()
             .filter(o -> Objects.equals(o.getType(), selector.getType()))
-            .filter(o -> range.includes(new Version(o.getVersion())))
+            .filter(o -> versionInRange(range, o))
             .max(cmp);
+    }
+
+    private static boolean versionInRange(final VersionRange range, Operator o) {
+        Version version;
+        try {
+            version = new Version(o.getVersion());
+        } catch (IllegalArgumentException iae) {
+            LOGGER.info("CR with unsupported version found for operator {}", o.getId());
+            return false;
+        }
+        return range.includes(version);
     }
 }
