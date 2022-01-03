@@ -40,14 +40,14 @@ public final class DebeziumConstants {
     public static final List<ResourceDefinitionContext> RESOURCE_TYPES = List.of(
         new ResourceDefinitionContext.Builder()
             .withNamespaced(true)
-            .withGroup(Constants.STRIMZI_GROUP)
+            .withGroup(Constants.RESOURCE_GROUP_NAME)
             .withVersion(KafkaConnect.CONSUMED_VERSION)
             .withKind(KafkaConnect.RESOURCE_KIND)
             .withPlural(KafkaConnect.RESOURCE_PLURAL)
             .build(),
         new ResourceDefinitionContext.Builder()
             .withNamespaced(true)
-            .withGroup(Constants.STRIMZI_GROUP)
+            .withGroup(Constants.RESOURCE_GROUP_NAME)
             .withVersion(KafkaConnector.CONSUMED_VERSION)
             .withKind(KafkaConnector.RESOURCE_KIND)
             .withPlural(KafkaConnector.RESOURCE_PLURAL)

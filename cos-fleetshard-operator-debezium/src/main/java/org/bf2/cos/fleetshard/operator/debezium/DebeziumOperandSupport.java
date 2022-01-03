@@ -28,8 +28,8 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNA
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 
 public class DebeziumOperandSupport {
-    public static final String AV_KAFKA_CONNECT = Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION;
-    public static final String AV_KAFKA_CONNECTOR = Constants.STRIMZI_GROUP + "/" + KafkaConnector.CONSUMED_VERSION;
+    public static final String AV_KAFKA_CONNECT = Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnect.CONSUMED_VERSION;
+    public static final String AV_KAFKA_CONNECTOR = Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnector.CONSUMED_VERSION;
 
     public static boolean isSecret(HasMetadata ref) {
         return Objects.equals("v1", ref.getApiVersion())
