@@ -134,12 +134,12 @@ public class DebeziumOperandControllerTest {
         assertThat(controller.getResourceTypes())
             .hasSize(2)
             .anyMatch(ctx -> {
-                return Constants.STRIMZI_GROUP.equals(ctx.getGroup())
+                return Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
                     && KafkaConnect.CONSUMED_VERSION.equals(ctx.getVersion())
                     && KafkaConnect.RESOURCE_KIND.equals(ctx.getKind());
             })
             .anyMatch(ctx -> {
-                return Constants.STRIMZI_GROUP.equals(ctx.getGroup())
+                return Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
                     && KafkaConnector.CONSUMED_VERSION.equals(ctx.getVersion())
                     && KafkaConnector.RESOURCE_KIND.equals(ctx.getKind());
             });

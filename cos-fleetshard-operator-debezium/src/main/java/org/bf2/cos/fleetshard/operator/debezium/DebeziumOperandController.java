@@ -147,7 +147,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
         }
 
         final KafkaConnect kc = new KafkaConnectBuilder()
-            .withApiVersion(Constants.STRIMZI_GROUP + "/" + KafkaConnect.CONSUMED_VERSION)
+            .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnect.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName())
                 .addToAnnotations(STRIMZI_IO_USE_CONNECTOR_RESOURCES, "true")
@@ -156,7 +156,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .build();
 
         final KafkaConnector kctr = new KafkaConnectorBuilder()
-            .withApiVersion(Constants.STRIMZI_GROUP + "/" + KafkaConnector.CONSUMED_VERSION)
+            .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnector.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
                 .withName(connector.getMetadata().getName())
                 .addToLabels(STRIMZI_DOMAIN + "cluster", connector.getMetadata().getName())
