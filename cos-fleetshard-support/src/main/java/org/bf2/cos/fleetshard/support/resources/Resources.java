@@ -34,6 +34,14 @@ public final class Resources {
 
     public static final String LABEL_KCP_TARGET_CLUSTER_ID = "kcp.dev/cluster";
 
+    public static final String LABEL_KUBERNETES_NAME = "app.kubernetes.io/name";
+    public static final String LABEL_KUBERNETES_INSTANCE = "app.kubernetes.io/instance";
+    public static final String LABEL_KUBERNETES_VERSION = "app.kubernetes.io/version";
+    public static final String LABEL_KUBERNETES_COMPONENT = "app.kubernetes.io/component";
+    public static final String LABEL_KUBERNETES_PART_OF = "app.kubernetes.io/part-of";
+    public static final String LABEL_KUBERNETES_MANAGED_BY = "app.kubernetes.io/managed-by";
+    public static final String LABEL_KUBERNETES_CREATED_BY = "app.kubernetes.io/created-by";
+
     private Resources() {
     }
 
