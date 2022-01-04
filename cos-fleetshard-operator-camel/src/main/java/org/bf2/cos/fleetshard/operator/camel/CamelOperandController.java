@@ -8,8 +8,6 @@ import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
-import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
@@ -51,14 +49,6 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {
-    public static final String APP_KUBERNETES_IO_NAME = "app.kubernetes.io/name";
-    public static final String APP_KUBERNETES_IO_INSTANCE = "app.kubernetes.io/instance";
-    public static final String APP_KUBERNETES_IO_VERSION = "app.kubernetes.io/version";
-    public static final String APP_KUBERNETES_IO_COMPONENT = "app.kubernetes.io/component";
-    public static final String APP_KUBERNETES_IO_PART_OF = "app.kubernetes.io/part-of";
-    public static final String APP_KUBERNETES_IO_MANAGED_BY = "app.kubernetes.io/managed-by";
-    public static final String APP_KUBERNETES_IO_CREATED_BY = "app.kubernetes.io/created-by";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandController.class);
 
     private final CamelOperandConfiguration configuration;
@@ -131,23 +121,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         .collect(Collectors.toList()))
                 .build())
             .build();
-
-        // Kubernetes recommended labels - should probably move up to abstract and be applied to any type of Connector
-        Map<String, String> kameletLabels = KubernetesResourceUtil.getOrCreateLabels(binding);
-        ManagedConnectorSpec spec = connector.getSpec();
-
-        kameletLabels.put(APP_KUBERNETES_IO_NAME, spec.getConnectorId());
-        kameletLabels.put(APP_KUBERNETES_IO_INSTANCE, spec.getDeploymentId());
-
-        String version = String.valueOf(spec.getDeployment().getDeploymentResourceVersion());
-        kameletLabels.put(APP_KUBERNETES_IO_VERSION, version);
-        kameletLabels.put(APP_KUBERNETES_IO_COMPONENT, "connector");
-        kameletLabels.put(APP_KUBERNETES_IO_PART_OF, spec.getClusterId());
-
-        OperatorSelector operatorSelector = spec.getOperatorSelector();
-        String operatorTypeAndId = operatorSelector.getType() + "-" + operatorSelector.getId();
-        kameletLabels.put(APP_KUBERNETES_IO_MANAGED_BY, operatorTypeAndId);
-        kameletLabels.put(APP_KUBERNETES_IO_CREATED_BY, operatorTypeAndId);
 
         Map<String, String> annotations = KubernetesResourceUtil.getOrCreateAnnotations(binding);
         if (shardMetadata.getAnnotations() != null) {

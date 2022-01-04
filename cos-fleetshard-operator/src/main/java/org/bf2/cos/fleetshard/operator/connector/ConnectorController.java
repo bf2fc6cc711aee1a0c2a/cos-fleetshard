@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.api.DeploymentSpecAware;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorBuilder;
@@ -65,6 +66,13 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_COMPONENT;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_CREATED_BY;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_INSTANCE;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_MANAGED_BY;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_NAME;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_PART_OF;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_VERSION;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_OWNER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_TYPE;
 import static org.bf2.cos.fleetshard.support.resources.Resources.copyAnnotation;
@@ -433,17 +441,30 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 resource.getMetadata().setAnnotations(new HashMap<>());
             }
 
-            final String rv = Long.toString(connector.getSpec().getDeployment().getDeploymentResourceVersion());
+            ManagedConnectorSpec spec = connector.getSpec();
+            final String rv = String.valueOf(spec.getDeployment().getDeploymentResourceVersion());
 
             final Map<String, String> labels = KubernetesResourceUtil.getOrCreateLabels(resource);
             labels.put(LABEL_CONNECTOR_OPERATOR, connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
-            labels.put(LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId());
-            labels.put(LABEL_CONNECTOR_TYPE_ID, connector.getSpec().getDeployment().getConnectorTypeId());
-            labels.put(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId());
-            labels.put(LABEL_CLUSTER_ID, connector.getSpec().getClusterId());
+            labels.put(LABEL_CONNECTOR_ID, spec.getConnectorId());
+            labels.put(LABEL_CONNECTOR_TYPE_ID, spec.getDeployment().getConnectorTypeId());
+            labels.put(LABEL_DEPLOYMENT_ID, spec.getDeploymentId());
+            labels.put(LABEL_CLUSTER_ID, spec.getClusterId());
             labels.put(LABEL_OPERATOR_TYPE, managedConnectorOperator.getSpec().getType());
             labels.put(LABEL_OPERATOR_OWNER, managedConnectorOperator.getMetadata().getName());
             labels.put(LABEL_DEPLOYMENT_RESOURCE_VERSION, rv);
+
+            // Kubernetes recommended labels
+            labels.put(LABEL_KUBERNETES_NAME, spec.getConnectorId());
+            labels.put(LABEL_KUBERNETES_INSTANCE, spec.getDeploymentId());
+            labels.put(LABEL_KUBERNETES_VERSION, rv);
+            labels.put(LABEL_KUBERNETES_COMPONENT, "connector");
+            labels.put(LABEL_KUBERNETES_PART_OF, spec.getClusterId());
+            String operatorType = managedConnectorOperator.getSpec().getType();
+            String operatorId = managedConnectorOperator.getMetadata().getName();
+            String operatorTypeAndId = operatorType + "-" + operatorId;
+            labels.put(LABEL_KUBERNETES_MANAGED_BY, operatorTypeAndId);
+            labels.put(LABEL_KUBERNETES_CREATED_BY, operatorTypeAndId);
 
             config.connectors().targetLabels().ifPresent(items -> {
                 for (String item : items) {

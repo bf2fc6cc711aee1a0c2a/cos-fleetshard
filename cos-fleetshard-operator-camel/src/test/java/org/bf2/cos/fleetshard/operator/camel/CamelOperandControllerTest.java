@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
@@ -375,28 +374,6 @@ public final class CamelOperandControllerTest {
                     .contains("camel.kamelet.managed-kafka-sink.error.bootstrapServers=kafka.acme.com:2181")
                     .contains("camel.kamelet.managed-kafka-sink.error.user=kcid")
                     .contains("camel.kamelet.managed-kafka-sink.error.password=kcs");
-            });
-    }
-
-    @Test
-    void reifyRecommendedLabels() {
-        var resources = buildTestResourcesWithSpec(spec -> {
-        });
-
-        assertThat(resources)
-            .filteredOn(resource -> resource.getMetadata().getLabels() != null)
-            .anySatisfy(resource -> {
-                Map<String, String> labels = resource.getMetadata().getLabels();
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_NAME, DEFAULT_MANAGED_CONNECTOR_ID);
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_INSTANCE, DEFAULT_DEPLOYMENT_ID);
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_VERSION,
-                    DEFAULT_DEPLOYMENT_REVISION.toString());
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_COMPONENT, "connector");
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_PART_OF, "1");
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_MANAGED_BY,
-                    DEFAULT_OPERATOR_TYPE + "-" + DEFAULT_OPERATOR_ID);
-                assertThat(labels).containsEntry(CamelOperandController.APP_KUBERNETES_IO_CREATED_BY,
-                    DEFAULT_OPERATOR_TYPE + "-" + DEFAULT_OPERATOR_ID);
             });
     }
 
