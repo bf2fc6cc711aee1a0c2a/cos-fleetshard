@@ -26,7 +26,10 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
 
             return Map.of(
                 "cos.connectors.namespace", ns,
-                "cos.operators.namespace", ns);
+                "cos.operators.namespace", ns,
+                "cos.operator.camel.route-controller.backoff-delay", "2s",
+                "cos.operator.camel.route-controller.initial-delay", "1s",
+                "cos.operator.camel.route-controller.backoff-multiplier", "2");
         }
     }
 }
