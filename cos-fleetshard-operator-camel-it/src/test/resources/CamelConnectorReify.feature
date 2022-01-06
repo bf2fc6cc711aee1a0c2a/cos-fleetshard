@@ -37,6 +37,9 @@ Feature: Camel Connector Reify
           | app.kubernetes.io/instance            | ${cos.deployment.id}                                      | 
      And the klb has an array at path "$.spec.integration.configuration" containing:
           | { "type":"secret" , "value": "${json-unit.ignore}" }            |
+          | { "type":"property" , "value": "camel.main.route-controller-backoff-delay=2s" }            |
+          | { "type":"property" , "value": "camel.main.route-controller-initial-delay=1s" }            |
+          | { "type":"property" , "value": "camel.main.route-controller-backoff-multiplier=2" }        |
 
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
@@ -49,6 +52,7 @@ Feature: Camel Connector Reify
           | camel.kamelet.managed-kafka-source.password         |                            |
           | camel.kamelet.managed-kafka-source.user             |                            |
           | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
+          | camel.main.route-controller-supervise-enabled       | true                       |
      And the klb secret has labels containing:
           | cos.bf2.org/cluster.id                |                                                           |
           | cos.bf2.org/connector.id              |                                                           |

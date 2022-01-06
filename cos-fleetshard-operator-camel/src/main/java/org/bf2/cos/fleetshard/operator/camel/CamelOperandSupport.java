@@ -188,6 +188,10 @@ public final class CamelOperandSupport {
                         dlTopic.asText());
                 }
             }
+
+            // always enable supervising route controller, so that camel pods are not killed in case of failure
+            // this way we can check it's health and report failing connectors
+            props.put("camel.main.route-controller-supervise-enabled", "true");
         }
 
         return props;
@@ -211,12 +215,19 @@ public final class CamelOperandSupport {
                 .put("value", k + "=" + v);
         });
 
-        if (cfg.configurations() != null) {
-            for (var c : cfg.configurations()) {
-                configuration.addObject()
-                    .put("type", c.type())
-                    .put("value", c.value());
-            }
+        if (cfg.routeController() != null) {
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.route-controller-backoff-delay="
+                    + cfg.routeController().backoffDelay());
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.route-controller-initial-delay="
+                    + cfg.routeController().initialDelay());
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.route-controller-backoff-multiplier="
+                    + cfg.routeController().backoffMultiplier());
         }
 
         return integration;
