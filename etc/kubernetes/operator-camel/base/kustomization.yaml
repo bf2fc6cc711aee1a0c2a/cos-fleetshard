@@ -1,5 +1,5 @@
 resources:
   - kubernetes.yml
 
-patchesStrategicMerge:
-  - delete-cluster-role-binding.yaml
+#patchesStrategicMerge:
+#  - delete-cluster-role-binding.yaml
