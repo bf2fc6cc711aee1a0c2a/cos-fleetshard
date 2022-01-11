@@ -116,18 +116,6 @@ subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-operator-camel"
 ---
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
-metadata:
-  name: "connector-cluster-role-binding"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "connector-cluster-role"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-operator-camel"
----
 apiVersion: "apps/v1"
 kind: "Deployment"
 metadata:

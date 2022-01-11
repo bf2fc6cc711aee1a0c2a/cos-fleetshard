@@ -25,6 +25,7 @@
         <quarkus.operator-sdk.crd.generate>false</quarkus.operator-sdk.crd.generate>
         <quarkus.operator-sdk.crd.validate>false</quarkus.operator-sdk.crd.validate>
         <quarkus.operator-sdk.crd.apply>false</quarkus.operator-sdk.crd.apply>
+        <quarkus.operator-sdk.disable-rbac-generation>true</quarkus.operator-sdk.disable-rbac-generation>
 
         <!-- kubernetes -->
         <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
