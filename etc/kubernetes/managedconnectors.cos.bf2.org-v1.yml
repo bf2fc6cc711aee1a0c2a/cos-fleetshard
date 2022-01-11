@@ -99,10 +99,6 @@ spec:
                       type: string
                     type:
                       type: string
-                    additionalProperties:
-                      additionalProperties:
-                        type: string
-                      type: object
                   type: object
                 type: array
               deployment:
@@ -139,10 +135,6 @@ spec:
                           type: string
                         type:
                           type: string
-                        additionalProperties:
-                          additionalProperties:
-                            type: string
-                          type: object
                       type: object
                     type: array
                   assignedOperator:
