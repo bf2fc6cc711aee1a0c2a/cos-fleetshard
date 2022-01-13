@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.it.camel;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import io.quarkiverse.cucumber.CucumberOptions;
@@ -24,12 +25,22 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
         public Map<String, String> getConfigOverrides() {
             final String ns = "cos-camel-" + uid();
 
-            return Map.of(
-                "cos.connectors.namespace", ns,
-                "cos.operators.namespace", ns,
-                "cos.operator.camel.route-controller.backoff-delay", "2s",
-                "cos.operator.camel.route-controller.initial-delay", "1s",
-                "cos.operator.camel.route-controller.backoff-multiplier", "2");
+            final Map<String, String> configs = new HashMap<>();
+
+            configs.put("cos.connectors.namespace", ns);
+            configs.put("cos.operators.namespace", ns);
+            configs.put("cos.operator.camel.route-controller.backoff-delay", "2s");
+            configs.put("cos.operator.camel.route-controller.initial-delay", "1s");
+            configs.put("cos.operator.camel.route-controller.backoff-multiplier", "2");
+            configs.put("cos.operator.camel.health.readiness-success-threshold", "1");
+            configs.put("cos.operator.camel.health.readiness-failure-threshold", "2");
+            configs.put("cos.operator.camel.health.readiness-period-seconds", "3");
+            configs.put("cos.operator.camel.health.readiness-timeout-seconds", "4");
+            configs.put("cos.operator.camel.health.liveness-success-threshold", "5");
+            configs.put("cos.operator.camel.health.liveness-failure-threshold", "6");
+            configs.put("cos.operator.camel.health.liveness-period-seconds", "7");
+            configs.put("cos.operator.camel.health.liveness-timeout-seconds", "8");
+            return configs;
         }
     }
 }

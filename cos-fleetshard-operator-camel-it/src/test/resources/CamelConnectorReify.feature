@@ -23,7 +23,18 @@ Feature: Camel Connector Reify
 
     Then the klb exists
      And the klb has annotations containing:
-          | trait.camel.apache.org/container.image | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
+          | trait.camel.apache.org/container.image                    | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
+          | trait.camel.apache.org/health.enabled                     | true                                       |
+          | trait.camel.apache.org/health.liveness-probe-enabled      | true                                       |
+          | trait.camel.apache.org/health.readiness-probe-enabled     | true                                       |
+          | trait.camel.apache.org/health.readiness-success-threshold | 1                                          |
+          | trait.camel.apache.org/health.readiness-failure-threshold | 2                                          |
+          | trait.camel.apache.org/health.readiness-period            | 3                                          |
+          | trait.camel.apache.org/health.readiness-timeout           | 4                                          |
+          | trait.camel.apache.org/health.liveness-success-threshold  | 5                                          |
+          | trait.camel.apache.org/health.liveness-failure-threshold  | 6                                          |
+          | trait.camel.apache.org/health.liveness-period             | 7                                          |
+          | trait.camel.apache.org/health.liveness-timeout            | 8                                          |          
      And the klb has labels containing:
           | cos.bf2.org/cluster.id                |                                                           |
           | cos.bf2.org/connector.id              |                                                           |
@@ -53,6 +64,11 @@ Feature: Camel Connector Reify
           | camel.kamelet.managed-kafka-source.user             |                            |
           | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
           | camel.main.route-controller-supervise-enabled       | true                       |
+          | camel.health.contextEnabled                         | true                       |
+          | camel.health.routesEnabled                          | true                       |
+          | camel.health.registryEnabled                        | true                       |
+          | camel.health.config[*].parent                       | routes                     |
+          | camel.health.config[*].enabled                      | true                       |
      And the klb secret has labels containing:
           | cos.bf2.org/cluster.id                |                                                           |
           | cos.bf2.org/connector.id              |                                                           |
