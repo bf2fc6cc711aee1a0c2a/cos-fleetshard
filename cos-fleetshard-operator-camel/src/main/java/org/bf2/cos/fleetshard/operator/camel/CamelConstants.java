@@ -23,6 +23,17 @@ public final class CamelConstants {
     public static final String TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON = "trait.camel.apache.org/logging.json";
     public static final String TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS = "trait.camel.apache.org/owner.target-labels";
     public static final String TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS = "trait.camel.apache.org/owner.target-annotations";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED = "trait.camel.apache.org/health.enabled";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED = "trait.camel.apache.org/health.liveness-probe-enabled";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PERIOD = "trait.camel.apache.org/health.liveness-period";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT = "trait.camel.apache.org/health.liveness-timeout";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_SUCCESS_THRESHOLD = "trait.camel.apache.org/health.liveness-success-threshold";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_FAILURE_THRESHOLD = "trait.camel.apache.org/health.liveness-failure-threshold";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED = "trait.camel.apache.org/health.readiness-probe-enabled";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PERIOD = "trait.camel.apache.org/health.readiness-period";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT = "trait.camel.apache.org/health.readiness-timeout";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD = "trait.camel.apache.org/health.readiness-success-threshold";
+    public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD = "trait.camel.apache.org/health.readiness-failure-threshold";
 
     public static final String ERROR_HANDLER_LOG_TYPE = "log";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE = "dead-letter-channel";

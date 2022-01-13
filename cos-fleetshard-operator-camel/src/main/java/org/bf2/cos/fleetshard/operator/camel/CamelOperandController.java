@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration.Health;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
@@ -35,6 +36,17 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYP
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_FAILURE_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PERIOD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_SUCCESS_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PERIOD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
@@ -132,6 +144,26 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
+
+        // health check annotations
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED, "true");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED, "true");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED, "true");
+        Health health = configuration.health();
+        if (health != null) {
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD,
+                health.readinessSuccessThreshold());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD,
+                health.readinessFailureThreshold());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PERIOD, health.readinessPeriodSeconds());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT, health.readinessTimeoutSeconds());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_SUCCESS_THRESHOLD,
+                health.livenessSuccessThreshold());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_FAILURE_THRESHOLD,
+                health.livenessFailureThreshold());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PERIOD, health.livenessPeriodSeconds());
+            annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT, health.livenessTimeoutSeconds());
+        }
 
         return List.of(secret, binding);
     }

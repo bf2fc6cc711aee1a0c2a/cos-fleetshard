@@ -116,6 +116,10 @@ public final class CamelOperandSupport {
         return stepDefinitions;
     }
 
+    /**
+     * Generates a properties map to be stored as a secret in kubernetes. Properties in this secret are to be used by the camel
+     * implementation running the connector.
+     */
     public static Map<String, String> createSecretsData(
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
@@ -125,7 +129,7 @@ public final class CamelOperandSupport {
         final String connectorKameletId = shardMetadata.getKamelets().get("connector");
         final String kafkaKameletId = shardMetadata.getKamelets().get("kafka");
 
-        Map<String, String> props = new HashMap<>();
+        final Map<String, String> props = new HashMap<>();
         if (connectorSpec != null) {
             configureEndpoint(
                 props,
@@ -192,11 +196,21 @@ public final class CamelOperandSupport {
             // always enable supervising route controller, so that camel pods are not killed in case of failure
             // this way we can check it's health and report failing connectors
             props.put("camel.main.route-controller-supervise-enabled", "true");
+
+            // always enable camel health checks so we can monitor the connector
+            props.put("camel.health.contextEnabled", "true");
+            props.put("camel.health.routesEnabled", "true");
+            props.put("camel.health.registryEnabled", "true");
+            props.put("camel.health.config[*].parent", "routes");
+            props.put("camel.health.config[*].enabled", "true");
         }
 
         return props;
     }
 
+    /**
+     * Generates the integration node that holds camel configurations.
+     */
     public static ObjectNode createIntegrationSpec(
         String secretName,
         CamelOperandConfiguration cfg,
