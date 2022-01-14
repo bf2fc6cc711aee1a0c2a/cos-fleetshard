@@ -141,6 +141,8 @@ public final class CamelOperandControllerTest {
                     .containsEntry(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED, "true");
 
                 assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
+                    assertThat(binding.getSpec().getIntegration().get("profile").textValue())
+                        .isEqualTo(CamelConstants.CAMEL_K_PROFILE_OPENSHIFT);
                     assertThat(binding.getSpec().getSource().getRef())
                         .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                         .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
