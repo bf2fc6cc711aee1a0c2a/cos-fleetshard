@@ -51,6 +51,9 @@ Feature: Camel Connector Reify
           | { "type":"property" , "value": "camel.main.route-controller-backoff-delay=2s" }            |
           | { "type":"property" , "value": "camel.main.route-controller-initial-delay=1s" }            |
           | { "type":"property" , "value": "camel.main.route-controller-backoff-multiplier=2" }        |
+          | { "type":"property" , "value": "camel.main.exchange-factory=prototype" }                   |
+          | { "type":"property" , "value": "camel.main.exchange-factory-capacity=31" }                 |
+          | { "type":"property" , "value": "camel.main.exchange-factory-statistics-enabled=true" }     |
 
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"

@@ -245,6 +245,21 @@ public final class CamelOperandSupport {
                     + cfg.routeController().backoffMultiplier());
         }
 
+        if (cfg.exchangePooling() != null) {
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.exchange-factory="
+                    + cfg.exchangePooling().exchangeFactory());
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.exchange-factory-capacity="
+                    + cfg.exchangePooling().exchangeFactoryCapacity());
+            configuration.addObject()
+                .put("type", "property")
+                .put("value", "camel.main.exchange-factory-statistics-enabled="
+                    + cfg.exchangePooling().exchangeFactoryStatisticsEnabled());
+        }
+
         return integration;
     }
 
