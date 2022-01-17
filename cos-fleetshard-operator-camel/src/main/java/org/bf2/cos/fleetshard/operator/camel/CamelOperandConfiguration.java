@@ -9,6 +9,8 @@ public interface CamelOperandConfiguration {
 
     Health health();
 
+    ExchangePooling exchangePooling();
+
     interface RouteController {
         @WithDefault("10s")
         String backoffDelay();
@@ -44,5 +46,16 @@ public interface CamelOperandConfiguration {
 
         @WithDefault("1")
         String readinessTimeoutSeconds();
+    }
+
+    interface ExchangePooling {
+        @WithDefault("pooled")
+        String exchangeFactory();
+
+        @WithDefault("100")
+        String exchangeFactoryCapacity();
+
+        @WithDefault("false")
+        String exchangeFactoryStatisticsEnabled();
     }
 }
