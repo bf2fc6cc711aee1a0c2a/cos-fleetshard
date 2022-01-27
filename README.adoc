@@ -34,29 +34,6 @@ export KAS_BASE_PATH=https://api.openshift.com
 +
 ** follow the steps on that page to download and install the ocm command-line tool, then run the ocm login with the provided token
 
-* build the https://github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager-api[cos-fleet-manager-api] project
-+
-[source,shell]
-----
-git clone git@github.com:bf2fc6cc711aee1a0c2a/cos-fleet-manager-api.git
-./mvnw clean install -f cos-fleet-manager-api-java/pom.xml
-----
-
-* Alternatively to building the API artifact yourself, you can obtain it as a dependency;
-to do so, add a server section to ~/.m2/settings.xml, like:
-+
-[source,xml]
-----
-<server>
-    <id>github</id>
-    <username>YOUR_GITHUB_USERNAME</username>
-    <password>TOKEN</password>
-</server>
-----
-+
-** this ensures maven will be able to download our dependencies
-** if you don't have a github token, https://github.com/settings/tokens[generate one] with the `read:packages` permission
-
 == local installation
 
 [NOTE]

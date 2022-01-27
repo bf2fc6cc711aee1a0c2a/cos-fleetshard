@@ -59,10 +59,12 @@
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
         <spotbugs-maven-plugin.version>4.5.0.0</spotbugs-maven-plugin.version>
         <maven-pmd-plugin.version>3.15.0</maven-pmd-plugin.version>
+        <openapi-generator-maven-plugin.version>5.3.1</openapi-generator-maven-plugin.version>
     </properties>
 
     <modules>
         <module>cos-build-tools</module>
+        <module>cos-fleet-manager-api</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
         <module>cos-fleetshard-it</module>
@@ -192,6 +194,16 @@
                 <artifactId>commons-text</artifactId>
                 <version>${commons-text.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openapitools</groupId>
+                <artifactId>jackson-databind-nullable</artifactId>
+                <version>${jackson-databind-nullable.version}</version>
+            </dependency>
 
             <!-- deps :: cos -->
             <dependency>
@@ -294,24 +306,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <repositories>
-        <repository>
-          <id>github</id>
-          <url>https://maven.pkg.github.com/bf2fc6cc711aee1a0c2a/cos-fleet-manager-api</url>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-        </repository>
-        <repository>
-            <id>oss-sonatype</id>
-            <name>oss-sonatype</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <build>
         <pluginManagement>
@@ -480,6 +474,11 @@
                     <groupId>io.quarkus</groupId>
                     <artifactId>quarkus-bootstrap-maven-plugin</artifactId>
                     <version>${quarkus.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi-generator-maven-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
