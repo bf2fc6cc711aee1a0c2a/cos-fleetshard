@@ -1,62 +1,61 @@
 #common
-"/cos-build-tools/**/*":
+"cos-build-tools/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-"/cos-fleetshard-support/**/*":
+"cos-fleetshard-support/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-"/cos-fleetshard-operator/**/*":
+"cos-fleetshard-operator/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-"/cos-fleetshard-operator-it/**/*":
+"cos-fleetshard-operator-it/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
   -
 # api
-"/cos-fleetshard-api/**/*":
+"cos-fleetshard-api/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-"/cos-fleet-manager-api/**/*":
+"cos-fleet-manager-api/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
 
 #sync
-"/cos-fleetshard-sync/**/*":
+"cos-fleetshard-sync/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-"/cos-fleetshard-sync-it/**/*":
+"cos-fleetshard-sync-it/**/*":
   - rinaldodev
   - valdar
   - gunnarmorling
   - rk3rn3r
-
 
  # camel
-"/cos-fleetshard-operator-camel/**/*":
+"cos-fleetshard-operator-camel/**/*":
   - rinaldodev
   - valdar
-"/cos-fleetshard-operator-camel-it/**/*":
+"cos-fleetshard-operator-camel-it/**/*":
   - rinaldodev
   - valdar
 
 # debezium
-"/cos-fleetshard-operator-debezium/**/*":
+"cos-fleetshard-operator-debezium/**/*":
   - rinaldodev
   - valdar
-"/cos-fleetshard-operator-debezium-it/**/*":
+"cos-fleetshard-operator-debezium-it/**/*":
   - rk3rn3r
   - gunnarmorling
