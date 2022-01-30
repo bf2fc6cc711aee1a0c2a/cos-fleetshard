@@ -124,7 +124,8 @@ public final class CamelOperandSupport {
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
-        KafkaSpec kafkaSpec) {
+        KafkaSpec kafkaSpec,
+        CamelOperandConfiguration cfg) {
 
         final String connectorKameletId = shardMetadata.getKamelets().get("connector");
         final String kafkaKameletId = shardMetadata.getKamelets().get("kafka");
@@ -192,17 +193,35 @@ public final class CamelOperandSupport {
                         dlTopic.asText());
                 }
             }
+        }
 
-            // always enable supervising route controller, so that camel pods are not killed in case of failure
-            // this way we can check it's health and report failing connectors
-            props.put("camel.main.route-controller-supervise-enabled", "true");
+        // always enable supervising route controller, so that camel pods are not killed in case of failure
+        // this way we can check it's health and report failing connectors
+        props.put("camel.main.route-controller-supervise-enabled", "true");
 
-            // always enable camel health checks so we can monitor the connector
-            props.put("camel.health.contextEnabled", "true");
-            props.put("camel.health.routesEnabled", "true");
-            props.put("camel.health.registryEnabled", "true");
-            props.put("camel.health.config[*].parent", "routes");
-            props.put("camel.health.config[*].enabled", "true");
+        // when starting a route (and restarts) fails all attempts then we can control whether the route
+        // should influence the health-check and report the route as either UNKNOWN or DOWN. Setting this
+        // option to true will report it as DOWN otherwise its UNKNOWN
+        props.put("camel.main.route-controller-unhealthy-on-exhausted", "true");
+
+        // always enable camel health checks so we can monitor the connector
+        props.put("camel.health.contextEnabled", "true");
+        props.put("camel.health.routesEnabled", "true");
+        props.put("camel.health.registryEnabled", "true");
+        props.put("camel.health.config[*].parent", "routes");
+        props.put("camel.health.config[*].enabled", "true");
+
+        if (cfg.routeController() != null) {
+            props.put("camel.main.route-controller-backoff-delay", cfg.routeController().backoffDelay());
+            props.put("camel.main.route-controller-initial-delay", cfg.routeController().initialDelay());
+            props.put("camel.main.route-controller-backoff-multiplier", cfg.routeController().backoffMultiplier());
+        }
+
+        if (cfg.exchangePooling() != null) {
+            props.put("camel.main.exchange-factory", cfg.exchangePooling().exchangeFactory());
+            props.put("camel.main.exchange-factory-capacity", cfg.exchangePooling().exchangeFactoryCapacity());
+            props.put("camel.main.exchange-factory-statistics-enabled",
+                cfg.exchangePooling().exchangeFactoryStatisticsEnabled());
         }
 
         return props;
@@ -229,36 +248,6 @@ public final class CamelOperandSupport {
                 .put("type", "env")
                 .put("value", k + "=" + v);
         });
-
-        if (cfg.routeController() != null) {
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.route-controller-backoff-delay="
-                    + cfg.routeController().backoffDelay());
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.route-controller-initial-delay="
-                    + cfg.routeController().initialDelay());
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.route-controller-backoff-multiplier="
-                    + cfg.routeController().backoffMultiplier());
-        }
-
-        if (cfg.exchangePooling() != null) {
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.exchange-factory="
-                    + cfg.exchangePooling().exchangeFactory());
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.exchange-factory-capacity="
-                    + cfg.exchangePooling().exchangeFactoryCapacity());
-            configuration.addObject()
-                .put("type", "property")
-                .put("value", "camel.main.exchange-factory-statistics-enabled="
-                    + cfg.exchangePooling().exchangeFactoryStatisticsEnabled());
-        }
 
         return integration;
     }

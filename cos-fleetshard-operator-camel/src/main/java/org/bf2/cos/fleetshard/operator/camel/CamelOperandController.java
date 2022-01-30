@@ -84,7 +84,12 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         KafkaSpec kafkaSpec) {
 
         final List<CamelOperandSupport.Step> stepDefinitions = createSteps(connectorSpec, shardMetadata);
-        final Map<String, String> secretsData = createSecretsData(connector, shardMetadata, connectorSpec, kafkaSpec);
+        final Map<String, String> secretsData = createSecretsData(
+            connector,
+            shardMetadata,
+            connectorSpec,
+            kafkaSpec,
+            configuration);
 
         final String source;
         final String sink;
