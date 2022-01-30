@@ -14,7 +14,7 @@ jobs:
       - uses: actions/labeler@v3
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-      - uses: shufo/auto-assign-reviewer-by-files@v1.1.2
+      - uses: shufo/auto-assign-reviewer-by-files@v1.1.3
         with:
           config: ".github/owners.yaml"
           token: ${{ secrets.GITHUB_TOKEN }}
