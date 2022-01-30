@@ -34,7 +34,7 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-success-threshold  | 5                                          |
           | trait.camel.apache.org/health.liveness-failure-threshold  | 6                                          |
           | trait.camel.apache.org/health.liveness-period             | 7                                          |
-          | trait.camel.apache.org/health.liveness-timeout            | 8                                          |          
+          | trait.camel.apache.org/health.liveness-timeout            | 8                                          |
      And the klb has labels containing:
           | cos.bf2.org/cluster.id                |                                                           |
           | cos.bf2.org/connector.id              |                                                           |
@@ -45,15 +45,9 @@ Feature: Camel Connector Reify
           | app.kubernetes.io/version             | 1                                                         |
           | app.kubernetes.io/part-of             | ${cos.cluster.id}                                         |
           | app.kubernetes.io/name                | ${cos.connector.id}                                       |
-          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      | 
+          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      |
      And the klb has an array at path "$.spec.integration.configuration" containing:
           | { "type":"secret" , "value": "${json-unit.ignore}" }            |
-          | { "type":"property" , "value": "camel.main.route-controller-backoff-delay=2s" }            |
-          | { "type":"property" , "value": "camel.main.route-controller-initial-delay=1s" }            |
-          | { "type":"property" , "value": "camel.main.route-controller-backoff-multiplier=2" }        |
-          | { "type":"property" , "value": "camel.main.exchange-factory=prototype" }                   |
-          | { "type":"property" , "value": "camel.main.exchange-factory-capacity=31" }                 |
-          | { "type":"property" , "value": "camel.main.exchange-factory-statistics-enabled=true" }     |
 
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
@@ -66,12 +60,19 @@ Feature: Camel Connector Reify
           | camel.kamelet.managed-kafka-source.password         |                            |
           | camel.kamelet.managed-kafka-source.user             |                            |
           | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
-          | camel.main.route-controller-supervise-enabled       | true                       |
           | camel.health.contextEnabled                         | true                       |
           | camel.health.routesEnabled                          | true                       |
           | camel.health.registryEnabled                        | true                       |
           | camel.health.config[*].parent                       | routes                     |
           | camel.health.config[*].enabled                      | true                       |
+          | camel.main.route-controller-supervise-enabled       | true                       |
+          | camel.main.route-controller-backoff-delay           | 2s                         |
+          | camel.main.route-controller-initial-delay           | 1s                         |
+          | camel.main.route-controller-backoff-multiplier      | 2                          |
+          | camel.main.route-controller-unhealthy-on-exhausted  | true                       |
+          | camel.main.exchange-factory                         | prototype                  |
+          | camel.main.exchange-factory-capacity                | 31                         |
+          | camel.main.exchange-factory-statistics-enabled      | true                       |
      And the klb secret has labels containing:
           | cos.bf2.org/cluster.id                |                                                           |
           | cos.bf2.org/connector.id              |                                                           |
@@ -82,7 +83,7 @@ Feature: Camel Connector Reify
           | app.kubernetes.io/version             | 1                                                         |
           | app.kubernetes.io/part-of             | ${cos.cluster.id}                                         |
           | app.kubernetes.io/name                | ${cos.connector.id}                                       |
-          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      | 
+          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      |
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
 
