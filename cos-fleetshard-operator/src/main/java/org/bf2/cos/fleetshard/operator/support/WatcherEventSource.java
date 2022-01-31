@@ -3,8 +3,9 @@ package org.bf2.cos.fleetshard.operator.support;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.javaoperatorsdk.operator.OperatorException;
 import io.javaoperatorsdk.operator.processing.event.EventHandler;
-import io.javaoperatorsdk.operator.processing.event.EventSource;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 
 public abstract class WatcherEventSource<T> extends AbstractWatcher<T> implements EventSource {
     private final KubernetesClient client;
@@ -20,10 +21,6 @@ public abstract class WatcherEventSource<T> extends AbstractWatcher<T> implement
         this.eventHandler = eventHandler;
     }
 
-    @Override
-    public void eventSourceDeRegisteredForResource(String customResourceUid) {
-    }
-
     protected KubernetesClient getClient() {
         return client;
     }
@@ -31,4 +28,10 @@ public abstract class WatcherEventSource<T> extends AbstractWatcher<T> implement
     protected EventHandler getEventHandler() {
         return eventHandler;
     }
+
+    @Override
+    public void stop() throws OperatorException {
+        close();
+    }
+
 }

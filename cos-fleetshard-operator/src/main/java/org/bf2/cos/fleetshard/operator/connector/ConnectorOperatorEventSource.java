@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
-import io.javaoperatorsdk.operator.processing.event.DefaultEvent;
+import io.javaoperatorsdk.operator.processing.event.Event;
+import io.javaoperatorsdk.operator.processing.event.ResourceID;
 
 public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource<ManagedConnectorOperator> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);
@@ -49,27 +50,28 @@ public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource
             resource.getMetadata().getNamespace(),
             resource.getMetadata().getName());
 
-        getEventHandler().handleEvent(
-            new DefaultEvent(
-                cr -> hasGreaterVersion((ManagedConnector) cr, resource),
-                this));
+        getClient()
+            .resources(ManagedConnector.class)
+            .inAnyNamespace()
+            .withLabel(Resources.LABEL_OPERATOR_TYPE, resource.getSpec().getType())
+            .list().getItems().stream()
+            .filter(mc -> mc.getStatus() != null)
+            .filter(mc -> mc.getStatus().getConnectorStatus().getAssignedOperator() != null)
+            .filter(mc -> isSameOperatorType(resource, mc))
+            .filter(mc -> hasGreaterOperatorVersion(resource, mc))
+            .map(mc -> new ResourceID(mc.getMetadata().getName(), mc.getMetadata().getNamespace()))
+            .forEach(resourceId -> getEventHandler().handleEvent(new Event(resourceId)));
     }
 
-    private boolean hasGreaterVersion(ManagedConnector connector, ManagedConnectorOperator resource) {
-        if (connector.getStatus() == null) {
-            return false;
-        }
-        if (connector.getStatus().getConnectorStatus().getAssignedOperator() == null) {
-            return false;
-        }
-        if (!Objects.equals(resource.getSpec().getType(),
-            connector.getStatus().getConnectorStatus().getAssignedOperator().getType())) {
-            return false;
-        }
+    private boolean isSameOperatorType(ManagedConnectorOperator resource, ManagedConnector mc) {
+        return Objects.equals(resource.getSpec().getType(),
+            mc.getStatus().getConnectorStatus().getAssignedOperator().getType());
+    }
 
+    private boolean hasGreaterOperatorVersion(ManagedConnectorOperator resource, ManagedConnector mc) {
         final var rv = new Version(resource.getSpec().getVersion());
-        final var cv = new Version(connector.getStatus().getConnectorStatus().getAssignedOperator().getVersion());
-
+        final var cv = new Version(mc.getStatus().getConnectorStatus().getAssignedOperator().getVersion());
         return rv.compareTo(cv) > 0;
     }
+
 }

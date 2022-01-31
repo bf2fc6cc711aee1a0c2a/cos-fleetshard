@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,10 +42,13 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
-import io.javaoperatorsdk.operator.api.Context;
-import io.javaoperatorsdk.operator.api.Controller;
-import io.javaoperatorsdk.operator.api.UpdateControl;
-import io.javaoperatorsdk.operator.processing.event.EventSourceManager;
+import io.javaoperatorsdk.operator.api.reconciler.Constants;
+import io.javaoperatorsdk.operator.api.reconciler.Context;
+import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
+import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
+import io.javaoperatorsdk.operator.api.reconciler.EventSourceInitializer;
+import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -78,11 +82,11 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_OPERATOR_
 import static org.bf2.cos.fleetshard.support.resources.Resources.copyAnnotation;
 import static org.bf2.cos.fleetshard.support.resources.Resources.copyLabel;
 
-@Controller(
+@ControllerConfiguration(
     name = "connector",
-    finalizerName = Controller.NO_FINALIZER,
+    finalizerName = Constants.NO_FINALIZER,
     generationAwareEventProcessing = false)
-public class ConnectorController extends AbstractResourceController<ManagedConnector> {
+public class ConnectorController extends AbstractResourceController<ManagedConnector> implements EventSourceInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
     @Inject
@@ -119,16 +123,15 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     @Override
-    public void registerEventSources(EventSourceManager eventSourceManager) {
-        eventSourceManager.registerEventSource(
-            "_secrets",
+    public List<EventSource> prepareEventSources(EventSourceContext context) {
+        var eventSources = new ArrayList<EventSource>();
+        eventSources.add(
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
-        eventSourceManager.registerEventSource(
-            "_operators",
+        eventSources.add(
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
@@ -137,22 +140,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
             final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
-
-            eventSourceManager.registerEventSource(
-                id,
+            eventSources.add(
                 new OperandResourceWatcher(
+                    id,
                     kubernetesClient,
                     managedConnectorOperator,
                     res,
                     fleetShard.getConnectorsNamespace(),
                     MetricsRecorder.of(registry, id, tags)));
         }
+
+        return eventSources;
     }
 
     @Override
-    protected UpdateControl<ManagedConnector> reconcile(
+    public UpdateControl<ManagedConnector> reconcile(
         ManagedConnector connector,
-        Context<ManagedConnector> context) {
+        Context context) {
 
         LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
             connector.getApiVersion(),
@@ -192,7 +196,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     connector.getSpec().getOperatorSelector().getId());
 
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Transferring);
-                answer = UpdateControl.updateStatusSubResource(connector);
+                answer = UpdateControl.updateStatus(connector);
             } else {
                 // the connector is transferring to another operator, just reconcile and wait.
                 LOGGER.debug("Connector {}/{}, is transferring to {} operator, reconcile and wait.",
@@ -356,7 +360,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     "Unknown desired state: " + connector.getSpec().getDeployment().getDesiredState());
         }
 
-        return UpdateControl.updateStatusSubResource(connector);
+        return UpdateControl.updateStatus(connector);
     }
 
     private UpdateControl<ManagedConnector> handleAugmentation(ManagedConnector connector) {
@@ -394,9 +398,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     "AugmentationError",
                     "AugmentationError");
 
-                return UpdateControl.updateStatusSubResource(connector);
+                return UpdateControl.updateStatus(connector);
             } else {
-                return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+                return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
             }
         } else {
             final String connectorUow = connector.getSpec().getDeployment().getUnitOfWork();
@@ -426,9 +430,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         "AugmentationError",
                         "AugmentationError");
 
-                    return UpdateControl.updateStatusSubResource(connector);
+                    return UpdateControl.updateStatus(connector);
                 } else {
-                    return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+                    return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
                 }
             }
         }
@@ -483,6 +487,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     .withKind(connector.getKind())
                     .withName(connector.getMetadata().getName())
                     .withUid(connector.getMetadata().getUid())
+                    .withAdditionalProperties(Map.of("namespace", connector.getMetadata().getNamespace()))
                     .withBlockOwnerDeletion(true)
                     .build()));
 
@@ -506,7 +511,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         setCondition(connector, ManagedConnectorConditions.Type.Ready, true);
         setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true);
 
-        return UpdateControl.updateStatusSubResource(connector);
+        return UpdateControl.updateStatus(connector);
     }
 
     private UpdateControl<ManagedConnector> handleMonitor(ManagedConnector connector) {
@@ -538,7 +543,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getConnectorStatus().setAvailableOperator(new Operator());
         }
 
-        return UpdateControl.updateStatusSubResource(connector);
+        return UpdateControl.updateStatus(connector);
     }
 
     private UpdateControl<ManagedConnector> handleDeleting(ManagedConnector connector) {
@@ -551,10 +556,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getMetadata().getName(),
                 connector.getStatus().getPhase());
 
-            return UpdateControl.updateStatusSubResource(connector);
+            return UpdateControl.updateStatus(connector);
         }
 
-        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
@@ -572,10 +577,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getMetadata().getName(),
                 connector.getStatus().getPhase());
 
-            return UpdateControl.updateStatusSubResource(connector);
+            return UpdateControl.updateStatus(connector);
         }
 
-        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
     }
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
@@ -585,7 +590,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
     @SuppressWarnings({ "PMD.UnusedFormalParameter" })
     private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
-        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
     }
 
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
@@ -598,10 +603,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 connector.getMetadata().getName(),
                 connector.getStatus().getPhase());
 
-            return UpdateControl.updateStatusSubResource(connector);
+            return UpdateControl.updateStatus(connector);
         }
 
-        return UpdateControl.<ManagedConnector> noUpdate().withReSchedule(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
     }
 
     private UpdateControl<ManagedConnector> handleTransferred(ManagedConnector connector) {
@@ -612,7 +617,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         connector.getStatus().getConnectorStatus().setAssignedOperator(null);
         connector.getStatus().getConnectorStatus().setAvailableOperator(null);
 
-        return UpdateControl.updateStatusSubResource(connector);
+        return UpdateControl.updateStatus(connector);
     }
 
     // **************************************************
@@ -674,7 +679,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 diff,
                 connector.getStatus().getPhase());
 
-            return UpdateControl.updateStatusSubResource(connector);
+            return UpdateControl.updateStatus(connector);
         }
 
         return okAction.apply(connector);
