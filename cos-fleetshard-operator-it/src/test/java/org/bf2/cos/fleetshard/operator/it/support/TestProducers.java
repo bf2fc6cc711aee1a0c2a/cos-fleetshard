@@ -22,6 +22,9 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 @ApplicationScoped
 public class TestProducers {
+    @ConfigProperty(name = "reify.fail", defaultValue = "false")
+    boolean fail;
+
     @Produces
     @Singleton
     public ManagedConnectorOperator operator(
@@ -53,12 +56,15 @@ public class TestProducers {
 
             @Override
             public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
+                if (fail) {
+                    throw new IllegalArgumentException("reify.failed");
+                }
+
                 return Collections.emptyList();
             }
 
             @Override
             public void status(ManagedConnector connector) {
-
             }
 
             @Override

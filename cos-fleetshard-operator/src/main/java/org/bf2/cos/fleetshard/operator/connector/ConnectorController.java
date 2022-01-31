@@ -14,14 +14,7 @@ import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.api.DeploymentSpecAware;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
-import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
-import org.bf2.cos.fleetshard.api.Operator;
-import org.bf2.cos.fleetshard.api.OperatorBuilder;
+import org.bf2.cos.fleetshard.api.*;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
@@ -35,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.fabric8.kubernetes.api.model.ConditionBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -437,7 +432,34 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             }
         }
 
-        for (var resource : operandController.reify(connector, secret)) {
+        List<HasMetadata> resources;
+
+        try {
+            resources = operandController.reify(connector, secret);
+        } catch (Exception e) {
+            setCondition(
+                connector,
+                ManagedConnectorConditions.Type.Augmentation,
+                ManagedConnectorConditions.Status.False,
+                "ReifyFailed",
+                e.getMessage());
+
+            connector.getStatus().setDeployment(connector.getSpec().getDeployment());
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
+
+            connector.getStatus().getConnectorStatus().setPhase(ManagedConnector.STATE_FAILED);
+            connector.getStatus().getConnectorStatus().setConditions(List.of(new ConditionBuilder()
+                .withType(ManagedConnectorConditions.Type.Augmentation.name())
+                .withReason("ReifyFailed")
+                .withStatus(ManagedConnectorConditions.Status.False.name())
+                .withMessage(e.getMessage())
+                .withLastTransitionTime(Conditions.now())
+                .build()));
+
+            return UpdateControl.updateStatus(connector);
+        }
+
+        for (var resource : resources) {
             if (resource.getMetadata().getLabels() == null) {
                 resource.getMetadata().setLabels(new HashMap<>());
             }
