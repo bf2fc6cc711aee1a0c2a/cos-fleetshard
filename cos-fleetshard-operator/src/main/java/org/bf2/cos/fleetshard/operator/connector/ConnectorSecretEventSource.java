@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
+import java.util.List;
+
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.InstrumentedWatcherEventSource;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
@@ -7,9 +9,12 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
+import io.javaoperatorsdk.operator.processing.event.Event;
+import io.javaoperatorsdk.operator.processing.event.ResourceID;
 
 public class ConnectorSecretEventSource extends InstrumentedWatcherEventSource<Secret> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSecretEventSource.class);
@@ -47,7 +52,12 @@ public class ConnectorSecretEventSource extends InstrumentedWatcherEventSource<S
             resource.getMetadata().getName(),
             resource.getMetadata().getResourceVersion());
 
-        getEventHandler().handleEvent(
-            new ConnectorSecretEvent(this, resource));
+        List<OwnerReference> ownerReferences = resource.getMetadata().getOwnerReferences();
+        if (!ownerReferences.isEmpty()) {
+            OwnerReference ownerReference = ownerReferences.get(0);
+            String connectorNamespace = (String) ownerReference.getAdditionalProperties().get("namespace");
+            getEventHandler().handleEvent(new Event(new ResourceID(ownerReference.getName(), connectorNamespace)));
+        }
     }
+
 }

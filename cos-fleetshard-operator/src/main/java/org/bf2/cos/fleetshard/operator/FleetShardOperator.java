@@ -42,6 +42,6 @@ public class FleetShardOperator {
             managedConnectorOperator.getSpec().getType(),
             managedConnectorOperator.getSpec().getVersion());
 
-        operator.close();
+        operator.stop();
     }
 }

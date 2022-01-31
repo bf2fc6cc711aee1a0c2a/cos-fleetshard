@@ -2,16 +2,18 @@ package org.bf2.cos.fleetshard.operator.operand;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.support.InstrumentedWatcherEventSource;
-import org.bf2.cos.fleetshard.operator.support.ResourceEvent;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.javaoperatorsdk.operator.processing.event.Event;
+import io.javaoperatorsdk.operator.processing.event.ResourceID;
 
 public class OperandResourceWatcher extends InstrumentedWatcherEventSource<GenericKubernetesResource> {
     private static final Logger LOGGER = LoggerFactory.getLogger(OperandResourceWatcher.class);
@@ -20,18 +22,21 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
     private final ResourceDefinitionContext context;
     private final String contextApiVersion;
     private final String namespace;
+    private final String name;
 
     public OperandResourceWatcher(
+        String name,
         KubernetesClient client,
         ManagedConnectorOperator operator,
         String apiVersion,
         String kind,
         String namespace,
         MetricsRecorder recorder) {
-        this(client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace, recorder);
+        this(name, client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace, recorder);
     }
 
     public OperandResourceWatcher(
+        String name,
         KubernetesClient client,
         ManagedConnectorOperator operator,
         ResourceDefinitionContext context,
@@ -40,6 +45,7 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
 
         super(client, recorder);
 
+        this.name = name;
         this.operator = operator;
         this.namespace = namespace;
         this.context = context;
@@ -47,6 +53,11 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
             ? context.getGroup() + "/" + context.getVersion()
             : context.getVersion();
 
+    }
+
+    @Override
+    public String name() {
+        return name;
     }
 
     @Override
@@ -89,7 +100,7 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
 
             return;
         }
-        if (resource.getMetadata().getOwnerReferences().size() == 0) {
+        if (resource.getMetadata().getOwnerReferences().isEmpty()) {
             LOGGER.debug("Ignoring action {} on resource {}:{}:{}@{} as it does not have OwnerReferences: {}",
                 action,
                 resource.getApiVersion(),
@@ -124,11 +135,8 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
         // Since we need to know the owner UUID of the resource to properly
         // generate the event, we can use the list of the owners
         //
-        getEventHandler().handleEvent(
-            new ResourceEvent(
-                action,
-                Resources.asRef(resource),
-                resource.getMetadata().getOwnerReferences().get(0).getUid(),
-                this));
+        OwnerReference ownerReference = resource.getMetadata().getOwnerReferences().get(0);
+        ResourceID managedConnector = new ResourceID(ownerReference.getName(), resource.getMetadata().getNamespace());
+        getEventHandler().handleEvent(new Event(managedConnector));
     }
 }
