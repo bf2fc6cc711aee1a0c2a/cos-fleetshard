@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "19:30"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 6
+    labels:
+      - area/dependencies
+    ignore:
+      - dependency-name: io.sundr:builder-annotations
+      - dependency-name: io.cucumber:cucumber-java
+      - dependency-name: io.cucumber:cucumber-java8
