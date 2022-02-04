@@ -60,6 +60,7 @@
         <spotbugs-maven-plugin.version>4.5.0.0</spotbugs-maven-plugin.version>
         <maven-pmd-plugin.version>3.15.0</maven-pmd-plugin.version>
         <openapi-generator-maven-plugin.version>5.3.1</openapi-generator-maven-plugin.version>
+        <versions-maven-plugin.version>2.9.0</versions-maven-plugin.version>
     </properties>
 
     <modules>
@@ -500,7 +501,13 @@
                     <artifactId>gmavenplus-plugin</artifactId>
                     <version>${gmavenplus-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${versions-maven-plugin.version}</version>
+                </plugin>
             </plugins>
+
         </pluginManagement>
         <plugins>
             <plugin>
