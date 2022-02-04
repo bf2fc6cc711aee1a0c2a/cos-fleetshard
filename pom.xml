@@ -34,7 +34,7 @@
         <wiremock.version>2.32.0</wiremock.version>
         <spock.version>2.0-groovy-3.0</spock.version>
         <groovy.version>3.0.9</groovy.version>
-        <json-unit.version>2.28.0</json-unit.version>
+        <json-unit.version>2.29.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <strimzi.version>0.27.0</strimzi.version>
         <bson.version>4.4.1</bson.version>
@@ -57,7 +57,7 @@
         <maven-deploy-plugin.version>3.0.0-M1</maven-deploy-plugin.version>
         <maven-install-plugin.version>3.0.0-M1</maven-install-plugin.version>
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
-        <spotbugs-maven-plugin.version>4.5.0.0</spotbugs-maven-plugin.version>
+        <spotbugs-maven-plugin.version>4.5.3.0</spotbugs-maven-plugin.version>
         <maven-pmd-plugin.version>3.15.0</maven-pmd-plugin.version>
         <openapi-generator-maven-plugin.version>5.3.1</openapi-generator-maven-plugin.version>
         <versions-maven-plugin.version>2.9.0</versions-maven-plugin.version>
