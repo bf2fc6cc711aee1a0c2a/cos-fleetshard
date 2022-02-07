@@ -107,10 +107,24 @@ public final class ManagedConnectorConditions {
             return false;
         }
 
-        return connector.getStatus().getConditions().stream().anyMatch(
-            c -> Objects.equals(c.getType(), type.name())
+        return connector.getStatus().getConditions().stream().anyMatch(c -> {
+            return Objects.equals(c.getType(), type.name())
                 && Objects.equals(c.getStatus(), status.name())
-                && Objects.equals(c.getReason(), reason));
+                && Objects.equals(c.getReason(), reason);
+        });
+    }
+
+    public static boolean hasCondition(ManagedConnector connector, Type type, Status status, String reason, String message) {
+        if (connector.getStatus().getConditions() == null) {
+            return false;
+        }
+
+        return connector.getStatus().getConditions().stream().anyMatch(c -> {
+            return Objects.equals(c.getType(), type.name())
+                && Objects.equals(c.getStatus(), status.name())
+                && Objects.equals(c.getReason(), reason)
+                && Objects.equals(c.getMessage(), message);
+        });
     }
 
     public enum Type {
@@ -121,6 +135,7 @@ public final class ManagedConnectorConditions {
         Monitor,
         Delete,
         Stop,
+        Stopping,
         Migrate,
         Resync,
     }

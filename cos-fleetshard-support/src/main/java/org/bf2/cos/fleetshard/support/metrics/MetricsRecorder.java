@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -98,7 +100,9 @@ public class MetricsRecorder {
                 .register(registry)
                 .increment();
 
-            throw new RuntimeException("Failure recording method execution (id: " + id + subId + ")", e);
+            throw new WrappedRuntimeException(
+                "Failure recording method execution (id: " + id + subId + ")",
+                e);
         }
     }
 

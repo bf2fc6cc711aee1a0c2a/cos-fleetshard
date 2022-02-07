@@ -13,6 +13,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -22,9 +23,6 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 @ApplicationScoped
 public class TestProducers {
-    @ConfigProperty(name = "reify.fail", defaultValue = "false")
-    boolean fail;
-
     @Produces
     @Singleton
     public ManagedConnectorOperator operator(
@@ -56,8 +54,8 @@ public class TestProducers {
 
             @Override
             public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
-                if (fail) {
-                    throw new IllegalArgumentException("reify.failed");
+                if (secret.getData() != null && secret.getData().containsKey("reify.fail")) {
+                    throw new IllegalArgumentException(Secrets.extract(secret, "reify.fail", String.class));
                 }
 
                 return Collections.emptyList();
@@ -65,6 +63,7 @@ public class TestProducers {
 
             @Override
             public void status(ManagedConnector connector) {
+                connector.getStatus().getConnectorStatus().setPhase(ManagedConnector.STATE_READY);
             }
 
             @Override

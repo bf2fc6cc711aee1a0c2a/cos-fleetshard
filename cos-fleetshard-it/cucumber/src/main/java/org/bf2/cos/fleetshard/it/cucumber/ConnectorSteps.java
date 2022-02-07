@@ -15,7 +15,6 @@ import javax.inject.Inject;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
@@ -224,9 +223,27 @@ public class ConnectorSteps {
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_META, payload);
     }
 
+    @And("with secret data:")
+    public void with_secret_data(Map<String, String> content) {
+        content.forEach((k, v) -> Secrets.set(ctx.secret(), k, v));
+    }
+
+    @And("with secret key {string} and value {string}")
+    public void with_secret(String key, String value) {
+        Secrets.set(ctx.secret(), key, value);
+    }
+
     @When("^deploy$")
     public void deploy() {
         final String uow = uid();
+        deploy_connector_with_uow(uow);
+        deploy_secret_with_uow(uow);
+    }
+
+    @When("^deploy with secret data:")
+    public void deployWithSecretData(Map<String, String> content) {
+        final String uow = uid();
+        with_secret_data(content);
         deploy_connector_with_uow(uow);
         deploy_secret_with_uow(uow);
     }
@@ -406,8 +423,16 @@ public class ConnectorSteps {
         });
     }
 
-    @Then("wait till the connector has entry in history with conditions:")
+    @Then("the connector has conditions:")
     public void connector_has_conditions(DataTable table) {
+        final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+        final ManagedConnector connector = connector();
+
+        assertThat(rows).allMatch(row -> hasCondition(connector, row));
+    }
+
+    @Then("wait till the connector has entry in history with conditions:")
+    public void connector_has_conditions_in_history(DataTable table) {
         final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
 
         awaiter.until(() -> {
@@ -417,7 +442,7 @@ public class ConnectorSteps {
     }
 
     @Then("wait till the connector has entry in history with phase {string} and conditions:")
-    public void connector_has_conditions(String phase, DataTable table) {
+    public void connector_has_conditions_in_history(String phase, DataTable table) {
         final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
 
         awaiter.until(() -> {
@@ -444,15 +469,23 @@ public class ConnectorSteps {
     }
 
     private boolean hasCondition(ManagedConnector connector, Map<String, String> row) {
-        return ManagedConnectorConditions.hasCondition(
-            connector,
-            ManagedConnectorConditions.Type.valueOf(row.get("type")),
-            ManagedConnectorConditions.Status.valueOf(row.get("status")),
-            row.get("reason"));
+        return connector.getStatus().getConditions().stream().anyMatch(c -> {
+            return Objects.equals(c.getType(), row.get("type"))
+                && Objects.equals(c.getStatus(), row.get("status"))
+                && Objects.equals(c.getReason(), row.get("reason"))
+                && (row.get("message") == null || Objects.equals(c.getMessage(), row.get("message")));
+        });
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {
         awaiter.until(conditionEvaluator);
+    }
+
+    private ManagedConnector connector() {
+        return kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .get();
     }
 
     private void untilConnector(Predicate<ManagedConnector> predicate) {
@@ -503,4 +536,5 @@ public class ConnectorSteps {
                 .inNamespace(ctx.connectorsNamespace())
                 .createOrReplace(ctx.connector()));
     }
+
 }
