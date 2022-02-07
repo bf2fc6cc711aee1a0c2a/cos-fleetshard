@@ -14,13 +14,21 @@ import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.api.*;
+import org.bf2.cos.fleetshard.api.DeploymentSpecAware;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
+import org.bf2.cos.fleetshard.api.Operator;
+import org.bf2.cos.fleetshard.api.OperatorBuilder;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
+import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
@@ -28,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.fabric8.kubernetes.api.model.ConditionBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -54,6 +61,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_STOPPED;
 import static org.bf2.cos.fleetshard.api.ManagedConnectorConditions.hasCondition;
@@ -302,7 +310,9 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 .register(registry)
                 .recordCallable(() -> action.apply(connector));
         } catch (Exception e) {
-            throw new RuntimeException("Failure recording method execution (id: " + id + ")", e);
+            throw new WrappedRuntimeException(
+                "Failure recording method execution (id: " + id + ")",
+                e);
         }
     };
 
@@ -327,6 +337,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 break;
             }
             case DESIRED_STATE_STOPPED: {
+                setCondition(
+                    connector,
+                    ManagedConnectorConditions.Type.Stopping,
+                    ManagedConnectorConditions.Status.True,
+                    "Stopping",
+                    "Stopping");
+
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopping);
                 connector.getStatus().getConnectorStatus().setPhase(STATE_DE_PROVISIONING);
@@ -442,19 +459,19 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                 ManagedConnectorConditions.Type.Augmentation,
                 ManagedConnectorConditions.Status.False,
                 "ReifyFailed",
-                e.getMessage());
+                e instanceof WrappedRuntimeException ? e.getCause().getMessage() : e.getMessage());
+            setCondition(
+                connector,
+                ManagedConnectorConditions.Type.Stopping,
+                ManagedConnectorConditions.Status.True,
+                "Stopping",
+                "Stopping");
 
             connector.getStatus().setDeployment(connector.getSpec().getDeployment());
-            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopping);
 
-            connector.getStatus().getConnectorStatus().setPhase(ManagedConnector.STATE_FAILED);
-            connector.getStatus().getConnectorStatus().setConditions(List.of(new ConditionBuilder()
-                .withType(ManagedConnectorConditions.Type.Augmentation.name())
-                .withReason("ReifyFailed")
-                .withStatus(ManagedConnectorConditions.Status.False.name())
-                .withMessage(e.getMessage())
-                .withLastTransitionTime(Conditions.now())
-                .build()));
+            connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
+            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
 
             return UpdateControl.updateStatus(connector);
         }
@@ -574,6 +591,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getConnectorStatus().setPhase(STATE_DELETED);
             connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
 
+            setCondition(
+                connector,
+                ManagedConnectorConditions.Type.Delete,
+                ManagedConnectorConditions.Status.True,
+                "Deleted",
+                "Deleted");
+
             LOGGER.info("Connector {} deleted, move to phase: {}",
                 connector.getMetadata().getName(),
                 connector.getStatus().getPhase());
@@ -595,6 +619,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             connector.getStatus().getConnectorStatus().setPhase(STATE_STOPPED);
             connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
 
+            setCondition(
+                connector,
+                ManagedConnectorConditions.Type.Stop,
+                ManagedConnectorConditions.Status.True,
+                "Stopped",
+                "Stopped");
+
             LOGGER.info("Connector {} stopped, move to phase: {}",
                 connector.getMetadata().getName(),
                 connector.getStatus().getPhase());
@@ -605,14 +636,23 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
     }
 
-    @SuppressWarnings("PMD.UnusedFormalParameter")
-    private UpdateControl<ManagedConnector> handleStopped(ManagedConnector ignored) {
+    private UpdateControl<ManagedConnector> handleStopped(ManagedConnector connector) {
+        // if the reify process fails, the safest option is to stop the connector and
+        // report the failure.
+        if (isReifyFailed(connector)) {
+            connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Error);
+            connector.getStatus().getConnectorStatus().setPhase(STATE_FAILED);
+            connector.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
+
+            return UpdateControl.updateStatus(connector);
+        }
+
         return UpdateControl.noUpdate();
     }
 
     @SuppressWarnings({ "PMD.UnusedFormalParameter" })
     private UpdateControl<ManagedConnector> handleError(ManagedConnector connector) {
-        return UpdateControl.<ManagedConnector> noUpdate().rescheduleAfter(1500, TimeUnit.MILLISECONDS);
+        return UpdateControl.noUpdate();
     }
 
     private UpdateControl<ManagedConnector> handleTransferring(ManagedConnector connector) {
@@ -738,6 +778,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             ManagedConnectorConditions.Type.Resync,
             ManagedConnectorConditions.Status.True,
             "Resync");
+    }
+
+    private boolean isReifyFailed(ManagedConnector connector) {
+        return hasCondition(
+            connector,
+            ManagedConnectorConditions.Type.Augmentation,
+            ManagedConnectorConditions.Status.False,
+            "ReifyFailed");
     }
 
 }
