@@ -49,9 +49,9 @@ spec:
                   connectorTypeId:
                     type: string
                   connectorResourceVersion:
-                    type: number
+                    type: integer
                   deploymentResourceVersion:
-                    type: number
+                    type: integer
                   desiredState:
                     type: string
                   secret:
@@ -92,7 +92,7 @@ spec:
                     message:
                       type: string
                     observedGeneration:
-                      type: number
+                      type: integer
                     reason:
                       type: string
                     status:
@@ -106,9 +106,9 @@ spec:
                   connectorTypeId:
                     type: string
                   connectorResourceVersion:
-                    type: number
+                    type: integer
                   deploymentResourceVersion:
-                    type: number
+                    type: integer
                   desiredState:
                     type: string
                   secret:
@@ -128,7 +128,7 @@ spec:
                         message:
                           type: string
                         observedGeneration:
-                          type: number
+                          type: integer
                         reason:
                           type: string
                         status:

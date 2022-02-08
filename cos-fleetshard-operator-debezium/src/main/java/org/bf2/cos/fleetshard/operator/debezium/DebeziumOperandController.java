@@ -193,6 +193,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             getKubernetesClient()
                 .resources(KafkaConnector.class)
                 .inNamespace(connector.getMetadata().getNamespace())
+                .withName(kc.getMetadata().getName())
                 .patch(kc);
 
             return false;
