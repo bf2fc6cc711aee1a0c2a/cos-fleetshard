@@ -20,25 +20,28 @@ public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorOperatorEventSource.class);
 
     private final ManagedConnectorOperator operator;
-    private final String namespace;
+    private final String operatorsNamespace;
+    private final String connectorsNamespace;
 
     public ConnectorOperatorEventSource(
         KubernetesClient kubernetesClient,
         ManagedConnectorOperator operator,
-        String namespace,
+        String operatorsNamespace,
+        String connectorsNamespace,
         MetricsRecorder recorder) {
 
         super(kubernetesClient, recorder);
 
         this.operator = operator;
-        this.namespace = namespace;
+        this.operatorsNamespace = operatorsNamespace;
+        this.connectorsNamespace = connectorsNamespace;
     }
 
     @Override
     protected Watch doWatch() {
         return getClient()
             .resources(ManagedConnectorOperator.class)
-            .inNamespace(namespace)
+            .inNamespace(operatorsNamespace)
             .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
             .watch(this);
     }
@@ -52,14 +55,14 @@ public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource
 
         getClient()
             .resources(ManagedConnector.class)
-            .inAnyNamespace()
+            .inNamespace(connectorsNamespace)
             .withLabel(Resources.LABEL_OPERATOR_TYPE, resource.getSpec().getType())
             .list().getItems().stream()
             .filter(mc -> mc.getStatus() != null)
             .filter(mc -> mc.getStatus().getConnectorStatus().getAssignedOperator() != null)
             .filter(mc -> isSameOperatorType(resource, mc))
             .filter(mc -> hasGreaterOperatorVersion(resource, mc))
-            .map(mc -> new ResourceID(mc.getMetadata().getName(), mc.getMetadata().getNamespace()))
+            .map(ResourceID::fromResource)
             .forEach(resourceId -> getEventHandler().handleEvent(new Event(resourceId)));
     }
 

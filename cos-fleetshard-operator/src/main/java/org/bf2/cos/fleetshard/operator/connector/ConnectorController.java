@@ -132,13 +132,14 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
-                fleetShard.getOperatorNamespace(),
+                fleetShard.getConnectorsNamespace(),
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
         eventSources.add(
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
+                fleetShard.getConnectorsNamespace(),
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators", tags)));
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
