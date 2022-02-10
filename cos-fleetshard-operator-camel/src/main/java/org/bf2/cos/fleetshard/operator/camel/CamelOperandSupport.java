@@ -32,8 +32,8 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYP
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_LOG_TYPE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_SINK_CHANNEL_TYPE;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_STOP_URI;
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
@@ -464,7 +464,7 @@ public final class CamelOperandSupport {
 
     public static ObjectNode createStopErrorHandler() {
         var errorHandler = Serialization.jsonMapper().createObjectNode();
-        var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
+        var dlq = errorHandler.putObject(ERROR_HANDLER_SINK_CHANNEL_TYPE);
         var endpoint = dlq.putObject("endpoint");
         endpoint.put("uri", ERROR_HANDLER_STOP_URI);
         return errorHandler;
@@ -472,7 +472,7 @@ public final class CamelOperandSupport {
 
     public static ObjectNode createDeadLetterQueueErrorHandler() {
         var errorHandler = Serialization.jsonMapper().createObjectNode();
-        var dlq = errorHandler.putObject(ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE);
+        var dlq = errorHandler.putObject(ERROR_HANDLER_SINK_CHANNEL_TYPE);
         var endpoint = dlq.putObject("endpoint");
 
         endpoint.put(

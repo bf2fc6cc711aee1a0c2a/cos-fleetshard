@@ -130,7 +130,7 @@ public final class CamelOperandControllerTest {
                         .withPrefix("aws")
                         .build())
                     .withKafka(new EndpointKameletBuilder()
-                        .withName("managed-kafka-sink")
+                        .withName("cos-kafka-sink")
                         .withPrefix("kafka")
                         .build())
                     .addToProcessors("insert_field", "insert-field-action")
@@ -169,7 +169,7 @@ public final class CamelOperandControllerTest {
                     assertThat(binding.getSpec().getSink().getRef())
                         .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                         .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                        .hasFieldOrPropertyWithValue("name", "managed-kafka-sink");
+                        .hasFieldOrPropertyWithValue("name", "cos-kafka-sink");
 
                     assertThat(binding.getSpec().getSteps()).element(0).satisfies(step -> {
                         assertThat(step.getRef())
@@ -208,10 +208,10 @@ public final class CamelOperandControllerTest {
                 byte[] decoded = Base64.getDecoder().decode(encoded);
 
                 assertThat(new String(decoded))
-                    .contains("camel.kamelet.managed-kafka-sink.topic=kafka-foo")
-                    .contains("camel.kamelet.managed-kafka-sink.bootstrapServers=kafka.acme.com:2181")
-                    .contains("camel.kamelet.managed-kafka-sink.user=kcid")
-                    .contains("camel.kamelet.managed-kafka-sink.password=kcs")
+                    .contains("camel.kamelet.cos-kafka-sink.topic=kafka-foo")
+                    .contains("camel.kamelet.cos-kafka-sink.bootstrapServers=kafka.acme.com:2181")
+                    .contains("camel.kamelet.cos-kafka-sink.user=kcid")
+                    .contains("camel.kamelet.cos-kafka-sink.password=kcs")
                     .contains("camel.kamelet.aws-kinesis-source.bar=bar")
                     .contains("camel.kamelet.aws-kinesis-source.foo=aws-foo")
                     .contains("camel.kamelet.aws-kinesis-source.fooBar=aws-foo-bar")
@@ -267,7 +267,7 @@ public final class CamelOperandControllerTest {
                         .withPrefix("aws")
                         .build())
                     .withKafka(new EndpointKameletBuilder()
-                        .withName("managed-kafka-sink")
+                        .withName("cos-kafka-sink")
                         .withPrefix("kafka")
                         .build())
                     .build())
@@ -300,7 +300,7 @@ public final class CamelOperandControllerTest {
                     assertThat(binding.getSpec().getSink().getRef())
                         .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                         .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                        .hasFieldOrPropertyWithValue("name", "managed-kafka-sink");
+                        .hasFieldOrPropertyWithValue("name", "cos-kafka-sink");
                 });
             });
     }
@@ -388,9 +388,9 @@ public final class CamelOperandControllerTest {
                 assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
 
                     assertThatObject(binding.getSpec().getErrorHandler())
-                        .extracting(h -> h.at("/dead-letter-channel/endpoint/uri"))
+                        .extracting(h -> h.at("/sink/endpoint/uri"))
                         .extracting(JsonNode::asText)
-                        .isEqualTo("kamelet://managed-kafka-sink/error");
+                        .isEqualTo("kamelet://cos-kafka-sink/error");
                 });
             });
 
@@ -406,10 +406,10 @@ public final class CamelOperandControllerTest {
                 byte[] decoded = Base64.getDecoder().decode(encoded);
 
                 assertThat(new String(decoded))
-                    .contains("camel.kamelet.managed-kafka-sink.error.topic=dlq")
-                    .contains("camel.kamelet.managed-kafka-sink.error.bootstrapServers=kafka.acme.com:2181")
-                    .contains("camel.kamelet.managed-kafka-sink.error.user=kcid")
-                    .contains("camel.kamelet.managed-kafka-sink.error.password=kcs");
+                    .contains("camel.kamelet.cos-kafka-sink.error.topic=dlq")
+                    .contains("camel.kamelet.cos-kafka-sink.error.bootstrapServers=kafka.acme.com:2181")
+                    .contains("camel.kamelet.cos-kafka-sink.error.user=kcid")
+                    .contains("camel.kamelet.cos-kafka-sink.error.password=kcs");
             });
     }
 
@@ -427,7 +427,7 @@ public final class CamelOperandControllerTest {
                 assertThat(resource).isInstanceOfSatisfying(KameletBinding.class, binding -> {
 
                     assertThatObject(binding.getSpec().getErrorHandler())
-                        .extracting(h -> h.at("/dead-letter-channel/endpoint/uri"))
+                        .extracting(h -> h.at("/sink/endpoint/uri"))
                         .extracting(JsonNode::asText)
                         .isEqualTo("controlbus:route?routeId=current&action=stop");
                 });
@@ -481,7 +481,7 @@ public final class CamelOperandControllerTest {
                         .withPrefix("aws")
                         .build())
                     .withKafka(new EndpointKameletBuilder()
-                        .withName("managed-kafka-sink")
+                        .withName("cos-kafka-sink")
                         .withPrefix("kafka")
                         .build())
                     .build())

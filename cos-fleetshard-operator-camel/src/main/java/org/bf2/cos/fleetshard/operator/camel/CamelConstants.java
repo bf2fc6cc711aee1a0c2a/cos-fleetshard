@@ -38,8 +38,8 @@ public final class CamelConstants {
     public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD = "trait.camel.apache.org/health.readiness-failure-threshold";
 
     public static final String ERROR_HANDLER_LOG_TYPE = "log";
-    public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_TYPE = "dead-letter-channel";
-    public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET = "managed-kafka-sink";
+    public static final String ERROR_HANDLER_SINK_CHANNEL_TYPE = "sink";
+    public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET = "cos-kafka-sink";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID = "error";
     public static final String ERROR_HANDLER_STOP_URI = "controlbus:route?routeId=current&action=stop";
 

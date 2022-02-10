@@ -98,6 +98,25 @@ public class KameletBindingSteps extends StepsSupport {
         //            });
     }
 
+    @SuppressWarnings("unchecked")
+    @When("the klb phase is {string}")
+    public void klb_phase_and_conditions(String phase) {
+        kubernetesClient.genericKubernetesResources(KameletBinding.RESOURCE_DEFINITION)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .editStatus(binding -> {
+                Map<String, Object> status = (Map<String, Object>) binding.getAdditionalProperties().get("status");
+                if (status == null) {
+                    status = new HashMap<>();
+                }
+
+                status.put("phase", phase);
+                binding.getAdditionalProperties().put("status", status);
+
+                return binding;
+            });
+    }
+
     @When("the klb path {string} is set to json:")
     public void klb_pointer(String path, String payload) {
         kubernetesClient.resources(KameletBinding.class)

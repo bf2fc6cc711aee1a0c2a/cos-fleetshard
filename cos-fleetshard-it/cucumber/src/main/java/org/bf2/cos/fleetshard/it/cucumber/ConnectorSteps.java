@@ -311,6 +311,15 @@ public class ConnectorSteps {
         });
     }
 
+    @And("the connector operand status is in phase {string}")
+    public void connector_operand_status_is_in_phase(String phase) {
+        untilConnector(c -> {
+            return Objects.equals(
+                phase,
+                c.getStatus().getConnectorStatus().getPhase());
+        });
+    }
+
     @Then("the deployment is in phase {string}")
     public void deployment_is_in_phase(String phase) {
         untilConnector(c -> {
