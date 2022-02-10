@@ -46,7 +46,7 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
-     And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "kamelet://managed-kafka-sink/error"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "kamelet://cos-kafka-sink/error"
 
     Then the klb secret exists
      And the klb secret contains:
@@ -56,10 +56,10 @@ Feature: Camel Connector Reify
       | camel.kamelet.managed-kafka-source.password             |                            |
       | camel.kamelet.managed-kafka-source.user                 |                            |
       | camel.kamelet.managed-kafka-source.topic                | dbz_pg.inventory.customers |
-      | camel.kamelet.managed-kafka-sink.error.topic            | dlq                        |
-      | camel.kamelet.managed-kafka-sink.error.bootstrapServers | kafka.acme.com:443         |
-      | camel.kamelet.managed-kafka-sink.error.password         |                            |
-      | camel.kamelet.managed-kafka-sink.error.user             |                            |
+      | camel.kamelet.cos-kafka-sink.error.topic                | dlq                        |
+      | camel.kamelet.cos-kafka-sink.error.bootstrapServers     | kafka.acme.com:443         |
+      | camel.kamelet.cos-kafka-sink.error.password             |                            |
+      | camel.kamelet.cos-kafka-sink.error.user                 |                            |
 
   Scenario: reify stop error handler
     Given a Connector with:
@@ -79,4 +79,8 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
-     And the klb has an entry at path "$.spec.errorHandler.dead-letter-channel.endpoint.uri" with value "controlbus:route?routeId=current&action=stop"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "controlbus:route?routeId=current&action=stop"
+     
+    When the klb phase is "error"
+    Then the connector is in phase "Monitor"
+     And the connector operand status is in phase "failed"
