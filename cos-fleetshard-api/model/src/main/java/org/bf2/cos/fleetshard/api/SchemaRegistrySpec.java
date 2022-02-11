@@ -13,7 +13,7 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
-public class KafkaSpec {
+public class SchemaRegistrySpec {
     @JsonProperty
     private String id;
     @JsonProperty

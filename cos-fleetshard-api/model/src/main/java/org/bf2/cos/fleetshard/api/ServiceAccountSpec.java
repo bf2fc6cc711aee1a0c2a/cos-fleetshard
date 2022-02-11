@@ -13,25 +13,25 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
-public class KafkaSpec {
+public class ServiceAccountSpec {
     @JsonProperty
-    private String id;
+    private String clientId;
     @JsonProperty
-    private String url;
+    private String clientSecret;
 
-    public String getId() {
-        return id;
+    public String getClientId() {
+        return clientId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
-    public String getUrl() {
-        return url;
+    public String getClientSecret() {
+        return clientSecret;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
     }
 }

@@ -25,6 +25,8 @@ public class DeploymentSpec {
     private String connectorTypeId;
     private Long connectorResourceVersion;
     private Long deploymentResourceVersion;
+    private KafkaSpec kafka;
+    private SchemaRegistrySpec schemaRegistry;
     private String desiredState;
     private String secret;
     private String unitOfWork;
@@ -57,6 +59,26 @@ public class DeploymentSpec {
     @JsonProperty
     public void setDeploymentResourceVersion(Long deploymentResourceVersion) {
         this.deploymentResourceVersion = deploymentResourceVersion;
+    }
+
+    @JsonProperty
+    public KafkaSpec getKafka() {
+        return kafka;
+    }
+
+    @JsonProperty
+    public void setKafka(KafkaSpec kafka) {
+        this.kafka = kafka;
+    }
+
+    @JsonProperty
+    public SchemaRegistrySpec getSchemaRegistry() {
+        return schemaRegistry;
+    }
+
+    @JsonProperty
+    public void setSchemaRegistry(SchemaRegistrySpec schemaRegistry) {
+        this.schemaRegistry = schemaRegistry;
     }
 
     @JsonProperty
@@ -94,38 +116,43 @@ public class DeploymentSpec {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof DeploymentSpec)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DeploymentSpec spec = (DeploymentSpec) o;
-        return Objects.equals(getConnectorTypeId(), spec.getConnectorTypeId())
-            && Objects.equals(getConnectorResourceVersion(), spec.getConnectorResourceVersion())
-            && Objects.equals(getDeploymentResourceVersion(), spec.getDeploymentResourceVersion())
-            && Objects.equals(getDesiredState(), spec.getDesiredState())
-            && Objects.equals(getSecret(), spec.getSecret())
-            && Objects.equals(getUnitOfWork(), spec.getUnitOfWork());
+        DeploymentSpec that = (DeploymentSpec) o;
+        return Objects.equals(connectorTypeId, that.connectorTypeId)
+            && Objects.equals(connectorResourceVersion, that.connectorResourceVersion)
+            && Objects.equals(deploymentResourceVersion, that.deploymentResourceVersion)
+            && Objects.equals(kafka, that.kafka)
+            && Objects.equals(schemaRegistry, that.schemaRegistry)
+            && Objects.equals(desiredState, that.desiredState)
+            && Objects.equals(secret, that.secret)
+            && Objects.equals(unitOfWork, that.unitOfWork);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(
-            getConnectorTypeId(),
-            getConnectorResourceVersion(),
-            getDeploymentResourceVersion(),
-            getDesiredState(),
-            getSecret(),
-            getUnitOfWork());
+        return Objects.hash(connectorTypeId,
+            connectorResourceVersion,
+            deploymentResourceVersion,
+            kafka,
+            schemaRegistry,
+            desiredState,
+            secret,
+            unitOfWork);
     }
 
     @Override
     public String toString() {
         return "DeploymentSpec{" +
-            "connectorTypeId=" + connectorTypeId +
+            "connectorTypeId='" + connectorTypeId + '\'' +
             ", connectorResourceVersion=" + connectorResourceVersion +
             ", deploymentResourceVersion=" + deploymentResourceVersion +
-            ", desiredState=" + desiredState +
-            ", secret=" + secret +
-            ", unitOfWork='" + unitOfWork +
+            ", kafka=" + kafka +
+            ", schemaRegistry=" + schemaRegistry +
+            ", desiredState='" + desiredState + '\'' +
+            ", secret='" + secret + '\'' +
+            ", unitOfWork='" + unitOfWork + '\'' +
             '}';
     }
 }

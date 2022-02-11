@@ -6,8 +6,8 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
-import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -76,7 +76,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
         ManagedConnector connector,
         DebeziumShardMetadata shardMetadata,
         ObjectNode connectorSpec,
-        KafkaSpec kafkaSpec) {
+        ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> secretsData = createSecretsData(connectorSpec);
 
@@ -85,14 +85,14 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX)
                 .build())
             .addToData(EXTERNAL_CONFIG_FILE, asBytesBase64(secretsData))
-            .addToData(KAFKA_CLIENT_SECRET_KEY, kafkaSpec.getClientSecret())
+            .addToData(KAFKA_CLIENT_SECRET_KEY, serviceAccountSpec.getClientSecret())
             .build();
 
         final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
             .withReplicas(1)
-            .withBootstrapServers(kafkaSpec.getBootstrapServers())
+            .withBootstrapServers(connector.getSpec().getDeployment().getKafka().getUrl())
             .withKafkaClientAuthenticationPlain(new KafkaClientAuthenticationPlainBuilder()
-                .withUsername(kafkaSpec.getClientId())
+                .withUsername(serviceAccountSpec.getClientId())
                 .withPasswordSecret(new PasswordSecretSourceBuilder()
                     .withSecretName(secret.getMetadata().getName())
                     .withPassword(KAFKA_CLIENT_SECRET_KEY)

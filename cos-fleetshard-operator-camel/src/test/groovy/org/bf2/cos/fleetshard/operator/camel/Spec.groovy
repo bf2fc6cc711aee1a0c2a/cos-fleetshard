@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.client.KubernetesClient
 import org.bf2.cos.fleetshard.api.KafkaSpec
 import org.bf2.cos.fleetshard.api.ManagedConnector
+import org.bf2.cos.fleetshard.api.ServiceAccountSpec
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding
 import org.mockito.Mockito
@@ -34,12 +35,12 @@ class Spec extends Specification {
         return YAML.readValue(content, type)
     }
 
-    def reify(GString connector,  GString meta, GString spec, GString kafka) {
+    def reify(GString connector,  GString meta, GString spec, GString serviceAccount) {
         CONTROLLER.doReify(
                 readValue(ManagedConnector.class, connector),
                 readValue(CamelShardMetadata.class, meta),
                 readValue(ObjectNode.class, spec),
-                readValue(KafkaSpec.class, kafka))
+                readValue(ServiceAccountSpec.class, serviceAccount))
     }
 
     KameletBinding klb(Collection<HasMetadata> resources) {

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
-import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -70,16 +70,14 @@ public class ConnectorProvisionerTest {
                 .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
-                .containsKey(Secrets.SECRET_ENTRY_KAFKA)
+                .containsKey(Secrets.SECRET_ENTRY_SERVICE_ACCOUNT)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
-            assertThat(kafkaNode.getBootstrapServer())
-                .isEqualTo(deployment.getSpec().getKafka().getBootstrapServer());
-            assertThat(kafkaNode.getClientSecret())
-                .isEqualTo(deployment.getSpec().getKafka().getClientSecret());
-            assertThat(kafkaNode.getClientId())
-                .isEqualTo(deployment.getSpec().getKafka().getClientId());
+            var serviceAccountNode = Secrets.extract(val, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, ServiceAccount.class);
+            assertThat(serviceAccountNode.getClientSecret())
+                .isEqualTo(deployment.getSpec().getServiceAccount().getClientSecret());
+            assertThat(serviceAccountNode.getClientId())
+                .isEqualTo(deployment.getSpec().getServiceAccount().getClientId());
 
             var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
             assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
@@ -112,6 +110,9 @@ public class ConnectorProvisionerTest {
                 assertThat(d.getUnitOfWork())
                     .isNotEmpty()
                     .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
+                assertThat(d.getKafka().getUrl())
+                    .isNotEmpty()
+                    .isEqualTo(deployment.getSpec().getKafka().getUrl());
             });
         });
     }
@@ -152,7 +153,7 @@ public class ConnectorProvisionerTest {
         // When deployment is updated
         //
         final ConnectorDeployment newDeployment = createDeployment(0, d -> {
-            d.getSpec().getKafka().setBootstrapServer("my-kafka.acme.com:218");
+            d.getSpec().getKafka().setUrl("my-kafka.acme.com:218");
             ((ObjectNode) d.getSpec().getConnectorSpec()).with("connector").put("foo", "connector-baz");
             ((ObjectNode) d.getSpec().getShardMetadata()).put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
         });
@@ -181,16 +182,14 @@ public class ConnectorProvisionerTest {
                 .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
-                .containsKey(Secrets.SECRET_ENTRY_KAFKA)
+                .containsKey(Secrets.SECRET_ENTRY_SERVICE_ACCOUNT)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
-            assertThat(kafkaNode.getBootstrapServer())
-                .isEqualTo(newDeployment.getSpec().getKafka().getBootstrapServer());
-            assertThat(kafkaNode.getClientSecret())
-                .isEqualTo(newDeployment.getSpec().getKafka().getClientSecret());
-            assertThat(kafkaNode.getClientId())
-                .isEqualTo(newDeployment.getSpec().getKafka().getClientId());
+            var serviceAccountNode = Secrets.extract(val, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, ServiceAccount.class);
+            assertThat(serviceAccountNode.getClientSecret())
+                .isEqualTo(newDeployment.getSpec().getServiceAccount().getClientSecret());
+            assertThat(serviceAccountNode.getClientId())
+                .isEqualTo(newDeployment.getSpec().getServiceAccount().getClientId());
 
             var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
             assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
@@ -224,6 +223,9 @@ public class ConnectorProvisionerTest {
                 assertThat(d.getUnitOfWork())
                     .isNotEmpty()
                     .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
+                assertThat(d.getKafka().getUrl())
+                    .isNotEmpty()
+                    .isEqualTo(newDeployment.getSpec().getKafka().getUrl());
             });
         });
     }
@@ -265,7 +267,7 @@ public class ConnectorProvisionerTest {
         //
         final ConnectorDeployment newDeployment = createDeployment(1, d -> {
             d.getMetadata().setResourceVersion(1L);
-            d.getSpec().getKafka().setBootstrapServer("my-kafka.acme.com:218");
+            d.getSpec().getKafka().setUrl("my-kafka.acme.com:218");
             ((ObjectNode) d.getSpec().getConnectorSpec()).with("connector").put("foo", "connector-baz");
             ((ObjectNode) d.getSpec().getShardMetadata()).put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
         });
@@ -291,16 +293,14 @@ public class ConnectorProvisionerTest {
                 .containsKey(LABEL_UOW);
 
             assertThat(val.getData())
-                .containsKey(Secrets.SECRET_ENTRY_KAFKA)
+                .containsKey(Secrets.SECRET_ENTRY_SERVICE_ACCOUNT)
                 .containsKey(Secrets.SECRET_ENTRY_CONNECTOR);
 
-            var kafkaNode = Secrets.extract(val, Secrets.SECRET_ENTRY_KAFKA, KafkaConnectionSettings.class);
-            assertThat(kafkaNode.getBootstrapServer())
-                .isEqualTo(newDeployment.getSpec().getKafka().getBootstrapServer());
-            assertThat(kafkaNode.getClientSecret())
-                .isEqualTo(newDeployment.getSpec().getKafka().getClientSecret());
-            assertThat(kafkaNode.getClientId())
-                .isEqualTo(newDeployment.getSpec().getKafka().getClientId());
+            var serviceAccountNode = Secrets.extract(val, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, ServiceAccount.class);
+            assertThat(serviceAccountNode.getClientSecret())
+                .isEqualTo(newDeployment.getSpec().getServiceAccount().getClientSecret());
+            assertThat(serviceAccountNode.getClientId())
+                .isEqualTo(newDeployment.getSpec().getServiceAccount().getClientId());
 
             var connectorNode = Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR);
             assertThatJson(Secrets.extract(val, Secrets.SECRET_ENTRY_CONNECTOR))
@@ -334,6 +334,9 @@ public class ConnectorProvisionerTest {
                 assertThat(d.getUnitOfWork())
                     .isNotEmpty()
                     .isEqualTo(sc.getValue().getMetadata().getLabels().get(LABEL_UOW));
+                assertThat(d.getKafka().getUrl())
+                    .isNotEmpty()
+                    .isEqualTo(newDeployment.getSpec().getKafka().getUrl());
             });
         });
     }

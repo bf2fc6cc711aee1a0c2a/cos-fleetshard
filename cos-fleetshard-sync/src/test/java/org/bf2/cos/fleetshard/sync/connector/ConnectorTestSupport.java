@@ -15,6 +15,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.SchemaRegistryConnectionSettings;
+import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
@@ -130,7 +132,10 @@ public final class ConnectorTestSupport {
                 .connectorTypeId(connectorTypeId)
                 .connectorResourceVersion(1L)
                 .kafka(new KafkaConnectionSettings()
-                    .bootstrapServer("kafka.acme.com:2181")
+                    .url("kafka.acme.com:2181"))
+                .schemaRegistry(new SchemaRegistryConnectionSettings()
+                    .url("schemaregistry.acme.com:2282"))
+                .serviceAccount(new ServiceAccount()
                     .clientId(UUID.randomUUID().toString())
                     .clientSecret(toBase64(UUID.randomUUID().toString())))
                 .connectorSpec(connectorSpec.get())

@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
@@ -117,7 +118,9 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
                         spec.connectorResourceVersion(1L);
                         spec.kafka(
                             new KafkaConnectionSettings()
-                                .bootstrapServer(KAFKA_URL)
+                                .url(KAFKA_URL));
+                        spec.serviceAccount(
+                            new ServiceAccount()
                                 .clientId(KAFKA_CLIENT_ID)
                                 .clientSecret(KAFKA_CLIENT_SECRET));
                         spec.connectorSpec(node(n -> {

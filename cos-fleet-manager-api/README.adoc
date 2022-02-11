@@ -1,0 +1,33 @@
+= cos-fleet-manager-api
+
+This module generates cos-fleet-manager api objects starting from openapi definitions. It needs to be kept up to date with changes in https://github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/tree/main/openapi
+
+== Keeping os-fleet-manager-api up to date
+
+=== Specs
+
+The `src/openapi/specs` files needs to be kept up to date with the corresponding file in https://github.com/bf2fc6cc711aee1a0c2a/kas-fleet-manager/tree/main/openapi to do so just copy and paste files from there in this module (warning: can happen that some file is renamed or the content is moved in another one, you should notice because other modules in this project will broke).
+
+=== Templates
+
+Files under `src/openapi/templates` exist to workaround some code generation limitations (like handling deprecated operations with the same camel case name of non deprecated one i.e. my_operation vs myOperation). The templates are taken from the maven generation plugin codebase, using the same tag of the plugin version we use (see <<gmp,Generation maven plugin>>). For instance if we used plugin version 5.4.0 then the original templates would be from https://github.com/OpenAPITools/openapi-generator/tree/v5.4.0/modules/openapi-generator/src/main/resources/Java
+
+[[gmp]]
+=== Generation maven plugin
+
+The plugin is configured, as usual, in `pom.xml`. It is important to update `src/openapi/templates` once the plugin version is updated. At the moment this is the used version:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.openapitools</groupId>
+    <artifactId>openapi-generator-maven-plugin</artifactId>
+    <version>5.4.0</version>
+...
+</plugin>
+----
+
+Code generation is done using 2 different configurations for `api` and `model` packages:
+
+* `api`: uses **microprofile** library ant thus the templates in the corresponding `templates/libraries` directory.
+* `model`: uses **resteasy** library ant thus the templates in the corresponding `templates/libraries` directory.
