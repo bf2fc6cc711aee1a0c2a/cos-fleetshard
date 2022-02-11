@@ -2,8 +2,8 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "managed-services-api-private.yaml" file
 info:
   title: Kafka Service Fleet Manager
-  version: 1.1.1
-  description: Kafka Service Fleet Manager is a Rest API to manage Kafka instances and connectors.
+  version: 1.2.0
+  description: Kafka Service Fleet Manager is a Rest API to manage Kafka instances.
 servers:
   - url: https://api.openshift.com
     description: Main (production) server
@@ -25,9 +25,42 @@ paths:
                 $ref: '#/components/schemas/VersionMetadata'
           description: Version metadata
       summary: Returns the version metadata
+
+  /api/kafkas_mgmt/v1/errors/{id}:
+    get:
+      operationId: getErrorById
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Get error by Id
+      summary: Returns the error by id
+      tags:
+        - errors
+      parameters:
+        - $ref: "#/components/parameters/id"
+
+  /api/kafkas_mgmt/v1/errors:
+    get:
+      operationId: getErrors
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorList'
+          description: List of possible errors
+      summary: Returns the list of possible API errors
+      tags:
+        - errors
+
   /api/kafkas_mgmt/v1/status:
     get:
+      deprecated: true
       operationId: getServiceStatus
+      description: "[DEPRECATED] The service capacity status is now reported per cloud provider region and Kafka instance type in the /api/kafkas_mgmt/v1/cloud_providers/{id}/regions endpoint. Please use this endpoint instead."
       responses:
         "200":
           content:
@@ -46,7 +79,7 @@ paths:
                   $ref: '#/components/examples/500Example'
       summary: Returns the status of resources, such as whether maximum service capacity has been reached
       security:
-        - Bearer: []
+        - Bearer: [ ]
   /api/kafkas_mgmt/v1/kafkas/{id}:
     get:
       operationId: getKafkaById
@@ -99,7 +132,7 @@ paths:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
       security:
-        - Bearer: []
+        - Bearer: [ ]
       summary: Returns a Kafka request by ID
     delete:
       operationId: deleteKafkaById
@@ -166,7 +199,59 @@ paths:
           description: Unexpected error occurred
       summary: Deletes a Kafka request by ID
       security:
-        - Bearer: []
+        - Bearer: [ ]
+    patch:
+      summary: Update a Kafka instance by id
+      security:
+        - Bearer: [ ]
+      operationId: updateKafkaById
+      requestBody:
+        description: Update owner of kafka
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KafkaUpdateRequest'
+        required: true
+      responses:
+        "200":
+          description: Kafka updated by ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KafkaRequest'
+              examples:
+                KafkaRequestPostResponseExample:
+                  $ref: '#/components/examples/KafkaRequestExample'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Auth token is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "403":
+          description: User is not authorised to access the service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "404":
+          description: No Kafka found with the specified ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
     parameters:
       - $ref: "#/components/parameters/id"
   /api/kafkas_mgmt/v1/kafkas:
@@ -229,6 +314,8 @@ paths:
                   $ref: '#/components/examples/403Example'
                 403MaxAllowedInstanceReachedExample:
                   $ref: '#/components/examples/403MaxAllowedInstanceReachedExample'
+                403TermsNotAcceptedExample:
+                  $ref: '#/components/examples/403TermsNotAcceptedExample'
           description: User forbidden either because the user is not authorized to access the service or because the maximum number of instances that can be created by this user has been reached.
         "404":
           content:
@@ -258,13 +345,13 @@ paths:
                   $ref: '#/components/examples/500Example'
           description: An unexpected error occurred while creating the Kafka request
       security:
-        - Bearer: []
+        - Bearer: [ ]
       summary: Creates a Kafka request
     get:
       summary: Returns a list of Kafka requests
       operationId: getKafkas
       security:
-        - Bearer: []
+        - Bearer: [ ]
       responses:
         "200":
           description: A list of Kafka requests
@@ -318,7 +405,7 @@ paths:
       summary: Returns the list of supported cloud providers
       operationId: getCloudProviders
       security:
-        - Bearer: []
+        - Bearer: [ ]
       responses:
         '200':
           description: Returned list of supported cloud providers
@@ -352,7 +439,7 @@ paths:
       summary: Returns the list of supported regions of the supported cloud provider
       operationId: getCloudProviderRegions
       security:
-        - Bearer: []
+        - Bearer: [ ]
       responses:
         '200':
           description: Returned list of supported cloud provider regions
@@ -382,6 +469,7 @@ paths:
         - $ref: "#/components/parameters/id"
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/size'
+        - $ref: '#/components/parameters/instance_type'
   /api/kafkas_mgmt/v1/service_accounts:
     get:
       responses:
@@ -419,7 +507,7 @@ paths:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
       security:
-        - Bearer: []
+        - Bearer: [ ]
       tags:
         - security
       operationId: getServiceAccounts
@@ -473,12 +561,12 @@ paths:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
       security:
-        - Bearer: []
+        - Bearer: [ ]
       operationId: createServiceAccount
       tags:
         - security
       summary: Creates a service account
-  '/api/kafkas_mgmt/v1/service_accounts/{id}':
+  /api/kafkas_mgmt/v1/service_accounts/{id}:
     get:
       parameters:
         - $ref: "#/components/parameters/id"
@@ -493,7 +581,7 @@ paths:
                   $ref: '#/components/examples/ServiceAccountByIdExample'
           description: Returns a service account by ID
       security:
-        - Bearer: []
+        - Bearer: [ ]
       operationId: getServiceAccountById
       tags:
         - security
@@ -531,18 +619,18 @@ paths:
         '500':
           content:
             application/json:
-              schema: {}
+              schema: { }
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
       security:
-        - Bearer: []
+        - Bearer: [ ]
       operationId: deleteServiceAccountById
       tags:
         - security
       summary: Deletes a service account by ID
-  '/api/kafkas_mgmt/v1/service_accounts/{id}/reset_credentials':
+  /api/kafkas_mgmt/v1/service_accounts/{id}/reset_credentials:
     post:
       parameters:
         - $ref: "#/components/parameters/id"
@@ -577,13 +665,13 @@ paths:
         '500':
           content:
             application/json:
-              schema: {}
+              schema: { }
               examples:
                 500Example:
                   $ref: '#/components/examples/500Example'
           description: Unexpected error occurred
       security:
-        - Bearer: []
+        - Bearer: [ ]
       operationId: resetServiceAccountCreds
       tags:
         - security
@@ -596,7 +684,7 @@ paths:
       summary: Returns metrics with timeseries range query by Kafka ID
       operationId: getMetricsByRangeQuery
       security:
-        - Bearer: []
+        - Bearer: [ ]
       responses:
         '200':
           description: Returned JSON array of Prometheus metrics objects from observatorium
@@ -632,7 +720,7 @@ paths:
       summary: Returns metrics with instant query by Kafka ID
       operationId: getMetricsByInstantQuery
       security:
-        - Bearer: []
+        - Bearer: [ ]
       responses:
         '200':
           description: Returned JSON array of Prometheus metrics objects from observatorium
@@ -661,7 +749,57 @@ paths:
       parameters:
         - $ref: "#/components/parameters/id"
         - $ref: "#/components/parameters/filters"
-
+  /api/kafkas_mgmt/v1/kafkas/{id}/metrics/federate:
+    get:
+      summary: Returns all metrics in scrapeable format for a given kafka id
+      operationId: federateMetrics
+      security:
+        - Bearer: [ ]
+      responses:
+        '200':
+          description: Returned Kafka metrics in a Prometheus text format
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                MissingParameterExample:
+                  $ref: '#/components/examples/400MissingParameterExample'
+        '401':
+          description: Auth token is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: '#/components/examples/401Example'
+        '404':
+          description: Kafka id not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                404Example:
+                  $ref: '#/components/examples/404Example'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: '#/components/examples/500Example'
+      parameters:
+        - $ref: "#/components/parameters/id"
 
 components:
   schemas:
@@ -715,22 +853,25 @@ components:
       allOf:
         - $ref: "#/components/schemas/ObjectReference"
         - type: object
+          required:
+            - reauthentication_enabled
+            - multi_az
           properties:
             status:
+              description: "Values: [accepted, preparing, provisioning, ready, failed, deprovision, deleting] "
               type: string
             cloud_provider:
+              description: "Name of Cloud used to deploy. For example AWS"
               type: string
             multi_az:
               type: boolean
             region:
+              description: "Values will be regions of specific cloud provider. For example: us-east-1 for AWS"
               type: string
             owner:
               type: string
             name:
               type: string
-            bootstrapServerHost:
-              type: string
-              deprecated: true
             bootstrap_server_host:
               type: string
             created_at:
@@ -743,6 +884,10 @@ components:
               type: string
             version:
               type: string
+            instance_type:
+              type: string
+            reauthentication_enabled:
+              type: boolean  
           example:
             $ref: "#/components/examples/KafkaRequestExample"
     KafkaRequestList:
@@ -814,6 +959,10 @@ components:
         region:
           description: The region where the Kafka cluster will be created in
           type: string
+        reauthentication_enabled:
+          description: Whether connection reauthentication is enabled or not. If set to true, connection reauthentication on the Kafka instance will be required every 5 minutes. The default value is true 
+          type: boolean
+          nullable: true  
     CloudProviderList:
       allOf:
         - $ref: "#/components/schemas/List"
@@ -884,8 +1033,21 @@ components:
           description: 'Whether the region is enabled for deploying an OSD cluster.'
           type: boolean
           default: false
+        supported_instance_types:
+          description: 'The Kafka instance types supported by this region.'
+          type: array
+          items: 
+            type: string
+        capacity:
+          description: 'Indicates whether there is capacity left per instance type'
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/RegionCapacityListItem"
       required:
         - enabled
+        - supported_instance_types
+        - capacity
     ServiceAccount:
       description: 'Service Account created in MAS-SSO for the Kafka Cluster for authentication'
       allOf:
@@ -901,14 +1063,8 @@ components:
             description:
               description: ''
               type: string
-            clientID:
-              type: string
-              deprecated: true
             client_id:
               type: string
-            clientSecret:
-              type: string
-              deprecated: true
             client_secret:
               type: string
             owner:
@@ -932,6 +1088,18 @@ components:
           type: string
       example:
         $ref: "#/components/examples/ServiceAccountRequestExample"
+    RegionCapacityListItem:
+      description: 'schema for a kafka instance type capacity in region'
+      type: object
+      properties:
+        instance_type:
+          description: 'kafka instance type'
+          type: string
+        max_capacity_reached:
+          description: 'flag indicating whether the capacity for the instance type in the region is reached'
+          type: boolean
+      required:
+        - max_capacity_reached
     ServiceAccountListItem:
       description: ''
       allOf:
@@ -941,10 +1109,6 @@ components:
             id:
               description: 'server generated unique id of the service account'
               type: string
-            clientID:
-              description: 'client id of the service account'
-              type: string
-              deprecated: true
             client_id:
               description: 'client id of the service account'
               type: string
@@ -1012,17 +1176,9 @@ components:
     values:
       type: object
       properties:
-        Timestamp:
-          type: integer
-          format: int64
-          deprecated: true
         timestamp:
           type: integer
           format: int64
-        Value:
-          type: number
-          format: double
-          deprecated: true
         value:
           type: number
           format: double
@@ -1046,6 +1202,8 @@ components:
               items:
                 allOf:
                   - $ref: "#/components/schemas/InstantQuery"
+    MetricsFederationResult:
+      type: string
     InstantQuery:
       type: object
       properties:
@@ -1053,23 +1211,25 @@ components:
           type: object
           additionalProperties:
             type: string
-        Timestamp:
-          type: integer
-          format: int64
-          deprecated: true
         timestamp:
           type: integer
           format: int64
-        Value:
-          type: number
-          format: double
-          deprecated: true
         value:
           type: number
           format: double
       required:
         - value
-
+    KafkaUpdateRequest:
+      type: object
+      properties:
+        # for now owner is the only supported field for update
+        owner:
+          type: string
+          nullable: true
+        reauthentication_enabled:
+          description: Whether connection reauthentication is enabled or not. If set to true, connection reauthentication on the Kafka instance will be required every 5 minutes.
+          type: boolean
+          nullable: true   
 
   parameters:
     id:
@@ -1082,7 +1242,7 @@ components:
     duration:
       name: duration
       in: query
-      description:  The length of time in minutes for which to return the metrics
+      description: The length of time in minutes for which to return the metrics
       required: true
       schema:
         type: integer
@@ -1115,7 +1275,7 @@ components:
         type: array
         items:
           type: string
-        default: []
+        default: [ ]
     page:
       name: page
       in: query
@@ -1140,7 +1300,25 @@ components:
       description: |-
         Specifies the order by criteria. The syntax of this parameter is
         similar to the syntax of the `order by` clause of an SQL statement.
-        Each query can be ordered by any of the `kafkaRequests` fields.
+        Each query can be ordered by any of the following `kafkaRequests` fields:
+
+        * bootstrap_server_host
+        * cloud_provider
+        * cluster_id
+        * created_at
+        * href
+        * id
+        * instance_type
+        * multi_az
+        * name
+        * organisation_id
+        * owner
+        * reauthentication_enabled
+        * region
+        * status
+        * updated_at
+        * version
+
         For example, to return all Kafka instances ordered by their name, use the following syntax:
 
         ```sql
@@ -1201,6 +1379,18 @@ components:
       schema:
         type: string
       style: form
+    instance_type:
+      name: instance_type
+      description: The Kafka instance type to filter the results by
+      in: query
+      schema:
+        type: string
+      required: false
+      examples:
+        eval_instance_type:
+          value: "eval"
+        standard_instance_type:
+          value: "standard"
   securitySchemes:
     Bearer:
       scheme: bearer
@@ -1226,12 +1416,14 @@ components:
         cloud_provider: "aws"
         multi_az: true
         region: "us-east-1"
-        owner:  "api_kafka_service"
+        owner: "api_kafka_service"
         name: "serviceapi"
         bootstrap_server_host: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
         created_at: "2020-10-05T12:51:24.053142Z"
         updated_at: "2020-10-05T12:56:36.362208Z"
         version: "2.6.0"
+        instance_type: standard
+        reauthentication_enabled: true
     KafkaRequestFailedCreationStatusExample:
       value:
         id: "1iSY6RQ3JKI8Q0OTmjQFd3ocFRg"
@@ -1241,12 +1433,14 @@ components:
         cloud_provider: "aws"
         multi_az: true
         region: "us-east-1"
-        owner:  "api_kafka_service"
+        owner: "api_kafka_service"
         name: "serviceapi"
         bootstrap_server_host: "serviceapi-1isy6rq3jki8q0otmjqfd3ocfrg.apps.mk-bttg0jn170hp.x5u8.s1.devshift.org"
         created_at: "2020-10-05T12:51:24.053142Z"
         updated_at: "2020-10-05T12:56:36.362208Z"
         failed_reason: "a reason the Kafka request creation failed"
+        instance_type: standard
+        reauthentication_enabled: true
     CloudProviderExample:
       value:
         kind: "CloudProvider"
@@ -1260,6 +1454,13 @@ components:
         id: "us-east-1"
         display_name: "US East, N. Virginia"
         enabled: true
+        supported_instance_types: ["standard"]
+        capacity: [
+          {
+              instance_type: "standard",
+              max_capacity_reached: true
+          }
+        ]
     ServiceAccountRequestExample:
       value:
         name: "my-app-sa"
@@ -1334,15 +1535,23 @@ components:
         operation_id: "1iWIimqGcrDuL61aUxIZqBTqNRa"
     400InvalidQueryExample:
       value:
-        id: "203"
+        id: "23"
         kind: "Error"
         href: "/api/kafkas_mgmt/v1/errors/23"
         code: "KAFKAS-MGMT-23"
         reason: "Failed to parse search query: Unable to list Kafka requests for api_kafka_service: KAFKAS-MGMT-23: Failed to parse search query: Unsupported column name for search: 'id'. Supported column names are: region, name, cloud_provider, name, status. Query invalid: id = 123"
         operation_id: "1lWDGuybIrEnxrAem724gqkkiDv"
+    400MissingParameterExample:
+      value:
+        id: "21"
+        kind: "Error"
+        href: "/api/kafkas_mgmt/v1/errors/21"
+        code: "KAFKAS-MGMT-21"
+        reason: "missing path parameter: kafka id"
+        operation_id: "1lWDGuybIrEnxrAem724gqkkiDv"
     404Example:
       value:
-        id: "404"
+        id: "7"
         kind: "Error"
         href: "/api/kafkas_mgmt/v1/errors/7"
         code: "KAFKAS-MGMT-7"
@@ -1379,6 +1588,14 @@ components:
         code: "KAFKAS-MGMT-5"
         reason: "User 'foo-bar' has reached a maximum number of 6 allowed instances."
         operation_id: "1lY3UiEkxnXBpVPeI2oNejd3XB"
+    403TermsNotAcceptedExample:
+      value:
+        id: "12"
+        kind: "Error"
+        href: "/api/kafkas_mgmt/v1/errors/12"
+        code: "KAFKAS-MGMT-12"
+        reason: "Required terms have not been accepted"
+        operation_id: "kXCzWPeI2oXBpVPeI2LvF9jMQY"
     409NameConflictExample:
       value:
         id: "36"

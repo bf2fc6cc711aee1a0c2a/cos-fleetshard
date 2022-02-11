@@ -114,6 +114,8 @@ class ReifyTest extends Spec {
                     secret: "secret"
                     deploymentResourceVersion: ${DEFAULT_DEPLOYMENT_REVISION}
                     desiredState: "ready"
+                    kafka:
+                        url: ${DEFAULT_KAFKA_SERVER}
                 """,
                     """
                 connector_image: ${DEFAULT_CONNECTOR_IMAGE}
@@ -143,7 +145,6 @@ class ReifyTest extends Spec {
                     format: "application/json"
                 """,
                     """
-                bootstrapServers: ${DEFAULT_KAFKA_SERVER}
                 clientId: ${DEFAULT_KAFKA_CLIENT_ID}
                 clientSecret: ${Secrets.toBase64("kcs")}
                 """)
@@ -202,6 +203,8 @@ class ReifyTest extends Spec {
                     secret: "secret"
                     deploymentResourceVersion: ${DEFAULT_DEPLOYMENT_REVISION}
                     desiredState: "ready"
+                    kafka:
+                        url: ${DEFAULT_KAFKA_SERVER}
                 """,
                 """
                 connector_image: ${DEFAULT_CONNECTOR_IMAGE}
@@ -232,7 +235,6 @@ class ReifyTest extends Spec {
                     format: "application/json"
                 """,
                 """
-                bootstrapServers: ${DEFAULT_KAFKA_SERVER}
                 clientId: ${DEFAULT_KAFKA_CLIENT_ID}
                 clientSecret: ${Secrets.toBase64("kcs")}
                 """)

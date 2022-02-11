@@ -50,7 +50,7 @@ public class FleetManagerClient {
             final List<ConnectorDeployment> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                ConnectorDeploymentList list = controlPlane.getClusterAssignedConnectorDeployments(
+                ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
                     config.cluster().id(),
                     Integer.toString(i),
                     null,

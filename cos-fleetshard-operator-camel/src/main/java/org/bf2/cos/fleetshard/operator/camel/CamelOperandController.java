@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration.Health;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
@@ -83,13 +83,13 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
-        KafkaSpec kafkaSpec) {
+        ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> properties = createSecretsData(
             connector,
             shardMetadata,
             connectorSpec,
-            kafkaSpec,
+            serviceAccountSpec,
             configuration,
             new TreeMap<>());
         final List<ProcessorKamelet> stepDefinitions = createSteps(

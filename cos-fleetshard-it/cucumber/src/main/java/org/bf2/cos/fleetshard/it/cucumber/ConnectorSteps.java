@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
+import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorConditions;
@@ -172,6 +173,8 @@ public class ConnectorSteps {
                     .withConnectorResourceVersion(crv)
                     .withConnectorTypeId(entry.get(ConnectorContext.CONNECTOR_TYPE_ID))
                     .withDeploymentResourceVersion(drv)
+                    .withKafka(
+                        new KafkaSpecBuilder().withUrl(entry.getOrDefault("kafka.bootstrap", "kafka.acme.com:443")).build())
                     .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
                     .withSecret(Connectors.generateConnectorId(deploymentId) + "-" + drv)
                     .build())
@@ -192,10 +195,9 @@ public class ConnectorSteps {
                 .build())
             .withData(new HashMap<>())
             .addToData(
-                "kafka",
+                Secrets.SECRET_ENTRY_SERVICE_ACCOUNT,
                 Secrets.toBase64(Serialization.asJson(
                     Serialization.jsonMapper().createObjectNode()
-                        .put("bootstrap_server", entry.getOrDefault("kafka.bootstrap", "kafka.acme.com:443"))
                         .put("client_id", entry.getOrDefault("kafka.client.id", uid()))
                         .put("client_secret", entry.getOrDefault("kafka.client.secret", Secrets.toBase64(uid()))))))
             .build();

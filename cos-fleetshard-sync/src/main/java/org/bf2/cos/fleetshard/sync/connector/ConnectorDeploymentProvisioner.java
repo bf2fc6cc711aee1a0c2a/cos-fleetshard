@@ -7,10 +7,14 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.SchemaRegistryConnectionSettings;
+import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
+import org.bf2.cos.fleetshard.api.SchemaRegistrySpecBuilder;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -151,6 +155,22 @@ public class ConnectorDeploymentProvisioner {
         connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
         connector.getSpec().getDeployment().setConnectorTypeId(deployment.getSpec().getConnectorTypeId());
         connector.getSpec().getDeployment().setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
+
+        KafkaConnectionSettings kafkaConnectionSettings = deployment.getSpec().getKafka();
+        if (kafkaConnectionSettings != null) {
+            connector.getSpec().getDeployment().setKafka(new KafkaSpecBuilder()
+                .withId(kafkaConnectionSettings.getId())
+                .withUrl(kafkaConnectionSettings.getUrl()).build());
+        }
+
+        SchemaRegistryConnectionSettings schemaRegistryConnectionSettings = deployment.getSpec().getSchemaRegistry();
+        if (schemaRegistryConnectionSettings != null) {
+            connector.getSpec().getDeployment().setSchemaRegistry(new SchemaRegistrySpecBuilder()
+                .withId(schemaRegistryConnectionSettings.getId())
+                .withUrl(schemaRegistryConnectionSettings.getUrl()).build());
+        }
+
+        connector.getSpec().getDeployment().setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
         connector.getSpec().getDeployment().setSecret(Secrets.generateConnectorSecretId(deployment.getId()));
         connector.getSpec().getDeployment().setUnitOfWork(uow);
         connector.getSpec().setOperatorSelector(operatorSelector);
@@ -217,7 +237,7 @@ public class ConnectorDeploymentProvisioner {
             owner.getMetadata().getLabels().get(Resources.LABEL_OPERATOR_TYPE));
 
         Secrets.set(secret, Secrets.SECRET_ENTRY_CONNECTOR, deployment.getSpec().getConnectorSpec());
-        Secrets.set(secret, Secrets.SECRET_ENTRY_KAFKA, deployment.getSpec().getKafka());
+        Secrets.set(secret, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, deployment.getSpec().getServiceAccount());
         Secrets.set(secret, Secrets.SECRET_ENTRY_META, deployment.getSpec().getShardMetadata());
 
         try {

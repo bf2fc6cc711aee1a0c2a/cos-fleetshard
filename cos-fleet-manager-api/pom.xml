@@ -47,8 +47,9 @@
                 <plugin>
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>5.4.0</version>
                     <configuration>
-                        <inputSpec>${project.basedir}/src/openapi/specs/kas-fleet-manager-private.yaml</inputSpec>
+                        <inputSpec>${project.basedir}/src/openapi/specs/connector_mgmt-private.yaml</inputSpec>
                         <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
                         <generatorName>java</generatorName>
                         <generateAliasAsModel>true</generateAliasAsModel>
@@ -103,6 +104,7 @@
                             <library>resteasy</library>
                             <generateModels>true</generateModels>
                             <generateApis>false</generateApis>
+                            <templateDirectory>${project.basedir}/src/openapi/templates</templateDirectory>
                         </configuration>
                     </execution>
                     <execution>

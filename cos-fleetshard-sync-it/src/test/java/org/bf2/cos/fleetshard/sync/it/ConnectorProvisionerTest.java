@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
 import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
@@ -35,8 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
-import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_KAFKA;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
+import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_SERVICE_ACCOUNT;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 @QuarkusTest
@@ -77,9 +78,8 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 assertThat(item.getMetadata().getName())
                     .isEqualTo(Secrets.generateConnectorSecretId(mc.getSpec().getDeploymentId()));
 
-                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_SERVICE_ACCOUNT))
                     .isObject()
-                    .containsEntry("bootstrap_server", KAFKA_URL)
                     .containsEntry("client_id", KAFKA_CLIENT_ID)
                     .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
 
@@ -101,6 +101,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
+            assertThat(mc.getSpec().getDeployment().getKafka().getUrl()).isEqualTo(KAFKA_URL);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
         {
@@ -131,9 +132,8 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 assertThat(item.getMetadata().getName())
                     .isEqualTo(Secrets.generateConnectorSecretId(mc.getSpec().getDeploymentId()));
 
-                assertThatJson(Secrets.extract(item, SECRET_ENTRY_KAFKA))
+                assertThatJson(Secrets.extract(item, SECRET_ENTRY_SERVICE_ACCOUNT))
                     .isObject()
-                    .containsEntry("bootstrap_server", KAFKA_URL)
                     .containsEntry("client_id", KAFKA_CLIENT_ID)
                     .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
 
@@ -155,6 +155,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
+            assertThat(mc.getSpec().getDeployment().getKafka().getUrl()).isEqualTo(KAFKA_URL);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
         }
     }
@@ -203,7 +204,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                         spec.connectorResourceVersion(1L);
                         spec.kafka(
                             new KafkaConnectionSettings()
-                                .bootstrapServer(KAFKA_URL)
+                                .url(KAFKA_URL));
+                        spec.serviceAccount(
+                            new ServiceAccount()
                                 .clientId(KAFKA_CLIENT_ID)
                                 .clientSecret(KAFKA_CLIENT_SECRET));
                         spec.connectorSpec(node(n -> {
@@ -242,7 +245,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                         spec.connectorResourceVersion(1L);
                         spec.kafka(
                             new KafkaConnectionSettings()
-                                .bootstrapServer(KAFKA_URL)
+                                .url(KAFKA_URL));
+                        spec.serviceAccount(
+                            new ServiceAccount()
                                 .clientId(KAFKA_CLIENT_ID)
                                 .clientSecret(KAFKA_CLIENT_SECRET));
                         spec.connectorSpec(node(n -> {

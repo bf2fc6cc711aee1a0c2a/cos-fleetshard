@@ -52,6 +52,20 @@ spec:
                     type: integer
                   deploymentResourceVersion:
                     type: integer
+                  kafka:
+                    properties:
+                      id:
+                        type: string
+                      url:
+                        type: string
+                    type: object
+                  schemaRegistry:
+                    properties:
+                      id:
+                        type: string
+                      url:
+                        type: string
+                    type: object
                   desiredState:
                     type: string
                   secret:
@@ -109,6 +123,20 @@ spec:
                     type: integer
                   deploymentResourceVersion:
                     type: integer
+                  kafka:
+                    properties:
+                      id:
+                        type: string
+                      url:
+                        type: string
+                    type: object
+                  schemaRegistry:
+                    properties:
+                      id:
+                        type: string
+                      url:
+                        type: string
+                    type: object
                   desiredState:
                     type: string
                   secret:

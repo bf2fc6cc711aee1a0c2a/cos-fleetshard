@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
+import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadataBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.EndpointKameletBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
@@ -114,6 +115,7 @@ public final class CamelOperandControllerTest {
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
+                        .withKafka(new KafkaSpecBuilder().withUrl(DEFAULT_KAFKA_SERVER).build())
                         .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
                         .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
                         .withDesiredState(DESIRED_STATE_READY)
@@ -138,8 +140,7 @@ public final class CamelOperandControllerTest {
                     .build())
                 .build(),
             spec,
-            new KafkaSpecBuilder()
-                .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+            new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
                 .build());
@@ -251,6 +252,7 @@ public final class CamelOperandControllerTest {
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
+                        .withKafka(new KafkaSpecBuilder().withUrl(DEFAULT_KAFKA_SERVER).build())
                         .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
                         .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
                         .withDesiredState(DESIRED_STATE_READY)
@@ -274,8 +276,7 @@ public final class CamelOperandControllerTest {
                 .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, image)
                 .build(),
             spec,
-            new KafkaSpecBuilder()
-                .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+            new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
                 .build());
@@ -465,6 +466,7 @@ public final class CamelOperandControllerTest {
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
+                        .withKafka(new KafkaSpecBuilder().withUrl(DEFAULT_KAFKA_SERVER).build())
                         .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
                         .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
                         .withDesiredState(DESIRED_STATE_READY)
@@ -487,8 +489,7 @@ public final class CamelOperandControllerTest {
                     .build())
                 .build(),
             spec,
-            new KafkaSpecBuilder()
-                .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+            new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
                 .build());

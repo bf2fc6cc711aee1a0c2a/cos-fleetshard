@@ -24,7 +24,7 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMEN
 
 public final class Secrets {
     public static final String SECRET_ENTRY_CONNECTOR = "connector";
-    public static final String SECRET_ENTRY_KAFKA = "kafka";
+    public static final String SECRET_ENTRY_SERVICE_ACCOUNT = "serviceAccount";
     public static final String SECRET_ENTRY_META = "meta";
 
     private Secrets() {

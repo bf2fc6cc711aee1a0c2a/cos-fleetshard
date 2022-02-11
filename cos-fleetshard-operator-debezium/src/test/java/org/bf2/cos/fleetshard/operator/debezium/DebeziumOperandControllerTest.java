@@ -11,6 +11,7 @@ import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -184,6 +185,7 @@ public class DebeziumOperandControllerTest {
                     .withDeployment(new DeploymentSpecBuilder()
                         .withConnectorTypeId(DEFAULT_CONNECTOR_TYPE_ID)
                         .withSecret("secret")
+                        .withKafka(new KafkaSpecBuilder().withUrl(DEFAULT_KAFKA_SERVER).build())
                         .withConnectorResourceVersion(DEFAULT_CONNECTOR_REVISION)
                         .withDeploymentResourceVersion(DEFAULT_DEPLOYMENT_REVISION)
                         .withDesiredState(DESIRED_STATE_READY)
@@ -198,8 +200,7 @@ public class DebeziumOperandControllerTest {
                 .withConnectorSha512sum(PG_ARTIFACT_SHA)
                 .build(),
             spec,
-            new KafkaSpecBuilder()
-                .withBootstrapServers(DEFAULT_KAFKA_SERVER)
+            new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
                 .build());

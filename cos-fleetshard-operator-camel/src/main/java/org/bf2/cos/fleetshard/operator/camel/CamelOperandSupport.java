@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.apache.commons.text.CaseUtils;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
-import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
@@ -293,7 +293,7 @@ public final class CamelOperandSupport {
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
         ObjectNode connectorSpec,
-        KafkaSpec kafkaSpec,
+        ServiceAccountSpec serviceAccountSpec,
         CamelOperandConfiguration cfg,
         Map<String, String> props) {
 
@@ -305,13 +305,13 @@ public final class CamelOperandSupport {
 
             props.put(
                 String.format("camel.kamelet.%s.user", shardMetadata.getKamelets().getKafka().getName()),
-                kafkaSpec.getClientId());
+                serviceAccountSpec.getClientId());
             props.put(
                 String.format("camel.kamelet.%s.password", shardMetadata.getKamelets().getKafka().getName()),
-                new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
+                new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()), StandardCharsets.UTF_8));
             props.put(
                 String.format("camel.kamelet.%s.bootstrapServers", shardMetadata.getKamelets().getKafka().getName()),
-                kafkaSpec.getBootstrapServers());
+                connector.getSpec().getDeployment().getKafka().getUrl());
 
             if (CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType())) {
                 props.put(
@@ -329,13 +329,13 @@ public final class CamelOperandSupport {
                 }
                 props.put(
                     String.format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
-                    kafkaSpec.getClientId());
+                    serviceAccountSpec.getClientId());
                 props.put(
                     String.format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
-                    new String(Base64.getDecoder().decode(kafkaSpec.getClientSecret()), StandardCharsets.UTF_8));
+                    new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()), StandardCharsets.UTF_8));
                 props.put(
                     String.format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
-                    kafkaSpec.getBootstrapServers());
+                    connector.getSpec().getDeployment().getKafka().getUrl());
                 props.put(
                     String.format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
                     dlTopic.asText());
