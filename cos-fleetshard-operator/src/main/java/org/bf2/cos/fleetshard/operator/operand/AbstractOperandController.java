@@ -36,21 +36,26 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
 
     @Override
     public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
-        LOGGER.debug("Reifying connector: {} and secret: {}", connector, secret);
+        LOGGER.debug("Reifying connector: {} and secret.metadata: {}", connector, secret.getMetadata());
         final ServiceAccount serviceAccountSettings = extract(
             secret,
             SECRET_ENTRY_SERVICE_ACCOUNT,
             ServiceAccount.class);
-        LOGGER.debug("Extracted serviceAccount: {}", serviceAccountSettings);
+        LOGGER.debug("Extracted serviceAccount {}",
+            serviceAccountSettings == null ? "is null" : "with clientId: " + serviceAccountSettings.getClientId());
+
+        ServiceAccountSpec sas = serviceAccountSettings == null
+            ? new ServiceAccountSpecBuilder().build()
+            : new ServiceAccountSpecBuilder()
+                .withClientId(serviceAccountSettings.getClientId())
+                .withClientSecret(serviceAccountSettings.getClientSecret())
+                .build();
 
         return doReify(
             connector,
             extract(secret, SECRET_ENTRY_META, metadataType),
             extract(secret, SECRET_ENTRY_CONNECTOR, connectorSpecType),
-            new ServiceAccountSpecBuilder()
-                .withClientId(serviceAccountSettings.getClientId())
-                .withClientSecret(serviceAccountSettings.getClientSecret())
-                .build());
+            sas);
     }
 
     protected abstract List<HasMetadata> doReify(
