@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.sundr.builder.annotations.Buildable;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -21,7 +20,7 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "ref", "properties" })
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
-public class KameletEndpoint implements KubernetesResource {
+public class KameletEndpoint {
     @JsonProperty("ref")
     private ResourceRef ref;
     @JsonProperty("properties")

@@ -52,6 +52,13 @@ Feature: Camel Connector Reify
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
 
+    And the klb has an entry at path "$.spec.source.ref.apiVersion" with value "camel.apache.org/v1alpha1"
+    And the klb has an entry at path "$.spec.source.ref.kind" with value "Kamelet"
+    And the klb has an entry at path "$.spec.source.ref.name" with value "managed-kafka-source"
+    And the klb has an entry at path "$.spec.sink.ref.apiVersion" with value "camel.apache.org/v1alpha1"
+    And the klb has an entry at path "$.spec.sink.ref.kind" with value "Kamelet"
+    And the klb has an entry at path "$.spec.sink.ref.name" with value "log-sink"
+
     Then the klb secret exists
      And the klb secret contains:
           | camel.kamelet.log-sink.multiLine                    | true                       |

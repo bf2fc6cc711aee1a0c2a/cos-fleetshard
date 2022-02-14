@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.api;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,7 +19,7 @@ import lombok.ToString;
     "name",
     "namespace"
 })
-public class ResourceRef implements Serializable {
+public class ResourceRef {
     @JsonProperty
     private String apiVersion;
     @JsonProperty
