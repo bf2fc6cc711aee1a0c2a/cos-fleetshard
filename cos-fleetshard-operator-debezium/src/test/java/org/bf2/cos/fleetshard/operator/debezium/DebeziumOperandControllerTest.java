@@ -12,12 +12,15 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -58,38 +61,13 @@ public class DebeziumOperandControllerTest {
         }
 
         @Override
-        public ContainerImage containerImage() {
-            return new ContainerImage() {
-                @Override
-                public String registry() {
-                    return "quay.io";
-                }
-
-                @Override
-                public String group() {
-                    return "rhoas";
-                }
-            };
-        }
-
-        @Override
         public KafkaConnect kafkaConnect() {
-            return new KafkaConnect() {
-                @Override
-                public Map<String, String> config() {
-                    return Map.of();
-                }
-            };
+            return Map::of;
         }
 
         @Override
         public KafkaConnector kafkaConnector() {
-            return new KafkaConnector() {
-                @Override
-                public Map<String, String> config() {
-                    return Map.of();
-                }
-            };
+            return Map::of;
         }
     };
 
@@ -134,16 +112,12 @@ public class DebeziumOperandControllerTest {
 
         assertThat(controller.getResourceTypes())
             .hasSize(2)
-            .anyMatch(ctx -> {
-                return Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
-                    && KafkaConnect.CONSUMED_VERSION.equals(ctx.getVersion())
-                    && KafkaConnect.RESOURCE_KIND.equals(ctx.getKind());
-            })
-            .anyMatch(ctx -> {
-                return Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
-                    && KafkaConnector.CONSUMED_VERSION.equals(ctx.getVersion())
-                    && KafkaConnector.RESOURCE_KIND.equals(ctx.getKind());
-            });
+            .anyMatch(ctx -> Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
+                && KafkaConnect.CONSUMED_VERSION.equals(ctx.getVersion())
+                && KafkaConnect.RESOURCE_KIND.equals(ctx.getKind()))
+            .anyMatch(ctx -> Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
+                && KafkaConnector.CONSUMED_VERSION.equals(ctx.getVersion())
+                && KafkaConnector.RESOURCE_KIND.equals(ctx.getKind()));
     }
 
     @Test
@@ -171,7 +145,7 @@ public class DebeziumOperandControllerTest {
             .put("poll.interval.ms", "100")
             .put("consumer.interceptor.classes", "io.opentracing.contrib.kafka.TracingConsumerInterceptor")
             .put("producer.interceptor.classes", "io.opentracing.contrib.kafka.TracingProducerInterceptor");
-
+        spec.with("data_shape").put("key", "JSON").put("value", "JSON");
         spec.with("database.password").put("kind", "base64").put("value", pwdB64);
 
         var resources = controller.doReify(
@@ -195,11 +169,8 @@ public class DebeziumOperandControllerTest {
             new org.bf2.cos.fleetshard.operator.debezium.DebeziumShardMetadataBuilder()
                 .withContainerImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorClass(PG_CLASS)
-                .withConnectorName("debezium-connector-postgres")
-                .withConnectorVersion("1.5.3.Final")
-                .withConnectorSha512sum(PG_ARTIFACT_SHA)
                 .build(),
-            spec,
+            new ConnectorConfiguration<>(spec, ObjectNode.class),
             new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)

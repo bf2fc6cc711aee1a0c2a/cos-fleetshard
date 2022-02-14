@@ -22,12 +22,6 @@ public class DebeziumShardMetadata {
     private String containerImage;
     @JsonProperty("connector_class")
     private String connectorClass;
-    @JsonProperty("connector_name")
-    private String connectorName;
-    @JsonProperty("connector_version")
-    private String connectorVersion;
-    @JsonProperty("connector_sha512sum")
-    private String connectorSha512sum;
 
     @JsonProperty("operators")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -49,30 +43,6 @@ public class DebeziumShardMetadata {
         this.connectorClass = connectorClass;
     }
 
-    public String getConnectorName() {
-        return connectorName;
-    }
-
-    public void setConnectorName(String connectorName) {
-        this.connectorName = connectorName;
-    }
-
-    public String getConnectorVersion() {
-        return connectorVersion;
-    }
-
-    public void setConnectorVersion(String connectorVersion) {
-        this.connectorVersion = connectorVersion;
-    }
-
-    public String getConnectorSha512sum() {
-        return connectorSha512sum;
-    }
-
-    public void setConnectorSha512sum(String connectorSha512sum) {
-        this.connectorSha512sum = connectorSha512sum;
-    }
-
     public List<Operator> getOperators() {
         return operators;
     }
@@ -92,9 +62,6 @@ public class DebeziumShardMetadata {
         DebeziumShardMetadata metadata = (DebeziumShardMetadata) o;
         return Objects.equals(getContainerImage(), metadata.getContainerImage())
             && Objects.equals(getConnectorClass(), metadata.getConnectorClass())
-            && Objects.equals(getConnectorName(), metadata.getConnectorName())
-            && Objects.equals(getConnectorVersion(), metadata.getConnectorVersion())
-            && Objects.equals(getConnectorSha512sum(), metadata.getConnectorSha512sum())
             && Objects.equals(getOperators(), metadata.getOperators());
     }
 
@@ -103,9 +70,6 @@ public class DebeziumShardMetadata {
         return Objects.hash(
             getContainerImage(),
             getConnectorClass(),
-            getConnectorName(),
-            getConnectorVersion(),
-            getConnectorSha512sum(),
             getOperators());
     }
 }

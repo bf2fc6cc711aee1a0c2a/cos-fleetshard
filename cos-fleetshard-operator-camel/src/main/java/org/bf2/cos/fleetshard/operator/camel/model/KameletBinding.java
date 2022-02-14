@@ -42,6 +42,7 @@ public class KameletBinding
         .build();
 
     public KameletBinding() {
+        super();
     }
 
     @Override

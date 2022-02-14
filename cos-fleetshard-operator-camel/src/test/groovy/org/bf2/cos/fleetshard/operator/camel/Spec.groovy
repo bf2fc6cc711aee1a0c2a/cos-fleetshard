@@ -7,17 +7,16 @@ import groovy.transform.TypeChecked
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.client.KubernetesClient
-import org.bf2.cos.fleetshard.api.KafkaSpec
 import org.bf2.cos.fleetshard.api.ManagedConnector
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration
 import org.mockito.Mockito
 import spock.lang.Specification
 
 class Spec extends Specification {
 
-    public static final ObjectMapper JSON = new ObjectMapper();
     public static final YAMLMapper YAML = new YAMLMapper();
 
     public static final KubernetesClient CLIENT = Mockito.mock(KubernetesClient.class)
@@ -39,7 +38,7 @@ class Spec extends Specification {
         CONTROLLER.doReify(
                 readValue(ManagedConnector.class, connector),
                 readValue(CamelShardMetadata.class, meta),
-                readValue(ObjectNode.class, spec),
+                new ConnectorConfiguration<ObjectNode>(readValue(ObjectNode.class, spec), ObjectNode.class),
                 readValue(ServiceAccountSpec.class, serviceAccount))
     }
 

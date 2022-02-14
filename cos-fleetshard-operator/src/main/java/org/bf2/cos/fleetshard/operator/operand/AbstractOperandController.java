@@ -6,8 +6,11 @@ import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -51,16 +54,20 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
                 .withClientSecret(serviceAccountSettings.getClientSecret())
                 .build();
 
+        ConnectorConfiguration<S> connectorConfig = new ConnectorConfiguration<>(
+            extract(secret, SECRET_ENTRY_CONNECTOR, ObjectNode.class),
+            connectorSpecType);
+
         return doReify(
             connector,
             extract(secret, SECRET_ENTRY_META, metadataType),
-            extract(secret, SECRET_ENTRY_CONNECTOR, connectorSpecType),
+            connectorConfig,
             sas);
     }
 
     protected abstract List<HasMetadata> doReify(
         ManagedConnector connector,
         M shardMetadata,
-        S connectorSpec,
+        ConnectorConfiguration<S> connectorSpec,
         ServiceAccountSpec serviceAccountSpec);
 }
