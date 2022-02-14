@@ -14,19 +14,9 @@ public interface DebeziumOperandConfiguration {
     @WithDefault("org.apache.kafka.connect.json.JsonConverter")
     String valueConverter();
 
-    ContainerImage containerImage();
-
     KafkaConnect kafkaConnect();
 
     KafkaConnector kafkaConnector();
-
-    interface ContainerImage {
-        @WithDefault("image-registry.openshift-image-registry.svc:5000")
-        String registry();
-
-        @WithDefault("cos")
-        String group();
-    }
 
     interface KafkaConnect {
         Map<String, String> config();

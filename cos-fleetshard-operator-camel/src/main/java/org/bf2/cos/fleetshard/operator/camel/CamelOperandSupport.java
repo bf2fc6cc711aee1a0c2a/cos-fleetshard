@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.commons.text.CaseUtils;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
@@ -19,6 +18,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelets;
 import org.bf2.cos.fleetshard.operator.camel.model.ProcessorKamelet;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -38,7 +38,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
-    private static final Set<String> RESERVED_PROPERTIES = Set.of("processors", "data_shape", "error_handling");
 
     private CamelOperandSupport() {
     }
@@ -82,22 +81,14 @@ public final class CamelOperandSupport {
         return templateId + "-" + index;
     }
 
-    public static void configureEndpoint(
-        Map<String, String> props,
-        ObjectNode node,
-        Kamelets mapping) {
+    public static void configureEndpoint(Map<String, String> props, ObjectNode node, Kamelets mapping) {
 
         for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
             final var property = cit.next();
             final String key = property.getKey();
 
-            if (RESERVED_PROPERTIES.contains(key)) {
-                continue;
-            }
-
             final String templateId;
             final String prefix;
-
             if (key.startsWith(mapping.getAdapter().getPrefix() + "_")) {
                 templateId = mapping.getAdapter().getName();
                 prefix = mapping.getAdapter().getPrefix();
@@ -137,19 +128,21 @@ public final class CamelOperandSupport {
         }
     }
 
-    public static List<ProcessorKamelet> createSteps(JsonNode connectorSpec, CamelShardMetadata shardMetadata,
-        Map<String, String> props) {
-        final JsonNode steps = connectorSpec.at("/processors");
+    public static List<ProcessorKamelet> createSteps(
+        ConnectorConfiguration<ObjectNode> connectorConfiguration,
+        CamelShardMetadata shardMetadata, Map<String, String> props) {
 
-        String consumes = Optional.of(connectorSpec.at("/data_shape/consumes/format"))
+        ObjectNode dataShapeSpec = connectorConfiguration.getDataShapeSpec();
+        String consumes = Optional.of(dataShapeSpec.at("/consumes/format"))
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getConsumes());
-        String produces = Optional.of(connectorSpec.at("/data_shape/produces/format"))
+        String produces = Optional.of(dataShapeSpec.at("/produces/format"))
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getProduces());
 
+        final ArrayNode steps = connectorConfiguration.getProcessorsSpec();
         final List<ProcessorKamelet> stepDefinitions = new ArrayList<>(steps.size() + 2);
 
         int i = 0;
@@ -204,9 +197,7 @@ public final class CamelOperandSupport {
                 throw new IllegalArgumentException("Unknown processor: " + element.getKey());
             }
 
-            stepDefinitions.add(new ProcessorKamelet(
-                templateId,
-                stepName(i, templateId)));
+            stepDefinitions.add(new ProcessorKamelet(templateId, stepName(i, templateId)));
 
             configureStep(
                 props,
@@ -262,7 +253,7 @@ public final class CamelOperandSupport {
                 String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
                 "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
-            if ("application/json".equals(consumes) && hasSchemaRegistry(connectorSpec)) {
+            if ("application/json".equals(consumes) && hasSchemaRegistry(connectorConfiguration.getConnectorSpec())) {
                 props.put(
                     String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer");
@@ -275,7 +266,7 @@ public final class CamelOperandSupport {
                 String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
 
-            if ("application/json".equals(produces) && hasSchemaRegistry(connectorSpec)) {
+            if ("application/json".equals(produces) && hasSchemaRegistry(connectorConfiguration.getConnectorSpec())) {
                 props.put(
                     String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonSerializer");
@@ -292,16 +283,14 @@ public final class CamelOperandSupport {
     public static Map<String, String> createSecretsData(
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
-        ObjectNode connectorSpec,
+        ConnectorConfiguration<ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec,
         CamelOperandConfiguration cfg,
         Map<String, String> props) {
 
-        if (connectorSpec != null) {
-            configureEndpoint(
-                props,
-                connectorSpec,
-                shardMetadata.getKamelets());
+        ObjectNode connectorConfigurationSpec = connectorConfiguration.getConnectorSpec();
+        if (connectorConfigurationSpec != null) {
+            configureEndpoint(props, connectorConfigurationSpec, shardMetadata.getKamelets());
 
             props.put(
                 String.format("camel.kamelet.%s.user", shardMetadata.getKamelets().getKafka().getName()),
@@ -319,26 +308,29 @@ public final class CamelOperandSupport {
                     connector.getSpec().getDeploymentId());
             }
 
-            var dlq = connectorSpec.at("/error_handling/dead_letter_queue");
-            if (!dlq.isMissingNode()) {
-                String errorKamelet = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
-                String errorKameletId = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
-                JsonNode dlTopic = dlq.get("topic");
-                if (dlTopic == null) {
-                    throw new RuntimeException("Missing topic property in dead_letter_queue error handler");
+            ObjectNode errorHandlerSpec = connectorConfiguration.getErrorHandlerSpec();
+            if (null != errorHandlerSpec) {
+                var dlq = errorHandlerSpec.at("/dead_letter_queue");
+                if (!dlq.isMissingNode()) {
+                    String errorKamelet = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET;
+                    String errorKameletId = ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID;
+                    JsonNode dlTopic = dlq.get("topic");
+                    if (dlTopic == null) {
+                        throw new RuntimeException("Missing topic property in dead_letter_queue error handler");
+                    }
+                    props.put(
+                        String.format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
+                        serviceAccountSpec.getClientId());
+                    props.put(
+                        String.format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
+                        new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()), StandardCharsets.UTF_8));
+                    props.put(
+                        String.format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
+                        connector.getSpec().getDeployment().getKafka().getUrl());
+                    props.put(
+                        String.format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
+                        dlTopic.asText());
                 }
-                props.put(
-                    String.format("camel.kamelet.%s.%s.user", errorKamelet, errorKameletId),
-                    serviceAccountSpec.getClientId());
-                props.put(
-                    String.format("camel.kamelet.%s.%s.password", errorKamelet, errorKameletId),
-                    new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()), StandardCharsets.UTF_8));
-                props.put(
-                    String.format("camel.kamelet.%s.%s.bootstrapServers", errorKamelet, errorKameletId),
-                    connector.getSpec().getDeployment().getKafka().getUrl());
-                props.put(
-                    String.format("camel.kamelet.%s.%s.topic", errorKamelet, errorKameletId),
-                    dlTopic.asText());
             }
         }
 
@@ -436,23 +428,19 @@ public final class CamelOperandSupport {
         }
     }
 
-    public static ObjectNode createErrorHandler(ObjectNode connectorSpec) {
-        if (connectorSpec != null) {
-            var errorHandling = (JsonNode) connectorSpec.get("error_handling");
-            if (errorHandling != null) {
-                // Assume only one is populated because of prior validation
-                if (errorHandling.get("log") != null) {
-                    return createLogErrorHandler();
-                } else if (errorHandling.get("stop") != null) {
-                    return createStopErrorHandler();
-                } else if (errorHandling.get("dead_letter_queue") != null) {
-                    return createDeadLetterQueueErrorHandler();
-                } else {
-                    throw new RuntimeException("Invalid error handling specification: " + errorHandling.asText());
-                }
+    public static ObjectNode createErrorHandler(ObjectNode errorHandlerSpec) {
+        if (errorHandlerSpec != null) {
+            // Assume only one is populated because of prior validation
+            if (errorHandlerSpec.get("log") != null) {
+                return createLogErrorHandler();
+            } else if (errorHandlerSpec.get("stop") != null) {
+                return createStopErrorHandler();
+            } else if (errorHandlerSpec.get("dead_letter_queue") != null) {
+                return createDeadLetterQueueErrorHandler();
+            } else {
+                throw new RuntimeException("Invalid error handling specification: " + errorHandlerSpec.asText());
             }
         }
-
         return null;
     }
 

@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.camel.model.ProcessorKamelet;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -82,18 +83,18 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
     protected List<HasMetadata> doReify(
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
-        ObjectNode connectorSpec,
+        ConnectorConfiguration<ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> properties = createSecretsData(
             connector,
             shardMetadata,
-            connectorSpec,
+            connectorConfiguration,
             serviceAccountSpec,
             configuration,
             new TreeMap<>());
         final List<ProcessorKamelet> stepDefinitions = createSteps(
-            connectorSpec,
+            connectorConfiguration,
             shardMetadata,
             properties);
 
@@ -133,7 +134,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret))))
                 .withSource(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, source))
                 .withSink(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, sink))
-                .withErrorHandler(createErrorHandler(connectorSpec))
+                .withErrorHandler(createErrorHandler(connectorConfiguration.getErrorHandlerSpec()))
                 .withSteps(
                     stepDefinitions.stream()
                         .map(s -> new KameletEndpoint(

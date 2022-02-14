@@ -44,7 +44,7 @@ public class CamelConnectorSteps extends StepsSupport {
         final String type = entries.getOrDefault(typeKey, "log");
 
         var connector = Secrets.extract(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR);
-        var errorNode = connector.with("error_handling").with(type);
+        var errorNode = connector.with("error_handler").with(type);
         for (String k : entries.keySet()) {
             if (typeKey.equals(k)) {
                 continue;
