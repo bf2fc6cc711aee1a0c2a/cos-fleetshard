@@ -1,15 +1,14 @@
 {
-    "kind": "Connector",
-    "metadata": {
-        "name": "cos_logger",
-        "kafka_id": ""
-    },
+    "name": "cos_logger",
     "deployment_location": {
         "kind": "addon",
         "cluster_id": ""
     },
     "kafka": {
-        "bootstrap_server": "",
+        "id": "",
+        "url": ""
+    },
+    "service_account": {
         "client_id": "",
         "client_secret": ""
     },
