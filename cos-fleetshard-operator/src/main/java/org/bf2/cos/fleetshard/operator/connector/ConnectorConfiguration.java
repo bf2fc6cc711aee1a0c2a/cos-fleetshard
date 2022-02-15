@@ -5,6 +5,9 @@ import java.io.StringReader;
 import java.util.Properties;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -12,6 +15,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 public class ConnectorConfiguration<S> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorConfiguration.class);
 
     private final static String PROPERTY_DATA_SHAPE = "data_shape";
     private final static String PROPERTY_PROCESSORS = "processors";
@@ -22,8 +26,8 @@ public class ConnectorConfiguration<S> {
 
     private final S connectorSpec;
     private final ObjectNode dataShapeSpec;
-    private ObjectNode errorHandlerSpec;
-    private ArrayNode processorsSpec = JSON_MAPPER.createArrayNode();
+    private final ObjectNode errorHandlerSpec;
+    private final ArrayNode processorsSpec;
 
     @SuppressWarnings("unchecked")
     public ConnectorConfiguration(ObjectNode connectorSpec, Class<S> type) {
@@ -33,18 +37,29 @@ public class ConnectorConfiguration<S> {
 
         var dataShape = connectorSpec.at("/" + PROPERTY_DATA_SHAPE);
         if (dataShape.isMissingNode()) {
-            throw new RuntimeException("Missing `data_shape` in connector spec: " + connectorSpec.toPrettyString());
+            // @TODO Eventually, once most/all connectors support `data_shape`, the exception should be enabled and error logged in `AbstractOperandController` instead
+            // throw new IncompleteConnectorSpecException("Missing `data_shape` in connector spec!");
+            LOGGER.error("Missing `data_shape` in connector spec!");
+            this.dataShapeSpec = null;
+        } else {
+            this.dataShapeSpec = dataShape.deepCopy();
         }
-        this.dataShapeSpec = dataShape.deepCopy();
 
         var errorHandler = connectorSpec.at("/" + PROPERTY_ERROR_HANDLER);
         if (!errorHandler.isMissingNode()) {
             this.errorHandlerSpec = errorHandler.deepCopy();
+        } else {
+            // @TODO Eventually, when `error_handler` becomes mandatory and most/all connectors support `error_handler` the exception should be enabled and error logged in `AbstractOperandController` instead
+            // throw new IncompleteConnectorSpecException("Missing `error_handler` in connector spec!");
+            LOGGER.warn("Missing `error_handler` in connector spec!");
+            this.errorHandlerSpec = null;
         }
 
         var processors = connectorSpec.at("/" + PROPERTY_PROCESSORS);
         if (!processors.isMissingNode()) {
             this.processorsSpec = processors.deepCopy();
+        } else {
+            this.processorsSpec = JSON_MAPPER.createArrayNode();
         }
 
         connectorSpec.remove(RESERVED_PROPERTIES);

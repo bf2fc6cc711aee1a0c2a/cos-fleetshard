@@ -7,6 +7,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
+import org.bf2.cos.fleetshard.operator.connector.IncompleteConnectorSpecException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +55,18 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
                 .withClientSecret(serviceAccountSettings.getClientSecret())
                 .build();
 
-        ConnectorConfiguration<S> connectorConfig = new ConnectorConfiguration<>(
-            extract(secret, SECRET_ENTRY_CONNECTOR, ObjectNode.class),
-            connectorSpecType);
+        ConnectorConfiguration<S> connectorConfig;
+        try {
+            connectorConfig = new ConnectorConfiguration<>(
+                extract(secret, SECRET_ENTRY_CONNECTOR, ObjectNode.class),
+                connectorSpecType);
+        } catch (IncompleteConnectorSpecException e) {
+            throw new RuntimeException("Incomplete connectorSpec for connector \""
+                + connector.getSpec().getConnectorId() + "@" + connector.getSpec().getDeploymentId()
+                + "#" + connector.getSpec().getDeployment().getDeploymentResourceVersion()
+                + "\": " + e.getLocalizedMessage(),
+                e);
+        }
 
         return doReify(
             connector,
