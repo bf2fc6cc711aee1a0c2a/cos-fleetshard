@@ -177,17 +177,17 @@ public final class CamelOperandControllerTest {
                         assertThat(step.getRef())
                             .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                             .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                            .hasFieldOrPropertyWithValue("name", "extract-field-action");
+                            .hasFieldOrPropertyWithValue("name", "cos-decoder-json-action");
                         assertThat(step.getProperties())
-                            .containsEntry("id", "extract-field-action-0");
+                            .containsEntry("id", "cos-decoder-json-action-0");
                     });
                     assertThat(binding.getSpec().getSteps()).element(1).satisfies(step -> {
                         assertThat(step.getRef())
                             .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                             .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                            .hasFieldOrPropertyWithValue("name", "insert-field-action");
+                            .hasFieldOrPropertyWithValue("name", "extract-field-action");
                         assertThat(step.getProperties())
-                            .containsEntry("id", "insert-field-action-1");
+                            .containsEntry("id", "extract-field-action-1");
                     });
                     assertThat(binding.getSpec().getSteps()).element(2).satisfies(step -> {
                         assertThat(step.getRef())
@@ -196,6 +196,22 @@ public final class CamelOperandControllerTest {
                             .hasFieldOrPropertyWithValue("name", "insert-field-action");
                         assertThat(step.getProperties())
                             .containsEntry("id", "insert-field-action-2");
+                    });
+                    assertThat(binding.getSpec().getSteps()).element(3).satisfies(step -> {
+                        assertThat(step.getRef())
+                            .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                            .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                            .hasFieldOrPropertyWithValue("name", "insert-field-action");
+                        assertThat(step.getProperties())
+                            .containsEntry("id", "insert-field-action-3");
+                    });
+                    assertThat(binding.getSpec().getSteps()).element(4).satisfies(step -> {
+                        assertThat(step.getRef())
+                            .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                            .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                            .hasFieldOrPropertyWithValue("name", "cos-encoder-json-action");
+                        assertThat(step.getProperties())
+                            .containsEntry("id", "cos-encoder-json-action-4");
                     });
                 });
             });
@@ -217,13 +233,13 @@ public final class CamelOperandControllerTest {
                     .contains("camel.kamelet.aws-kinesis-source.bar=bar")
                     .contains("camel.kamelet.aws-kinesis-source.foo=aws-foo")
                     .contains("camel.kamelet.aws-kinesis-source.fooBar=aws-foo-bar")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.field=field")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.foo-field=foo")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.barField=bar")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-1.field=a-field")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-1.value=a-value")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=b-field")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.value=b-value");
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.field=field")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.foo-field=foo")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.barField=bar")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=a-field")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.value=a-value")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-3.field=b-field")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-3.value=b-value");
             });
     }
 
