@@ -455,6 +455,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         try {
             resources = operandController.reify(connector, secret);
         } catch (Exception e) {
+            LOGGER.warn("Error reifying deployment {}", connector.getSpec().getDeploymentId(), e);
+
             setCondition(
                 connector,
                 ManagedConnectorConditions.Type.Augmentation,
