@@ -130,14 +130,16 @@ public final class CamelOperandSupport {
 
     public static List<ProcessorKamelet> createSteps(
         ConnectorConfiguration<ObjectNode> connectorConfiguration,
-        CamelShardMetadata shardMetadata, Map<String, String> props) {
+        CamelShardMetadata shardMetadata,
+        Map<String, String> props) {
 
-        ObjectNode dataShapeSpec = connectorConfiguration.getDataShapeSpec();
-        String consumes = Optional.of(dataShapeSpec.at("/consumes/format"))
+        String consumes = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
+            .map(spec -> spec.at("/consumes/format"))
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getConsumes());
-        String produces = Optional.of(dataShapeSpec.at("/produces/format"))
+        String produces = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
+            .map(spec -> spec.at("/produces/format"))
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getProduces());
