@@ -20,6 +20,10 @@
             <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api-model</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-core</artifactId>
         </dependency>

@@ -3,11 +3,13 @@ package org.bf2.cos.fleetshard.operator.debezium;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -36,10 +38,6 @@ import io.strimzi.api.kafka.model.PasswordSecretSourceBuilder;
 import io.strimzi.api.kafka.model.authentication.KafkaClientAuthenticationPlainBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuilder;
-import io.strimzi.api.kafka.model.connect.build.BuildBuilder;
-import io.strimzi.api.kafka.model.connect.build.DockerOutputBuilder;
-import io.strimzi.api.kafka.model.connect.build.PluginBuilder;
-import io.strimzi.api.kafka.model.connect.build.TgzArtifactBuilder;
 
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
@@ -75,10 +73,10 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     protected List<HasMetadata> doReify(
         ManagedConnector connector,
         DebeziumShardMetadata shardMetadata,
-        ObjectNode connectorSpec,
+        ConnectorConfiguration<ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec) {
 
-        final Map<String, String> secretsData = createSecretsData(connectorSpec);
+        final Map<String, String> secretsData = createSecretsData(connectorConfiguration.getConnectorSpec());
 
         final Secret secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
@@ -100,7 +98,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .build())
             .addToConfig(DebeziumConstants.DEFAULT_CONFIG_OPTIONS)
             // add external configuration
-            .addToConfig((Map) configuration.kafkaConnect().config())
+            .addToConfig(new TreeMap<>(configuration.kafkaConnect().config()))
             .addToConfig("group.id", connector.getMetadata().getName())
             // converters
             .addToConfig("key.converter", configuration.keyConverter())
@@ -124,27 +122,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                     .build())
                 .build());
 
-        if (shardMetadata.getContainerImage() != null) {
-            kcsb.withImage(shardMetadata.getContainerImage());
-        } else {
-            kcsb.withBuild(new BuildBuilder()
-                .withDockerOutput(new DockerOutputBuilder()
-                    .withImage(
-                        String.format("%s/%s/cos-debezium:%s",
-                            configuration.containerImage().registry(),
-                            configuration.containerImage().group(),
-                            connector.getSpec().getDeploymentId()))
-                    .build())
-                .addToPlugins(new PluginBuilder()
-                    .withName("debezium-connector")
-                    .addToTgzArtifactArtifacts(new TgzArtifactBuilder()
-                        .withUrl(DebeziumArtifactUri.getMavenCentralUri(shardMetadata.getConnectorName(),
-                            shardMetadata.getConnectorVersion()))
-                        .withSha512sum(shardMetadata.getConnectorSha512sum())
-                        .build())
-                    .build())
-                .build());
-        }
+        kcsb.withImage(shardMetadata.getContainerImage());
 
         final KafkaConnect kc = new KafkaConnectBuilder()
             .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnect.CONSUMED_VERSION)
@@ -165,7 +143,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withClassName(shardMetadata.getConnectorClass())
                 .withTasksMax(1)
                 .withPause(false)
-                .withConfig(createConfig(configuration, connectorSpec))
+                .withConfig(createConfig(configuration, connectorConfiguration.getConnectorSpec()))
                 .build())
             .build();
 

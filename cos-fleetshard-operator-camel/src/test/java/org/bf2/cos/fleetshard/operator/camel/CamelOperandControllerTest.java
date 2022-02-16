@@ -18,6 +18,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletsBuilder;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -71,11 +72,9 @@ public final class CamelOperandControllerTest {
         assertThat(controller.getResourceTypes())
             .hasSize(1)
             .first()
-            .matches(ctx -> {
-                return KameletBinding.RESOURCE_KIND.equals(ctx.getKind())
-                    && KameletBinding.RESOURCE_GROUP.equals(ctx.getGroup())
-                    && KameletBinding.RESOURCE_VERSION.equals(ctx.getVersion());
-            });
+            .matches(ctx -> KameletBinding.RESOURCE_KIND.equals(ctx.getKind())
+                && KameletBinding.RESOURCE_GROUP.equals(ctx.getGroup())
+                && KameletBinding.RESOURCE_VERSION.equals(ctx.getVersion()));
     }
 
     @Test
@@ -92,6 +91,8 @@ public final class CamelOperandControllerTest {
         spec.with("aws_bar").put("kind", "base64").put("value", barB64);
         spec.put("aws_foo", "aws-foo");
         spec.put("aws_foo_bar", "aws-foo-bar");
+        spec.with("data_shape").with("consumes").put("format", "application/json");
+        spec.with("data_shape").with("produces").put("format", "application/json");
 
         spec.withArray("processors").addObject().with("extract_field")
             .put("field", "field")
@@ -139,7 +140,7 @@ public final class CamelOperandControllerTest {
                     .addToProcessors("extract_field", "extract-field-action")
                     .build())
                 .build(),
-            spec,
+            new ConnectorConfiguration<>(spec, ObjectNode.class),
             new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
@@ -176,17 +177,17 @@ public final class CamelOperandControllerTest {
                         assertThat(step.getRef())
                             .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                             .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                            .hasFieldOrPropertyWithValue("name", "extract-field-action");
+                            .hasFieldOrPropertyWithValue("name", "cos-decoder-json-action");
                         assertThat(step.getProperties())
-                            .containsEntry("id", "extract-field-action-0");
+                            .containsEntry("id", "cos-decoder-json-action-0");
                     });
                     assertThat(binding.getSpec().getSteps()).element(1).satisfies(step -> {
                         assertThat(step.getRef())
                             .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                             .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
-                            .hasFieldOrPropertyWithValue("name", "insert-field-action");
+                            .hasFieldOrPropertyWithValue("name", "extract-field-action");
                         assertThat(step.getProperties())
-                            .containsEntry("id", "insert-field-action-1");
+                            .containsEntry("id", "extract-field-action-1");
                     });
                     assertThat(binding.getSpec().getSteps()).element(2).satisfies(step -> {
                         assertThat(step.getRef())
@@ -195,6 +196,22 @@ public final class CamelOperandControllerTest {
                             .hasFieldOrPropertyWithValue("name", "insert-field-action");
                         assertThat(step.getProperties())
                             .containsEntry("id", "insert-field-action-2");
+                    });
+                    assertThat(binding.getSpec().getSteps()).element(3).satisfies(step -> {
+                        assertThat(step.getRef())
+                            .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                            .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                            .hasFieldOrPropertyWithValue("name", "insert-field-action");
+                        assertThat(step.getProperties())
+                            .containsEntry("id", "insert-field-action-3");
+                    });
+                    assertThat(binding.getSpec().getSteps()).element(4).satisfies(step -> {
+                        assertThat(step.getRef())
+                            .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
+                            .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
+                            .hasFieldOrPropertyWithValue("name", "cos-encoder-json-action");
+                        assertThat(step.getProperties())
+                            .containsEntry("id", "cos-encoder-json-action-4");
                     });
                 });
             });
@@ -216,13 +233,13 @@ public final class CamelOperandControllerTest {
                     .contains("camel.kamelet.aws-kinesis-source.bar=bar")
                     .contains("camel.kamelet.aws-kinesis-source.foo=aws-foo")
                     .contains("camel.kamelet.aws-kinesis-source.fooBar=aws-foo-bar")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.field=field")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.foo-field=foo")
-                    .contains("camel.kamelet.extract-field-action.extract-field-action-0.barField=bar")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-1.field=a-field")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-1.value=a-value")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=b-field")
-                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.value=b-value");
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.field=field")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.foo-field=foo")
+                    .contains("camel.kamelet.extract-field-action.extract-field-action-1.barField=bar")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.field=a-field")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-2.value=a-value")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-3.field=b-field")
+                    .contains("camel.kamelet.insert-field-action.insert-field-action-3.value=b-value");
             });
     }
 
@@ -240,6 +257,8 @@ public final class CamelOperandControllerTest {
         spec.put("kafka_topic", "kafka-foo");
         spec.with("aws_bar").put("kind", "base64").put("value", barB64);
         spec.put("aws_foo", "aws-foo");
+        spec.with("data_shape").with("consumes").put("format", "application/json");
+        spec.with("data_shape").with("produces").put("format", "application/json");
 
         var resources = controller.doReify(
             new ManagedConnectorBuilder()
@@ -275,7 +294,7 @@ public final class CamelOperandControllerTest {
                     .build())
                 .addToAnnotations(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, image)
                 .build(),
-            spec,
+            new ConnectorConfiguration<>(spec, ObjectNode.class),
             new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)
@@ -358,7 +377,7 @@ public final class CamelOperandControllerTest {
     @Test
     void reifyErrorHandlerLog() {
         var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
-            spec.with("error_handling").with("log");
+            spec.with("error_handler").with("log");
         });
 
         assertThat(resources)
@@ -378,7 +397,7 @@ public final class CamelOperandControllerTest {
     @Test
     void reifyErrorHandlerDLQ() {
         var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
-            spec.with("error_handling").with("dead_letter_queue").put("topic", "dlq");
+            spec.with("error_handler").with("dead_letter_queue").put("topic", "dlq");
         });
 
         assertThat(resources)
@@ -417,7 +436,7 @@ public final class CamelOperandControllerTest {
     @Test
     void reifyErrorHandlerStop() {
         var resources = buildErrorHandlerTestResourcesWithSpec(spec -> {
-            spec.with("error_handling").with("stop");
+            spec.with("error_handler").with("stop");
         });
 
         assertThat(resources)
@@ -446,6 +465,8 @@ public final class CamelOperandControllerTest {
         spec.put("kafka_topic", "kafka-foo");
         spec.with("aws_bar").put("kind", "base64").put("value", kcsB64);
         spec.put("aws_foo", "aws-foo");
+        spec.with("data_shape").with("consumes").put("format", "application/json");
+        spec.with("data_shape").with("produces").put("format", "application/json");
 
         customizer.accept(spec);
 
@@ -488,7 +509,7 @@ public final class CamelOperandControllerTest {
                         .build())
                     .build())
                 .build(),
-            spec,
+            new ConnectorConfiguration<>(spec, ObjectNode.class),
             new ServiceAccountSpecBuilder()
                 .withClientId(DEFAULT_KAFKA_CLIENT_ID)
                 .withClientSecret(kcsB64)

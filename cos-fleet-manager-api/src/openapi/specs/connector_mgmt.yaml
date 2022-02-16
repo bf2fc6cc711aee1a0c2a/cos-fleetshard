@@ -1309,7 +1309,7 @@ components:
                 name: "fieldName"
                 value: "fieldValue"
         desired_state: ready
-        error_handling:
+        error_handler:
           dead_letter_queue:
             topic: "dlq"
     400CreationExample:
