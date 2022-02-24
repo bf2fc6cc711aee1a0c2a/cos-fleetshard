@@ -362,8 +362,7 @@
                 </property>
             </activation>
             <properties>
-                <quarkus.jib.base-jvm-image>adoptopenjdk/openjdk11:ubi-minimal</quarkus.jib.base-jvm-image>
-                <quarkus.jib.jvm-entrypoint>java,-XX:+UseShenandoahGC,-Djava.util.logging.manager=org.jboss.logmanager.LogManager,-jar,/work/quarkus-run.jar</quarkus.jib.jvm-entrypoint>
+                <quarkus.jib.jvm-arguments>-XX:+UseShenandoahGC,-Djava.util.logging.manager=org.jboss.logmanager.LogManager</quarkus.jib.jvm-arguments>
             </properties>
         </profile>
         <profile>
