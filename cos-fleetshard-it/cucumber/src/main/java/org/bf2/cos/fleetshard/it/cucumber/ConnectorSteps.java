@@ -245,9 +245,9 @@ public class ConnectorSteps {
     @When("^deploy with secret data:")
     public void deployWithSecretData(Map<String, String> content) {
         final String uow = uid();
-        with_secret_data(content);
+
         deploy_connector_with_uow(uow);
-        deploy_secret_with_uow(uow);
+        deploy_secret_with_uow(uow, content);
     }
 
     @When("^deploy secret$")
@@ -298,10 +298,11 @@ public class ConnectorSteps {
 
     @When("the connector desired status is set to {string}")
     public void connector_desired_state_set_to(String status) {
-        kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .accept(c -> c.getSpec().getDeployment().setDesiredState(status));
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName())
+                .accept(c -> c.getSpec().getDeployment().setDesiredState(status)));
     }
 
     @Then("the connector is in phase {string}")
@@ -333,50 +334,54 @@ public class ConnectorSteps {
 
     @When("the connector path {string} is set to json:")
     public void connector_pointer(String path, String payload) {
-        kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .edit(res -> {
-                JsonNode replacement = Serialization.unmarshal(payload, JsonNode.class);
-                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, replacement).json();
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName())
+                .edit(res -> {
+                    JsonNode replacement = Serialization.unmarshal(payload, JsonNode.class);
+                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, replacement).json();
 
-                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-            });
+                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+                }));
     }
 
     @When("the connector path {string} is set to {string}")
     public void connector_pointer_set_to_string(String path, String value) {
-        kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .edit(res -> {
-                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName())
+                .edit(res -> {
+                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
 
-                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-            });
+                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+                }));
     }
 
     @When("the connector path {string} is set to {int}")
     public void connector_pointer_set_to_int(String path, int value) {
-        kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .edit(res -> {
-                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+        ctx.connector(
+            kubernetesClient.resources(ManagedConnector.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName())
+                .edit(res -> {
+                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
 
-                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-            });
+                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+                }));
     }
 
     @When("the connector secret has labels:")
     public void connector_secret_has_labels(Map<String, String> entry) {
-        kubernetesClient.resources(Secret.class)
-            .inNamespace(ctx.secret().getMetadata().getNamespace())
-            .withName(ctx.secret().getMetadata().getName())
-            .edit(res -> {
-                entry.forEach((k, v) -> Resources.setLabel(res, k, ctx.resolvePlaceholders(v)));
-                return res;
-            });
+        ctx.secret(
+            kubernetesClient.resources(Secret.class)
+                .inNamespace(ctx.secret().getMetadata().getNamespace())
+                .withName(ctx.secret().getMetadata().getName())
+                .edit(res -> {
+                    entry.forEach((k, v) -> Resources.setLabel(res, k, ctx.resolvePlaceholders(v)));
+                    return res;
+                }));
     }
 
     @Then("the connector's assignedOperator exists with:")
@@ -515,6 +520,23 @@ public class ConnectorSteps {
     }
 
     public void deploy_secret_with_uow(String uow) {
+        deploy_secret_with_uow(uow, null);
+    }
+
+    public void deploy_secret_with_uow(String uow, Map<String, String> content) {
+        Secret res = kubernetesClient.resources(Secret.class)
+            .inNamespace(ctx.connectorsNamespace())
+            .withName(ctx.secret().getMetadata().getName())
+            .get();
+
+        if (res != null) {
+            ctx.secret(res);
+        }
+
+        if (content != null) {
+            with_secret_data(content);
+        }
+
         Resources.setAnnotation(
             ctx.secret(),
             Resources.ANNOTATION_UPDATED_TIMESTAMP,
@@ -531,6 +553,15 @@ public class ConnectorSteps {
     }
 
     public void deploy_connector_with_uow(String uow) {
+        ManagedConnector res = kubernetesClient.resources(ManagedConnector.class)
+            .inNamespace(ctx.connectorsNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .get();
+
+        if (res != null) {
+            ctx.connector(res);
+        }
+
         Resources.setAnnotation(
             ctx.connector(),
             Resources.ANNOTATION_UPDATED_TIMESTAMP,
