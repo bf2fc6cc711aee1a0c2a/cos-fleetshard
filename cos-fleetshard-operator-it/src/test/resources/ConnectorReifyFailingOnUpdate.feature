@@ -1,4 +1,4 @@
-Feature: Connector Reify Failing
+Feature: Connector Reify Failing On Update
 
   Background:
     Given Await configuration
@@ -6,7 +6,7 @@ Feature: Connector Reify Failing
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
-  Scenario: augmentation failed
+  Scenario: augmentation failed on update
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |
@@ -14,16 +14,22 @@ Feature: Connector Reify Failing
       | operator.id                 | cos-fleetshard-operator-it      |
       | operator.type               | connector-operator-it           |
       | operator.version            | [1.0.0,2.0.0)                   |
-     And with secret data:
-      | reify.fail | failure |
 
     When deploy
+    Then the connector exists
+     And the connector secret exists
+     And the connector is in phase "Monitor"
+     And the deployment is in phase "ready"
+
+    When deploy with secret data:
+      | reify.fail | failure |
     Then the connector exists
      And the connector secret exists
      And the connector is in phase "Error"
      And the deployment is in phase "failed"
      And the connector has conditions:
        | type         | reason      | status | message  |
+       | Resync       | Resync      | True   | Resync   |
        | Augmentation | ReifyFailed | False  | failure  |
        | Stopping     | Stopped     | False  | Stopped  |
        | Stop         | Stopped     | True   | Stopped  |

@@ -269,7 +269,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     case Deleting:
                         return handleDeleting(connector);
                     case Deleted:
-                        return handleDeleted(connector);
+                        return validate(connector, this::handleDeleted);
                     case Stopping:
                         return handleStopping(connector);
                     case Stopped:
@@ -331,6 +331,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         switch (connector.getSpec().getDeployment().getDesiredState()) {
             case DESIRED_STATE_DELETED: {
+                setCondition(
+                    connector,
+                    ManagedConnectorConditions.Type.Deleting,
+                    ManagedConnectorConditions.Status.True,
+                    "Deleting");
+
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleting);
                 connector.getStatus().getConnectorStatus().setPhase(STATE_DE_PROVISIONING);
@@ -342,7 +348,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     connector,
                     ManagedConnectorConditions.Type.Stopping,
                     ManagedConnectorConditions.Status.True,
-                    "Stopping",
                     "Stopping");
 
                 connector.getStatus().setDeployment(connector.getSpec().getDeployment());
@@ -596,9 +601,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             setCondition(
                 connector,
-                ManagedConnectorConditions.Type.Delete,
+                ManagedConnectorConditions.Type.Deleting,
+                ManagedConnectorConditions.Status.False,
+                "Deleted");
+            setCondition(
+                connector,
+                ManagedConnectorConditions.Type.Deleted,
                 ManagedConnectorConditions.Status.True,
-                "Deleted",
                 "Deleted");
 
             LOGGER.info("Connector {} deleted, move to phase: {}",
@@ -624,9 +633,13 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
             setCondition(
                 connector,
+                ManagedConnectorConditions.Type.Stopping,
+                ManagedConnectorConditions.Status.False,
+                "Stopped");
+            setCondition(
+                connector,
                 ManagedConnectorConditions.Type.Stop,
                 ManagedConnectorConditions.Status.True,
-                "Stopped",
                 "Stopped");
 
             LOGGER.info("Connector {} stopped, move to phase: {}",
@@ -714,25 +727,56 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     //      "value": "61ba142d2a83cb1d0cf3dff2"
                     //   }]
                     //
-                    // if the only changed element is unitOfWork then this reconcile loop was triggered
+                    // if the only changed element is unitOfWork then this reconciliation loop was triggered
                     // by a re-sink process: to be on the safe side, the Augmentation step is re-executed
                     // as if it were a new connector so operand's CRs are re-generated.
                     //
 
-                    setCondition(connector, ManagedConnectorConditions.Type.Resync, true);
+                    setCondition(
+                        connector,
+                        ManagedConnectorConditions.Type.Resync,
+                        ManagedConnectorConditions.Status.True,
+                        "Resync");
                 }
             }
 
             if (isResync(connector)) {
-                setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true, "Resync");
-                setCondition(connector, ManagedConnectorConditions.Type.Ready, false, "Resync");
+                switch (connector.getSpec().getDeployment().getDesiredState()) {
+                    case DESIRED_STATE_STOPPED:
+                        setCondition(
+                            connector,
+                            ManagedConnectorConditions.Type.Stopping,
+                            ManagedConnectorConditions.Status.True,
+                            "Stopping");
 
-                //
-                // If the managed connector is performing a resync, then we don't change the status
-                // of the connector on the control plane as this is a technical phase. We can then
-                // jump straight to the Augmentation phase
-                //
-                connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopping);
+                        connector.getStatus().setDeployment(connector.getSpec().getDeployment());
+                        break;
+                    case DESIRED_STATE_DELETED:
+                        setCondition(
+                            connector,
+                            ManagedConnectorConditions.Type.Deleting,
+                            ManagedConnectorConditions.Status.True,
+                            "Deleting");
+
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Deleting);
+                        connector.getStatus().setDeployment(connector.getSpec().getDeployment());
+                        break;
+                    case DESIRED_STATE_READY:
+                        setCondition(connector, ManagedConnectorConditions.Type.Augmentation, true, "Resync");
+                        setCondition(connector, ManagedConnectorConditions.Type.Ready, false, "Resync");
+
+                        //
+                        // If the managed connector is performing a resync, then we don't change the status
+                        // of the connector on the control plane as this is a technical phase. We can then
+                        // jump straight to the Augmentation phase
+                        //
+                        connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Augmentation);
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                            "Unknown desired state: " + connector.getSpec().getDeployment().getDesiredState());
+                }
             } else {
                 connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Initialization);
                 connector.getStatus().getConnectorStatus().setPhase(STATE_PROVISIONING);
@@ -790,5 +834,4 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             ManagedConnectorConditions.Status.False,
             "ReifyFailed");
     }
-
 }
