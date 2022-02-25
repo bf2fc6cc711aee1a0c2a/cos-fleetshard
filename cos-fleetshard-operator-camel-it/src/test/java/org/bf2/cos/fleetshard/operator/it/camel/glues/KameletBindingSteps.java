@@ -139,7 +139,7 @@ public class KameletBindingSteps extends StepsSupport {
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isString()
-            .isEqualTo(value);
+            .isEqualTo(ctx.resolvePlaceholders(value));
     }
 
     @And("the klb has an entry at path {string} with value {int}")

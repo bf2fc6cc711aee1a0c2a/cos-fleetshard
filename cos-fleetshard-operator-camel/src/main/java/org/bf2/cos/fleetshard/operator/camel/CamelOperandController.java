@@ -11,7 +11,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration.Health;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
-import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingBuilder;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpecBuilder;
@@ -131,17 +130,15 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                     configuration,
                     Map.of(
                         "CONNECTOR_SECRET_NAME", secret.getMetadata().getName(),
-                        "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret))))
-                .withSource(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, source))
-                .withSink(new KameletEndpoint(Kamelet.RESOURCE_API_VERSION, Kamelet.RESOURCE_KIND, sink))
+                        "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
+                        "CONNECTOR_ID", connector.getSpec().getConnectorId(),
+                        "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId())))
+                .withSource(KameletEndpoint.kamelet(source, Map.of("id", connector.getSpec().getDeploymentId())))
+                .withSink(KameletEndpoint.kamelet(sink, Map.of("id", connector.getSpec().getDeploymentId())))
                 .withErrorHandler(createErrorHandler(connectorConfiguration.getErrorHandlerSpec()))
                 .withSteps(
                     stepDefinitions.stream()
-                        .map(s -> new KameletEndpoint(
-                            Kamelet.RESOURCE_API_VERSION,
-                            Kamelet.RESOURCE_KIND,
-                            s.getTemplateId(),
-                            Map.of("id", s.getId())))
+                        .map(s -> KameletEndpoint.kamelet(s.getTemplateId(), Map.of("id", s.getId())))
                         .collect(Collectors.toList()))
                 .build())
             .build();

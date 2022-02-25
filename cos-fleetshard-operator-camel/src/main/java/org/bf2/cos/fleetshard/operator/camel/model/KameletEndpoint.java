@@ -67,4 +67,12 @@ public class KameletEndpoint {
     public void setRef(String apiVersion, String kind, String name) {
         setRef(new ResourceRef(apiVersion, kind, name));
     }
+
+    public static KameletEndpoint kamelet(String name, Map<String, Object> properties) {
+        return new KameletEndpoint(
+            Kamelet.RESOURCE_API_VERSION,
+            Kamelet.RESOURCE_KIND,
+            name,
+            properties);
+    }
 }
