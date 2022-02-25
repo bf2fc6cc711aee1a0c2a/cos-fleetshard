@@ -53,7 +53,7 @@ This is an example installation that consists in:
 minikube start --profile cos --cpus=4 --memory=4096
 ----
 
-* *install camel-k 1.7.x*
+* *install camel-k 1.8.x*
 +
 This will install Camel K in the running cluster, needed to create connectors based on it, so make sure the `minikube start` was successful.
 +
