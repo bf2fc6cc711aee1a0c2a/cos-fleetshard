@@ -1,9 +1,11 @@
 {
     "name": "cos_logger",
+    "channel": "stable",
     "deployment_location": {
         "kind": "addon",
         "cluster_id": ""
     },
+    "desired_state": "ready",
     "kafka": {
         "id": "",
         "url": ""
@@ -13,13 +15,7 @@
         "client_secret": ""
     },
     "connector_type_id": "log_sink_0.1",
-    "connector_spec": {
-        "connector": {
-            "showAll": true,
-            "multiLine": true
-        },
-        "kafka": {
-            "topic": "cos_log"
-        }
+    "connector": {
+        "kafka_topic": "cos_log"
     }
 }
