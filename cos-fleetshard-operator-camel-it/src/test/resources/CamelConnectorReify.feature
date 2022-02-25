@@ -55,9 +55,12 @@ Feature: Camel Connector Reify
     And the klb has an entry at path "$.spec.source.ref.apiVersion" with value "camel.apache.org/v1alpha1"
     And the klb has an entry at path "$.spec.source.ref.kind" with value "Kamelet"
     And the klb has an entry at path "$.spec.source.ref.name" with value "managed-kafka-source"
+    And the klb has an entry at path "$.spec.source.properties.id" with value "${cos.deployment.id}"
+
     And the klb has an entry at path "$.spec.sink.ref.apiVersion" with value "camel.apache.org/v1alpha1"
     And the klb has an entry at path "$.spec.sink.ref.kind" with value "Kamelet"
     And the klb has an entry at path "$.spec.sink.ref.name" with value "log-sink"
+    And the klb has an entry at path "$.spec.sink.properties.id" with value "${cos.deployment.id}"
 
     Then the klb secret exists
      And the klb secret contains:
