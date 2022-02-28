@@ -14,6 +14,14 @@ public class EndpointKamelet {
     @JsonProperty("prefix")
     private String prefix;
 
+    public EndpointKamelet() {
+    }
+
+    public EndpointKamelet(String name, String prefix) {
+        this.name = name;
+        this.prefix = prefix;
+    }
+
     public String getName() {
         return name;
     }
