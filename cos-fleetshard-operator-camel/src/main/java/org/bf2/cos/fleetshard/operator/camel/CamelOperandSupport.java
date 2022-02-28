@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -129,6 +130,7 @@ public final class CamelOperandSupport {
     }
 
     public static List<ProcessorKamelet> createSteps(
+        ManagedConnector connector,
         ConnectorConfiguration<ObjectNode> connectorConfiguration,
         CamelShardMetadata shardMetadata,
         Map<String, String> props) {
@@ -255,7 +257,7 @@ public final class CamelOperandSupport {
                 String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
                 "org.apache.kafka.common.serialization.ByteArrayDeserializer");
 
-            if ("application/json".equals(consumes) && hasSchemaRegistry(connectorConfiguration.getConnectorSpec())) {
+            if ("application/json".equals(consumes) && hasSchemaRegistry(connector)) {
                 props.put(
                     String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer");
@@ -268,7 +270,7 @@ public final class CamelOperandSupport {
                 String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
                 "org.apache.kafka.common.serialization.ByteArraySerializer");
 
-            if ("application/json".equals(produces) && hasSchemaRegistry(connectorConfiguration.getConnectorSpec())) {
+            if ("application/json".equals(produces) && hasSchemaRegistry(connector)) {
                 props.put(
                     String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonSerializer");
@@ -308,6 +310,12 @@ public final class CamelOperandSupport {
                 props.put(
                     String.format("camel.kamelet.%s.consumerGroup", shardMetadata.getKamelets().getKafka().getName()),
                     connector.getSpec().getDeploymentId());
+            }
+
+            if (hasSchemaRegistry(connector)) {
+                props.put(
+                    String.format("camel.kamelet.%s.registryUrl", shardMetadata.getKamelets().getKafka().getName()),
+                    connector.getSpec().getDeployment().getSchemaRegistry().getUrl());
             }
 
             ObjectNode errorHandlerSpec = connectorConfiguration.getErrorHandlerSpec();
@@ -483,8 +491,11 @@ public final class CamelOperandSupport {
         return CONNECTOR_TYPE_SINK.equals(shardMetadata.getConnectorType());
     }
 
-    public static boolean hasSchemaRegistry(JsonNode connectorSpec) {
-        // TODO: remove once moving to the new APIs
-        return !connectorSpec.at("/kafka_registry_url").isMissingNode();
+    public static boolean hasSchemaRegistry(ManagedConnector connector) {
+        if (connector.getSpec().getDeployment().getSchemaRegistry() == null) {
+            return false;
+        }
+
+        return StringUtils.isNotEmpty(connector.getSpec().getDeployment().getSchemaRegistry().getUrl());
     }
 }

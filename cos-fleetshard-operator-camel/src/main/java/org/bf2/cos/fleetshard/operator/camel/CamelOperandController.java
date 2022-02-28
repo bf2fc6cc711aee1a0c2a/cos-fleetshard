@@ -93,6 +93,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             configuration,
             new TreeMap<>());
         final List<ProcessorKamelet> stepDefinitions = createSteps(
+            connector,
             connectorConfiguration,
             shardMetadata,
             properties);

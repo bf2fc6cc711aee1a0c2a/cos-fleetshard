@@ -16,6 +16,7 @@ class ReifyTest extends Spec {
     private static final String DEFAULT_DEPLOYMENT_ID = "1";
     private static final Long DEFAULT_DEPLOYMENT_REVISION = 1L;
     private static final String DEFAULT_KAFKA_CLIENT_ID = "kcid";
+    private static final String DEFAULT_KAFKA_TOPIC = "kafka-foo";
     private static final String DEFAULT_KAFKA_SERVER = "kafka.acme.com:2181"
     private static final String DEFAULT_KAFKA_REGISTRY= "http://foo.bar:443"
 
@@ -116,8 +117,10 @@ class ReifyTest extends Spec {
                     desiredState: "ready"
                     kafka:
                         url: ${DEFAULT_KAFKA_SERVER}
+                    schemaRegistry:
+                        url: ${DEFAULT_KAFKA_REGISTRY}
                 """,
-                    """
+                """
                 connector_image: ${DEFAULT_CONNECTOR_IMAGE}
                 connector_revision: ${DEFAULT_CONNECTOR_REVISION}
                 connector_type: ${CONNECTOR_TYPE_SOURCE}
@@ -133,9 +136,8 @@ class ReifyTest extends Spec {
                     extract_field: "extract-field-action"
                 consumes: "application/x-java-object"
                 """,
-                    """
-                kafka_topic: "kafka-foo"
-                kafka_registry_url: ${DEFAULT_KAFKA_REGISTRY}
+                """
+                kafka_topic: ${DEFAULT_KAFKA_TOPIC}
                 aws_foo: "bar"
                 processors:
                   - extract_field:
@@ -144,7 +146,7 @@ class ReifyTest extends Spec {
                   produces:
                     format: "application/json"
                 """,
-                    """
+                """
                 clientId: ${DEFAULT_KAFKA_CLIENT_ID}
                 clientSecret: ${Secrets.toBase64("kcs")}
                 """)
@@ -205,6 +207,8 @@ class ReifyTest extends Spec {
                     desiredState: "ready"
                     kafka:
                         url: ${DEFAULT_KAFKA_SERVER}
+                    schemaRegistry:
+                        url: ${DEFAULT_KAFKA_REGISTRY}
                 """,
                 """
                 connector_image: ${DEFAULT_CONNECTOR_IMAGE}
@@ -222,8 +226,7 @@ class ReifyTest extends Spec {
                     extract_field: "extract-field-action"
                 """,
                 """
-                kafka_topic: "kafka-foo"
-                kafka_registry_url: ${DEFAULT_KAFKA_REGISTRY}
+                kafka_topic: ${DEFAULT_KAFKA_TOPIC}
                 aws_foo: "bar"
                 processors:
                   - extract_field:
