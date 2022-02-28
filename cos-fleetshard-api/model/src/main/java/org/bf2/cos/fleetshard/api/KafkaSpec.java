@@ -19,6 +19,14 @@ public class KafkaSpec {
     @JsonProperty
     private String url;
 
+    public KafkaSpec() {
+    }
+
+    public KafkaSpec(String id, String url) {
+        this.id = id;
+        this.url = url;
+    }
+
     public String getId() {
         return id;
     }

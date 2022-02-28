@@ -19,6 +19,14 @@ public class ServiceAccountSpec {
     @JsonProperty
     private String clientSecret;
 
+    public ServiceAccountSpec() {
+    }
+
+    public ServiceAccountSpec(String clientId, String clientSecret) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
+
     public String getClientId() {
         return clientId;
     }

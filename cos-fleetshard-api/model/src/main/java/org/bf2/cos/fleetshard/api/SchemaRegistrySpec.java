@@ -19,6 +19,14 @@ public class SchemaRegistrySpec {
     @JsonProperty
     private String url;
 
+    public SchemaRegistrySpec() {
+    }
+
+    public SchemaRegistrySpec(String id, String url) {
+        this.id = id;
+        this.url = url;
+    }
+
     public String getId() {
         return id;
     }
