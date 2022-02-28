@@ -170,15 +170,15 @@ public final class CamelOperandControllerTest {
                         .hasFieldOrPropertyWithValue("name", "aws-kinesis-source");
 
                     assertThat(binding.getSpec().getSource().getProperties())
-                        .containsEntry("id", DEFAULT_DEPLOYMENT_ID);
+                        .containsEntry("id", DEFAULT_DEPLOYMENT_ID + "-source");
 
                     assertThat(binding.getSpec().getSink().getRef())
                         .hasFieldOrPropertyWithValue("apiVersion", Kamelet.RESOURCE_API_VERSION)
                         .hasFieldOrPropertyWithValue("kind", Kamelet.RESOURCE_KIND)
                         .hasFieldOrPropertyWithValue("name", "cos-kafka-sink");
 
-                    assertThat(binding.getSpec().getSource().getProperties())
-                        .containsEntry("id", DEFAULT_DEPLOYMENT_ID);
+                    assertThat(binding.getSpec().getSink().getProperties())
+                        .containsEntry("id", DEFAULT_DEPLOYMENT_ID + "-sink");
 
                     assertThat(binding.getSpec().getSteps()).element(0).satisfies(step -> {
                         assertThat(step.getRef())
