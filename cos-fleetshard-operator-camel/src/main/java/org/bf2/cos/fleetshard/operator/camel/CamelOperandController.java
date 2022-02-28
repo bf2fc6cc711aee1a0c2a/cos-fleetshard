@@ -133,8 +133,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
                         "CONNECTOR_ID", connector.getSpec().getConnectorId(),
                         "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId())))
-                .withSource(KameletEndpoint.kamelet(source, Map.of("id", connector.getSpec().getDeploymentId())))
-                .withSink(KameletEndpoint.kamelet(sink, Map.of("id", connector.getSpec().getDeploymentId())))
+                .withSource(KameletEndpoint.kamelet(source, Map.of("id", connector.getSpec().getDeploymentId() + "-source")))
+                .withSink(KameletEndpoint.kamelet(sink, Map.of("id", connector.getSpec().getDeploymentId() + "-sink")))
                 .withErrorHandler(createErrorHandler(connectorConfiguration.getErrorHandlerSpec()))
                 .withSteps(
                     stepDefinitions.stream()
