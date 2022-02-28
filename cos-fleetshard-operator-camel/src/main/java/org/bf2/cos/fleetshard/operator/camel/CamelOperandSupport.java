@@ -255,7 +255,7 @@ public final class CamelOperandSupport {
         if (isSink(shardMetadata)) {
             props.put(
                 String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
-                "org.apache.kafka.common.serialization.ByteArrayDeserializer");
+                "org.bf2.cos.connector.camel.serdes.bytes.ByteArrayDeserializer");
 
             if ("application/json".equals(consumes) && hasSchemaRegistry(connector)) {
                 props.put(
@@ -268,7 +268,7 @@ public final class CamelOperandSupport {
         if (isSource(shardMetadata)) {
             props.put(
                 String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
-                "org.apache.kafka.common.serialization.ByteArraySerializer");
+                "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer");
 
             if ("application/json".equals(produces) && hasSchemaRegistry(connector)) {
                 props.put(

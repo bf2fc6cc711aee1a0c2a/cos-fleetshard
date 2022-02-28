@@ -185,6 +185,66 @@ class ReifyTest extends Spec {
             }
     }
 
+    def "reify with bytes"() {
+        when:
+            def resources = reify(
+                """
+                metadata:
+                  name: ${DEFAULT_MANAGED_CONNECTOR_ID}
+                spec:
+                  connectorId: ${DEFAULT_MANAGED_CONNECTOR_ID}
+                  deploymentId: ${DEFAULT_DEPLOYMENT_ID}
+                  deployment:
+                    connectorTypeId: ${DEFAULT_CONNECTOR_TYPE_ID}
+                    connectorResourceVersion: ${DEFAULT_CONNECTOR_REVISION}
+                    secret: "secret"
+                    deploymentResourceVersion: ${DEFAULT_DEPLOYMENT_REVISION}
+                    desiredState: "ready"
+                    kafka:
+                        url: ${DEFAULT_KAFKA_SERVER}
+                    schemaRegistry:
+                        url: ${DEFAULT_KAFKA_REGISTRY}
+                """,
+                    """
+                connector_image: ${DEFAULT_CONNECTOR_IMAGE}
+                connector_revision: ${DEFAULT_CONNECTOR_REVISION}
+                connector_type: ${CONNECTOR_TYPE_SOURCE}
+                kamelets:
+                  adapter:
+                    name: "test-adapter"
+                    prefix: "aws"
+                  kafka:
+                    name: "test-kafka"
+                    prefix: "kafka"
+                """,
+                    """
+                kafka_topic: ${DEFAULT_KAFKA_TOPIC}
+                aws_foo: "bar"
+                """,
+                    """
+                clientId: ${DEFAULT_KAFKA_CLIENT_ID}
+                clientSecret: ${Secrets.toBase64("kcs")}
+                """)
+        then:
+            resources.size() == 2
+
+            with(klb(resources)) {
+                spec.steps.size() == 0
+            }
+
+            with(secret(resources)) {
+                def props = Secrets.extract(it, 'application.properties', Properties.class)
+
+                props["camel.kamelet.test-kafka.topic"] == "kafka-foo"
+                props["camel.kamelet.test-kafka.bootstrapServers"] == DEFAULT_KAFKA_SERVER
+                props["camel.kamelet.test-kafka.user"] == "kcid"
+                props["camel.kamelet.test-kafka.password"] == "kcs"
+                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer"
+                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
+                props["camel.kamelet.test-adapter.foo"] == "bar"
+            }
+    }
+
     // ***********************************
     //
     // Helpers

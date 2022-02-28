@@ -1,6 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel
 
-import com.fasterxml.jackson.databind.ObjectMapper
+
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import groovy.transform.TypeChecked
@@ -34,12 +34,20 @@ class Spec extends Specification {
         return YAML.readValue(content, type)
     }
 
-    def reify(GString connector,  GString meta, GString spec, GString serviceAccount) {
+
+    def reify(ManagedConnector connector,  CamelShardMetadata meta, ServiceAccountSpec serviceAccount, GString spec) {
         CONTROLLER.doReify(
-                readValue(ManagedConnector.class, connector),
-                readValue(CamelShardMetadata.class, meta),
+                connector, meta,
                 new ConnectorConfiguration<ObjectNode>(readValue(ObjectNode.class, spec), ObjectNode.class),
-                readValue(ServiceAccountSpec.class, serviceAccount))
+                serviceAccount)
+    }
+
+    def reify(GString connector,  GString meta, GString spec, GString serviceAccount) {
+        reify(
+            readValue(ManagedConnector.class, connector),
+            readValue(CamelShardMetadata.class, meta),
+            readValue(ServiceAccountSpec.class, serviceAccount),
+            spec)
     }
 
     KameletBinding klb(Collection<HasMetadata> resources) {
