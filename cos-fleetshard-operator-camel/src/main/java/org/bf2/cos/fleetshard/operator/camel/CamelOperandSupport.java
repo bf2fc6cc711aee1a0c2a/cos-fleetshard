@@ -187,6 +187,7 @@ public final class CamelOperandSupport {
                 }
                     break;
                 case "text/plain":
+                case "application/octet-stream":
                     break;
                 default:
                     throw new IllegalArgumentException("Unsupported value format " + consumes);
@@ -240,6 +241,12 @@ public final class CamelOperandSupport {
                         stepName(i, "cos-encoder-string-action")));
                 }
                     break;
+                case "application/octet-stream": {
+                    stepDefinitions.add(new ProcessorKamelet(
+                        "cos-encoder-bytearray-action",
+                        stepName(i, "cos-encoder-bytearray-action")));
+                }
+                    break;
                 default:
                     throw new IllegalArgumentException("Unsupported value format " + produces);
             }
@@ -262,6 +269,11 @@ public final class CamelOperandSupport {
                     String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer");
             }
+            if ("avro/binary".equals(produces) && hasSchemaRegistry(connector)) {
+                props.put(
+                    String.format("camel.kamelet.%s.valueDeserializer", shardMetadata.getKamelets().getKafka().getName()),
+                    "org.bf2.cos.connector.camel.serdes.avro.AvroDeserializer");
+            }
         }
 
         // If it is a source, then it produces to kafka
@@ -274,6 +286,11 @@ public final class CamelOperandSupport {
                 props.put(
                     String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
                     "org.bf2.cos.connector.camel.serdes.json.JsonSerializer");
+            }
+            if ("avro/binary".equals(produces) && hasSchemaRegistry(connector)) {
+                props.put(
+                    String.format("camel.kamelet.%s.valueSerializer", shardMetadata.getKamelets().getKafka().getName()),
+                    "org.bf2.cos.connector.camel.serdes.avro.AvroSerializer");
             }
         }
 

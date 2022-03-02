@@ -64,6 +64,18 @@ class BaseSpec extends Specification {
         } as Secret
     }
 
+
+    Properties applicationProperties(Collection<HasMetadata> resources) {
+        def secret = secret(resources)
+
+        if (secret != null) {
+            return Secrets.extract(secret, 'application.properties', Properties.class)
+        }
+
+        return new Properties()
+    }
+
+
     @TypeChecked
     <T> T readValue(Class<T> type, GString content) {
         return YAML.readValue(content, type)
