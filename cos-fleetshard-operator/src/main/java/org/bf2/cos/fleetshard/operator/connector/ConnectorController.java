@@ -511,11 +511,8 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_KUBERNETES_VERSION, rv);
             labels.put(LABEL_KUBERNETES_COMPONENT, "connector");
             labels.put(LABEL_KUBERNETES_PART_OF, spec.getClusterId());
-            String operatorType = managedConnectorOperator.getSpec().getType();
-            String operatorId = managedConnectorOperator.getMetadata().getName();
-            String operatorTypeAndId = operatorType + "-" + operatorId;
-            labels.put(LABEL_KUBERNETES_MANAGED_BY, operatorTypeAndId);
-            labels.put(LABEL_KUBERNETES_CREATED_BY, operatorTypeAndId);
+            labels.put(LABEL_KUBERNETES_MANAGED_BY, managedConnectorOperator.getMetadata().getName());
+            labels.put(LABEL_KUBERNETES_CREATED_BY, managedConnectorOperator.getMetadata().getName());
 
             config.connectors().targetLabels().ifPresent(items -> {
                 for (String item : items) {

@@ -36,16 +36,16 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-period             | 7                                          |
           | trait.camel.apache.org/health.liveness-timeout            | 8                                          |
      And the klb has labels containing:
-          | cos.bf2.org/cluster.id                |                                                           |
-          | cos.bf2.org/connector.id              |                                                           |
-          | cos.bf2.org/deployment.id             |                                                           |
-          | app.kubernetes.io/managed-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
-          | app.kubernetes.io/created-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
-          | app.kubernetes.io/component           | connector                                                 |
-          | app.kubernetes.io/version             | 1                                                         |
-          | app.kubernetes.io/part-of             | ${cos.cluster.id}                                         |
-          | app.kubernetes.io/name                | ${cos.connector.id}                                       |
-          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      |
+          | cos.bf2.org/cluster.id                |                               |
+          | cos.bf2.org/connector.id              |                               |
+          | cos.bf2.org/deployment.id             |                               |
+          | app.kubernetes.io/managed-by          | ${cos.operator.id}            |
+          | app.kubernetes.io/created-by          | ${cos.operator.id}            |
+          | app.kubernetes.io/component           | connector                     |
+          | app.kubernetes.io/version             | 1                             |
+          | app.kubernetes.io/part-of             | ${cos.cluster.id}             |
+          | app.kubernetes.io/name                | ${cos.connector.id}           |
+          | app.kubernetes.io/instance            | ${cos.deployment.id}          |
      And the klb has an array at path "$.spec.integration.configuration" containing:
           | { "type":"secret" , "value": "${json-unit.ignore}" }            |
 
@@ -84,16 +84,16 @@ Feature: Camel Connector Reify
           | camel.main.exchange-factory-capacity                | 31                         |
           | camel.main.exchange-factory-statistics-enabled      | true                       |
      And the klb secret has labels containing:
-          | cos.bf2.org/cluster.id                |                                                           |
-          | cos.bf2.org/connector.id              |                                                           |
-          | cos.bf2.org/deployment.id             |                                                           |
-          | app.kubernetes.io/managed-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
-          | app.kubernetes.io/created-by          | camel-connector-operator-cos-fleetshard-operator-camel    |
-          | app.kubernetes.io/component           | connector                                                 |
-          | app.kubernetes.io/version             | 1                                                         |
-          | app.kubernetes.io/part-of             | ${cos.cluster.id}                                         |
-          | app.kubernetes.io/name                | ${cos.connector.id}                                       |
-          | app.kubernetes.io/instance            | ${cos.deployment.id}                                      |
+          | cos.bf2.org/cluster.id                |                               |
+          | cos.bf2.org/connector.id              |                               |
+          | cos.bf2.org/deployment.id             |                               |
+          | app.kubernetes.io/managed-by          | ${cos.operator.id}            |
+          | app.kubernetes.io/created-by          | ${cos.operator.id}            |
+          | app.kubernetes.io/component           | connector                     |
+          | app.kubernetes.io/version             | 1                             |
+          | app.kubernetes.io/part-of             | ${cos.cluster.id}             |
+          | app.kubernetes.io/name                | ${cos.connector.id}           |
+          | app.kubernetes.io/instance            | ${cos.deployment.id}          |
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
 

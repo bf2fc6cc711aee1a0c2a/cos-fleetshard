@@ -23,16 +23,16 @@ Feature: Camel Connector Reify
 
     Then the kc exists
      And the kc has labels containing:
-       | cos.bf2.org/cluster.id           | ${cos.cluster.id}                                               |
-       | cos.bf2.org/connector.id         | ${cos.connector.id}                                             |
-       | cos.bf2.org/deployment.id        | ${cos.deployment.id}                                            |
-       | app.kubernetes.io/managed-by     | debezium-connector-operator-cos-fleetshard-operator-debezium    |
-       | app.kubernetes.io/created-by     | debezium-connector-operator-cos-fleetshard-operator-debezium    |
-       | app.kubernetes.io/component      | connector                                                       |
-       | app.kubernetes.io/version        | 1                                                               |
-       | app.kubernetes.io/part-of        | ${cos.cluster.id}                                               |
-       | app.kubernetes.io/name           | ${cos.connector.id}                                             |
-       | app.kubernetes.io/instance       | ${cos.deployment.id}                                            |        
+       | cos.bf2.org/cluster.id           | ${cos.cluster.id}             |
+       | cos.bf2.org/connector.id         | ${cos.connector.id}           |
+       | cos.bf2.org/deployment.id        | ${cos.deployment.id}          |
+       | app.kubernetes.io/managed-by     | ${cos.operator.id}            |
+       | app.kubernetes.io/created-by     | ${cos.operator.id}            |
+       | app.kubernetes.io/component      | connector                     |
+       | app.kubernetes.io/version        | 1                             |
+       | app.kubernetes.io/part-of        | ${cos.cluster.id}             |
+       | app.kubernetes.io/name           | ${cos.connector.id}           |
+       | app.kubernetes.io/instance       | ${cos.deployment.id}          |
 
      And the kc has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
      And the kc has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
@@ -53,18 +53,18 @@ Feature: Camel Connector Reify
 
     Then the kctr exists
      And the kctr has labels containing:
-       | cos.bf2.org/cluster.id           | ${cos.cluster.id}                                               |
-       | cos.bf2.org/connector.id         | ${cos.connector.id}                                             |
-       | cos.bf2.org/deployment.id        | ${cos.deployment.id}                                            |
-       | strimzi.io/cluster               | ${cos.managed.connector.name}                                   |
-       | app.kubernetes.io/managed-by     | debezium-connector-operator-cos-fleetshard-operator-debezium    |
-       | app.kubernetes.io/created-by     | debezium-connector-operator-cos-fleetshard-operator-debezium    |
-       | app.kubernetes.io/component      | connector                                                       |
-       | app.kubernetes.io/version        | 1                                                               |
-       | app.kubernetes.io/part-of        | ${cos.cluster.id}                                               |
-       | app.kubernetes.io/name           | ${cos.connector.id}                                             |
-       | app.kubernetes.io/instance       | ${cos.deployment.id}                                            | 
-       
+       | cos.bf2.org/cluster.id           | ${cos.cluster.id}             |
+       | cos.bf2.org/connector.id         | ${cos.connector.id}           |
+       | cos.bf2.org/deployment.id        | ${cos.deployment.id}          |
+       | strimzi.io/cluster               | ${cos.managed.connector.name} |
+       | app.kubernetes.io/managed-by     | ${cos.operator.id}            |
+       | app.kubernetes.io/created-by     | ${cos.operator.id}            |
+       | app.kubernetes.io/component      | connector                     |
+       | app.kubernetes.io/version        | 1                             |
+       | app.kubernetes.io/part-of        | ${cos.cluster.id}             |
+       | app.kubernetes.io/name           | ${cos.connector.id}           |
+       | app.kubernetes.io/instance       | ${cos.deployment.id}          |
+
      And the kctr has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
      And the kctr has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
      And the kctr has an entry at path "$.spec.pause" with value false
