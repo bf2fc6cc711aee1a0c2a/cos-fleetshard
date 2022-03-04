@@ -131,7 +131,7 @@ public final class CamelOperandSupport {
 
     public static List<ProcessorKamelet> createSteps(
         ManagedConnector connector,
-        ConnectorConfiguration<ObjectNode> connectorConfiguration,
+        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         CamelShardMetadata shardMetadata,
         Map<String, String> props) {
 
@@ -304,7 +304,7 @@ public final class CamelOperandSupport {
     public static Map<String, String> createSecretsData(
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
-        ConnectorConfiguration<ObjectNode> connectorConfiguration,
+        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec,
         CamelOperandConfiguration cfg,
         Map<String, String> props) {

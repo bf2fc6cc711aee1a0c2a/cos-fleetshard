@@ -34,8 +34,9 @@ public final class DebeziumConstants {
         "status.storage.replication.factor", -1,
         "key.converter.schemas.enable", true,
         "value.converter.schemas.enable", true,
-        "config.providers", "file",
-        "config.providers.file.class", "org.apache.kafka.common.config.provider.FileConfigProvider");
+        "config.providers", "file,dir",
+        "config.providers.file.class", "org.apache.kafka.common.config.provider.FileConfigProvider",
+        "config.providers.dir.class", "org.apache.kafka.common.config.provider.DirectoryConfigProvider");
 
     public static final List<ResourceDefinitionContext> RESOURCE_TYPES = List.of(
         new ResourceDefinitionContext.Builder()

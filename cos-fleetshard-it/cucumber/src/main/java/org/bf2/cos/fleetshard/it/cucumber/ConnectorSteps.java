@@ -52,6 +52,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class ConnectorSteps {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSteps.class);
+    private static final String SCHEMA_REGISTRY_URL = "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2";
+    private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
 
     @Inject
     KubernetesClient kubernetesClient;
@@ -172,6 +174,7 @@ public class ConnectorSteps {
                     .withConnectorResourceVersion(crv)
                     .withConnectorTypeId(entry.get(ConnectorContext.CONNECTOR_TYPE_ID))
                     .withDeploymentResourceVersion(drv)
+                    .withNewSchemaRegistry(SCHEMA_REGISTRY_ID, SCHEMA_REGISTRY_URL)
                     .withKafka(
                         new KafkaSpecBuilder().withUrl(entry.getOrDefault("kafka.bootstrap", "kafka.acme.com:443")).build())
                     .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
@@ -197,7 +200,9 @@ public class ConnectorSteps {
                 Secrets.SECRET_ENTRY_SERVICE_ACCOUNT,
                 Secrets.toBase64(Serialization.asJson(
                     Serialization.jsonMapper().createObjectNode()
-                        .put("client_id", entry.getOrDefault("kafka.client.id", uid()))
+                        .put("client_id",
+                            entry.getOrDefault("kafka.client.id",
+                                ctx.getPlaceholderValue(ConnectorContext.COS_KAFKA_CLIENT_ID)))
                         .put("client_secret", entry.getOrDefault("kafka.client.secret", Secrets.toBase64(uid()))))))
             .build();
 
@@ -216,8 +221,8 @@ public class ConnectorSteps {
     }
 
     @And("with connector spec:")
-    public void with_connector_spec(String payload) {
-        Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, payload);
+    public void with_connector_spec(Map<String, String> entry) {
+        Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, entry);
     }
 
     @And("with shard meta:")

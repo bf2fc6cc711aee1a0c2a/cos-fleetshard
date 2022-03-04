@@ -22,16 +22,19 @@ import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_SERVICE_ACCOUNT;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 
-public abstract class AbstractOperandController<M, S> implements OperandController {
+public abstract class AbstractOperandController<M, S, D> implements OperandController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractOperandController.class);
     private final KubernetesClient kubernetesClient;
     private final Class<M> metadataType;
     private final Class<S> connectorSpecType;
+    private Class<D> dataShapeType;
 
-    public AbstractOperandController(KubernetesClient kubernetesClient, Class<M> metadataType, Class<S> connectorSpecType) {
+    public AbstractOperandController(KubernetesClient kubernetesClient, Class<M> metadataType, Class<S> connectorSpecType,
+        Class<D> dataShapeType) {
         this.kubernetesClient = kubernetesClient;
         this.metadataType = metadataType;
         this.connectorSpecType = connectorSpecType;
+        this.dataShapeType = dataShapeType;
     }
 
     protected KubernetesClient getKubernetesClient() {
@@ -55,11 +58,12 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
                 .withClientSecret(serviceAccountSettings.getClientSecret())
                 .build();
 
-        ConnectorConfiguration<S> connectorConfig;
+        ConnectorConfiguration<S, D> connectorConfig;
         try {
             connectorConfig = new ConnectorConfiguration<>(
                 extract(secret, SECRET_ENTRY_CONNECTOR, ObjectNode.class),
-                connectorSpecType);
+                connectorSpecType,
+                dataShapeType);
         } catch (IncompleteConnectorSpecException e) {
             throw new RuntimeException("Incomplete connectorSpec for connector \""
                 + connector.getSpec().getConnectorId() + "@" + connector.getSpec().getDeploymentId()
@@ -78,6 +82,6 @@ public abstract class AbstractOperandController<M, S> implements OperandControll
     protected abstract List<HasMetadata> doReify(
         ManagedConnector connector,
         M shardMetadata,
-        ConnectorConfiguration<S> connectorSpec,
+        ConnectorConfiguration<S, D> connectorSpec,
         ServiceAccountSpec serviceAccountSpec);
 }

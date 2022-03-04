@@ -87,7 +87,7 @@ class BaseSpec extends Specification {
 
         CONTROLLER.doReify(
                 connector, meta,
-                new ConnectorConfiguration<ObjectNode>(conf, ObjectNode.class),
+                new ConnectorConfiguration<ObjectNode, ObjectNode>(conf, ObjectNode.class, ObjectNode.class),
                 serviceAccount)
     }
 

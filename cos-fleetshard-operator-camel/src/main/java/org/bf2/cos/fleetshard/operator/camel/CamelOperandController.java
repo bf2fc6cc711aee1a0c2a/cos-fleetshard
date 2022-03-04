@@ -62,13 +62,13 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBi
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
-public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode> {
+public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode, ObjectNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandController.class);
 
     private final CamelOperandConfiguration configuration;
 
     public CamelOperandController(KubernetesClient kubernetesClient, CamelOperandConfiguration configuration) {
-        super(kubernetesClient, CamelShardMetadata.class, ObjectNode.class);
+        super(kubernetesClient, CamelShardMetadata.class, ObjectNode.class, ObjectNode.class);
 
         this.configuration = configuration;
     }
@@ -82,7 +82,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
     protected List<HasMetadata> doReify(
         ManagedConnector connector,
         CamelShardMetadata shardMetadata,
-        ConnectorConfiguration<ObjectNode> connectorConfiguration,
+        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> properties = createSecretsData(

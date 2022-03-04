@@ -8,7 +8,7 @@ Feature: Debezium Connector Reify With Target Meta
 
   Scenario: reify with target meta
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.5.0.Final    |
+      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |
@@ -16,7 +16,7 @@ Feature: Debezium Connector Reify With Target Meta
       | operator.version            | [1.0.0,2.0.0)                    |
     And set connector annotation "foo/barAnnotation" to "baz"
     And set connector label "foo/barLabel" to "baz"
-    And with sample debezium connector
+    And with a simple Debezium connector
 
     When deploy
     Then the connector exists
