@@ -10,7 +10,9 @@ import javax.inject.Singleton;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
+import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
+import org.bf2.cos.fleetshard.operator.debezium.model.KeyAndValueConverters;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -53,13 +55,13 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lo
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @Singleton
-public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode> {
+public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode, DebeziumDataShape> {
     private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumOperandController.class);
 
     private final DebeziumOperandConfiguration configuration;
 
     public DebeziumOperandController(KubernetesClient kubernetesClient, DebeziumOperandConfiguration configuration) {
-        super(kubernetesClient, DebeziumShardMetadata.class, ObjectNode.class);
+        super(kubernetesClient, DebeziumShardMetadata.class, ObjectNode.class, DebeziumDataShape.class);
 
         this.configuration = configuration;
     }
@@ -73,7 +75,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     protected List<HasMetadata> doReify(
         ManagedConnector connector,
         DebeziumShardMetadata shardMetadata,
-        ConnectorConfiguration<ObjectNode> connectorConfiguration,
+        ConnectorConfiguration<ObjectNode, DebeziumDataShape> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> secretsData = createSecretsData(connectorConfiguration.getConnectorSpec());
@@ -101,8 +103,8 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToConfig(new TreeMap<>(configuration.kafkaConnect().config()))
             .addToConfig("group.id", connector.getMetadata().getName())
             // converters
-            .addToConfig("key.converter", configuration.keyConverter())
-            .addToConfig("value.converter", configuration.valueConverter())
+            .addToConfig(
+                KeyAndValueConverters.getConfig(connectorConfiguration.getDataShapeSpec(), connector, serviceAccountSpec))
             // topics
             .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")

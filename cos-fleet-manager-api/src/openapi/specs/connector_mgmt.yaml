@@ -1286,12 +1286,12 @@ components:
           id: "9bsv0s6brfr002pfnkh0"
           client_id: "srvc-acct-162ef2d8-0209-4117-8462-df63c2025c26"
           client_secret: "b144d991-08eb-4472-8ec1-eb034c69231b"
-          url: "foo-9bsv0s6brfr002pfnkh0.kas.acme.com:443"
+          url: "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2"
         schema_registry:
           id: "9bsv0s0k8lng031se9q0"
           client_id: "srvc-acct-e025265e-a88a-44fb-8450-ed010eb6bc5c"
           client_secret: "dc5a8298-bed7-422e-8947-f6fda69292ff"
-          url: "bar-9bsv0s2mfca002t9q7sg.srs.acme.com:443"
+          url: "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2"
         channel: stable
         connector_type_id: "log_sink_0.1"
         connector:

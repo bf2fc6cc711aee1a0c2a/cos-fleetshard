@@ -1,4 +1,4 @@
-Feature: Camel Connector Reify
+Feature: Debezium Connector Reify
 
   Background:
     Given Await configuration
@@ -8,13 +8,13 @@ Feature: Camel Connector Reify
 
   Scenario: reify
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.5.0.Final    |
+      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |
       | operator.type               | debezium-connector-operator      |
       | operator.version            | [1.0.0,2.0.0)                    |
-    And with sample debezium connector
+    And with a simple Debezium connector
 
     When deploy
     Then the connector exists
@@ -31,9 +31,9 @@ Feature: Camel Connector Reify
     And the kc has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
     And the kc has an entry at path "$.spec.authentication.passwordSecret.secretName" with value "${cos.managed.connector.name}-config"
     And the kc has an entry at path "$.spec.authentication.passwordSecret.password" with value "_kafka.client.secret"
-    And the kc has an entry at path "$.spec.image" with value "quay.io/asansari/debezium-connector-postgres:1.5.3.Final"
+    And the kc has an entry at path "$.spec.image" with value "quay.io/rhoas/cos-connector-debezium-postgres@sha256:b67d0ef4d4638bd5b6e71e2ccc30d5f7d5f74738db94dae53504077de7df5cff"
     And the kc has config containing:
-      | config.providers                  | file                                 |
+      | config.providers                  | file,dir                             |
       | config.storage.replication.factor | 3                                    |
       | config.storage.topic              | ${cos.managed.connector.name}-config |
       | offset.storage.topic              | ${cos.managed.connector.name}-offset |

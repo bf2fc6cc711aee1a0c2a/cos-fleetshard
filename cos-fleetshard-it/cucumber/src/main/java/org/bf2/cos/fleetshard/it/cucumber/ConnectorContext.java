@@ -16,6 +16,8 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import io.cucumber.datatable.DataTable;
 import io.fabric8.kubernetes.api.model.Secret;
 
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
+
 @ApplicationScoped
 public class ConnectorContext {
     public static final String COS_OPERATORS_NAMESPACE = "cos.operators.namespace";
@@ -29,6 +31,8 @@ public class ConnectorContext {
     public static final String COS_CONNECTOR_RESOURCE_VERSION = "cos.connector.resource-version";
     public static final String COS_MANAGED_CONNECTOR_NAME = "cos.managed.connector.name";
     public static final String COS_MANAGED_CONNECTOR_SECRET_NAME = "cos.managed.connector.secret.name";
+    public static final String COS_KAFKA_CLIENT_ID = "kafka.client.id";
+    public static final String DEFAULT_KAFKA_CLIENT_ID = uid();
     public static final String PLACEHOLDER_IGNORE = "${cos.ignore}";
 
     public static final String OPERATOR_TYPE = "operator.type";
@@ -91,21 +95,39 @@ public class ConnectorContext {
         return cosCtx.getOperatorsNamespace();
     }
 
-    public String resolvePlaceholders(String in) {
-        Map<String, Object> properties = new HashMap<>();
-        properties.put(COS_OPERATORS_NAMESPACE, cosCtx.getOperatorsNamespace());
-        properties.put(COS_CONNECTORS_NAMESPACE, cosCtx.getConnectorsNamespace());
-        properties.put(COS_CLUSTER_ID, clusterId());
-        properties.put(COS_OPERATOR_ID, operatorId());
-        properties.put(COS_OPERATOR_VERSION, operatorVersion());
-        properties.put(COS_DEPLOYMENT_ID, connector().getSpec().getDeploymentId());
-        properties.put(COS_DEPLOYMENT_RESOURCE_VERSION, connector().getSpec().getDeployment().getDeploymentResourceVersion());
-        properties.put(COS_CONNECTOR_ID, connector().getSpec().getConnectorId());
-        properties.put(COS_CONNECTOR_RESOURCE_VERSION, connector().getSpec().getDeployment().getConnectorResourceVersion());
-        properties.put(COS_MANAGED_CONNECTOR_NAME, connector().getMetadata().getName());
-        properties.put(COS_MANAGED_CONNECTOR_SECRET_NAME, secret().getMetadata().getName());
+    private Map<String, Object> getPlaceholders() {
+        Map<String, Object> placeholders = new HashMap<>();
+        placeholders.put(COS_OPERATORS_NAMESPACE, cosCtx.getOperatorsNamespace());
+        placeholders.put(COS_CONNECTORS_NAMESPACE, cosCtx.getConnectorsNamespace());
+        placeholders.put(COS_CLUSTER_ID, clusterId());
+        placeholders.put(COS_OPERATOR_ID, operatorId());
+        placeholders.put(COS_OPERATOR_VERSION, operatorVersion());
+        placeholders.put(COS_KAFKA_CLIENT_ID, DEFAULT_KAFKA_CLIENT_ID);
+        if (null != connector()) {
+            if (null != connector().getSpec()) {
+                placeholders.put(COS_DEPLOYMENT_ID, connector().getSpec().getDeploymentId());
+                placeholders.put(COS_DEPLOYMENT_RESOURCE_VERSION,
+                    connector().getSpec().getDeployment().getDeploymentResourceVersion());
+                placeholders.put(COS_CONNECTOR_ID, connector().getSpec().getConnectorId());
+                placeholders.put(COS_CONNECTOR_RESOURCE_VERSION,
+                    connector().getSpec().getDeployment().getConnectorResourceVersion());
+            }
+            if (null != connector().getMetadata()) {
+                placeholders.put(COS_MANAGED_CONNECTOR_NAME, connector().getMetadata().getName());
+            }
+        }
+        if (null != secret() && null != secret().getMetadata()) {
+            placeholders.put(COS_MANAGED_CONNECTOR_SECRET_NAME, secret().getMetadata().getName());
+        }
+        return placeholders;
+    }
 
-        return new StringSubstitutor(properties).replace(in);
+    public String getPlaceholderValue(String in) {
+        return getPlaceholders().get(in).toString();
+    }
+
+    public String resolvePlaceholders(String in) {
+        return new StringSubstitutor(getPlaceholders()).replace(in);
     }
 
     public Map<String, String> resolvePlaceholders(DataTable in) {

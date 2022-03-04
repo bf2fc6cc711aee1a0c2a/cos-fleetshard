@@ -1,4 +1,4 @@
-Feature: Camel Connector Lifecycle
+Feature: Debezium Connector Lifecycle
 
   Background:
     Given Await configuration
@@ -8,13 +8,13 @@ Feature: Camel Connector Lifecycle
 
   Scenario: delete
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.5.0.Final    |
+      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |
       | operator.type               | debezium-connector-operator      |
       | operator.version            | [1.0.0,2.0.0)                    |
-    And with sample debezium connector
+    And with a simple Debezium connector
 
     When deploy
     Then the connector exists

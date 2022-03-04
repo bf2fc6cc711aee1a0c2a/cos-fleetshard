@@ -11,14 +11,14 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @CucumberOptions(
     features = {
-        "classpath:DebeziumConnectorReify.feature"
+        "classpath:DebeziumConnectorReifySchemalessJson.feature"
     },
     glue = {
         "org.bf2.cos.fleetshard.it.cucumber",
         "org.bf2.cos.fleetshard.operator.it.debezium.glues"
     })
-@TestProfile(DebeziumConnectorReifyTest.Profile.class)
-public class DebeziumConnectorReifyTest extends CucumberQuarkusTest {
+@TestProfile(DebeziumConnectorReifySchemalessJsonTest.Profile.class)
+public class DebeziumConnectorReifySchemalessJsonTest extends CucumberQuarkusTest {
     public static class Profile implements QuarkusTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
