@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.bf2.cos.fleetshard.support.CollectionUtils;
 
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.KafkaConnect;
@@ -20,6 +21,8 @@ public final class DebeziumConstants {
 
     public static final String STRIMZI_DOMAIN = "strimzi.io/";
     public static final String STRIMZI_IO_USE_CONNECTOR_RESOURCES = STRIMZI_DOMAIN + "use-connector-resources";
+
+    public static final LocalObjectReference IMAGE_PULL_SECRET = new LocalObjectReference("cos-pull-secret");
 
     public static final Map<String, Object> DEFAULT_CONFIG_OPTIONS = CollectionUtils.mapOf(
         "request.timeout.ms", 20_000,
