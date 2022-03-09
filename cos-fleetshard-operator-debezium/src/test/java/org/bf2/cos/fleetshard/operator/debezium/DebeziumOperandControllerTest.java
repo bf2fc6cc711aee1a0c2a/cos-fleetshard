@@ -203,6 +203,15 @@ public class DebeziumOperandControllerTest {
             });
 
         assertThat(resources)
+            .filteredOn(DebeziumOperandSupport::isKafkaConnect)
+            .hasSize(1)
+            .first()
+            .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
+                assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
+                    .contains(DebeziumConstants.IMAGE_PULL_SECRET);
+            });
+
+        assertThat(resources)
             .filteredOn(DebeziumOperandSupport::isKafkaConnector)
             .hasSize(1)
             .first()
