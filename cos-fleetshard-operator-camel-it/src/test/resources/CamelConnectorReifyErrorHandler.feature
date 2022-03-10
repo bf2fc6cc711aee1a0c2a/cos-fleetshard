@@ -79,7 +79,7 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
-     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "controlbus:route?routeId=current&action=stop"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "rc:fail?routeId=current"
      
     When the klb phase is "error"
     Then the connector is in phase "Monitor"

@@ -41,7 +41,7 @@ public final class CamelConstants {
     public static final String ERROR_HANDLER_SINK_CHANNEL_TYPE = "sink";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET = "cos-kafka-sink";
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID = "error";
-    public static final String ERROR_HANDLER_STOP_URI = "controlbus:route?routeId=current&action=stop";
+    public static final String ERROR_HANDLER_STOP_URI = "rc:fail?routeId=current";
 
     public static final String LABELS_TO_TRANSFER = JacksonUtil.asArrayString(
         LABEL_DEPLOYMENT_ID,
