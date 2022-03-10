@@ -62,7 +62,7 @@ class ReifyErrorHandlerTest extends BaseSpec {
 
         then:
             with(klb(resources)) {
-                it.spec.errorHandler.at("/sink/endpoint/uri").asText() == 'controlbus:route?routeId=current&action=stop'
+                it.spec.errorHandler.at("/sink/endpoint/uri").asText() == 'rc:fail?routeId=current'
             }
     }
 }
