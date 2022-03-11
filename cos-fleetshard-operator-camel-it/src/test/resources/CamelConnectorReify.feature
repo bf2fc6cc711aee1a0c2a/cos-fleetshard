@@ -70,7 +70,7 @@ Feature: Camel Connector Reify
           | camel.kamelet.managed-kafka-source.password         |                            |
           | camel.kamelet.managed-kafka-source.user             |                            |
           | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
-          | camel.health.load-health-checks                     | true                       |
+          | camel.main.load-health-checks                       | true                       |
           | camel.health.contextEnabled                         | true                       |
           | camel.health.consumersEnabled                       | true                       |
           | camel.health.routesEnabled                          | true                       |
