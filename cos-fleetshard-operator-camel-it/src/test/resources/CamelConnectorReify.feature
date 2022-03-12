@@ -11,6 +11,8 @@ Feature: Camel Connector Reify
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |
       | kafka.bootstrap             | kafka.acme.com:443              |
+      | kafka.client.id             | kcid                            |
+      | kafka.client.secret         | ${cos.uid}                      |
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
       | operator.version            | [1.0.0,2.0.0)                   |
@@ -56,20 +58,22 @@ Feature: Camel Connector Reify
     And the klb has an entry at path "$.spec.source.ref.kind" with value "Kamelet"
     And the klb has an entry at path "$.spec.source.ref.name" with value "managed-kafka-source"
     And the klb has an entry at path "$.spec.source.properties.id" with value "${cos.deployment.id}-source"
+    And the klb has an entry at path "$.spec.source.properties.bootstrapServers" with value "${kafka.bootstrap}"
+    And the klb has an entry at path "$.spec.source.properties.user" with value "{{sa_client_id}}"
+    And the klb has an entry at path "$.spec.source.properties.password" with value "{{sa_client_secret}}"
+    And the klb has an entry at path "$.spec.source.properties.topic" with value "dbz_pg.inventory.customers"
 
     And the klb has an entry at path "$.spec.sink.ref.apiVersion" with value "camel.apache.org/v1alpha1"
     And the klb has an entry at path "$.spec.sink.ref.kind" with value "Kamelet"
     And the klb has an entry at path "$.spec.sink.ref.name" with value "log-sink"
     And the klb has an entry at path "$.spec.sink.properties.id" with value "${cos.deployment.id}-sink"
+    And the klb has an entry at path "$.spec.sink.properties.multiLine" with value "true"
+    And the klb has an entry at path "$.spec.sink.properties.showAll" with value "true"
 
     Then the klb secret exists
      And the klb secret contains:
-          | camel.kamelet.log-sink.multiLine                    | true                       |
-          | camel.kamelet.log-sink.showAll                      | true                       |
-          | camel.kamelet.managed-kafka-source.bootstrapServers | kafka.acme.com:443         |
-          | camel.kamelet.managed-kafka-source.password         |                            |
-          | camel.kamelet.managed-kafka-source.user             |                            |
-          | camel.kamelet.managed-kafka-source.topic            | dbz_pg.inventory.customers |
+          | sa_client_id                                        | ${kafka.client.id}         |
+          | sa_client_secret                                    | ${kafka.client.secret}     |
           | camel.main.load-health-checks                       | true                       |
           | camel.health.contextEnabled                         | true                       |
           | camel.health.consumersEnabled                       | true                       |
@@ -86,9 +90,9 @@ Feature: Camel Connector Reify
           | camel.main.exchange-factory-capacity                | 31                         |
           | camel.main.exchange-factory-statistics-enabled      | true                       |
      And the klb secret has labels containing:
-          | cos.bf2.org/cluster.id                |                               |
-          | cos.bf2.org/connector.id              |                               |
-          | cos.bf2.org/deployment.id             |                               |
+          | cos.bf2.org/cluster.id                | ${cos.cluster.id}             |
+          | cos.bf2.org/connector.id              | ${cos.connector.id}           |
+          | cos.bf2.org/deployment.id             | ${cos.deployment.id}          |
           | app.kubernetes.io/managed-by          | ${cos.operator.id}            |
           | app.kubernetes.io/created-by          | ${cos.operator.id}            |
           | app.kubernetes.io/component           | connector                     |

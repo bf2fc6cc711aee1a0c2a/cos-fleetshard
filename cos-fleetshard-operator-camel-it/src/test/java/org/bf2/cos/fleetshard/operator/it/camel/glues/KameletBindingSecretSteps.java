@@ -1,16 +1,13 @@
 package org.bf2.cos.fleetshard.operator.it.camel.glues;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Properties;
 
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
@@ -38,13 +35,7 @@ public class KameletBindingSecretSteps extends StepsSupport {
         Secret secret = secret();
         assertThat(secret).isNotNull();
 
-        String enc = secret.getData().get("application.properties");
-        String dec = new String(Base64.getDecoder().decode(enc));
-        Properties props = new Properties();
-
-        try (InputStream is = new ByteArrayInputStream(dec.getBytes(StandardCharsets.UTF_8))) {
-            props.load(is);
-        }
+        Properties props = Secrets.extract(secret, "application.properties", Properties.class);
 
         assertThatDataTable(table, ctx::resolvePlaceholders)
             .matches((Map) props);

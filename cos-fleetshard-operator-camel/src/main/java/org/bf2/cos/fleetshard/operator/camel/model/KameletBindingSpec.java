@@ -24,6 +24,7 @@ public class KameletBindingSpec {
     private KameletEndpoint sink;
     @JsonProperty("source")
     private KameletEndpoint source;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("steps")
     private List<KameletEndpoint> steps = new ArrayList<>();
     @JsonProperty("errorHandler")

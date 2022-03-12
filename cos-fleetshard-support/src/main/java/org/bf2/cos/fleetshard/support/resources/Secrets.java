@@ -117,6 +117,12 @@ public final class Secrets {
             .encodeToString(in.getBytes(StandardCharsets.UTF_8));
     }
 
+    public static String fromBase64(String in) {
+        return new String(
+            Base64.getDecoder().decode(in.getBytes(StandardCharsets.UTF_8)),
+            StandardCharsets.UTF_8);
+    }
+
     public static Secret newSecret(
         String name,
         String clusterId,

@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -80,7 +81,7 @@ public class ConnectorDeploymentProvisioner {
                 fleetShard.getClusterId(),
                 deployment.getSpec().getConnectorId(),
                 deployment.getId(),
-                Map.of());
+                Collections.emptyMap());
         });
 
         // TODO: change APIs to include a single operator

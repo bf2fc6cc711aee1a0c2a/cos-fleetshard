@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.camel.model;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
 
@@ -74,5 +75,18 @@ public class KameletEndpoint {
             Kamelet.RESOURCE_KIND,
             name,
             properties);
+    }
+
+    public static KameletEndpoint kamelet(String name) {
+        return new KameletEndpoint(
+            Kamelet.RESOURCE_API_VERSION,
+            Kamelet.RESOURCE_KIND,
+            name);
+    }
+
+    public static KameletEndpoint kamelet(String name, Consumer<Map<String, Object>> consumer) {
+        KameletEndpoint answer = kamelet(name);
+        consumer.accept(answer.getProperties());
+        return answer;
     }
 }

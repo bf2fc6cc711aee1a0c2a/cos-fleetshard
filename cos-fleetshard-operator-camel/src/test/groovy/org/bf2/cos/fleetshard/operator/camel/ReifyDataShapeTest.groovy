@@ -1,8 +1,10 @@
 package org.bf2.cos.fleetshard.operator.camel
 
+import groovy.util.logging.Slf4j
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet
 import org.bf2.cos.fleetshard.operator.camel.support.BaseSpec
 
+@Slf4j
 class ReifyDataShapeTest extends BaseSpec {
 
     // *****************************************************
@@ -35,20 +37,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-json-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-json-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -73,21 +76,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-json-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-json-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -115,21 +118,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.source) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueDeserializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonDeserializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-json-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-json-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueDeserializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -154,20 +157,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.source) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueDeserializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonDeserializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-json-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-json-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueDeserializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonDeserializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -201,15 +205,17 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 1
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
-                spec.steps[0].properties['id'] == 'cos-encoder-bytearray-action-0'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -234,15 +240,17 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 1
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
-                spec.steps[0].properties['id'] == 'cos-encoder-bytearray-action-0'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -255,7 +263,7 @@ class ReifyDataShapeTest extends BaseSpec {
             def sm = sharedMeta()
             sm.produces = 'application/json'
             sm.consumes = 'application/json'
-            sm.connectorType = 'source'
+            sm.connectorType = 'sink'
 
         when:
             def resources = reify(connector, sm, sa, [
@@ -271,15 +279,17 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 1
 
+                with(it.spec.source) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueDeserializer'] == 'org.bf2.cos.connector.camel.serdes.bytes.ByteArrayDeserializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
-                spec.steps[0].properties['id'] == 'cos-encoder-bytearray-action-0'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -291,7 +301,7 @@ class ReifyDataShapeTest extends BaseSpec {
             def sm = sharedMeta()
             sm.produces = 'application/octet-stream'
             sm.consumes = 'application/octet-stream'
-            sm.connectorType = 'source'
+            sm.connectorType = 'sink'
 
         when:
             def resources = reify(connector, sm, sa, [
@@ -304,15 +314,17 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 1
 
+                with(it.spec.source) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueDeserializer'] == 'org.bf2.cos.connector.camel.serdes.bytes.ByteArrayDeserializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
-                spec.steps[0].properties['id'] == 'cos-encoder-bytearray-action-0'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.bytes.ByteArraySerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -343,21 +355,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-pojo-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-pojo-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
-                props["camel.kamelet.cos-decoder-pojo-action.cos-decoder-pojo-action-0.mimeType"] == "application/json"
             }
     }
 
@@ -387,22 +399,23 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.avro.AvroSerializer'
+                }
+
                 spec.steps.size() == 2
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-json-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-json-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-avro-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-avro-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.avro.AvroSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -428,20 +441,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-avro-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-avro-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -467,20 +481,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.json.JsonSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-pojo-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-pojo-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-json-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-json-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.json.JsonSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 
@@ -506,20 +521,21 @@ class ReifyDataShapeTest extends BaseSpec {
             with(klb(resources)) {
                 spec.steps.size() == 2
 
+                with(it.spec.sink) {
+                    it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it.ref.kind == Kamelet.RESOURCE_KIND
+                    it.ref.name == 'test-kafka'
+                    it.properties['registryUrl'] == DEFAULT_KAFKA_REGISTRY
+                    it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.avro.AvroSerializer'
+                }
+
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[0].ref.name == 'cos-decoder-pojo-action'
-                spec.steps[0].properties['id'] == 'cos-decoder-pojo-action-0'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-avro-action'
-                spec.steps[1].properties['id'] == 'cos-encoder-avro-action-1'
-            }
-
-            with(applicationProperties(resources)) { props ->
-                props["camel.kamelet.test-kafka.valueSerializer"] == "org.bf2.cos.connector.camel.serdes.avro.AvroSerializer"
-                props["camel.kamelet.test-kafka.registryUrl"] == DEFAULT_KAFKA_REGISTRY
             }
     }
 }

@@ -43,6 +43,7 @@
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.2</pmd.asm.version>
         <findsecbugs.version>1.11.0</findsecbugs.version>
+        <spotbugs.version>4.6.0</spotbugs.version>
 
         <formatter-maven-plugin.version>2.18.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
@@ -219,6 +220,11 @@
                 <groupId>org.spockframework</groupId>
                 <artifactId>spock-core</artifactId>
                 <version>${spock.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-annotations</artifactId>
+                <version>${spotbugs.version}</version>
             </dependency>
 
             <!-- deps :: cos -->

@@ -12,6 +12,9 @@ import javax.inject.Inject;
 import org.apache.commons.text.StringSubstitutor;
 import org.assertj.core.util.Strings;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.cucumber.datatable.DataTable;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -32,8 +35,13 @@ public class ConnectorContext {
     public static final String COS_MANAGED_CONNECTOR_NAME = "cos.managed.connector.name";
     public static final String COS_MANAGED_CONNECTOR_SECRET_NAME = "cos.managed.connector.secret.name";
     public static final String COS_KAFKA_CLIENT_ID = "kafka.client.id";
+    public static final String COS_KAFKA_CLIENT_SECRET = "kafka.client.secret";
     public static final String DEFAULT_KAFKA_CLIENT_ID = uid();
     public static final String PLACEHOLDER_IGNORE = "${cos.ignore}";
+    public static final String PLACEHOLDER_UID = "${cos.uid}";
+    public static final String COS_KAFKA_BOOTSTRAP = "kafka.bootstrap";
+    public static final String SA_CLIENT_ID = "client_id";
+    public static final String SA_CLIENT_SECRET = "client_secret";
 
     public static final String OPERATOR_TYPE = "operator.type";
     public static final String OPERATOR_ID = "operator.id";
@@ -111,6 +119,8 @@ public class ConnectorContext {
                 placeholders.put(COS_CONNECTOR_ID, connector().getSpec().getConnectorId());
                 placeholders.put(COS_CONNECTOR_RESOURCE_VERSION,
                     connector().getSpec().getDeployment().getConnectorResourceVersion());
+                placeholders.put(COS_KAFKA_BOOTSTRAP,
+                    connector().getSpec().getDeployment().getKafka().getUrl());
             }
             if (null != connector().getMetadata()) {
                 placeholders.put(COS_MANAGED_CONNECTOR_NAME, connector().getMetadata().getName());
@@ -119,11 +129,22 @@ public class ConnectorContext {
         if (null != secret() && null != secret().getMetadata()) {
             placeholders.put(COS_MANAGED_CONNECTOR_SECRET_NAME, secret().getMetadata().getName());
         }
+        if (null != secret() && null != secret().getMetadata()) {
+            ObjectNode sa = Secrets.extract(secret(), Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, ObjectNode.class);
+            if (sa.has(SA_CLIENT_ID)) {
+                placeholders.put(COS_KAFKA_CLIENT_ID, sa.get(SA_CLIENT_ID).textValue());
+            }
+            if (sa.has(SA_CLIENT_SECRET)) {
+                placeholders.put(COS_KAFKA_CLIENT_SECRET, Secrets.fromBase64(sa.get(SA_CLIENT_SECRET).textValue()));
+            }
+            placeholders.put(COS_MANAGED_CONNECTOR_SECRET_NAME, secret().getMetadata().getName());
+        }
         return placeholders;
     }
 
     public String getPlaceholderValue(String in) {
-        return getPlaceholders().get(in).toString();
+        Object value = getPlaceholders().get(in);
+        return value != null ? value.toString() : null;
     }
 
     public String resolvePlaceholders(String in) {
@@ -139,6 +160,9 @@ public class ConnectorContext {
         in.forEach((k, v) -> {
             if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_IGNORE.equals(v)) {
                 v = resolvePlaceholders(v);
+            }
+            if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_UID.equals(v)) {
+                v = uid();
             }
 
             answer.put(k, resolvePlaceholders(v));

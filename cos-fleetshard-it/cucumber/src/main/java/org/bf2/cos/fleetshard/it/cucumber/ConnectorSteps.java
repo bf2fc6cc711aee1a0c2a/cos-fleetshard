@@ -47,6 +47,9 @@ import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_BOOTSTRAP;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_CLIENT_ID;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_CLIENT_SECRET;
 import static org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport.PARSER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
@@ -54,6 +57,7 @@ public class ConnectorSteps {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSteps.class);
     private static final String SCHEMA_REGISTRY_URL = "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2";
     private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
+    private static final String KAFKA_URL = "kafka.acme.com:443";
 
     @Inject
     KubernetesClient kubernetesClient;
@@ -151,7 +155,9 @@ public class ConnectorSteps {
     }
 
     @Given("^a Connector with:$")
-    public void a_connector(Map<String, String> entry) {
+    public void a_connector(Map<String, String> options) {
+        Map<String, String> entry = ctx.resolvePlaceholders(options);
+
         final Long drv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_DEPLOYMENT_RESOURCE_VERSION, "1"));
         final Long crv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_CONNECTOR_RESOURCE_VERSION, "1"));
         final String connectorId = entry.getOrDefault(ConnectorContext.COS_CONNECTOR_ID, uid());
@@ -176,7 +182,7 @@ public class ConnectorSteps {
                     .withDeploymentResourceVersion(drv)
                     .withNewSchemaRegistry(SCHEMA_REGISTRY_ID, SCHEMA_REGISTRY_URL)
                     .withKafka(
-                        new KafkaSpecBuilder().withUrl(entry.getOrDefault("kafka.bootstrap", "kafka.acme.com:443")).build())
+                        new KafkaSpecBuilder().withUrl(entry.getOrDefault(COS_KAFKA_BOOTSTRAP, KAFKA_URL)).build())
                     .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
                     .withSecret(Connectors.generateConnectorId(deploymentId) + "-" + drv)
                     .build())
@@ -201,9 +207,13 @@ public class ConnectorSteps {
                 Secrets.toBase64(Serialization.asJson(
                     Serialization.jsonMapper().createObjectNode()
                         .put("client_id",
-                            entry.getOrDefault("kafka.client.id",
-                                ctx.getPlaceholderValue(ConnectorContext.COS_KAFKA_CLIENT_ID)))
-                        .put("client_secret", entry.getOrDefault("kafka.client.secret", Secrets.toBase64(uid()))))))
+                            entry.getOrDefault(
+                                COS_KAFKA_CLIENT_ID,
+                                ctx.getPlaceholderValue(COS_KAFKA_CLIENT_ID)))
+                        .put("client_secret",
+                            Secrets.toBase64(entry.getOrDefault(
+                                COS_KAFKA_CLIENT_SECRET,
+                                uid()))))))
             .build();
 
         ctx.connector(connector);
