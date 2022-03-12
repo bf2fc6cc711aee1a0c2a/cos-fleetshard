@@ -1,8 +1,13 @@
 package org.bf2.cos.fleetshard.operator.camel
 
+import groovy.util.logging.Slf4j
+import org.bf2.cos.fleetshard.operator.camel.model.Kamelet
 import org.bf2.cos.fleetshard.operator.camel.support.BaseSpec
-import org.bf2.cos.fleetshard.support.resources.Secrets
+import org.bf2.cos.fleetshard.support.json.JacksonUtil
 
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET
+
+@Slf4j
 class ReifyErrorHandlerTest extends BaseSpec {
 
     def 'reify error_handler (log)'() {
@@ -13,7 +18,7 @@ class ReifyErrorHandlerTest extends BaseSpec {
 
         when:
             def resources = reify(connector, sm, sa, [
-                error_handler: ['log': [:]]
+                error_handler: [ 'log': [:]]
             ])
 
         then:
@@ -35,17 +40,16 @@ class ReifyErrorHandlerTest extends BaseSpec {
             ])
 
         then:
+            log.info('>>> {}', JacksonUtil.asPrettyPrintedYaml(klb(resources)))
+
             with(klb(resources)) {
-                it.spec.errorHandler.at("/sink/endpoint/uri").asText() == 'kamelet://cos-kafka-sink/error'
-            }
-
-            with(secret((resources))) {
-                def props = Secrets.extract(it, 'application.properties', Properties.class)
-
-                props['camel.kamelet.cos-kafka-sink.error.topic'] == 'dlq'
-                props['camel.kamelet.cos-kafka-sink.error.bootstrapServers'] == 'kafka.acme.com:2181'
-                props['camel.kamelet.cos-kafka-sink.error.user'] == 'kcid'
-                props['camel.kamelet.cos-kafka-sink.error.password'] == 'kcs'
+                it.spec.errorHandler.requiredAt("/sink/endpoint/ref/kind").asText() == Kamelet.RESOURCE_KIND
+                it.spec.errorHandler.requiredAt("/sink/endpoint/ref/apiVersion").asText() == Kamelet.RESOURCE_API_VERSION
+                it.spec.errorHandler.requiredAt("/sink/endpoint/ref/name").asText() == ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET
+                it.spec.errorHandler.requiredAt("/sink/endpoint/properties/topic").asText() == 'dlq'
+                it.spec.errorHandler.requiredAt("/sink/endpoint/properties/bootstrapServers").asText() == DEFAULT_KAFKA_SERVER
+                it.spec.errorHandler.requiredAt("/sink/endpoint/properties/user").asText() == '{{sa_client_id}}'
+                it.spec.errorHandler.requiredAt("/sink/endpoint/properties/password").asText() == '{{sa_client_secret}}'
             }
     }
 

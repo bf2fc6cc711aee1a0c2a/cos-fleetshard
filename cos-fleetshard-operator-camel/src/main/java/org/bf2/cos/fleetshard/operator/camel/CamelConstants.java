@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
-import org.bf2.cos.fleetshard.support.resources.Resources;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_TYPE_ID;
@@ -43,11 +42,20 @@ public final class CamelConstants {
     public static final String ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET_ID = "error";
     public static final String ERROR_HANDLER_STOP_URI = "rc:fail?routeId=current";
 
+    public static final String SA_CLIENT_ID_PROPERTY = "sa_client_id";
+    public static final String SA_CLIENT_SECRET_PROPERTY = "sa_client_secret";
+    public static final String SA_CLIENT_ID_PLACEHOLDER = "{{" + SA_CLIENT_ID_PROPERTY + "}}";
+    public static final String SA_CLIENT_SECRET_PLACEHOLDER = "{{" + SA_CLIENT_SECRET_PROPERTY + "}}";
+
+    public static final String ERROR_HANDLER_TYPE_LOG = "log";
+    public static final String ERROR_HANDLER_TYPE_STOP = "stop";
+    public static final String ERROR_HANDLER_TYPE_DLQ = "dead_letter_queue";
+
     public static final String LABELS_TO_TRANSFER = JacksonUtil.asArrayString(
         LABEL_DEPLOYMENT_ID,
         LABEL_CONNECTOR_ID,
-        LABEL_CONNECTOR_TYPE_ID,
-        Resources.LABEL_KCP_TARGET_CLUSTER_ID);
+        LABEL_CONNECTOR_TYPE_ID);
+    //Resources.LABEL_KCP_TARGET_CLUSTER_ID
 
     private CamelConstants() {
     }

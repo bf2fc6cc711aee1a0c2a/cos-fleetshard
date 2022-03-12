@@ -31,6 +31,8 @@ Feature: Camel Connector Reify
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
       | desired.state               | ready                           |
+      | kafka.client.id             | kcid                            |
+      | kafka.client.secret         | ${cos.uid}                      |
       | kafka.bootstrap             | kafka.acme.com:443              |
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
@@ -46,20 +48,18 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
-     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "kamelet://cos-kafka-sink/error"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.ref.kind" with value "Kamelet"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.ref.apiVersion" with value "camel.apache.org/v1alpha1"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.ref.name" with value "cos-kafka-sink"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.properties.topic" with value "dlq"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.properties.bootstrapServers" with value "${kafka.bootstrap}"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.properties.user" with value "{{sa_client_id}}"
+     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.properties.password" with value "{{sa_client_secret}}"
 
     Then the klb secret exists
      And the klb secret contains:
-      | camel.kamelet.log-sink.multiLine                        | true                       |
-      | camel.kamelet.log-sink.showAll                          | true                       |
-      | camel.kamelet.managed-kafka-source.bootstrapServers     | kafka.acme.com:443         |
-      | camel.kamelet.managed-kafka-source.password             |                            |
-      | camel.kamelet.managed-kafka-source.user                 |                            |
-      | camel.kamelet.managed-kafka-source.topic                | dbz_pg.inventory.customers |
-      | camel.kamelet.cos-kafka-sink.error.topic                | dlq                        |
-      | camel.kamelet.cos-kafka-sink.error.bootstrapServers     | kafka.acme.com:443         |
-      | camel.kamelet.cos-kafka-sink.error.password             |                            |
-      | camel.kamelet.cos-kafka-sink.error.user                 |                            |
+      | sa_client_id      | ${kafka.client.id}         |
+      | sa_client_secret  | ${kafka.client.secret}     |
 
   Scenario: reify stop error handler
     Given a Connector with:
@@ -80,7 +80,7 @@ Feature: Camel Connector Reify
 
     Then the klb exists
      And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "rc:fail?routeId=current"
-     
+
     When the klb phase is "error"
     Then the connector is in phase "Monitor"
      And the connector operand status is in phase "failed"
