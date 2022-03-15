@@ -4,6 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DebeziumDataShape {
 
+    public static final String CONVERTER_TYPE_JSON = "JSON";
+    public static final String CONVERTER_TYPE_AVRO = "AVRO";
+    public static final String CONVERTER_TYPE_JSON_WITHOUT_SCHEMA = "JSON without schema";
+    public static final String DEFAULT_CONVERTER_TYPE_KEY = CONVERTER_TYPE_JSON_WITHOUT_SCHEMA;
+    public static final String DEFAULT_CONVERTER_TYPE_VALUE = CONVERTER_TYPE_JSON_WITHOUT_SCHEMA;
+
     private String keyConverterString;
     private String valueConverterString;
     private KafkaConnectConverter keyConverter;
@@ -11,13 +17,13 @@ public class DebeziumDataShape {
 
     private static KafkaConnectConverter createConverter(String converterType) {
         switch (converterType) {
-            case "JSON":
+            case CONVERTER_TYPE_JSON:
                 return new ApicurioJsonConverter();
-            case "AVRO":
+            case CONVERTER_TYPE_AVRO:
                 return new ApicurioAvroConverter();
             default:
             case "JSON_WITHOUT_SCHEMA":
-            case "JSON without schema":
+            case CONVERTER_TYPE_JSON_WITHOUT_SCHEMA:
                 return new KafkaConnectJsonConverter();
         }
     }
@@ -28,9 +34,10 @@ public class DebeziumDataShape {
     }
 
     @JsonProperty("key")
-    public void setKeyConverter(String keyConverterString) {
+    public DebeziumDataShape setKeyConverter(String keyConverterString) {
         this.keyConverterString = keyConverterString;
         this.keyConverter = createConverter(keyConverterString);
+        return this;
     }
 
     public KafkaConnectConverter getKeyConverter() {
@@ -43,9 +50,10 @@ public class DebeziumDataShape {
     }
 
     @JsonProperty("value")
-    public void setValueConverter(String valueConverterString) {
+    public DebeziumDataShape setValueConverter(String valueConverterString) {
         this.valueConverterString = valueConverterString;
         this.valueConverter = createConverter(valueConverterString);
+        return this;
     }
 
     public KafkaConnectConverter getValueConverter() {

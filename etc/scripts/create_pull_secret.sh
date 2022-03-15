@@ -13,7 +13,7 @@ done
 
 oc project ${OC_PROJECT} || print_exit "Unable to access openshift cluster."
 
-oc get secrets cos-pull-secret || oc create secret docker-registry cos-pull-secret \
+oc get secrets addon-pullsecret || oc create secret docker-registry addon-pullsecret \
    --docker-server="${IMAGE_REPO_HOSTNAME}" \
    --docker-username="${IMAGE_REPO_USERNAME}" \
    --docker-password="${IMAGE_REPO_PASSWORD}" \

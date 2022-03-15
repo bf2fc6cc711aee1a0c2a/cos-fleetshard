@@ -22,7 +22,7 @@ public final class DebeziumConstants {
     public static final String STRIMZI_DOMAIN = "strimzi.io/";
     public static final String STRIMZI_IO_USE_CONNECTOR_RESOURCES = STRIMZI_DOMAIN + "use-connector-resources";
 
-    public static final LocalObjectReference IMAGE_PULL_SECRET = new LocalObjectReference("cos-pull-secret");
+    public static final LocalObjectReference IMAGE_PULL_SECRET = new LocalObjectReference("addon-pullsecret");
 
     public static final Map<String, Object> DEFAULT_CONFIG_OPTIONS = CollectionUtils.mapOf(
         "request.timeout.ms", 20_000,

@@ -41,6 +41,7 @@ import io.strimzi.api.kafka.model.authentication.KafkaClientAuthenticationPlainB
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuilder;
 import io.strimzi.api.kafka.model.template.KafkaConnectTemplateBuilder;
+import io.strimzi.api.kafka.model.template.PodTemplate;
 import io.strimzi.api.kafka.model.template.PodTemplateBuilder;
 
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
@@ -91,6 +92,11 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToData(KAFKA_CLIENT_SECRET_KEY, serviceAccountSpec.getClientSecret())
             .build();
 
+        PodTemplate podTemplate = new PodTemplateBuilder()
+            .withImagePullSecrets(IMAGE_PULL_SECRET)
+            .build();
+        podTemplate.setAdditionalProperty("restartPolicy", "Never");
+
         final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
             .withReplicas(1)
             .withBootstrapServers(connector.getSpec().getDeployment().getKafka().getUrl())
@@ -118,11 +124,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withTls(new ClientTlsBuilder()
                 .withTrustedCertificates(Collections.emptyList())
                 .build())
-            .withTemplate(new KafkaConnectTemplateBuilder()
-                .withPod(new PodTemplateBuilder()
-                    .withImagePullSecrets(IMAGE_PULL_SECRET)
-                    .build())
-                .build())
+            .withTemplate(new KafkaConnectTemplateBuilder().withPod(podTemplate).build())
             .withExternalConfiguration(new ExternalConfigurationBuilder()
                 .addToVolumes(new ExternalConfigurationVolumeSourceBuilder()
                     .withName(EXTERNAL_CONFIG_DIRECTORY)

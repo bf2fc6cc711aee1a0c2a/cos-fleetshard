@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/version: "latest"
   name: "cos-fleetshard-operator-debezium"
 imagePullSecrets:
-- name: "cos-pull-secret"
+- name: "addon-pullsecret"
 ---
 apiVersion: "v1"
 kind: "Service"
