@@ -24,6 +24,6 @@ Feature: Camel Connector Status
 
     When the klb phase is "Ready" with conditions:
       | message   | reason   | status     | type     | lastTransitionTime        |
-      | a message | a reason | the status | the type | 2021-06-12T12:35:09+02:00 |
+      | a message | a reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
     Then the connector is in phase "Monitor"
     Then the deployment is in phase "ready"

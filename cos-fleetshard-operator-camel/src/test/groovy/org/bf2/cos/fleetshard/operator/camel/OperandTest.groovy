@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.operator.camel.support.BaseSpec
 import org.mockito.Mockito
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED
+import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY
 
 class OperandTest extends BaseSpec {
@@ -30,7 +31,7 @@ class OperandTest extends BaseSpec {
             resources[0].version == KameletBinding.RESOURCE_VERSION
     }
 
-    def 'status (ready)'() {
+    def 'status (condition false)'() {
         given:
             def status = new ConnectorStatusSpec()
 
@@ -48,11 +49,36 @@ class OperandTest extends BaseSpec {
                             .build());
 
         then:
-            status.phase == STATE_READY
+            status.phase == STATE_PROVISIONING
             status.conditions.any {
                 it.type == 'Ready' && it.reason == 'reason'
             }
     }
+
+    def 'status (ready)'() {
+        given:
+        def status = new ConnectorStatusSpec()
+
+        when:
+        CamelOperandSupport.computeStatus(
+                status,
+                new KameletBindingStatusBuilder()
+                        .withPhase(KameletBindingStatus.PHASE_READY)
+                        .addToConditions(new ConditionBuilder()
+                                .withType("Ready")
+                                .withStatus("True")
+                                .withReason("reason")
+                                .withMessage("message")
+                                .build())
+                        .build());
+
+        then:
+        status.phase == STATE_READY
+        status.conditions.any {
+            it.type == 'Ready' && it.reason == 'reason'
+        }
+    }
+
 
 
     def 'status (error)'() {
