@@ -379,7 +379,15 @@ public final class CamelOperandSupport {
         if (kameletBindingStatus.phase != null) {
             switch (kameletBindingStatus.phase.toLowerCase(Locale.US)) {
                 case KameletBindingStatus.PHASE_READY:
-                    statusSpec.setPhase(ManagedConnector.STATE_READY);
+                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+                    if (kameletBindingStatus.conditions != null) {
+                        boolean readyCondition = kameletBindingStatus.conditions.stream()
+                            .anyMatch(cond -> "Ready".equals(cond.getType())
+                                && "True".equals(cond.getStatus()));
+                        if (readyCondition) {
+                            statusSpec.setPhase(ManagedConnector.STATE_READY);
+                        }
+                    }
                     break;
                 case KameletBindingStatus.PHASE_ERROR:
                     statusSpec.setPhase(ManagedConnector.STATE_FAILED);
