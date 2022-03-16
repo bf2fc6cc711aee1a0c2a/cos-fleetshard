@@ -82,6 +82,20 @@ eval $(minikube --profile cos docker-env)
 ./mvnw clean install -DskipTests=true -Pcontainer-build
 ----
 
+* *configure pull secret*
++
+In order to use private image on quay a pull secret need to be crated:
++
+** copy the content of https://vault.devshift.net/ui/vault/secrets/managed-services/show/quay-org-accounts/rhoas/robots/rhoas-pull-docker[rhoas-pull-docker] to a local file
+** create a pull secret:
++
+[source,shell]
+----
+kubectl create secret generic addon-pullsecret \
+    --from-file=${path of rhoas-pull-docker} \
+    --type=kubernetes.io/dockerconfigjson
+----
+
 * *install CRDs*
 +
 This will install the CRDs for Managed Connectors, it's Operators and Clusters.

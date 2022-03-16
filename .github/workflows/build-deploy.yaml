@@ -97,9 +97,6 @@ jobs:
           openshift_token: ${{ secrets.K8S_CLUSTER_DEV_TOKEN }}
           insecure_skip_tls_verify: false
           namespace: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
-      - name: 'Create Pull Secret'
-        run: |
-          ./etc/scripts/create_pull_secret.sh
       - name: 'Deploy FleetShard CRDs'
         run: |
           ./etc/scripts/deploy_fleetshard_crds.sh
