@@ -20,10 +20,12 @@
 
         <!-- secret -->
         <quarkus.kubernetes.secret-volumes.app-secret.secret-name>cos-fleetshard-sync-config</quarkus.kubernetes.secret-volumes.app-secret.secret-name>
+        <quarkus.kubernetes.secret-volumes.app-secret.default-mode>0644</quarkus.kubernetes.secret-volumes.app-secret.default-mode>
         <quarkus.kubernetes.mounts.app-secret.path>/mnt/app-secret</quarkus.kubernetes.mounts.app-secret.path>
 
         <!-- config map -->
         <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>cos-fleetshard-sync-config</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
+        <quarkus.kubernetes.config-map-volumes.app-config.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config.default-mode>
         <quarkus.kubernetes.mounts.app-config.path>/mnt/app-config</quarkus.kubernetes.mounts.app-config.path>
 
         <!-- smallrye -->
