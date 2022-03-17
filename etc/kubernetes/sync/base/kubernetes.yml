@@ -201,11 +201,11 @@ spec:
       volumes:
       - name: "app-secret"
         secret:
-          defaultMode: 384
+          defaultMode: 420
           optional: false
           secretName: "cos-fleetshard-sync-config"
       - configMap:
-          defaultMode: 384
+          defaultMode: 420
           name: "cos-fleetshard-sync-config"
           optional: false
         name: "app-config"
