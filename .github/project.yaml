@@ -1,4 +1,3 @@
-name: Managed Connector Services - Camel Meta Service
+name: Managed Connector Services
 release:
-  current-version: 0.0.1
-  next-version: 0.0.2-SNAPSHOT
+  current-version: v1.0.3
