@@ -29,54 +29,32 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
     }
 
     public int size() {
-        this.lock.lock();
-
-        try {
-            return this.events.size();
-        } finally {
-            this.lock.unlock();
-        }
+        return LockSupport.callWithLock(lock, this.events::size);
     }
 
     public boolean isPoisoned() {
-        this.lock.lock();
-
-        try {
-            return poison;
-        } finally {
-            this.lock.unlock();
-        }
+        return poison;
     }
 
     public void submitPoisonPill() {
-        this.lock.lock();
-
-        try {
+        LockSupport.doWithLock(this.lock, () -> {
             this.poison = true;
             this.condition.signalAll();
-        } finally {
-            this.lock.unlock();
-        }
+        });
     }
 
     public void submit(T element) {
         Objects.requireNonNull(element, "Element must not be null");
 
-        this.lock.lock();
-
-        try {
+        LockSupport.doWithLock(this.lock, () -> {
             this.events.add(element);
             this.condition.signalAll();
-        } finally {
-            this.lock.unlock();
-        }
+        });
     }
 
     public void run(Consumer<Collection<R>> consumer) {
-        this.lock.lock();
-
-        try {
-            if (events.isEmpty()) {
+        LockSupport.doWithLock(this.lock, () -> {
+            if (!poison && events.isEmpty()) {
                 return;
             }
 
@@ -84,15 +62,11 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
             poison = false;
             events.clear();
-        } finally {
-            this.lock.unlock();
-        }
+        });
     }
 
     public void poll(long time, TimeUnit unit, Consumer<Collection<R>> consumer) throws InterruptedException {
-        this.lock.lock();
-
-        try {
+        LockSupport.doWithLockT(this.lock, () -> {
             if (events.isEmpty() && !poison) {
                 boolean elapsed = this.condition.await(time, unit);
                 if (elapsed) {
@@ -104,9 +78,7 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
             poison = false;
             events.clear();
-        } finally {
-            this.lock.unlock();
-        }
+        });
     }
 
     protected abstract void process(Collection<T> elements, Consumer<Collection<R>> consumer);
