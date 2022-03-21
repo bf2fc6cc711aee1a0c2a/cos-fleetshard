@@ -25,7 +25,7 @@ patchesJson6902:
         path: /spec/template/spec/containers/0/env/-
         value:
           name: COS_OPERATOR_ID
-          value: cos-fleetshard-operator-debezium
+          value: "cos-fleetshard-operator-debezium-1.0.1"
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
