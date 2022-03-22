@@ -29,6 +29,17 @@ export COS_OPERATOR_VERSION==${some_value}
 ./mvnw -Dlocal
 ----
 
+[IMPORTANT]
+====
+The `COS_OPERATOR_ID` should be synchronized with the value assigned by the addon bundle.
+As of this commit, this would be `cos-fleetshard-operator-debezium-1.0.1`.
+
+Please check the bundles repository for this operator's latest cluster service version configuration and make sure this is set to the same value as the container's `COS_OPERATOR_ID` environment variable.
+
+Additionally, the `COS_OPERATOR_VERSION` should be synchronized from the same location but should match the cluster service version configuration's environment variable of the same name.
+As of this commit, this would be `1.5.0`.
+====
+
 By default, the application searches for:
 
 * **ConfigMap**: cos-fleetshard-operator-debezium-config
