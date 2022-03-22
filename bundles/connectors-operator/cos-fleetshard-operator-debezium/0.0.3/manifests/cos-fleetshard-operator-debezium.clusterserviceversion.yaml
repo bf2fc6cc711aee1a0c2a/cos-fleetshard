@@ -1,0 +1,136 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: ""
+    capabilities: Basic Install
+    containerImage: quay.io/rhoas/cos-fleetshard-operator-debezium@sha256:e09d06f48e037d06b4d51565053738599f9fedf807a5e3338b1d0d802ad6f077
+    repository: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard/tree/main/cos-fleetshard-operator-debezium
+  name: cos-fleetshard-operator-debezium.v0.0.3
+spec:
+  description: |-
+    The cos-fleetshard-operator-debezium is responsible for managing Debezium connectors.
+  displayName: cos-fleetshard-operator-debezium
+  maintainers:
+    - name: Red Hat OpenShift Connectors team <mas-connectors@redhat.com>
+      email: mas-connectors@redhat.com
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.3
+  replaces: cos-fleetshard-operator-debezium.v0.0.2
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: false
+    - type: MultiNamespace
+      supported: false
+    - type: AllNamespaces
+      supported: true
+  install:
+    strategy: deployment
+    spec:
+      deployments:
+        - name: cos-fleetshard-operator-debezium
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app.kubernetes.io/name: cos-fleetshard-operator-debezium
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: cos-fleetshard-operator-debezium
+              spec:
+                containers:
+                  - env:
+                      - name: COS_OPERATOR_ID
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: COS_OPERATOR_VERSION
+                        value: "0.0.3"
+                      - name: KUBERNETES_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: COS_CONNECTORS_NAMESPACE
+                        value: "${kubernetes.namespace}"
+                      - name: COS_OPERATORS_NAMESPACE
+                        value: "${kubernetes.namespace}"
+                    image: quay.io/rhoas/cos-fleetshard-operator-debezium:latest
+                    imagePullPolicy: Always
+                    livenessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/live
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                    name: cos-fleetshard-operator-debezium
+                    ports:
+                      - containerPort: 8080
+                        name: http
+                        protocol: TCP
+                    readinessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/ready
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                imagePullSecrets:
+                  - name: addon-pullsecret
+                serviceAccount: cos-fleetshard-operator-debezium
+      permissions:
+        - serviceAccountName: cos-fleetshard-operator-debezium
+          rules:
+            - apiGroups:
+                - cos.bf2.org
+              resources:
+                - managedconnectors
+                - managedconnectors/status
+                - managedconnectors/finalizers
+                - managedconnectoroperators
+                - managedconnectoroperators/status
+                - managedconnectoroperators/finalizers
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - secrets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - kafka.strimzi.io
+              resources:
+                - kafkaconnects
+                - kafkaconnectors
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch

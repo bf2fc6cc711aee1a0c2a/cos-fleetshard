@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: cos-fleetshard-operator-camel
+  name: cos-fleetshard-operator-camel
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: cos-fleetshard-operator-camel
+  type: ClusterIP

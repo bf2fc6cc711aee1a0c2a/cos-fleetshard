@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cos-fleetshard-sync
+data:
+  application.properties: |
+    quarkus.log.category."org.bf2.cos.fleetshard.sync".level = INFO
+    quarkus.log.category."org.bf2.cos.fleetshard.client".level = INFO
+    quarkus.log.category."io.fabric8.kubernetes.client.internal.VersionUsageUtils".level = ERROR
+    cos.cluster.id           = ${cluster-id}
+    cos.connectors.namespace = ${kubernetes.namespace}
+    cos.operators.namespace  = ${kubernetes.namespace}

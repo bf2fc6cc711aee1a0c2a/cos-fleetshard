@@ -1,0 +1,71 @@
+name: Addon Bundle Test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'bundles/**'
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  LANG: en_US.UTF-8
+  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kubernetes:
+        - 'v1.22.1'
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+      - name: 'Login to quay.io'
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.IMAGE_REPO_USERNAME }}
+          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
+      - name: 'Setup Python'
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+      - name: 'Install managedtenants script'
+        run: |
+          pip install managedtenants-cli~=1.14.0
+      - name: 'SetUp KinD'
+        uses: container-tools/kind-action@v1
+        with:
+          registry: false
+          node_image: kindest/node:${{ matrix.kubernetes }}
+      - name: 'Install OLM and Prometheus'
+        run: |
+          cat $HOME/.kube/config
+          kubectl create -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.20.0/crds.yaml
+          kubectl create -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/v0.20.0/olm.yaml
+          kubectl create -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml
+      - name: 'Deploy bundle'
+        env:
+          QUAY_USER: ${{secrets.IMAGE_REPO_USERNAME}}
+          QUAY_APIKEY: ${{secrets.IMAGE_REPO_PASSWORD}}
+          QUAY_ORG: ${{secrets.IMAGE_REPO_NAMESPACE}}
+        run: |
+          ./etc/scripts/deploy_bundle.sh
+      - name: 'Install bundle'
+        env:
+          QUAY_USER: ${{secrets.IMAGE_REPO_USERNAME}}
+          QUAY_APIKEY: ${{secrets.IMAGE_REPO_PASSWORD}}
+          QUAY_ORG: ${{secrets.IMAGE_REPO_NAMESPACE}}
+          CLUSTER_SECRET: ${{secrets.CLUSTER_SECRET}}
+        run: |
+          ./etc/scripts/install_bundle.sh
+      - name: 'Run test harness'
+        run: |
+          sleep 120 # need to wait fo OLM to kick in and cannot use kubectl wait
+          kubectl get subscriptions -n redhat-openshift-connectors
+          docker run --net=host -v $HOME/.kube/config:/.kube/config quay.io/rhoas/cos-fleetshard-test-harness

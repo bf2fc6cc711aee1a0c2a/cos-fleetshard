@@ -1,0 +1,5 @@
+dependencies:
+  - type: olm.package
+    value:
+      packageName: strimzi-kafka-operator
+      version: "0.28.0"

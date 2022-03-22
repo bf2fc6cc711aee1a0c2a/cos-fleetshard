@@ -1,0 +1,3 @@
+addons:
+  - name: connectors-operator
+    environments: ["stage"]

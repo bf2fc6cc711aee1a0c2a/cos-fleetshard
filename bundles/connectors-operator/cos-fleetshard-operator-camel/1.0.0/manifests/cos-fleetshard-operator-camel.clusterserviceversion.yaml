@@ -1,0 +1,135 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: ""
+    capabilities: Basic Install
+    containerImage: quay.io/rhoas/cos-fleetshard-operator-camel@sha256:36b2b5761f83c80ef4ee9f385ec26bd8521976844c9efb0d44926e3eb0cf5e50
+    repository: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard/tree/main/cos-fleetshard-operator-camel
+  name: cos-fleetshard-operator-camel.v1.0.0
+spec:
+  description: |-
+    The cos-fleetshard-operator-camel is responsible for managing Camel K connectors.
+  displayName: cos-fleetshard-operator-camel
+  maintainers:
+    - name: Red Hat OpenShift Connectors team <mas-connectors@redhat.com>
+      email: mas-connectors@redhat.com
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 1.0.0
+  replaces: cos-fleetshard-operator-camel.v0.0.3
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: false
+    - type: MultiNamespace
+      supported: false
+    - type: AllNamespaces
+      supported: true
+  install:
+    strategy: deployment
+    spec:
+      deployments:
+        - name: cos-fleetshard-operator-camel
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app.kubernetes.io/name: cos-fleetshard-operator-camel
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: cos-fleetshard-operator-camel
+              spec:
+                containers:
+                  - env:
+                      - name: COS_OPERATOR_ID
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.name
+                      - name: COS_OPERATOR_VERSION
+                        value: "1.0.0"
+                      - name: KUBERNETES_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: COS_CONNECTORS_NAMESPACE
+                        value: "${kubernetes.namespace}"
+                      - name: COS_OPERATORS_NAMESPACE
+                        value: "${kubernetes.namespace}"
+                    image: quay.io/rhoas/cos-fleetshard-operator-camel:latest
+                    imagePullPolicy: Always
+                    livenessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/live
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                    name: cos-fleetshard-operator-camel
+                    ports:
+                      - containerPort: 8080
+                        name: http
+                        protocol: TCP
+                    readinessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/ready
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                imagePullSecrets:
+                  - name: addon-pullsecret
+                serviceAccount: cos-fleetshard-operator-camel
+      permissions:
+        - serviceAccountName: cos-fleetshard-operator-camel
+          rules:
+            - apiGroups:
+                - cos.bf2.org
+              resources:
+                - managedconnectors
+                - managedconnectors/status
+                - managedconnectors/finalizers
+                - managedconnectoroperators
+                - managedconnectoroperators/status
+                - managedconnectoroperators/finalizers
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - secrets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - camel.apache.org
+              resources:
+                - kameletbindings
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch

@@ -1,0 +1,161 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: ""
+    capabilities: Basic Install
+    containerImage: quay.io/rhoas/cos-fleetshard-sync@sha256:2d3fff92b325acc899c7fd36253f450b3737a985bfa6adf49c860a66bc27a85b
+    repository: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard/tree/main/cos-fleetshard-sync
+  name: cos-fleetshard-sync.v0.0.3
+spec:
+  customresourcedefinitions:
+    owned:
+    - description: ManagedConnectorCluster is the Schema for the managedconnectorclusters API
+      displayName: Managed Connector Cluster
+      kind: ManagedConnectorCluster
+      name: managedconnectorclusters.cos.bf2.org
+      version: v1alpha1
+    - description: ManagedConnectorOperator is the Schema for the managedconnectoroperators API
+      displayName: Managed Connector Operator
+      kind: ManagedConnectorOperator
+      name: managedconnectoroperators.cos.bf2.org
+      version: v1alpha1
+    - description: ManagedConnector is the Schema for the managedconnectors API
+      displayName: Managed Connector
+      kind: ManagedConnector
+      name: managedconnectors.cos.bf2.org
+      version: v1alpha1
+  description: The cos-fleetshard-sync is responsible for synchronizing data with the control plane and creating/updating/deleting ManagedConnectors in the data plane.
+  displayName: cos-fleetshard-sync
+  maintainers:
+    - name: Red Hat OpenShift Connectors team <mas-connectors@redhat.com>
+      email: mas-connectors@redhat.com
+  maturity: alpha
+  provider:
+    name: Red Hat
+  version: 0.0.3
+  replaces: cos-fleetshard-sync.v0.0.2
+  installModes:
+    - type: OwnNamespace
+      supported: true
+    - type: SingleNamespace
+      supported: false
+    - type: MultiNamespace
+      supported: false
+    - type: AllNamespaces
+      supported: true
+  install:
+    strategy: deployment
+    spec:
+      deployments:
+        - name: cos-fleetshard-sync
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app.kubernetes.io/name: cos-fleetshard-sync
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: cos-fleetshard-sync
+              spec:
+                containers:
+                  - env:
+                      - name: KUBERNETES_NAMESPACE
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: metadata.namespace
+                      - name: SMALLRYE_CONFIG_LOCATIONS
+                        value: /mnt/app-config
+                      - name: SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS
+                        value: /mnt/app-secret
+                    image: quay.io/rhoas/cos-fleetshard-sync:latest
+                    imagePullPolicy: Always
+                    livenessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/live
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                    name: cos-fleetshard-sync
+                    ports:
+                      - containerPort: 8080
+                        name: http
+                        protocol: TCP
+                    readinessProbe:
+                      failureThreshold: 3
+                      httpGet:
+                        path: /q/health/ready
+                        port: 8080
+                        scheme: HTTP
+                      initialDelaySeconds: 0
+                      periodSeconds: 30
+                      successThreshold: 1
+                      timeoutSeconds: 10
+                    volumeMounts:
+                      - name: app-config
+                        mountPath: /mnt/app-config
+                        readOnly: false
+                      - name: app-secret
+                        mountPath: /mnt/app-secret
+                        readOnly: false
+                imagePullSecrets:
+                  - name: addon-pullsecret
+                serviceAccount: cos-fleetshard-sync
+                volumes:
+                  - name: app-config
+                    configMap:
+                      name: cos-fleetshard-sync
+                      defaultMode: 384
+                      optional: false
+                  - name: app-secret
+                    secret:
+                      secretName: addon-connectors-operator-parameters
+                      defaultMode: 384
+                      optional: false
+      permissions:
+        - serviceAccountName: cos-fleetshard-sync
+          rules:
+            - apiGroups:
+                - cos.bf2.org
+              resources:
+                - managedconnectors
+                - managedconnectors/status
+                - managedconnectors/finalizers
+                - managedconnectorclusters
+                - managedconnectorclusters/status
+                - managedconnectorclusters/finalizers
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch
+            - apiGroups:
+                - cos.bf2.org
+              resources:
+                - managedconnectoroperators
+                - managedconnectoroperators/status
+                - managedconnectoroperators/finalizers
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - ""
+              resources:
+                - secrets
+              verbs:
+                - create
+                - delete
+                - get
+                - list
+                - patch
+                - update
+                - watch

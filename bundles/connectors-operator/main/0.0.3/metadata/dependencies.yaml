@@ -1,0 +1,9 @@
+dependencies:
+  - type: olm.package
+    value:
+      packageName: cos-fleetshard-operator-camel
+      version: "0.0.3"
+  - type: olm.package
+    value:
+      packageName: cos-fleetshard-operator-debezium
+      version: "0.0.3"
