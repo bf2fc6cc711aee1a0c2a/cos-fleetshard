@@ -25,11 +25,6 @@
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
-            <artifactId>cos-fleetshard-it-resources</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-it-assertj</artifactId>
             <scope>test</scope>
         </dependency>

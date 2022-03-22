@@ -262,11 +262,6 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
-                <artifactId>cos-fleetshard-it-resources</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-it-assertj</artifactId>
                 <version>${project.version}</version>
             </dependency>

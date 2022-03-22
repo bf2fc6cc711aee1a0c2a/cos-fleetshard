@@ -1,20 +1,27 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 public final class Resources {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Resources.class);
+
     public static final String LABEL_CLUSTER_ID = "cos.bf2.org/cluster.id";
+    public static final String LABEL_NAMESPACE_ID = "cos.bf2.org/namespace.id";
     public static final String LABEL_DEPLOYMENT_ID = "cos.bf2.org/deployment.id";
     public static final String LABEL_CONNECTOR_ID = "cos.bf2.org/connector.id";
     public static final String LABEL_CONNECTOR_TYPE_ID = "cos.bf2.org/connector.type.id";
@@ -27,6 +34,10 @@ public final class Resources {
     public static final String LABEL_UOW = "cos.bf2.org/uow";
 
     public static final String ANNOTATION_UPDATED_TIMESTAMP = "cos.bf2.org/update.timestamp";
+    public static final String ANNOTATION_NAMESPACE_NAME = "cos.bf2.org/namespace.name";
+    public static final String ANNOTATION_NAMESPACE_EXPIRATION = "cos.bf2.org/namespace.expiration";
+    public static final String ANNOTATION_NAMESPACE_TENAT_KIND = "cos.bf2.org/namespace.tenant.kind";
+    public static final String ANNOTATION_NAMESPACE_TENAT_ID = "cos.bf2.org/namespace.tenant.id";
 
     public static final String CONNECTOR_PREFIX = "mctr-";
     public static final String CONNECTOR_SECRET_SUFFIX = "-config";
@@ -41,6 +52,10 @@ public final class Resources {
     public static final String LABEL_KUBERNETES_PART_OF = "app.kubernetes.io/part-of";
     public static final String LABEL_KUBERNETES_MANAGED_BY = "app.kubernetes.io/managed-by";
     public static final String LABEL_KUBERNETES_CREATED_BY = "app.kubernetes.io/created-by";
+
+    public static final String COMPONENT_CLUSTER = "cluster";
+    public static final String COMPONENT_CONNECTOR = "connector";
+    public static final String COMPONENT_NAMESPACE = "namespace";
 
     private Resources() {
     }
@@ -69,6 +84,15 @@ public final class Resources {
         }
     }
 
+    public static void setLabels(HasMetadata metadata, String name, String value, String... keyVals) {
+        Map<String, String> labels = KubernetesResourceUtil.getOrCreateLabels(metadata);
+        labels.put(name, value);
+
+        for (int i = 0; i < keyVals.length; i += 2) {
+            labels.put(keyVals[i], keyVals[i + 1]);
+        }
+    }
+
     public static String getLabel(HasMetadata metadata, String name) {
         Map<String, String> labels = metadata.getMetadata().getLabels();
         if (labels != null) {
@@ -90,6 +114,21 @@ public final class Resources {
     public static void setAnnotation(HasMetadata metadata, String name, String value) {
         if (value != null) {
             KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+        }
+    }
+
+    public static void setAnnotations(HasMetadata metadata, String name, String value, String... keyVals) {
+        Map<String, String> annotations = KubernetesResourceUtil.getOrCreateAnnotations(metadata);
+        if (value != null) {
+            annotations.put(name, value);
+        }
+
+        for (int i = 0; i < keyVals.length; i += 2) {
+            if (keyVals[i + 1] == null) {
+                continue;
+            }
+
+            annotations.put(keyVals[i], keyVals[i + 1]);
         }
     }
 
@@ -147,5 +186,30 @@ public final class Resources {
             .inNamespace(namespace)
             .withName(name)
             .get() == null;
+    }
+
+    public static void setOwnerReferences(HasMetadata target, HasMetadata owner) {
+        if (owner == null) {
+            return;
+        }
+
+        OwnerReference ref = new OwnerReference();
+        ref.setApiVersion(owner.getApiVersion());
+        ref.setKind(owner.getKind());
+        ref.setName(owner.getMetadata().getName());
+        ref.setUid(owner.getMetadata().getUid());
+        ref.setBlockOwnerDeletion(true);
+
+        KubernetesResourceUtil.getOrCreateMetadata(target).setOwnerReferences(List.of(ref));
+    }
+
+    public static void closeQuietly(final AutoCloseable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                LOGGER.debug("Exception closing: {}", closeable, e);
+            }
+        }
     }
 }

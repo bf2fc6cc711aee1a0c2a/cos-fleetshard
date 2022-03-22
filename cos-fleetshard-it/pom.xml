@@ -15,7 +15,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>resources</module>
         <module>assertj</module>
         <module>cucumber</module>
     </modules>

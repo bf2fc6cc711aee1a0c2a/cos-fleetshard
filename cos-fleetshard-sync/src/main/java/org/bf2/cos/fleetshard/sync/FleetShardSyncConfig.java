@@ -85,12 +85,6 @@ public interface FleetShardSyncConfig {
     }
 
     interface Connectors {
-        /**
-         * The namespace where {@link ManagedConnector} are placed.
-         *
-         * @return the namespace.
-         */
-        String namespace();
 
         /**
          * Determine if the synchronizer should watch {@link ManagedConnector} and report the related status to the Control

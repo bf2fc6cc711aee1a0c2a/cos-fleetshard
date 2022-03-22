@@ -71,10 +71,6 @@ To change the default values, use the following system properties:
 | ${kubernetes.namespace}
 | the namespace where operators are installed
 
-| cos.connectors.namespace
-| ${kubernetes.namespace}
-| the namespace where connectors should be created
-
 | cos.connectors.poll-interval
 | 15s
 | the interval between pool for new deployments
@@ -100,7 +96,7 @@ To change the default values, use the following system properties:
 | the interval between connectors status update
 
 | cos.cluster.status.sync-interval
-| 60s
+| 30s
 | the interval between cluster status sync
 
 | mas-sso-base-url

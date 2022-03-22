@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -44,8 +45,7 @@ public class ConnectorStatusSync {
 
         if (config.connectors().watch()) {
             LOGGER.info("Starting connector status observer");
-            connectorClient.watchConnectors(
-                connector -> queue.submit(connector.getMetadata().getName()));
+            connectorClient.watchConnectors(connector -> queue.submit(NamespacedName.of(connector)));
         }
     }
 

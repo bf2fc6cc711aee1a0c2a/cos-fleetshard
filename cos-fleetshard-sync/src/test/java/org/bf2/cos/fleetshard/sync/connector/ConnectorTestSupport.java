@@ -118,6 +118,7 @@ public final class ConnectorTestSupport {
         Supplier<JsonNode> connectorSpec,
         Supplier<JsonNode> connectorMeta) {
 
+        final String namespaceId = "nid";
         final String deploymentId = "did";
         final String connectorId = "cid";
         final String connectorTypeId = "ctid";
@@ -128,6 +129,7 @@ public final class ConnectorTestSupport {
             .metadata(new ConnectorDeploymentAllOfMetadata()
                 .resourceVersion(deploymentRevision))
             .spec(new ConnectorDeploymentSpec()
+                .namespaceId(namespaceId)
                 .connectorId(connectorId)
                 .connectorTypeId(connectorTypeId)
                 .connectorResourceVersion(1L)
@@ -166,15 +168,6 @@ public final class ConnectorTestSupport {
         when(fleetShard.getSecret(any(ConnectorDeployment.class)))
             .thenAnswer(invocation -> {
                 return lookupSecret(allSecrets.values(), clusterId, invocation.getArgument(0));
-            });
-        when(fleetShard.editConnector(any(String.class), any()))
-            .thenAnswer(invocation -> {
-                return allConnectors.computeIfPresent(
-                    invocation.getArgument(0, String.class),
-                    (k, v) -> {
-                        invocation.getArgument(1, Consumer.class).accept(v);
-                        return v;
-                    });
             });
 
         when(fleetShard.createConnector(any(ManagedConnector.class)))

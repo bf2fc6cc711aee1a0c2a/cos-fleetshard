@@ -67,17 +67,21 @@ public abstract class EventQueue<T extends Comparable<T>, R> {
 
     public void poll(long time, TimeUnit unit, Consumer<Collection<R>> consumer) throws InterruptedException {
         LockSupport.doWithLockT(this.lock, () -> {
-            if (events.isEmpty() && !poison) {
+            if (poison) {
+                process(Collections.emptyList(), consumer);
+                poison = false;
+                events.clear();
+            } else if (events.isEmpty()) {
                 boolean elapsed = this.condition.await(time, unit);
                 if (elapsed) {
-                    logger.trace("TaskQueue: await elapsed");
+                    logger.trace("EventQueue: await elapsed");
                 }
             }
 
-            process(poison ? Collections.emptyList() : events, consumer);
-
-            poison = false;
-            events.clear();
+            if (!events.isEmpty()) {
+                process(events, consumer);
+                events.clear();
+            }
         });
     }
 

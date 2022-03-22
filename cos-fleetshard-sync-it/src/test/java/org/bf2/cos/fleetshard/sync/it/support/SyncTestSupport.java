@@ -14,14 +14,20 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 
 public class SyncTestSupport {
     @Inject
@@ -42,6 +48,27 @@ public class SyncTestSupport {
         }
 
         return Serialization.jsonMapper().convertValue(items, JsonNode.class);
+    }
+
+    public static JsonNode namespaceList(ConnectorNamespace... namespaces) {
+        var items = new ConnectorNamespaceList();
+        items.page(1);
+        items.size(namespaces.length);
+        items.total(namespaces.length);
+
+        for (ConnectorNamespace namespace : namespaces) {
+            items.addItemsItem(namespace);
+        }
+
+        return Serialization.jsonMapper().convertValue(items, JsonNode.class);
+    }
+
+    public static ConnectorNamespace namespace(String id, String name, Consumer<ConnectorNamespace> consumer) {
+        ConnectorNamespace answer = new ConnectorNamespace().id(id).name(name);
+
+        consumer.accept(answer);
+
+        return answer;
     }
 
     public static ConnectorDeployment deployment(String name, long revision, Consumer<ConnectorDeploymentSpec> consumer) {
@@ -77,5 +104,9 @@ public class SyncTestSupport {
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
             .untilAsserted(runnable);
+    }
+
+    public static StringValuePattern jp(String expression, String expected) {
+        return matchingJsonPath(expression, equalTo(expected));
     }
 }

@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -7,12 +9,15 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -28,11 +33,15 @@ public class ConnectorDeploymentSync {
     @Inject
     ConnectorDeploymentProvisioner provisioner;
     @Inject
+    ConnectorNamespaceProvisioner namespaceProvisioner;
+    @Inject
     ManagedExecutor executor;
     @Inject
     FleetShardSyncConfig config;
     @Inject
     FleetShardSyncScheduler scheduler;
+    @Inject
+    FleetManagerClient fleetManager;
 
     private volatile Future<?> future;
 
@@ -70,15 +79,10 @@ public class ConnectorDeploymentSync {
 
     private void run() {
         try {
-            while (!executor.isShutdown()) {
-                final long timeout = config.connectors().provisioner().queueTimeout().toMillis();
-                queue.poll(timeout, TimeUnit.MILLISECONDS, deployments -> {
-                    LOGGER.debug("connectors to deploy: {}", deployments.size());
+            final long timeout = config.connectors().provisioner().queueTimeout().toMillis();
 
-                    for (ConnectorDeployment deployment : deployments) {
-                        provisioner.provision(deployment);
-                    }
-                });
+            while (!executor.isShutdown()) {
+                provision(timeout);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -89,6 +93,30 @@ public class ConnectorDeploymentSync {
             if (!executor.isShutdown()) {
                 future = executor.submit(this::run);
             }
+        }
+    }
+
+    @Retry(maxRetries = 10, delay = 1, delayUnit = ChronoUnit.SECONDS)
+    public void provision(long timeout) throws InterruptedException {
+        // TODO: should not be executed each time
+        fleetManager.getNamespaces(this::provisionNamespaces);
+
+        queue.poll(timeout, TimeUnit.MILLISECONDS, this::provisionConnectors);
+    }
+
+    private void provisionNamespaces(Collection<ConnectorNamespace> namespaces) {
+        LOGGER.debug("namespaces: {}", namespaces.size());
+
+        for (ConnectorNamespace namespace : namespaces) {
+            namespaceProvisioner.provision(namespace);
+        }
+    }
+
+    private void provisionConnectors(Collection<ConnectorDeployment> deployments) {
+        LOGGER.debug("deployments: {}", deployments.size());
+
+        for (ConnectorDeployment deployment : deployments) {
+            provisioner.provision(deployment);
         }
     }
 

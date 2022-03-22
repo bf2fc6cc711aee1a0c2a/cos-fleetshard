@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.it.resources;
+package org.bf2.cos.fleetshard.sync.it.support;
 
 import java.util.Map;
 import java.util.UUID;
