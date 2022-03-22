@@ -5,13 +5,18 @@ import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
-import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
-import org.bf2.cos.fleetshard.it.resources.WireMockTestInstance;
-import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
+import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
@@ -19,9 +24,9 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -30,35 +35,51 @@ import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(ConnectorStatusUpdaterTest.Profile.class)
 public class ConnectorStatusUpdaterTest extends SyncTestSupport {
     public static final String DEPLOYMENT_ID = uid();
+    public static final String CONNECTOR_ID = uid();
 
     @WireMockTestInstance
     com.github.tomakehurst.wiremock.WireMockServer server;
 
+    @ConfigProperty(name = "test.namespace")
+    String ns;
+
     @Test
     void statusIsUpdated() {
-        final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + config.cluster().id();
+        final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id();
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
         final Operator operator = new Operator(uid(), "operator-type", "1.2.3");
 
-        final ManagedConnector connector = Connectors.newConnector(
-            config.cluster().id(),
-            "connector-1",
-            DEPLOYMENT_ID,
-            Map.of());
+        final ManagedConnector connector = new ManagedConnectorBuilder()
+            .withMetadata(new ObjectMetaBuilder()
+                .withName(Connectors.generateConnectorId(DEPLOYMENT_ID))
+                .withNamespace(ns)
+                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+                .addToLabels(LABEL_CONNECTOR_ID, CONNECTOR_ID)
+                .addToLabels(LABEL_DEPLOYMENT_ID, DEPLOYMENT_ID)
+                .build())
+            .withSpec(new ManagedConnectorSpecBuilder()
+                .withClusterId(config.cluster().id())
+                .withConnectorId(CONNECTOR_ID)
+                .withDeploymentId(DEPLOYMENT_ID)
+                .build())
+            .build();
 
         connector.getSpec().setOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build());
 
         kubernetesClient
             .resources(ManagedConnector.class)
-            .inNamespace(config.connectors().namespace())
+            .inNamespace(ns)
             .create(connector);
 
         connector.getStatus().setConnectorStatus(new ConnectorStatusSpecBuilder()
@@ -69,7 +90,7 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
         kubernetesClient
             .resources(ManagedConnector.class)
-            .inNamespace(config.connectors().namespace())
+            .inNamespace(ns)
             .withName(connector.getMetadata().getName())
             .replaceStatus(connector);
 
@@ -83,16 +104,13 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
         });
     }
 
-    public static class Profile implements QuarkusTestProfile {
+    public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            final String ns = "cos-sync-" + uid();
-
             return Map.of(
-                "cos.cluster.id", uid(),
-                "test.namespace", ns,
-                "cos.connectors.namespace", ns,
-                "cos.operators.namespace", ns,
+                "cos.cluster.id", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
                 "cos.connectors.poll-interval", "disabled",
                 "cos.connectors.resync-interval", "disabled",
@@ -110,12 +128,25 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
         protected Map<String, String> doStart(com.github.tomakehurst.wiremock.WireMockServer server) {
-            MappingBuilder request = WireMock.put(WireMock.urlPathMatching(
-                "/api/connector_mgmt/v1/kafka_connector_clusters/.*/deployments/.*/status"));
+            {
+                MappingBuilder request = WireMock.get(WireMock.urlPathMatching(
+                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces"));
 
-            ResponseDefinitionBuilder response = WireMock.ok();
+                ResponseDefinitionBuilder response = WireMock.aResponse()
+                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withJsonBody(namespaceList());
 
-            server.stubFor(request.willReturn(response));
+                server.stubFor(request.willReturn(response));
+            }
+
+            {
+                MappingBuilder request = WireMock.put(WireMock.urlPathMatching(
+                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status"));
+
+                ResponseDefinitionBuilder response = WireMock.ok();
+
+                server.stubFor(request.willReturn(response));
+            }
 
             return Map.of("control-plane-base-url", server.baseUrl());
         }

@@ -38,19 +38,11 @@ spec:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "Role"
 metadata:
-  annotations: {}
-  labels:
-    app.kubernetes.io/name: "cos-fleetshard-sync"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  name: "cos-fleetshard-sync"
+  name: "cos-fleetshard-sync-operators"
 rules:
 - apiGroups:
   - "cos.bf2.org"
   resources:
-  - "managedconnectors"
-  - "managedconnectors/status"
-  - "managedconnectors/finalizers"
   - "managedconnectorclusters"
   - "managedconnectorclusters/status"
   - "managedconnectorclusters/finalizers"
@@ -72,32 +64,15 @@ rules:
   - "get"
   - "list"
   - "watch"
-- apiGroups:
-  - ""
-  resources:
-  - "secrets"
-  verbs:
-  - "create"
-  - "delete"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "RoleBinding"
 metadata:
-  annotations: {}
-  labels:
-    app.kubernetes.io/name: "cos-fleetshard-sync"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  name: "cos-fleetshard-sync"
+  name: "cos-fleetshard-sync-operators"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "Role"
-  name: "cos-fleetshard-sync"
+  name: "cos-fleetshard-sync-operators"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
@@ -113,6 +88,51 @@ roleRef:
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
+  name: "cos-fleetshard-sync-connectors"
+rules:
+- apiGroups:
+  - "cos.bf2.org"
+  resources:
+  - "managedconnectors"
+  - "managedconnectors/status"
+  - "managedconnectors/finalizers"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+- apiGroups:
+  - ""
+  resources:
+  - "secrets"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-connectors"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-connectors"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
 ---
 apiVersion: "apps/v1"
 kind: "Deployment"

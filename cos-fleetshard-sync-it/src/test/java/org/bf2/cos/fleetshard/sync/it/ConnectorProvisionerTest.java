@@ -9,12 +9,15 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.it.resources.OidcTestResource;
-import org.bf2.cos.fleetshard.it.resources.WireMockTestResource;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +28,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 
@@ -48,6 +50,9 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
     public static final String KAFKA_CLIENT_ID = uid();
     public static final String KAFKA_CLIENT_SECRET = toBase64(uid());
 
+    @ConfigProperty(name = "test.namespace")
+    String ns;
+
     @Test
     void connectorIsProvisioned() {
         {
@@ -62,13 +67,13 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 .post("/test/connectors/deployment/provisioner/queue");
 
             Secret s1 = until(
-                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
+                () -> fleetShardClient.getSecret(ns, DEPLOYMENT_ID),
                 item -> Objects.equals(
                     "1",
                     item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedConnector mc = until(
-                () -> fleetShardClient.getConnectorByDeploymentId(DEPLOYMENT_ID),
+                () -> fleetShardClient.getConnector(ns, DEPLOYMENT_ID),
                 item -> {
                     return item.getSpec().getDeployment().getDeploymentResourceVersion() == 1L
                         && item.getSpec().getDeployment().getSecret() != null;
@@ -116,13 +121,13 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 .post("/test/connectors/deployment/provisioner/queue");
 
             Secret s1 = until(
-                () -> fleetShardClient.getSecretByDeploymentId(DEPLOYMENT_ID),
+                () -> fleetShardClient.getSecret(ns, DEPLOYMENT_ID),
                 item -> Objects.equals(
                     "2",
                     item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedConnector mc = until(
-                () -> fleetShardClient.getConnectorByDeploymentId(DEPLOYMENT_ID),
+                () -> fleetShardClient.getConnector(ns, DEPLOYMENT_ID),
                 item -> {
                     return item.getSpec().getDeployment().getDeploymentResourceVersion() == 2L
                         && item.getSpec().getDeployment().getSecret() != null;
@@ -160,16 +165,13 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         }
     }
 
-    public static class Profile implements QuarkusTestProfile {
+    public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
-            final String ns = "cos-sync-" + uid();
-
             return Map.of(
-                "cos.cluster.id", uid(),
-                "test.namespace", ns,
-                "cos.connectors.namespace", ns,
-                "cos.operators.namespace", ns,
+                "cos.cluster.id", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
                 "cos.connectors.poll-interval", "disabled",
                 "cos.connectors.resync-interval", "disabled",
@@ -188,9 +190,24 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         @Override
         protected Map<String, String> doStart(WireMockServer server) {
             final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
-            final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
+            final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clusterId;
             final String deploymentsUrl = clusterUrl + "/deployments";
             final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
+
+            {
+                //
+                // Namespaces
+                //
+
+                MappingBuilder request = WireMock.get(WireMock.urlPathMatching(
+                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces"));
+
+                ResponseDefinitionBuilder response = WireMock.aResponse()
+                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withJsonBody(namespaceList());
+
+                server.stubFor(request.willReturn(response));
+            }
 
             {
                 //
@@ -199,6 +216,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
                 JsonNode list = deploymentList(
                     deployment(DEPLOYMENT_ID, 1L, spec -> {
+                        spec.namespaceId(clusterId);
                         spec.connectorId("connector-1");
                         spec.connectorTypeId("connector-type-1");
                         spec.connectorResourceVersion(1L);
@@ -240,6 +258,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
                 JsonNode list = deploymentList(
                     deployment(DEPLOYMENT_ID, 2L, spec -> {
+                        spec.namespaceId(clusterId);
                         spec.connectorId("connector-1");
                         spec.connectorTypeId("connector-type-1");
                         spec.connectorResourceVersion(1L);
@@ -273,6 +292,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
 
                 server.stubFor(request.willReturn(response));
             }
+
             {
                 //
                 // Status

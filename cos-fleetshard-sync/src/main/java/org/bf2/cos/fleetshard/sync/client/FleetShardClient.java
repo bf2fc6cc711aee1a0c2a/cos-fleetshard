@@ -1,9 +1,9 @@
 package org.bf2.cos.fleetshard.sync.client;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -14,15 +14,17 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.NamespacedName;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.watch.Informers;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -30,29 +32,32 @@ import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 
 @ApplicationScoped
 public class FleetShardClient {
-
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardSyncConfig config;
 
-    private volatile SharedIndexInformer<ManagedConnector> informer;
+    private volatile SharedIndexInformer<ManagedConnector> connectorsInformer;
+    private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
+    private volatile SharedIndexInformer<Namespace> namespaceInformers;
 
     public void start() {
-        informer = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
+        operatorsInformer = kubernetesClient.resources(ManagedConnectorOperator.class)
+            .inNamespace(config.operators().namespace())
+            .inform();
+        namespaceInformers = kubernetesClient.namespaces()
+            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
+            .inform();
+        connectorsInformer = kubernetesClient.resources(ManagedConnector.class)
+            .inAnyNamespace()
             .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
             .inform();
     }
 
     public void stop() {
-        if (informer != null) {
-            informer.stop();
-        }
-    }
-
-    public String getConnectorsNamespace() {
-        return config.connectors().namespace();
+        Resources.closeQuietly(operatorsInformer);
+        Resources.closeQuietly(namespaceInformers);
+        Resources.closeQuietly(connectorsInformer);
     }
 
     public String getClusterId() {
@@ -64,10 +69,30 @@ public class FleetShardClient {
     }
 
     public long getMaxDeploymentResourceRevision() {
-        return this.informer.getIndexer().list().stream()
+        return this.connectorsInformer.getIndexer().list().stream()
             .mapToLong(c -> c.getSpec().getDeployment().getDeploymentResourceVersion())
             .max()
             .orElse(0);
+    }
+
+    // *************************************
+    //
+    // Namespaces
+    //
+    // *************************************
+
+    public Optional<Namespace> getNamespace(String namespaceId) {
+        return Optional.ofNullable(
+            this.kubernetesClient
+                .namespaces()
+                .withName(Namespaces.generateNamespaceId(namespaceId))
+                .get());
+    }
+
+    public List<Namespace> getNamespaces() {
+        return namespaceInformers != null
+            ? namespaceInformers.getIndexer().list()
+            : Collections.emptyList();
     }
 
     // *************************************
@@ -76,20 +101,31 @@ public class FleetShardClient {
     //
     // *************************************
 
-    public Optional<Secret> getSecret(ConnectorDeployment deployment) {
-        return getSecretByDeploymentId(deployment.getId());
-    }
-
     public Secret createSecret(Secret secret) {
         return this.kubernetesClient.secrets()
-            .inNamespace(getConnectorsNamespace())
+            .inNamespace(secret.getMetadata().getNamespace())
+            .withName(secret.getMetadata().getName())
             .createOrReplace(secret);
     }
 
-    public Optional<Secret> getSecretByDeploymentId(String deploymentId) {
+    public Optional<Secret> getSecret(ConnectorDeployment deployment) {
+        return getSecret(
+            deployment.getSpec().getNamespaceId(),
+            deployment.getId());
+    }
+
+    public Optional<Secret> getSecret(NamespacedName id) {
         return Optional.ofNullable(
             kubernetesClient.secrets()
-                .inNamespace(getConnectorsNamespace())
+                .inNamespace(id.getNamespace())
+                .withName(id.getName())
+                .get());
+    }
+
+    public Optional<Secret> getSecret(String namespaceId, String deploymentId) {
+        return Optional.ofNullable(
+            kubernetesClient.secrets()
+                .inNamespace(Namespaces.generateNamespaceId(namespaceId))
                 .withName(Secrets.generateConnectorSecretId(deploymentId))
                 .get());
     }
@@ -102,58 +138,61 @@ public class FleetShardClient {
 
     public Boolean deleteConnector(ManagedConnector managedConnector) {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
+            .inNamespace(managedConnector.getMetadata().getNamespace())
             .withName(managedConnector.getMetadata().getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
             .delete();
     }
 
-    public Optional<ManagedConnector> getConnectorByName(String name) {
-        if (informer == null) {
+    public Optional<ManagedConnector> getConnector(NamespacedName id) {
+        if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        final String key = getConnectorsNamespace() + "/" + name;
-        final ManagedConnector val = informer.getIndexer().getByKey(key);
+        final String key = id.getNamespace() + "/" + id.getName();
+        final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
     }
 
-    public Optional<ManagedConnector> getConnectorByDeploymentId(String deploymentId) {
-        return getConnectorByName(Connectors.generateConnectorId(deploymentId));
+    public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
+        return getConnector(
+            deployment.getSpec().getNamespaceId(),
+            deployment.getId());
     }
 
-    public Optional<ManagedConnector> getConnector(ConnectorDeployment deployment) {
-        return getConnectorByName(Connectors.generateConnectorId(deployment.getId()));
+    public Optional<ManagedConnector> getConnector(String namespaceId, String deploymentId) {
+        if (connectorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = Namespaces.generateNamespaceId(namespaceId) + "/" + Connectors.generateConnectorId(deploymentId);
+        final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
     }
 
     public List<ManagedConnector> getAllConnectors() {
-        if (informer == null) {
+        if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        return informer.getIndexer().list();
+        return connectorsInformer.getIndexer().list();
     }
 
     public void watchConnectors(Consumer<ManagedConnector> handler) {
-        if (informer == null) {
+        if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        informer.addEventHandler(Informers.wrap(handler));
+        connectorsInformer.addEventHandler(Informers.wrap(handler));
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(connector.getMetadata().getName())
             .createOrReplace(connector);
-    }
-
-    public ManagedConnector editConnector(String name, Consumer<ManagedConnector> editor) {
-        return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
-            .withName(name)
-            .accept(editor);
     }
 
     // *************************************
@@ -162,17 +201,10 @@ public class FleetShardClient {
     //
     // *************************************
 
-    public List<Operator> lookupOperators() {
-        return kubernetesClient.resources(ManagedConnectorOperator.class)
-            .inNamespace(this.getConnectorsNamespace())
-            .list()
-            .getItems()
-            .stream()
-            .map(mco -> new Operator(
-                mco.getMetadata().getName(),
-                mco.getSpec().getType(),
-                mco.getSpec().getVersion()))
-            .collect(Collectors.toList());
+    public List<ManagedConnectorOperator> getOperators() {
+        return operatorsInformer != null
+            ? operatorsInformer.getIndexer().list()
+            : Collections.emptyList();
     }
 
     // *************************************
@@ -184,7 +216,7 @@ public class FleetShardClient {
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
         return Optional.ofNullable(
             kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(getConnectorsNamespace())
+                .inNamespace(this.config.operators().namespace())
                 .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + getClusterId())
                 .get());
     }
@@ -202,7 +234,7 @@ public class FleetShardClient {
                 .build();
 
             return kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(getConnectorsNamespace())
+                .inNamespace(this.config.operators().namespace())
                 .withName(cluster.getMetadata().getName())
                 .createOrReplace(cluster);
         });

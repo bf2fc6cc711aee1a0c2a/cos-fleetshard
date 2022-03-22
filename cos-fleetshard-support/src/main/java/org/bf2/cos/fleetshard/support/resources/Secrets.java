@@ -12,15 +12,8 @@ import java.util.zip.Checksum;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.utils.Serialization;
-
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION;
 
 public final class Secrets {
     public static final String SECRET_ENTRY_CONNECTOR = "connector";
@@ -123,31 +116,29 @@ public final class Secrets {
             StandardCharsets.UTF_8);
     }
 
-    public static Secret newSecret(
-        String name,
-        String clusterId,
-        String connectorId,
-        String deploymentId,
-        long deploymentResourceVersion,
-        Map<String, String> additionalLabels) {
+    public static String generateConnectorSecretId(String id) {
+        String answer = id;
 
-        return new SecretBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(name)
-                .addToLabels(LABEL_CLUSTER_ID, clusterId)
-                .addToLabels(LABEL_CONNECTOR_ID, connectorId)
-                .addToLabels(LABEL_DEPLOYMENT_ID, deploymentId)
-                .addToLabels(LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deploymentResourceVersion)
-                .addToLabels(additionalLabels)
-                .build())
-            .build();
+        if (!answer.startsWith(Resources.CONNECTOR_PREFIX)) {
+            answer = Resources.CONNECTOR_PREFIX + answer;
+        }
+        if (!answer.endsWith(Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX)) {
+            answer += Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;
+        }
+
+        return answer;
     }
 
-    public static String generateConnectorSecretId(String deploymentId) {
-        return Resources.CONNECTOR_PREFIX + deploymentId + Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;
-    }
+    public static String generateSecretId(String id) {
+        String answer = id;
 
-    public static String generateSecretId(String deploymentId) {
-        return Resources.CONNECTOR_PREFIX + deploymentId + Resources.CONNECTOR_SECRET_SUFFIX;
+        if (!answer.startsWith(Resources.CONNECTOR_PREFIX)) {
+            answer = Resources.CONNECTOR_PREFIX + answer;
+        }
+        if (!answer.endsWith(Resources.CONNECTOR_SECRET_SUFFIX)) {
+            answer += Resources.CONNECTOR_SECRET_SUFFIX;
+        }
+
+        return answer;
     }
 }

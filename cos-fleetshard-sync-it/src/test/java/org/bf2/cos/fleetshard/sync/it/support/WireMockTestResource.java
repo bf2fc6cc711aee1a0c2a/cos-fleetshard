@@ -1,5 +1,7 @@
-package org.bf2.cos.fleetshard.it.resources;
+package org.bf2.cos.fleetshard.sync.it.support;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
@@ -10,6 +12,15 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 public abstract class WireMockTestResource implements QuarkusTestResourceLifecycleManager {
     private com.github.tomakehurst.wiremock.WireMockServer server;
+
+    private final Map<String, String> args = new HashMap<>();
+
+    @Override
+    public void init(Map<String, String> initArgs) {
+        if (initArgs != null) {
+            this.args.putAll(initArgs);
+        }
+    }
 
     @Override
     public Map<String, String> start() {
@@ -38,6 +49,10 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
 
     protected com.github.tomakehurst.wiremock.WireMockServer getServer() {
         return server;
+    }
+
+    protected Map<String, String> getArguments() {
+        return Collections.unmodifiableMap(this.args);
     }
 
     protected void injectServerInstance(TestInjector testInjector) {

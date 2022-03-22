@@ -4,6 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
+import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 
 import io.quarkus.scheduler.Scheduled;
 
@@ -11,9 +12,13 @@ import io.quarkus.scheduler.Scheduled;
 public class ConnectorClusterStatusSync {
     @Inject
     FleetManagerClient controlPlane;
+    @Inject
+    FleetShardClient fleetShardClient;
 
-    @Scheduled(every = "{cos.cluster.status.sync-interval:60s}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @Scheduled(every = "{cos.cluster.status.sync-interval:30s}", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
     void run() {
-        controlPlane.updateClusterStatus();
+        controlPlane.updateClusterStatus(
+            fleetShardClient.getOperators(),
+            fleetShardClient.getNamespaces());
     }
 }

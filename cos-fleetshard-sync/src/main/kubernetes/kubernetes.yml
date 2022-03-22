@@ -7,20 +7,17 @@ imagePullSecrets:
   - name: addon-pullsecret
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
-  name: cos-fleetshard-sync
+  name: cos-fleetshard-sync-connectors
 rules:
-# operator custom resources
+# operator custom resources RW
 - apiGroups:
   - cos.bf2.org
   resources:
   - managedconnectors
   - managedconnectors/status
   - managedconnectors/finalizers
-  - managedconnectorclusters
-  - managedconnectorclusters/status
-  - managedconnectorclusters/finalizers
   verbs:
   - create
   - delete
@@ -29,16 +26,6 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-    - cos.bf2.org
-  resources:
-    - managedconnectoroperators
-    - managedconnectoroperators/status
-    - managedconnectoroperators/finalizers
-  verbs:
-    - get
-    - list
-    - watch
 # managed connector resources
 - apiGroups:
     - ""
@@ -54,16 +41,61 @@ rules:
     - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
-  name: cos-fleetshard-sync
+  name: cos-fleetshard-sync-connectors
 roleRef:
-  kind: Role
+  kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
-  name: cos-fleetshard-sync
+  name: cos-fleetshard-sync-connectors
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard-sync
+  namespace: placeholder
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cos-fleetshard-sync-operators
+rules:
+# operator custom resources RW
+- apiGroups:
+    - cos.bf2.org
+  resources:
+    - managedconnectorclusters
+    - managedconnectorclusters/status
+    - managedconnectorclusters/finalizers
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+# operator custom resources RO
+- apiGroups:
+    - cos.bf2.org
+  resources:
+    - managedconnectoroperators
+    - managedconnectoroperators/status
+    - managedconnectoroperators/finalizers
+  verbs:
+    - get
+    - list
+    - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cos-fleetshard-sync-operators
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-sync-operators
+subjects:
+  - kind: ServiceAccount
+    name: cos-fleetshard-sync
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

@@ -21,7 +21,7 @@ tags:
     description: "only accessible by connector fleet shard agents"
 
 paths:
-  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/status':
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -51,7 +51,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 400InvalidIdExample:
                   $ref: '#/components/examples/400InvalidIdExample'
@@ -60,14 +60,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 404Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/404Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/404Example'
           # This is deliberate to hide the endpoints for unauthorised users
           description: Auth token is not valid.
 
-  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments':
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/deployments':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -84,8 +84,8 @@ paths:
       summary: Returns a list of connector deployments assigned to the cluster.
       description: Returns a list of connector deployments assigned to the cluster.
       parameters:
-        - $ref: 'kas-fleet-manager.yaml#/components/parameters/page'
-        - $ref: 'kas-fleet-manager.yaml#/components/parameters/size'
+        - $ref: 'connector_mgmt.yaml#/components/parameters/page'
+        - $ref: 'connector_mgmt.yaml#/components/parameters/size'
         - in: query
           name: gt_version
           description: filters the connectors to those with a version greater than the given value
@@ -112,22 +112,22 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 401Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/401Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
           description: Auth token is invalid
         '500':
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 500Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}':
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -160,28 +160,28 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 401Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/401Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
           description: Auth token is invalid
         '410':
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
           description: deployment has been deleted
         '500':
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 500Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/500Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
-  '/api/connector_mgmt/v1/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
@@ -216,7 +216,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 400InvalidIdExample:
                   $ref: '#/components/examples/400InvalidIdExample'
@@ -225,10 +225,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
               examples:
                 404Example:
-                  $ref: 'kas-fleet-manager.yaml#/components/examples/404Example'
+                  $ref: 'connector_mgmt.yaml#/components/examples/404Example'
           # This is deliberate to hide the endpoints for unauthorised users
           description: Auth token is not valid.
         '410':
@@ -236,7 +236,109 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'kas-fleet-manager.yaml#/components/schemas/Error'
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/namespaces':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAsignedConnectorNamespaces
+      summary: Returns all connector namespaces assigned to the cluster.
+      description: Returns all connector namespaces assigned to the cluster.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespaceList'
+          description: All connector namespaces in cluster
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
+          description: Auth token is invalid
+        '410':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+          description: cluster has been deleted
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
+          description: Unexpected error occurred
+
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/namespaces/{namespace_id}':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: namespace_id
+        description: The id of the namespace
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAsignedConnectorNamespaceById
+      summary: Returns a connector namespace assigned to the cluster.
+      description: Returns a connector namespace assigned to the cluster.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespace'
+          description: A connector namespace
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
+          description: Auth token is invalid
+        '410':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+          description: namespace has been deleted
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
+          description: Unexpected error occurred
 
 components:
   schemas:
@@ -268,7 +370,7 @@ components:
           type: string
         error:
           nullable: true
-          $ref: "kas-fleet-manager.yaml#/components/schemas/Error"
+          $ref: "connector_mgmt.yaml#/components/schemas/Error"
         object:
           type: object
           nullable: true
@@ -276,7 +378,7 @@ components:
     ConnectorDeployment:
       description: Holds the deployment configuration of a connector
       allOf:
-        - $ref: 'kas-fleet-manager.yaml#/components/schemas/ObjectReference'
+        - $ref: 'connector_mgmt.yaml#/components/schemas/ObjectReference'
         - type: object
           properties:
             metadata:
@@ -312,6 +414,8 @@ components:
           type: integer
           format: int64
         connector_type_id:
+          type: string
+        namespace_id:
           type: string
         connector_spec:
           type: object
@@ -353,7 +457,7 @@ components:
 
     ConnectorDeploymentList:
       allOf:
-        - $ref: 'kas-fleet-manager.yaml#/components/schemas/List'
+        - $ref: 'connector_mgmt.yaml#/components/schemas/List'
         - type: object
           properties:
             items:
@@ -383,6 +487,29 @@ components:
           description: the version of the operator
           type: string
 
+    ConnectorNamespaceStatus:
+      description: "Schema for the request to update a data plane namespaces' status"
+      type: object
+      required:
+        - id
+        - phase
+        - version
+        - connectors_deployed
+      properties:
+        id:
+          type: string
+        phase:
+          type: string
+        version:
+          type: string
+        connectors_deployed:
+          type: integer
+          format: int32
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
+
     ConnectorClusterStatus:
       description: "Schema for the request to update a data plane cluster's status"
       type: object
@@ -409,6 +536,10 @@ components:
               status:
                 description: the status of the operator
                 type: string
+        namespaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectorNamespaceStatus'
 
   securitySchemes:
     Bearer:
