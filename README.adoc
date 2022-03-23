@@ -92,7 +92,7 @@ In order to use private image on quay a pull secret need to be crated:
 [source,shell]
 ----
 kubectl create secret generic addon-pullsecret \
-    --from-file=${path of rhoas-pull-docker} \
+    --from-file=.dockerconfigjson=${path of rhoas-pull-docker} \
     --type=kubernetes.io/dockerconfigjson
 ----
 
