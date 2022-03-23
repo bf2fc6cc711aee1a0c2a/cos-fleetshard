@@ -25,7 +25,13 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.ClientTlsBuilder;
@@ -45,7 +51,6 @@ import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuild
 import io.strimzi.api.kafka.model.template.KafkaConnectTemplateBuilder;
 import io.strimzi.api.kafka.model.template.PodTemplateBuilder;
 
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.DEFAULT_IMAGE_PULL_SECRET_NAME;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_CLIENT_SECRET_KEY;
@@ -147,7 +152,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .build())
             .withTemplate(new KafkaConnectTemplateBuilder()
                 .withPod(new PodTemplateBuilder()
-                    .withImagePullSecrets(new LocalObjectReference(DEFAULT_IMAGE_PULL_SECRET_NAME))
+                    .withImagePullSecrets(configuration.imagePullSecretsName())
                     .build())
                 .build())
             .withJmxPrometheusExporterMetricsConfig(
