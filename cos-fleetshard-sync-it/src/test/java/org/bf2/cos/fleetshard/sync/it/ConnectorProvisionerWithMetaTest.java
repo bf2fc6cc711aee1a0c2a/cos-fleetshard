@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -34,7 +35,6 @@ import io.restassured.RestAssured;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.mapOf;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
@@ -152,12 +152,11 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
                                 .put("type", "camel-connector-operator")
                                 .put("version", "[1.0.0,2.0.0)");
                         }));
-                        spec.desiredState(DESIRED_STATE_READY);
+                        spec.desiredState(ConnectorDesiredState.READY);
                     }));
 
                 MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                    .withQueryParam("gt_version", equalTo("0"))
-                    .withQueryParam("watch", equalTo("false"));
+                    .withQueryParam("gt_version", equalTo("0"));
                 ResponseDefinitionBuilder response = WireMock.aResponse()
                     .withHeader("Content-Type", APPLICATION_JSON)
                     .withJsonBody(list);

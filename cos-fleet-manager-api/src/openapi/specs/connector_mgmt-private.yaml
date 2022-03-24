@@ -427,7 +427,7 @@ components:
           description: an optional operator id that the connector should be run under.
           type: string
         desired_state:
-          type: string
+          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorDesiredState'
         shard_metadata:
           type: object
 
@@ -436,7 +436,7 @@ components:
       type: object
       properties:
         phase:
-          type: string
+          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorState'
         resource_version:
           type: integer
           format: int64
@@ -499,7 +499,7 @@ components:
         id:
           type: string
         phase:
-          type: string
+          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespaceState'
         version:
           type: string
         connectors_deployed:
@@ -515,7 +515,7 @@ components:
       type: object
       properties:
         phase:
-          type: string
+          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorClusterState'
         version:
           type: string
         conditions:

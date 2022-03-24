@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
+import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.SchemaRegistryConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
@@ -37,7 +38,6 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 import static org.mockito.ArgumentMatchers.any;
@@ -142,7 +142,7 @@ public final class ConnectorTestSupport {
                     .clientSecret(toBase64(UUID.randomUUID().toString())))
                 .connectorSpec(connectorSpec.get())
                 .shardMetadata(connectorMeta.get())
-                .desiredState(DESIRED_STATE_READY));
+                .desiredState(ConnectorDesiredState.READY));
     }
 
     @SuppressWarnings("unchecked")

@@ -16,7 +16,6 @@ import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -54,6 +53,11 @@ public class ConnectorDeploymentProvisioner {
     public void provision(ConnectorDeployment deployment) {
         final String uow = uid();
 
+        if (config != null && !config.tenancy().enabled()) {
+            LOGGER.info("tenancy is not enabled, defaulting to namespace: {}", config.operators().namespace());
+            deployment.getSpec().setNamespaceId(config.operators().namespace());
+        }
+
         LOGGER.info("Got cluster_id: {}, namespace_d: {}, connector_id: {}, deployment_id: {}, resource_version: {}, uow: {}",
             fleetShard.getClusterId(),
             deployment.getSpec().getNamespaceId(),
@@ -74,6 +78,7 @@ public class ConnectorDeploymentProvisioner {
     }
 
     private ManagedConnector createManagedConnector(String uow, ConnectorDeployment deployment, HasMetadata owner) {
+
         ManagedConnector connector = fleetShard.getConnector(deployment).orElseGet(() -> {
             LOGGER.info(
                 "Connector not found (cluster_id: {}, namespace_id: {}, connector_id: {}, deployment_id: {}, resource_version: {}), creating a new one",
@@ -85,7 +90,7 @@ public class ConnectorDeploymentProvisioner {
 
             ManagedConnector answer = new ManagedConnector();
             answer.setMetadata(new ObjectMeta());
-            answer.getMetadata().setNamespace(Namespaces.generateNamespaceId(deployment.getSpec().getNamespaceId()));
+            answer.getMetadata().setNamespace(fleetShard.generateNamespaceId(deployment.getSpec().getNamespaceId()));
             answer.getMetadata().setName(Connectors.generateConnectorId(deployment.getId()));
 
             Resources.setLabels(
@@ -173,7 +178,7 @@ public class ConnectorDeploymentProvisioner {
             uow);
 
         connector.getSpec().getDeployment().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
-        connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState());
+        connector.getSpec().getDeployment().setDesiredState(deployment.getSpec().getDesiredState().getValue());
         connector.getSpec().getDeployment().setConnectorTypeId(deployment.getSpec().getConnectorTypeId());
         connector.getSpec().getDeployment().setConnectorResourceVersion(deployment.getSpec().getConnectorResourceVersion());
 
@@ -222,7 +227,7 @@ public class ConnectorDeploymentProvisioner {
 
                 Secret answer = new Secret();
                 answer.setMetadata(new ObjectMeta());
-                answer.getMetadata().setNamespace(Namespaces.generateNamespaceId(deployment.getSpec().getNamespaceId()));
+                answer.getMetadata().setNamespace(fleetShard.generateNamespaceId(deployment.getSpec().getNamespaceId()));
                 answer.getMetadata().setName(Secrets.generateConnectorSecretId(deployment.getId()));
 
                 Resources.setLabels(

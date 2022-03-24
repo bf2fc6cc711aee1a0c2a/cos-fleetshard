@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.sync.connector;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
+import org.bf2.cos.fleet.manager.model.ConnectorState;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.DeploymentSpec;
@@ -13,9 +14,6 @@ import io.fabric8.kubernetes.api.model.Condition;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 
 public class ConnectorStatusExtractor {
     public static ConnectorDeploymentStatus extract(ManagedConnector connector) {
@@ -29,7 +27,7 @@ public class ConnectorStatusExtractor {
         status.setResourceVersion(deployment.getDeploymentResourceVersion());
 
         if (connector.getSpec().getOperatorSelector() == null || connector.getSpec().getOperatorSelector().getId() == null) {
-            status.setPhase(STATE_FAILED);
+            status.setPhase(ConnectorState.FAILED);
             status.addConditionsItem(new MetaV1Condition()
                 .type(Conditions.TYPE_READY)
                 .status(Conditions.STATUS_FALSE)
@@ -50,7 +48,8 @@ public class ConnectorStatusExtractor {
 
             if (connector.getStatus().getConnectorStatus() != null) {
                 if (connector.getStatus().getConnectorStatus().getPhase() != null) {
-                    status.setPhase(connector.getStatus().getConnectorStatus().getPhase());
+                    status.setPhase(ConnectorState.fromValue(
+                        connector.getStatus().getConnectorStatus().getPhase()));
                 }
                 if (connector.getStatus().getConnectorStatus().getConditions() != null) {
                     for (var cond : connector.getStatus().getConnectorStatus().getConditions()) {
@@ -61,12 +60,12 @@ public class ConnectorStatusExtractor {
         }
 
         if (status.getPhase() == null) {
+            status.setPhase(ConnectorState.PROVISIONING);
+
             if (DESIRED_STATE_DELETED.equals(deployment.getDesiredState())) {
-                status.setPhase(STATE_DE_PROVISIONING);
+                status.setPhase(ConnectorState.DEPROVISIONING);
             } else if (DESIRED_STATE_STOPPED.equals(deployment.getDesiredState())) {
-                status.setPhase(STATE_DE_PROVISIONING);
-            } else {
-                status.setPhase(STATE_PROVISIONING);
+                status.setPhase(ConnectorState.DEPROVISIONING);
             }
         }
 

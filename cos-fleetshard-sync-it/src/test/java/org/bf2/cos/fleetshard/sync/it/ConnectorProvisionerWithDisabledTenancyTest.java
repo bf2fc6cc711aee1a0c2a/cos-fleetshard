@@ -1,14 +1,12 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -16,8 +14,10 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,77 +25,69 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 
-import io.fabric8.kubernetes.api.model.Namespace;
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.toBase64;
 
 @QuarkusTest
-@TestProfile(ConnectorProvisionerWithNamespacesTest.Profile.class)
-public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
+@TestProfile(ConnectorProvisionerWithDisabledTenancyTest.Profile.class)
+public class ConnectorProvisionerWithDisabledTenancyTest extends SyncTestSupport {
+    public static final String DEPLOYMENT_ID = uid();
     public static final String KAFKA_URL = "kafka.acme.com:2181";
     public static final String KAFKA_CLIENT_ID = uid();
     public static final String KAFKA_CLIENT_SECRET = toBase64(uid());
 
-    @Test
-    void connectorIsProvisionedInNamespace() {
-        final String deploymentId = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
+    @WireMockTestInstance
+    com.github.tomakehurst.wiremock.WireMockServer server;
 
+    @ConfigProperty(name = "test.namespace")
+    String ns;
+
+    @Test
+    void connectorIsProvisioned() {
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)
             .accept(MediaType.TEXT_PLAIN)
             .body(0L)
             .post("/test/connectors/deployment/provisioner/queue");
 
-        Namespace ns1 = until(
-            () -> fleetShardClient.getNamespace(deploymentId),
-            item -> {
-                return item != null; // && item.getStatus() != null && "Active".equals(item.getStatus().getPhase());
-            });
-
-        assertThat(ns1).satisfies(item -> {
-            assertThat(item.getMetadata().getName())
-                .isEqualTo(Namespaces.generateNamespaceId(deploymentId));
-
-            assertThat(item.getMetadata().getLabels())
-                .containsEntry(Resources.LABEL_CLUSTER_ID, fleetShardClient.getClusterId())
-                .containsEntry(Resources.LABEL_NAMESPACE_ID, deploymentId)
-                .containsEntry(Resources.LABEL_KUBERNETES_MANAGED_BY, fleetShardClient.getClusterId())
-                .containsEntry(Resources.LABEL_KUBERNETES_CREATED_BY, fleetShardClient.getClusterId())
-                .containsEntry(Resources.LABEL_KUBERNETES_PART_OF, fleetShardClient.getClusterId())
-                .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
-                .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deploymentId);
-        });
-
-        RestAssured.given()
-            .contentType(MediaType.TEXT_PLAIN)
-            .accept(MediaType.TEXT_PLAIN)
-            .body(1L)
-            .post("/test/connectors/deployment/provisioner/queue");
+        until(
+            () -> fleetShardClient.getSecret(ns, DEPLOYMENT_ID),
+            item -> Objects.equals(
+                "1",
+                item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
         until(
-            () -> fleetShardClient.getConnector(deploymentId, deploymentId),
+            () -> fleetShardClient.getConnector(ns, DEPLOYMENT_ID),
             item -> {
                 return item.getSpec().getDeployment().getDeploymentResourceVersion() == 1L
                     && item.getSpec().getDeployment().getSecret() != null;
             });
+
+        final String namespacesUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/.*/namespaces";
+        final RequestPatternBuilder namespacesReq = anyRequestedFor(urlPathMatching(namespacesUrl));
+
+        server.verify(0, namespacesReq);
     }
 
     public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                "test.deployment.id", uid(),
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.tenancy.enabled", "false",
                 "cos.cluster.status.sync-interval", "disabled",
                 "cos.connectors.poll-interval", "disabled",
                 "cos.connectors.resync-interval", "disabled",
@@ -113,44 +105,23 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
         protected Map<String, String> doStart(WireMockServer server) {
-            final String deploymentId = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
             final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
-            final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clusterId;
+            final String clusterUrl = "/api/connector_mgmt/v1/kafka_connector_clusters/" + clusterId;
             final String deploymentsUrl = clusterUrl + "/deployments";
-            final String statusUrl = clusterUrl + "/deployments/.*/status";
+            final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
 
             {
-                //
-                // Namespaces
-                //
+                MappingBuilder request = WireMock.get(urlPathMatching(
+                    "/api/connector_mgmt/v1/kafka_connector_clusters/.*/namespaces"));
 
-                MappingBuilder request = WireMock.get(WireMock.urlPathMatching(
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces"));
-
-                ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
-                    .withJsonBody(namespaceList(
-                        namespace(deploymentId, deploymentId, ns -> {
-                            ConnectorNamespaceTenant tenant = new ConnectorNamespaceTenant()
-                                .id(uid())
-                                .kind(ConnectorNamespaceTenantKind.ORGANISATION);
-
-                            ns.setTenant(tenant);
-                            ns.setExpiration(new Date().toString());
-                        })));
-
-                server.stubFor(request.willReturn(response));
+                server.stubFor(request.willReturn(WireMock.ok()));
             }
 
             {
-                //
-                // Deployments
-                //
-
                 JsonNode list = deploymentList(
-                    deployment(deploymentId, 1L, spec -> {
-                        spec.namespaceId(deploymentId);
-                        spec.connectorId(deploymentId);
+                    deployment(DEPLOYMENT_ID, 1L, spec -> {
+                        spec.namespaceId(clusterId);
+                        spec.connectorId("connector-1");
                         spec.connectorTypeId("connector-type-1");
                         spec.connectorResourceVersion(1L);
                         spec.kafka(
@@ -174,40 +145,28 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
                         spec.desiredState(ConnectorDesiredState.READY);
                     }));
 
-                {
-                    MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                        .withQueryParam("gt_version", equalTo("0"));
-                    ResponseDefinitionBuilder response = WireMock.aResponse()
-                        .withHeader("Content-Type", APPLICATION_JSON)
-                        .withJsonBody(deploymentList());
+                MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
+                    .withQueryParam("gt_version", equalTo("0"));
+                ResponseDefinitionBuilder response = WireMock.aResponse()
+                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withJsonBody(list);
 
-                    server.stubFor(request.willReturn(response));
-                }
-
-                {
-                    MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                        .withQueryParam("gt_version", equalTo("1"));
-                    ResponseDefinitionBuilder response = WireMock.aResponse()
-                        .withHeader("Content-Type", APPLICATION_JSON)
-                        .withJsonBody(list);
-
-                    server.stubFor(request.willReturn(response));
-
-                }
+                server.stubFor(request.willReturn(response));
             }
 
             {
-                //
-                // Status
-                //
-
-                MappingBuilder request = WireMock.put(WireMock.urlPathMatching(statusUrl));
+                MappingBuilder request = WireMock.put(WireMock.urlPathEqualTo(statusUrl));
                 ResponseDefinitionBuilder response = WireMock.ok();
 
                 server.stubFor(request.willReturn(response));
             }
 
             return Map.of("control-plane-base-url", server.baseUrl());
+        }
+
+        @Override
+        public void inject(QuarkusTestResourceLifecycleManager.TestInjector testInjector) {
+            injectServerInstance(testInjector);
         }
     }
 }

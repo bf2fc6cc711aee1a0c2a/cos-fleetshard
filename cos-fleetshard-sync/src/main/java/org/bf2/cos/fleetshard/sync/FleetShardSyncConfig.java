@@ -50,6 +50,13 @@ public interface FleetShardSyncConfig {
      */
     Manager manager();
 
+    /**
+     * Configuration options for the tenancyr.
+     *
+     * @return {@link Tenancy}
+     */
+    Tenancy tenancy();
+
     interface Cluster {
         /**
          * The ID assigned to the operator.
@@ -82,6 +89,16 @@ public interface FleetShardSyncConfig {
          * @return the namespace.
          */
         String namespace();
+    }
+
+    interface Tenancy {
+        /**
+         * If tenancy is supported
+         *
+         * @return the namespace.
+         */
+        @WithDefault("true")
+        boolean enabled();
     }
 
     interface Connectors {

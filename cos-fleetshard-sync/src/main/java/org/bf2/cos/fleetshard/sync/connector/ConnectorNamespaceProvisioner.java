@@ -1,12 +1,10 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +16,6 @@ import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 public class ConnectorNamespaceProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorNamespaceProvisioner.class);
     private final FleetShardClient fleetShard;
-
-    @Inject
-    FleetShardSyncConfig config;
 
     public ConnectorNamespaceProvisioner(FleetShardClient connectorClient) {
         this.fleetShard = connectorClient;
@@ -53,7 +48,6 @@ public class ConnectorNamespaceProvisioner {
             Resources.ANNOTATION_NAMESPACE_TENAT_KIND, namespace.getTenant().getKind().toString(),
             Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId());
 
-        var nsx = fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
-        LOGGER.info(nsx.getStatus().getPhase());
+        fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
     }
 }
