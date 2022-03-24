@@ -167,6 +167,13 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.bf2</groupId>
+                        <artifactId>cos-fleetshard-api-deployment</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>build</id>

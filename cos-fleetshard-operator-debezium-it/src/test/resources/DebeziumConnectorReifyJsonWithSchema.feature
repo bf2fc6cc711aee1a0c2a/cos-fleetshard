@@ -40,6 +40,10 @@ Feature: Debezium Connector Reify
      And the kc has an entry at path "$.spec.authentication.passwordSecret.password" with value "_kafka.client.secret"
      And the kc has an entry at path "$.spec.image" with value "quay.io/rhoas/cos-connector-debezium-postgres@sha256:b67d0ef4d4638bd5b6e71e2ccc30d5f7d5f74738db94dae53504077de7df5cff"
      And the kc has an entry at path "$.spec.template.pod.imagePullSecrets[0].name" with value "addon-pullsecret"
+    And the kc has an entry at path "$.spec.metricsConfig.type" with value "jmxPrometheusExporter"
+    And the kc has an entry at path "$.spec.metricsConfig.valueFrom.configMapKeyRef.name" with value "${cos.managed.connector.name}-metrics"
+    And the kc has an entry at path "$.spec.metricsConfig.valueFrom.configMapKeyRef.key" with value "kafka_connect_metrics.yml"
+    And the kc has the correct metrics config map
      And the kc has config containing:
        | config.providers                  | file,dir                             |
        | config.storage.replication.factor | -1                                   |

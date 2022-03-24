@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
+import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandController;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,7 +13,9 @@ import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import io.strimzi.api.kafka.model.JmxPrometheusExporterMetrics;
 import io.strimzi.api.kafka.model.KafkaConnect;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
@@ -146,6 +149,34 @@ public class KafkaConnectSteps extends StepsSupport {
 
             assertThatJson(actual).isEqualTo(expected);
         });
+    }
+
+    @And("the kc has the correct metrics config map")
+    public void kc_metrics_config_map() {
+        KafkaConnect kc = kc();
+        assertThat(kc).isNotNull();
+        assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
+        final String kafkaConnectMetricsConfigMapName = ctx.connector().getMetadata().getName()
+            + DebeziumOperandController.KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX;
+        assertThat(kc.getSpec().getMetricsConfig()).isInstanceOfSatisfying(JmxPrometheusExporterMetrics.class,
+            jmxMetricsConfig -> {
+                assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getKey())
+                    .isEqualTo(DebeziumOperandController.METRICS_CONFIG_FILENAME);
+                assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getName())
+                    .isEqualTo(kafkaConnectMetricsConfigMapName);
+            });
+        ConfigMap kcMetricsConfigMap = cm(kafkaConnectMetricsConfigMapName);
+        assertThat(kcMetricsConfigMap).isNotNull();
+        assertThat(kcMetricsConfigMap.getData()).containsKey(DebeziumOperandController.METRICS_CONFIG_FILENAME);
+        assertThat(kcMetricsConfigMap.getData().get(DebeziumOperandController.METRICS_CONFIG_FILENAME))
+            .isEqualTo(DebeziumOperandController.METRICS_CONFIG);
+    }
+
+    private ConfigMap cm(String name) {
+        return kubernetesClient.resources(ConfigMap.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(name)
+            .get();
     }
 
     private KafkaConnect kc() {
