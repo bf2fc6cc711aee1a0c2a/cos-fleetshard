@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -35,7 +36,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_CONNECTOR;
 import static org.bf2.cos.fleetshard.support.resources.Secrets.SECRET_ENTRY_META;
@@ -238,12 +238,11 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                                 .put("type", "camel-connector-operator")
                                 .put("version", "[1.0.0,2.0.0)");
                         }));
-                        spec.desiredState(DESIRED_STATE_READY);
+                        spec.desiredState(ConnectorDesiredState.READY);
                     }));
 
                 MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                    .withQueryParam("gt_version", equalTo("0"))
-                    .withQueryParam("watch", equalTo("false"));
+                    .withQueryParam("gt_version", equalTo("0"));
                 ResponseDefinitionBuilder response = WireMock.aResponse()
                     .withHeader("Content-Type", APPLICATION_JSON)
                     .withJsonBody(list);
@@ -280,12 +279,11 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                                 .put("type", "camel-connector-operator")
                                 .put("version", "[1.0.0,2.0.0)");
                         }));
-                        spec.desiredState(DESIRED_STATE_READY);
+                        spec.desiredState(ConnectorDesiredState.READY);
                     }));
 
                 MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                    .withQueryParam("gt_version", equalTo("1"))
-                    .withQueryParam("watch", equalTo("false"));
+                    .withQueryParam("gt_version", equalTo("1"));
                 ResponseDefinitionBuilder response = WireMock.aResponse()
                     .withHeader("Content-Type", APPLICATION_JSON)
                     .withJsonBody(list);

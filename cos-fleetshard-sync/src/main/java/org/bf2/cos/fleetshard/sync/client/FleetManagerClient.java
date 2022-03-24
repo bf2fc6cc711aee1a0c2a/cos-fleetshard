@@ -10,8 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.ws.rs.core.UriBuilder;
 
-import org.bf2.cos.fleet.manager.api.ConnectorClustersAgentApi;
+import org.bf2.cos.fleet.manager.model.ConnectorClusterState;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperators;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
@@ -19,11 +20,11 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Operators;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -41,17 +42,22 @@ public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
 
     final FleetShardSyncConfig config;
-    final ConnectorClustersAgentApi controlPlane;
+    final FleetManagerClientApi controlPlane;
 
     public FleetManagerClient(FleetShardSyncConfig config) {
         this.config = config;
 
+        UriBuilder builder = UriBuilder.fromUri(config.manager().uri()).path("/api/connector_mgmt/v1");
+        if (config.tenancy().enabled()) {
+            builder = builder.path("/agent");
+        }
+
         this.controlPlane = RestClientBuilder.newBuilder()
-            .baseUri(config.manager().uri())
+            .baseUri(builder.build())
             .register(OidcClientRequestFilter.class)
             .connectTimeout(config.manager().connectTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .readTimeout(config.manager().readTimeout().toMillis(), TimeUnit.MILLISECONDS)
-            .build(ConnectorClustersAgentApi.class);
+            .build(FleetManagerClientApi.class);
     }
 
     public void getNamespaces(Consumer<Collection<ConnectorNamespace>> consumer) {
@@ -62,7 +68,7 @@ public class FleetManagerClient {
             final List<ConnectorNamespace> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                ConnectorNamespaceList list = controlPlane.getClusterAsignedConnectorNamespaces(
+                ConnectorNamespaceList list = controlPlane.getConnectorNamespaces(
                     config.cluster().id());
 
                 if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
@@ -89,12 +95,11 @@ public class FleetManagerClient {
             final List<ConnectorDeployment> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                ConnectorDeploymentList list = controlPlane.getClusterAsignedConnectorDeployments(
+                ConnectorDeploymentList list = controlPlane.getConnectorDeployments(
                     config.cluster().id(),
                     Integer.toString(i),
                     null,
-                    gv,
-                    "false");
+                    gv);
 
                 if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
                     LOGGER.info("No connectors for cluster {}", config.cluster().id());
@@ -131,7 +136,7 @@ public class FleetManagerClient {
     public void updateClusterStatus(Collection<ManagedConnectorOperator> operators, Collection<Namespace> namespaces) {
         FleetManagerClientHelper.run(() -> {
             ConnectorClusterStatus status = new ConnectorClusterStatus();
-            status.setPhase(Clusters.PHASE_READY);
+            status.setPhase(ConnectorClusterState.READY);
 
             operators.stream().map(
                 o -> new ConnectorClusterStatusOperators()
@@ -144,25 +149,27 @@ public class FleetManagerClient {
                 .forEach(
                     status::addOperatorsItem);
 
-            namespaces.stream().map(
-                n -> {
-                    String phase = Namespaces.PHASE_PROVISIONING;
-                    if (n.getStatus() != null) {
-                        if (Objects.equals(Namespaces.STATUS_ACTIVE, n.getStatus().getPhase())) {
-                            phase = Namespaces.PHASE_READY;
-                        } else if (Objects.equals(Namespaces.STATUS_TERMINATING, n.getStatus().getPhase())) {
-                            phase = Namespaces.PHASE_DEPROVISIONING;
+            if (config.tenancy().enabled()) {
+                namespaces.stream().map(
+                    n -> {
+                        ConnectorNamespaceState phase = ConnectorNamespaceState.DISCONNECTED;
+                        if (n.getStatus() != null) {
+                            if (Objects.equals(Namespaces.STATUS_ACTIVE, n.getStatus().getPhase())) {
+                                phase = ConnectorNamespaceState.READY;
+                            } else if (Objects.equals(Namespaces.STATUS_TERMINATING, n.getStatus().getPhase())) {
+                                phase = ConnectorNamespaceState.DELETING;
+                            }
                         }
-                    }
 
-                    return new ConnectorNamespaceStatus()
-                        .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
-                        .phase(phase);
-                })
-                .forEach(
-                    status::addNamespacesItem);
+                        return new ConnectorNamespaceStatus()
+                            .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
+                            .phase(phase);
+                    })
+                    .forEach(
+                        status::addNamespacesItem);
+            }
 
-            controlPlane.updateKafkaConnectorClusterStatus(
+            controlPlane.updateConnectorClusterStatus(
                 config.cluster().id(),
                 status);
         });

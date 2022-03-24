@@ -98,8 +98,10 @@ public class ConnectorDeploymentSync {
 
     @Retry(maxRetries = 10, delay = 1, delayUnit = ChronoUnit.SECONDS)
     public void provision(long timeout) throws InterruptedException {
-        // TODO: should not be executed each time
-        fleetManager.getNamespaces(this::provisionNamespaces);
+        if (config.tenancy().enabled()) {
+            // TODO: should not be executed each time
+            fleetManager.getNamespaces(this::provisionNamespaces);
+        }
 
         queue.poll(timeout, TimeUnit.MILLISECONDS, this::provisionConnectors);
     }

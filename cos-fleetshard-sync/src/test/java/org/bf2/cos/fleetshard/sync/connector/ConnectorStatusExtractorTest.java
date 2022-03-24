@@ -6,6 +6,7 @@ import java.util.stream.Stream;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;
+import org.bf2.cos.fleet.manager.model.ConnectorState;
 import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
@@ -26,9 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
-import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -38,13 +37,13 @@ public class ConnectorStatusExtractorTest {
         return Stream.of(
             arguments(
                 DESIRED_STATE_READY,
-                STATE_PROVISIONING),
+                ConnectorState.PROVISIONING),
             arguments(
                 DESIRED_STATE_STOPPED,
-                STATE_DE_PROVISIONING),
+                ConnectorState.DEPROVISIONING),
             arguments(
                 DESIRED_STATE_DELETED,
-                STATE_DE_PROVISIONING));
+                ConnectorState.DEPROVISIONING));
     }
 
     public static Stream<Arguments> extractFromConnectorStatus() {
@@ -52,7 +51,7 @@ public class ConnectorStatusExtractorTest {
             arguments(
                 DESIRED_STATE_READY,
                 STATE_FAILED,
-                STATE_FAILED,
+                ConnectorState.FAILED,
                 List.of(new ConditionBuilder()
                     .withType("Ready")
                     .withStatus("False")
@@ -62,7 +61,7 @@ public class ConnectorStatusExtractorTest {
             arguments(
                 DESIRED_STATE_READY,
                 STATE_READY,
-                STATE_READY,
+                ConnectorState.READY,
                 List.of(new ConditionBuilder()
                     .withType("Ready")
                     .withStatus("False")
@@ -72,7 +71,7 @@ public class ConnectorStatusExtractorTest {
             arguments(
                 DESIRED_STATE_READY,
                 null,
-                STATE_PROVISIONING,
+                ConnectorState.PROVISIONING,
                 List.of(new ConditionBuilder()
                     .withType("Ready")
                     .withStatus("False")
@@ -89,7 +88,7 @@ public class ConnectorStatusExtractorTest {
     @MethodSource
     void defaultIfPhaseIsNotSet(
         String statusDesiredState,
-        String expectedState) {
+        ConnectorState expectedState) {
 
         var status = ConnectorStatusExtractor.extract(
             new ManagedConnectorBuilder()
@@ -131,7 +130,7 @@ public class ConnectorStatusExtractorTest {
     void extractFromConnectorStatus(
         String statusDesiredState,
         String connectorPhase,
-        String expectedState,
+        ConnectorState expectedState,
         List<Condition> conditions) {
 
         var status = ConnectorStatusExtractor.extract(
@@ -189,7 +188,7 @@ public class ConnectorStatusExtractorTest {
                     .build())
                 .build());
 
-        assertThat(status.getPhase()).isEqualTo(STATE_FAILED);
+        assertThat(status.getPhase()).isEqualTo(ConnectorState.FAILED);
         assertThat(status.getConditions()).anySatisfy(c -> {
             assertThat(c.getType()).isEqualTo(Conditions.TYPE_READY);
             assertThat(c.getStatus()).isEqualTo(Conditions.STATUS_FALSE);
@@ -214,7 +213,7 @@ public class ConnectorStatusExtractorTest {
                     .build())
                 .build());
 
-        assertThat(status.getPhase()).isEqualTo(STATE_FAILED);
+        assertThat(status.getPhase()).isEqualTo(ConnectorState.FAILED);
         assertThat(status.getConditions()).anySatisfy(c -> {
             assertThat(c.getType()).isEqualTo(Conditions.TYPE_READY);
             assertThat(c.getStatus()).isEqualTo(Conditions.STATUS_FALSE);

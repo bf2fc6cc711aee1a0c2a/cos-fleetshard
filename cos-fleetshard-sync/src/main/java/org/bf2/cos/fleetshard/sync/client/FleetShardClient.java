@@ -85,7 +85,7 @@ public class FleetShardClient {
         return Optional.ofNullable(
             this.kubernetesClient
                 .namespaces()
-                .withName(Namespaces.generateNamespaceId(namespaceId))
+                .withName(generateNamespaceId(namespaceId))
                 .get());
     }
 
@@ -93,6 +93,12 @@ public class FleetShardClient {
         return namespaceInformers != null
             ? namespaceInformers.getIndexer().list()
             : Collections.emptyList();
+    }
+
+    public String generateNamespaceId(String namespaceId) {
+        return config.tenancy().enabled()
+            ? Namespaces.generateNamespaceId(namespaceId)
+            : namespaceId;
     }
 
     // *************************************
@@ -125,7 +131,7 @@ public class FleetShardClient {
     public Optional<Secret> getSecret(String namespaceId, String deploymentId) {
         return Optional.ofNullable(
             kubernetesClient.secrets()
-                .inNamespace(Namespaces.generateNamespaceId(namespaceId))
+                .inNamespace(generateNamespaceId(namespaceId))
                 .withName(Secrets.generateConnectorSecretId(deploymentId))
                 .get());
     }
@@ -166,7 +172,7 @@ public class FleetShardClient {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        final String key = Namespaces.generateNamespaceId(namespaceId) + "/" + Connectors.generateConnectorId(deploymentId);
+        final String key = generateNamespaceId(namespaceId) + "/" + generateConnectorId(deploymentId);
         final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
@@ -193,6 +199,10 @@ public class FleetShardClient {
             .inNamespace(connector.getMetadata().getNamespace())
             .withName(connector.getMetadata().getName())
             .createOrReplace(connector);
+    }
+
+    public String generateConnectorId(String namespaceId) {
+        return Connectors.generateConnectorId(namespaceId);
     }
 
     // *************************************
