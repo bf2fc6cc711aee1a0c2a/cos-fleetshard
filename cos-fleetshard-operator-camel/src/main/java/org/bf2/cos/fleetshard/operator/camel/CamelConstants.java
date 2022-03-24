@@ -16,6 +16,7 @@ public final class CamelConstants {
     public static final String CONNECTOR_TYPE_SINK = "sink";
 
     public static final String CAMEL_K_PROFILE_OPENSHIFT = "OpenShift";
+    public static final String KAMEL_OPERATOR_ID = "camel.apache.org/operator.id";
 
     public static final String TRAIT_CAMEL_APACHE_ORG_ENV = "trait.camel.apache.org/environment.%s";
     public static final String TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE = "trait.camel.apache.org/container.image";
