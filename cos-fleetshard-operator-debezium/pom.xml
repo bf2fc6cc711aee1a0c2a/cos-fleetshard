@@ -12,7 +12,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>cos-fleetshard-operator-debezium</artifactId>
-    <packaging>jar</packaging>
 
     <properties>
         <!-- CRD -->
@@ -79,6 +78,14 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.spotbugs</groupId>
+            <artifactId>spotbugs-annotations</artifactId>
+            <version>${spotbugs.version}</version>
+            <optional>true</optional>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-container-image-jib</artifactId>
         </dependency>
@@ -119,6 +126,13 @@
             <plugin>
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.bf2</groupId>
+                        <artifactId>cos-fleetshard-api-deployment</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>build</id>

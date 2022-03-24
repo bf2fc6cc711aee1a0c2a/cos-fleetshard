@@ -36,6 +36,11 @@ public class DebeziumOperandSupport {
             && Objects.equals("Secret", ref.getKind());
     }
 
+    public static boolean isConfigMap(HasMetadata ref) {
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("ConfigMap", ref.getKind());
+    }
+
     public static boolean isSecret(ResourceRef ref) {
         return Objects.equals("v1", ref.getApiVersion())
             && Objects.equals("Secret", ref.getKind());

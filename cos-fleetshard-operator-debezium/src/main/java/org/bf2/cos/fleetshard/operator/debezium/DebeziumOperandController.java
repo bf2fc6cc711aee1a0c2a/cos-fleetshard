@@ -1,8 +1,11 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.inject.Singleton;
@@ -21,6 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -30,6 +36,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.strimzi.api.kafka.model.ClientTlsBuilder;
 import io.strimzi.api.kafka.model.Constants;
+import io.strimzi.api.kafka.model.ExternalConfigurationReferenceBuilder;
+import io.strimzi.api.kafka.model.JmxPrometheusExporterMetricsBuilder;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnectBuilder;
 import io.strimzi.api.kafka.model.KafkaConnectSpecBuilder;
@@ -41,7 +49,6 @@ import io.strimzi.api.kafka.model.authentication.KafkaClientAuthenticationPlainB
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuilder;
 import io.strimzi.api.kafka.model.template.KafkaConnectTemplateBuilder;
-import io.strimzi.api.kafka.model.template.PodTemplate;
 import io.strimzi.api.kafka.model.template.PodTemplateBuilder;
 
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
@@ -58,9 +65,28 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.cr
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
+@SuppressFBWarnings("PATH_TRAVERSAL_IN")
 @Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode, DebeziumDataShape> {
+
+    public static final String METRICS_CONFIG_FILENAME = "kafka_connect_metrics.yml";
+    public static final String METRICS_CONFIG; // this could eventually go to the bundle
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumOperandController.class);
+    public static final String KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX = "-metrics";
+
+    static {
+        try {
+            METRICS_CONFIG = Files.readString(
+                new File(
+                    Objects
+                        .requireNonNull(DebeziumOperandController.class.getClassLoader().getResource(METRICS_CONFIG_FILENAME))
+                        .toURI())
+                            .toPath());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private final DebeziumOperandConfiguration configuration;
 
@@ -92,10 +118,11 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToData(KAFKA_CLIENT_SECRET_KEY, serviceAccountSpec.getClientSecret())
             .build();
 
-        PodTemplate podTemplate = new PodTemplateBuilder()
-            .withImagePullSecrets(IMAGE_PULL_SECRET)
+        ConfigMap kafkaConnectMetricsConfigMap = new ConfigMapBuilder()
+            .withNewMetadata().withName(connector.getMetadata().getName() + KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX)
+            .endMetadata()
+            .addToData(METRICS_CONFIG_FILENAME, METRICS_CONFIG)
             .build();
-        podTemplate.setAdditionalProperty("restartPolicy", "Never");
 
         final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
             .withReplicas(1)
@@ -124,7 +151,21 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withTls(new ClientTlsBuilder()
                 .withTrustedCertificates(Collections.emptyList())
                 .build())
-            .withTemplate(new KafkaConnectTemplateBuilder().withPod(podTemplate).build())
+            .withTemplate(new KafkaConnectTemplateBuilder()
+                .withPod(new PodTemplateBuilder()
+                    .withImagePullSecrets(IMAGE_PULL_SECRET)
+                    .build())
+                .build())
+            .withJmxPrometheusExporterMetricsConfig(
+                new JmxPrometheusExporterMetricsBuilder()
+                    .withValueFrom(
+                        new ExternalConfigurationReferenceBuilder()
+                            .withNewConfigMapKeyRef(
+                                METRICS_CONFIG_FILENAME,
+                                kafkaConnectMetricsConfigMap.getMetadata().getName(),
+                                false)
+                            .build())
+                    .build())
             .withExternalConfiguration(new ExternalConfigurationBuilder()
                 .addToVolumes(new ExternalConfigurationVolumeSourceBuilder()
                     .withName(EXTERNAL_CONFIG_DIRECTORY)
@@ -159,7 +200,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .build())
             .build();
 
-        return List.of(secret, kc, kctr);
+        return List.of(secret, kafkaConnectMetricsConfigMap, kc, kctr);
     }
 
     @Override

@@ -29,10 +29,12 @@ import org.mockito.Mockito;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.Constants;
+import io.strimzi.api.kafka.model.JmxPrometheusExporterMetrics;
 import io.strimzi.api.kafka.model.KafkaConnect;
 import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
@@ -57,6 +59,7 @@ public class DebeziumOperandControllerTest {
     private static final String PG_CLASS = "io.debezium.connector.postgresql.PostgresConnector";
     private static final String SCHEMA_REGISTRY_URL = "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2";
     private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
+    private static final String MANAGED_CONNECTOR_UID = "51eba005-daft-punk-afe1-b2178bcb523d";
 
     private static final DebeziumOperandConfiguration CONFIGURATION = new DebeziumOperandConfiguration() {
         @Override
@@ -163,6 +166,7 @@ public class DebeziumOperandControllerTest {
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .withUid(MANAGED_CONNECTOR_UID)
                     .build())
                 .withSpec(new ManagedConnectorSpecBuilder()
                     .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
@@ -192,7 +196,8 @@ public class DebeziumOperandControllerTest {
         assertThat(resources)
             .anyMatch(DebeziumOperandSupport::isKafkaConnect)
             .anyMatch(DebeziumOperandSupport::isKafkaConnector)
-            .anyMatch(DebeziumOperandSupport::isSecret);
+            .anyMatch(DebeziumOperandSupport::isSecret)
+            .anyMatch(DebeziumOperandSupport::isConfigMap);
 
         assertThat(resources)
             .filteredOn(DebeziumOperandSupport::isKafkaConnect)
@@ -200,28 +205,43 @@ public class DebeziumOperandControllerTest {
             .first()
             .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
                 assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
+                assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
+                    .contains(DebeziumConstants.IMAGE_PULL_SECRET);
+                assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
+                assertThat(kc.getSpec().getMetricsConfig()).isInstanceOfSatisfying(JmxPrometheusExporterMetrics.class,
+                    jmxMetricsConfig -> {
+                        assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getKey())
+                            .isEqualTo(DebeziumOperandController.METRICS_CONFIG_FILENAME);
+                        assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getName())
+                            .isEqualTo(
+                                DEFAULT_MANAGED_CONNECTOR_ID
+                                    + DebeziumOperandController.KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX);
+                    });
             });
 
         assertThat(resources)
-            .filteredOn(DebeziumOperandSupport::isKafkaConnect)
+            .filteredOn(DebeziumOperandSupport::isConfigMap)
             .hasSize(1)
             .first()
-            .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
-                assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
-                    .contains(DebeziumConstants.IMAGE_PULL_SECRET);
+            .isInstanceOfSatisfying(ConfigMap.class, configMap -> {
+                assertThat(configMap.getData())
+                    .containsKey(DebeziumOperandController.METRICS_CONFIG_FILENAME);
+                assertThat(configMap.getData().get(DebeziumOperandController.METRICS_CONFIG_FILENAME))
+                    .isEqualTo(DebeziumOperandController.METRICS_CONFIG);
             });
 
         assertThat(resources)
             .filteredOn(DebeziumOperandSupport::isKafkaConnector)
             .hasSize(1)
             .first()
-            .isInstanceOfSatisfying(KafkaConnector.class, kc -> assertThat(kc.getSpec().getConfig()).containsEntry(
-                "database.password",
-                "${file:/opt/kafka/external-configuration/"
-                    + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
-                    + "/"
-                    + EXTERNAL_CONFIG_FILE
-                    + ":database.password}"));
+            .isInstanceOfSatisfying(KafkaConnector.class, kc -> assertThat(
+                kc.getSpec().getConfig()).containsEntry(
+                    "database.password",
+                    "${file:/opt/kafka/external-configuration/"
+                        + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
+                        + "/"
+                        + EXTERNAL_CONFIG_FILE
+                        + ":database.password}"));
 
         assertThat(resources)
             .filteredOn(DebeziumOperandSupport::isKafkaConnect)
