@@ -75,9 +75,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         this.configuration = configuration;
     }
 
-    @ConfigProperty(name = "COS_OPERATOR_ID")
-    String kamel_operator_id;
-
     @Override
     public List<ResourceDefinitionContext> getResourceTypes() {
         return List.of(KameletBinding.RESOURCE_DEFINITION);
@@ -213,7 +210,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         final KameletBinding binding = new KameletBinding();
         binding.setMetadata(new ObjectMeta());
         binding.getMetadata().setName(connector.getMetadata().getName());
-        binding.getMetadata().setLabels(new TreeMap<>());
         binding.getMetadata().setAnnotations(new TreeMap<>());
         binding.setSpec(new KameletBindingSpec());
         binding.getSpec().setSource(source);
@@ -222,12 +218,15 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         binding.getSpec().setSteps(stepDefinitions);
         binding.getSpec().setIntegration(integration);
 
-        Map<String, String> labels = binding.getMetadata().getLabels();
-        labels.putIfAbsent(KAMEL_OPERATOR_ID, kamel_operator_id);
-
         Map<String, String> annotations = binding.getMetadata().getAnnotations();
         if (shardMetadata.getAnnotations() != null) {
             annotations.putAll(shardMetadata.getAnnotations());
+        }
+
+        // Camel Operator Annotation
+        String kamel_operator_id = connector.getStatus().getConnectorStatus().getAssignedOperator().getId();
+        if (kamel_operator_id != null) {
+            annotations.putIfAbsent(KAMEL_OPERATOR_ID, connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
         }
 
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage());
