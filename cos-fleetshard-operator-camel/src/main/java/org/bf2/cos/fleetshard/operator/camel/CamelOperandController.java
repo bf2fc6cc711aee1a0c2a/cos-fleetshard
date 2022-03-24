@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,7 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.KAMEL_OPERATOR_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.configureKameletProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
@@ -72,6 +74,9 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
 
         this.configuration = configuration;
     }
+
+    @ConfigProperty(name = "COS_OPERATOR_ID")
+    String kamel_operator_id;
 
     @Override
     public List<ResourceDefinitionContext> getResourceTypes() {
@@ -208,6 +213,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         final KameletBinding binding = new KameletBinding();
         binding.setMetadata(new ObjectMeta());
         binding.getMetadata().setName(connector.getMetadata().getName());
+        binding.getMetadata().setLabels(new TreeMap<>());
         binding.getMetadata().setAnnotations(new TreeMap<>());
         binding.setSpec(new KameletBindingSpec());
         binding.getSpec().setSource(source);
@@ -215,6 +221,9 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         binding.getSpec().setErrorHandler(errorHandler);
         binding.getSpec().setSteps(stepDefinitions);
         binding.getSpec().setIntegration(integration);
+
+        Map<String, String> labels = binding.getMetadata().getLabels();
+        labels.putIfAbsent(KAMEL_OPERATOR_ID, kamel_operator_id);
 
         Map<String, String> annotations = binding.getMetadata().getAnnotations();
         if (shardMetadata.getAnnotations() != null) {
