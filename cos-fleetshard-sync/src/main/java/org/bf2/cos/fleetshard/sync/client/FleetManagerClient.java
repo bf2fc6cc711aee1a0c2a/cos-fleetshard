@@ -138,6 +138,11 @@ public class FleetManagerClient {
 
     public void updateClusterStatus(Collection<ManagedConnectorOperator> operators, Collection<Namespace> namespaces) {
         FleetManagerClientHelper.run(() -> {
+            LOGGER.info("Update cluster status: cluster_id={}, operators={}, namespaces={}",
+                config.cluster().id(),
+                operators.size(),
+                namespaces.size());
+
             ConnectorClusterStatus status = new ConnectorClusterStatus();
             status.setPhase(ConnectorClusterState.READY);
 

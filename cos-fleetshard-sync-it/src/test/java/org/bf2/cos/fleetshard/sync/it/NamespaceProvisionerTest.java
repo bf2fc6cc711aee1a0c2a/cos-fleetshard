@@ -1,27 +1,26 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.MappingBuilder;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.quarkus.test.junit.QuarkusTest;
@@ -35,6 +34,9 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @QuarkusTest
 @TestProfile(NamespaceProvisionerTest.Profile.class)
 public class NamespaceProvisionerTest extends SyncTestSupport {
+    @WireMockTestInstance
+    WireMockServer server;
+
     @Test
     void namespaceIsProvisioned() {
         final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
@@ -91,10 +93,9 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.cluster.status.sync-interval", "disabled",
+                "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
-                "cos.resources.resync-interval", "disabled",
-                "cos.connectors.status.resync-interval", "disabled");
+                "cos.resources.resync-interval", "disabled");
         }
 
         @Override
@@ -107,70 +108,34 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
 
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
-        protected Map<String, String> doStart(WireMockServer server) {
+        protected void configure(WireMockServer server) {
             final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
             final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
-            final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
-            final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clusterId;
-            final String deploymentsUrl = clusterUrl + "/deployments";
-            final String statusUrl = clusterUrl + "/deployments/.*/status";
 
-            {
-                //
-                // Namespaces
-                //
+            server.stubMatching(
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
+                resp -> {
+                    JsonNode body = namespaceList(
+                        namespace(deployment1, deployment1),
+                        namespace(deployment2, deployment2));
 
-                MappingBuilder request = WireMock.get(WireMock.urlPathMatching(
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces"));
+                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
+                        .withJsonBody(body);
+                });
 
-                ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
-                    .withJsonBody(namespaceList(
-                        namespace(deployment1, deployment1, ns -> {
-                            ConnectorNamespaceTenant tenant = new ConnectorNamespaceTenant()
-                                .id(uid())
-                                .kind(ConnectorNamespaceTenantKind.ORGANISATION);
+            server.stubMatching(
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
+                resp -> {
+                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
+                        .withJsonBody(deploymentList());
+                });
 
-                            ns.setTenant(tenant);
-                            ns.setExpiration(new Date().toString());
-                        }),
-                        namespace(deployment2, deployment2, ns -> {
-                            ConnectorNamespaceTenant tenant = new ConnectorNamespaceTenant()
-                                .id(uid())
-                                .kind(ConnectorNamespaceTenantKind.ORGANISATION);
-
-                            ns.setTenant(tenant);
-                            ns.setExpiration(new Date().toString());
-                        })));
-
-                server.stubFor(request.willReturn(response));
-            }
-
-            {
-                //
-                // Deployments
-                //
-
-                MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl));
-                ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
-                    .withJsonBody(deploymentList());
-
-                server.stubFor(request.willReturn(response));
-            }
-
-            {
-                //
-                // Status
-                //
-
-                MappingBuilder request = WireMock.put(WireMock.urlPathMatching(statusUrl));
-                ResponseDefinitionBuilder response = WireMock.ok();
-
-                server.stubFor(request.willReturn(response));
-            }
-
-            return Map.of("control-plane-base-url", server.baseUrl());
+            server.stubMatching(
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
+                () -> WireMock.ok());
         }
     }
 }

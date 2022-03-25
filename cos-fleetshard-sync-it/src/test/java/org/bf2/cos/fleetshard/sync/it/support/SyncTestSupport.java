@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +17,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 
@@ -28,6 +31,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class SyncTestSupport {
     @Inject
@@ -71,6 +75,19 @@ public class SyncTestSupport {
         return answer;
     }
 
+    public static ConnectorNamespace namespace(String id, String name) {
+        ConnectorNamespace answer = new ConnectorNamespace().id(id).name(name);
+
+        ConnectorNamespaceTenant tenant = new ConnectorNamespaceTenant()
+            .id(uid())
+            .kind(ConnectorNamespaceTenantKind.ORGANISATION);
+
+        answer.setTenant(tenant);
+        answer.setExpiration(new Date().toString());
+
+        return answer;
+    }
+
     public static ConnectorDeployment deployment(String name, long revision, Consumer<ConnectorDeploymentSpec> consumer) {
         ConnectorDeployment answer = new ConnectorDeployment()
             .kind("ConnectorDeployment")
@@ -100,7 +117,7 @@ public class SyncTestSupport {
 
     public static void untilAsserted(ThrowingRunnable runnable) {
         Awaitility.await()
-            .atMost(30, TimeUnit.SECONDS)
+            .atMost(10, TimeUnit.SECONDS)
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
             .untilAsserted(runnable);

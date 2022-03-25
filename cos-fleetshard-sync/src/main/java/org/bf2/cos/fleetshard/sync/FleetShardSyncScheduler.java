@@ -49,4 +49,12 @@ public class FleetShardSyncScheduler {
     public void shutdown(String id) throws SchedulerException {
         quartz.deleteJob(JobKey.jobKey(id + ".job", id));
     }
+
+    public void shutdownQuietly(String id) {
+        try {
+            shutdown(id);
+        } catch (SchedulerException e) {
+            LOGGER.debug("Error deleting job {}", id, e);
+        }
+    }
 }

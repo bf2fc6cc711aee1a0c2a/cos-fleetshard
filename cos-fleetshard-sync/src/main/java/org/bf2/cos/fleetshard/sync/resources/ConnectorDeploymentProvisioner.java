@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.connector;
+package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Collection;
 import java.util.stream.Collectors;

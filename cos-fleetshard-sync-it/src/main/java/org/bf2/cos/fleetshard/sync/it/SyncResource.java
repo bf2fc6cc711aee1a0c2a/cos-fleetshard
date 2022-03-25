@@ -7,9 +7,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleetshard.sync.connector.ConnectorDeploymentProvisioner;
-import org.bf2.cos.fleetshard.sync.connector.ConnectorNamespaceProvisioner;
-import org.bf2.cos.fleetshard.sync.connector.ResourceSync;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorDeploymentProvisioner;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
+import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
 
 @ApplicationScoped
 @Path("/test")
@@ -19,7 +19,7 @@ public class SyncResource {
     @Inject
     ConnectorDeploymentProvisioner deploymentProvisioner;
     @Inject
-    ResourceSync resourceSync;
+    ResourcePoll resourceSync;
 
     @Path("/provisioner/namespaces")
     @POST
@@ -47,6 +47,6 @@ public class SyncResource {
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
     public void sync() {
-        resourceSync.sync();
+        resourceSync.run();
     }
 }

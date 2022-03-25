@@ -16,18 +16,18 @@ import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
 
-import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
@@ -47,7 +47,7 @@ public class PaginationTest extends SyncTestSupport {
     public static final String KAFKA_CLIENT_SECRET = toBase64(uid());
 
     @WireMockTestInstance
-    com.github.tomakehurst.wiremock.WireMockServer server;
+    WireMockServer server;
 
     @Test
     void namespaceIsProvisioned() {
@@ -89,10 +89,9 @@ public class PaginationTest extends SyncTestSupport {
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.cluster.status.sync-interval", "disabled",
+                "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
-                "cos.resources.resync-interval", "disabled",
-                "cos.connectors.status.resync-interval", "disabled");
+                "cos.resources.resync-interval", "disabled");
         }
 
         @Override
@@ -105,7 +104,7 @@ public class PaginationTest extends SyncTestSupport {
 
     public static class FleetManagerTestResource extends WireMockTestResource {
         @Override
-        protected Map<String, String> doStart(WireMockServer server) {
+        protected void configure(WireMockServer server) {
             final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
             final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
             final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
@@ -135,7 +134,7 @@ public class PaginationTest extends SyncTestSupport {
                     .withQueryParam("page", equalTo("1"));
 
                 ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                     .withJsonBody(list);
 
                 server.stubFor(request.willReturn(response));
@@ -163,7 +162,7 @@ public class PaginationTest extends SyncTestSupport {
                     .withQueryParam("page", equalTo("2"));
 
                 ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                     .withJsonBody(list);
 
                 server.stubFor(request.willReturn(response));
@@ -207,7 +206,7 @@ public class PaginationTest extends SyncTestSupport {
                     .withQueryParam("page", equalTo("1"));
 
                 ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                     .withJsonBody(list);
 
                 server.stubFor(request.willReturn(response));
@@ -251,7 +250,7 @@ public class PaginationTest extends SyncTestSupport {
                     .withQueryParam("page", equalTo("2"));
 
                 ResponseDefinitionBuilder response = WireMock.aResponse()
-                    .withHeader("Content-Type", APPLICATION_JSON)
+                    .withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                     .withJsonBody(list);
 
                 server.stubFor(request.willReturn(response));
@@ -267,13 +266,6 @@ public class PaginationTest extends SyncTestSupport {
 
                 server.stubFor(request.willReturn(response));
             }
-
-            return Map.of("control-plane-base-url", server.baseUrl());
-        }
-
-        @Override
-        public void inject(QuarkusTestResourceLifecycleManager.TestInjector testInjector) {
-            injectServerInstance(testInjector);
         }
     }
 }

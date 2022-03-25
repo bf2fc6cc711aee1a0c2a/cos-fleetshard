@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.connector;
+package org.bf2.cos.fleetshard.sync.resources;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatusOperators;

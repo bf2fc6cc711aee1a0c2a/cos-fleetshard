@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.connector;
+package org.bf2.cos.fleetshard.sync.resources;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -16,7 +16,7 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
-public class ResourceSync {
+public class ResourcePoll {
     private static final String JOB_ID = "cos.resources.poll";
     private static final long BEGINNING = 0;
 
@@ -37,25 +37,20 @@ public class ResourceSync {
     private volatile Instant lastResync;
 
     public void start() throws Exception {
+        recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + JOB_ID);
+
         scheduler.schedule(
             JOB_ID,
-            ResourceSyncJob.class,
+            ResourcePollJob.class,
             config.resources().pollInterval());
     }
 
     public void stop() {
-        try {
-            scheduler.shutdown(JOB_ID);
-        } catch (Exception ignored) {
-        }
+        scheduler.shutdownQuietly(JOB_ID);
     }
 
     @Retry(maxRetries = 10, delay = 1, delayUnit = ChronoUnit.SECONDS)
-    public void sync() {
-        if (recorder == null) {
-            recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + JOB_ID);
-        }
-
+    public void run() {
         recorder.record(this::poll);
     }
 

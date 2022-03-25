@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.cluster;
+package org.bf2.cos.fleetshard.sync;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -14,7 +14,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 @ApplicationScoped
-public class ConnectorClusterProducers {
+public class FleetShardSyncProducers {
 
     @Singleton
     @Produces
