@@ -9,6 +9,8 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,7 +45,9 @@ public class ConnectorProvisionerTest {
         final List<Secret> secrets = List.of();
 
         final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(fleetShard);
+        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
+        final FleetShardSyncConfig config = ConnectorTestSupport.config();
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager);
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -145,7 +149,9 @@ public class ConnectorProvisionerTest {
                 .build());
 
         final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(fleetShard);
+        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
+        final FleetShardSyncConfig config = ConnectorTestSupport.config();
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager);
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -258,7 +264,9 @@ public class ConnectorProvisionerTest {
                 .build());
 
         final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(fleetShard);
+        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
+        final FleetShardSyncConfig config = ConnectorTestSupport.config();
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager);
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 

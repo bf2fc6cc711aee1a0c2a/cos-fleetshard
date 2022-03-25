@@ -72,10 +72,9 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 .withClusterId(config.cluster().id())
                 .withConnectorId(CONNECTOR_ID)
                 .withDeploymentId(DEPLOYMENT_ID)
+                .withOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build())
                 .build())
             .build();
-
-        connector.getSpec().setOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build());
 
         kubernetesClient
             .resources(ManagedConnector.class)
@@ -112,8 +111,8 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "1s");
         }
 

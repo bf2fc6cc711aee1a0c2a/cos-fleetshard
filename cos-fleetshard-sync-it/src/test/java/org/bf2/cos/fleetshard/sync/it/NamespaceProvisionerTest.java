@@ -42,9 +42,8 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)
-            .accept(MediaType.TEXT_PLAIN)
             .body(0L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .post("/test/provisioner/namespaces");
 
         Namespace ns1 = until(
             () -> fleetShardClient.getNamespace(deployment1),
@@ -93,8 +92,8 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "disabled");
         }
 

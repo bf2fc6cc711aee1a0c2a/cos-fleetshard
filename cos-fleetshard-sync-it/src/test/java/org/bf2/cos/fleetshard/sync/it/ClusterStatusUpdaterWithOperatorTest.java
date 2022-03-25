@@ -59,9 +59,7 @@ public class ClusterStatusUpdaterWithOperatorTest extends SyncTestSupport {
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)
-            .accept(MediaType.TEXT_PLAIN)
-            .body(0L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .post("/test/provisioner/all");
 
         untilAsserted(() -> {
             server.verify(putRequestedFor(urlEqualTo(statusUrl))
@@ -84,8 +82,8 @@ public class ClusterStatusUpdaterWithOperatorTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "1s",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "disabled",
                 "cos.connectors.watch", "false");
         }

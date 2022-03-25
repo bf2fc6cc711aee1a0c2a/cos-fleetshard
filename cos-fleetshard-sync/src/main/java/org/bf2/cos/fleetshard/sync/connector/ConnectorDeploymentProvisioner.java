@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
@@ -19,6 +18,7 @@ import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,33 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
+
     private final FleetShardClient fleetShard;
+    private final FleetManagerClient fleetManager;
+    private final FleetShardSyncConfig config;
 
-    @Inject
-    FleetShardSyncConfig config;
+    public ConnectorDeploymentProvisioner(
+        FleetShardSyncConfig config,
+        FleetShardClient connectorClient,
+        FleetManagerClient fleetManager) {
 
-    public ConnectorDeploymentProvisioner(FleetShardClient connectorClient) {
+        this.config = config;
         this.fleetShard = connectorClient;
+        this.fleetManager = fleetManager;
+    }
+
+    public void poll(long revision) {
+        fleetManager.getDeployments(
+            revision,
+            this::provisionConnectors);
+    }
+
+    private void provisionConnectors(Collection<ConnectorDeployment> deployments) {
+        LOGGER.debug("deployments: {}", deployments.size());
+
+        for (ConnectorDeployment deployment : deployments) {
+            provision(deployment);
+        }
     }
 
     public void provision(ConnectorDeployment deployment) {

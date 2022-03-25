@@ -32,7 +32,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.mapOf;
@@ -56,7 +55,7 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
             .contentType(MediaType.TEXT_PLAIN)
             .accept(MediaType.TEXT_PLAIN)
             .body(0L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .post("/test/provisioner/all");
 
         Secret secret = until(
             () -> fleetShardClient.getSecret(ns, DEPLOYMENT_ID),
@@ -85,8 +84,8 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "disabled",
                 "cos.connectors.labels.\"foo/barLabel\"", "baz",
                 "cos.connectors.annotations.\"foo/barAnnotations\"", "baz");
@@ -155,8 +154,8 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
                         spec.desiredState(ConnectorDesiredState.READY);
                     }));
 
-                MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                    .withQueryParam("gt_version", equalTo("0"));
+                MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl));
+
                 ResponseDefinitionBuilder response = WireMock.aResponse()
                     .withHeader("Content-Type", APPLICATION_JSON)
                     .withJsonBody(list);

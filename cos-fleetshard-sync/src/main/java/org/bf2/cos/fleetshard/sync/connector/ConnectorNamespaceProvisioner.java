@@ -1,10 +1,14 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
+import java.util.Collection;
+
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +19,37 @@ import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 @ApplicationScoped
 public class ConnectorNamespaceProvisioner {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorNamespaceProvisioner.class);
-    private final FleetShardClient fleetShard;
 
-    public ConnectorNamespaceProvisioner(FleetShardClient connectorClient) {
+    private final FleetShardClient fleetShard;
+    private final FleetManagerClient fleetManager;
+    private final FleetShardSyncConfig config;
+
+    public ConnectorNamespaceProvisioner(
+        FleetShardSyncConfig config,
+        FleetShardClient connectorClient,
+        FleetManagerClient fleetManager) {
+
+        this.config = config;
         this.fleetShard = connectorClient;
+        this.fleetManager = fleetManager;
+    }
+
+    public void poll(long revision) {
+        if (!config.tenancy().enabled()) {
+            return;
+        }
+
+        fleetManager.getNamespaces(
+            revision,
+            this::provisionNamespaces);
+    }
+
+    private void provisionNamespaces(Collection<ConnectorNamespace> namespaces) {
+        LOGGER.debug("namespaces: {}", namespaces.size());
+
+        for (ConnectorNamespace namespace : namespaces) {
+            provision(namespace);
+        }
     }
 
     public void provision(ConnectorNamespace namespace) {

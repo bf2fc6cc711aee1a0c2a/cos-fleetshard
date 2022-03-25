@@ -8,9 +8,12 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.Mock;
+
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 
 @Mock
 @ApplicationScoped
@@ -25,6 +28,9 @@ public class TestFleetShardSync extends FleetShardSync {
 
     @ConfigProperty(name = "test.namespace.delete", defaultValue = "true")
     boolean namespaceDelete;
+
+    @ConfigProperty(name = "cos.cluster.id")
+    String clusterId;
 
     @Override
     public void start() {
@@ -48,6 +54,11 @@ public class TestFleetShardSync extends FleetShardSync {
             LOGGER.info("Deleting namespace {}", namespace);
 
             client.namespaces().withName(namespace).delete();
+
+            for (Namespace ns : client.namespaces().withLabel(LABEL_CLUSTER_ID, clusterId).list().getItems()) {
+                LOGGER.info("Deleting namespace {}", ns);
+                client.namespaces().delete(ns);
+            }
         }
     }
 }

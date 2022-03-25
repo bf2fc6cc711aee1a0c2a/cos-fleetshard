@@ -4,15 +4,15 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.connector.ConnectorDeploymentSync;
 import org.bf2.cos.fleetshard.sync.connector.ConnectorStatusSync;
+import org.bf2.cos.fleetshard.sync.connector.ResourceSync;
 
 @ApplicationScoped
 public class FleetShardSync {
     @Inject
     FleetShardClient fleetShardClient;
     @Inject
-    ConnectorDeploymentSync deploymentSync;
+    ResourceSync resourceSync;
     @Inject
     ConnectorStatusSync statusSync;
 
@@ -21,7 +21,7 @@ public class FleetShardSync {
             fleetShardClient.getOrCreateManagedConnectorCluster();
             fleetShardClient.start();
 
-            deploymentSync.start();
+            resourceSync.start();
             statusSync.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -30,7 +30,7 @@ public class FleetShardSync {
 
     public void stop() {
         try {
-            deploymentSync.stop();
+            resourceSync.stop();
             statusSync.stop();
 
             fleetShardClient.stop();

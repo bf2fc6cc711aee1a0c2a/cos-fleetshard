@@ -59,7 +59,7 @@ public class ConnectorProvisionerWithDisabledTenancyTest extends SyncTestSupport
             .contentType(MediaType.TEXT_PLAIN)
             .accept(MediaType.TEXT_PLAIN)
             .body(0L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .post("/test/provisioner/all");
 
         until(
             () -> fleetShardClient.getSecret(ns, DEPLOYMENT_ID),
@@ -89,8 +89,8 @@ public class ConnectorProvisionerWithDisabledTenancyTest extends SyncTestSupport
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.tenancy.enabled", "false",
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "disabled");
         }
 

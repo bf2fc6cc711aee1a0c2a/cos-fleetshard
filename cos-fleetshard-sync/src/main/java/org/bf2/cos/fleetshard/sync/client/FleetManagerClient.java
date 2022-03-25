@@ -83,7 +83,7 @@ public class FleetManagerClient {
 
                 consumer.accept(items);
 
-                if (counter.addAndGet(items.size()) == list.getTotal()) {
+                if (counter.addAndGet(items.size()) >= list.getTotal()) {
                     break;
                 }
             }
@@ -115,7 +115,7 @@ public class FleetManagerClient {
 
                 consumer.accept(items);
 
-                if (counter.addAndGet(items.size()) == list.getTotal()) {
+                if (counter.addAndGet(items.size()) >= list.getTotal()) {
                     break;
                 }
             }
