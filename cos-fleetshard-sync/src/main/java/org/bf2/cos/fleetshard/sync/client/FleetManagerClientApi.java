@@ -78,8 +78,7 @@ public interface FleetManagerClientApi {
         @QueryParam("page") String page,
         @QueryParam("size") String size,
         @QueryParam("gt_version") Long gtVersion)
-            throws ApiException, ProcessingException;
-
+        throws ApiException, ProcessingException;
 
     /**
      * update the connector deployment status

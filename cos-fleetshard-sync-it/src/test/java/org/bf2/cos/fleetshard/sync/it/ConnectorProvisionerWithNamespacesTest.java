@@ -50,14 +50,13 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)
-            .accept(MediaType.TEXT_PLAIN)
             .body(0L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .post("/test/provisioner/namespaces");
 
         Namespace ns1 = until(
             () -> fleetShardClient.getNamespace(deploymentId),
             item -> {
-                return item != null; // && item.getStatus() != null && "Active".equals(item.getStatus().getPhase());
+                return item != null && item.getStatus() != null && "Active".equals(item.getStatus().getPhase());
             });
 
         assertThat(ns1).satisfies(item -> {
@@ -76,9 +75,8 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)
-            .accept(MediaType.TEXT_PLAIN)
-            .body(1L)
-            .post("/test/connectors/deployment/provisioner/queue");
+            .body(0L)
+            .post("/test/provisioner/connectors");
 
         until(
             () -> fleetShardClient.getConnector(deploymentId, deploymentId),
@@ -97,8 +95,8 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "disabled");
         }
 
@@ -177,16 +175,6 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
                 {
                     MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
                         .withQueryParam("gt_version", equalTo("0"));
-                    ResponseDefinitionBuilder response = WireMock.aResponse()
-                        .withHeader("Content-Type", APPLICATION_JSON)
-                        .withJsonBody(deploymentList());
-
-                    server.stubFor(request.willReturn(response));
-                }
-
-                {
-                    MappingBuilder request = WireMock.get(WireMock.urlPathEqualTo(deploymentsUrl))
-                        .withQueryParam("gt_version", equalTo("1"));
                     ResponseDefinitionBuilder response = WireMock.aResponse()
                         .withHeader("Content-Type", APPLICATION_JSON)
                         .withJsonBody(list);

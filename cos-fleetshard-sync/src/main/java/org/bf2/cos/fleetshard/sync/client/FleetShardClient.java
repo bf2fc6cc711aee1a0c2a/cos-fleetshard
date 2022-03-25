@@ -83,7 +83,7 @@ public class FleetShardClient {
                     return 0;
                 }
 
-                return Integer.getInteger(rv);
+                return Long.parseLong(rv);
             })
             .max()
             .orElse(0);

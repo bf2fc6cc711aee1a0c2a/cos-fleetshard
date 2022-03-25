@@ -37,6 +37,13 @@ public interface FleetShardSyncConfig {
     Connectors connectors();
 
     /**
+     * Configuration options for resources.
+     *
+     * @return {@link Resources}
+     */
+    Resources resources();
+
+    /**
      * Metrics configuration options.
      *
      * @return {@link Connectors}
@@ -101,6 +108,26 @@ public interface FleetShardSyncConfig {
         boolean enabled();
     }
 
+    interface Resources {
+        /**
+         * Determine how often the synchronizer should poll the Control Plane for resources
+         *
+         * @return the poll interval
+         */
+        @WithDefault("15s")
+        @WithConverter(DurationConverter.class)
+        Duration pollInterval();
+
+        /**
+         * Determine how often the synchronizer should re-sync resources with the Control Plane.
+         *
+         * @return the re-sync interval
+         */
+        @WithDefault("60s")
+        @WithConverter(DurationConverter.class)
+        Duration resyncInterval();
+    }
+
     interface Connectors {
 
         /**
@@ -112,27 +139,7 @@ public interface FleetShardSyncConfig {
         @WithDefault("true")
         boolean watch();
 
-        /**
-         * Determine how often the synchronizer should poll the Control Plane for deployment
-         *
-         * @return the poll interval
-         */
-        @WithDefault("15s")
-        @WithConverter(DurationConverter.class)
-        Duration pollInterval();
-
-        /**
-         * Determine how often the synchronizer should re-sync the {@link ManagedConnector} with the Control Plane.
-         *
-         * @return the re-sync interval
-         */
-        @WithDefault("60s")
-        @WithConverter(DurationConverter.class)
-        Duration resyncInterval();
-
         Status status();
-
-        Provisioner provisioner();
 
         /**
          * An optional map of additional labels to be added to the generated {@link ManagedConnector}.
@@ -168,17 +175,6 @@ public interface FleetShardSyncConfig {
             @WithDefault("1s")
             @WithConverter(DurationConverter.class)
             Duration updateInterval();
-        }
-
-        interface Provisioner {
-            /**
-             * Determine the timeout of the internal provisioner queue.
-             *
-             * @return the timeout.
-             */
-            @WithDefault("15s")
-            @WithConverter(DurationConverter.class)
-            Duration queueTimeout();
         }
     }
 

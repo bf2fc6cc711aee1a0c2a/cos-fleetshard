@@ -37,7 +37,7 @@ public class SyncTestSupport {
     @Inject
     protected FleetShardClient fleetShardClient;
 
-    public static JsonNode deploymentList(ConnectorDeployment... deployments) {
+    public static ObjectNode deploymentList(ConnectorDeployment... deployments) {
         var items = new ConnectorDeploymentList();
         items.page(1);
         items.size(deployments.length);
@@ -47,10 +47,10 @@ public class SyncTestSupport {
             items.addItemsItem(deployment);
         }
 
-        return Serialization.jsonMapper().convertValue(items, JsonNode.class);
+        return Serialization.jsonMapper().convertValue(items, ObjectNode.class);
     }
 
-    public static JsonNode namespaceList(ConnectorNamespace... namespaces) {
+    public static ObjectNode namespaceList(ConnectorNamespace... namespaces) {
         var items = new ConnectorNamespaceList();
         items.page(1);
         items.size(namespaces.length);
@@ -60,7 +60,7 @@ public class SyncTestSupport {
             items.addItemsItem(namespace);
         }
 
-        return Serialization.jsonMapper().convertValue(items, JsonNode.class);
+        return Serialization.jsonMapper().convertValue(items, ObjectNode.class);
     }
 
     public static ConnectorNamespace namespace(String id, String name, Consumer<ConnectorNamespace> consumer) {

@@ -138,9 +138,8 @@ public class ConnectorDeletedTest extends SyncTestSupport {
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.status.sync-interval", "disabled",
-                "cos.connectors.poll-interval", "disabled",
-                "cos.connectors.resync-interval", "disabled",
-                "cos.connectors.provisioner.queue-timeout", "disabled",
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
                 "cos.connectors.status.resync-interval", "1s");
         }
 

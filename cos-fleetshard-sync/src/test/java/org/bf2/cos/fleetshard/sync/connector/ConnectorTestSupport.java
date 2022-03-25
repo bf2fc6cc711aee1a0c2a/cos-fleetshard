@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.sync.connector;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +27,8 @@ import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.mockito.Mockito;
 
@@ -145,7 +148,6 @@ public final class ConnectorTestSupport {
                 .desiredState(ConnectorDesiredState.READY));
     }
 
-    @SuppressWarnings("unchecked")
     public static FleetShardClient fleetShard(
         String clusterId,
         Collection<ManagedConnector> connectors,
@@ -156,34 +158,34 @@ public final class ConnectorTestSupport {
         Map<String, Secret> allSecrets = secrets.stream()
             .collect(Collectors.toMap(e -> e.getMetadata().getName(), Function.identity()));
 
-        FleetShardClient fleetShard = Mockito.mock(FleetShardClient.class);
+        FleetShardClient answer = Mockito.mock(FleetShardClient.class);
 
-        when(fleetShard.getClusterId())
+        when(answer.getClusterId())
             .thenAnswer(invocation -> clusterId);
 
-        when(fleetShard.getConnector(any(ConnectorDeployment.class)))
+        when(answer.getConnector(any(ConnectorDeployment.class)))
             .thenAnswer(invocation -> {
                 return lookupConnector(allConnectors.values(), clusterId, invocation.getArgument(0));
             });
-        when(fleetShard.getSecret(any(ConnectorDeployment.class)))
+        when(answer.getSecret(any(ConnectorDeployment.class)))
             .thenAnswer(invocation -> {
                 return lookupSecret(allSecrets.values(), clusterId, invocation.getArgument(0));
             });
 
-        when(fleetShard.createConnector(any(ManagedConnector.class)))
+        when(answer.createConnector(any(ManagedConnector.class)))
             .thenAnswer(invocation -> {
                 var arg = invocation.getArgument(0, ManagedConnector.class);
                 allConnectors.put(arg.getMetadata().getName(), arg);
                 return arg;
             });
-        when(fleetShard.createSecret(any(Secret.class)))
+        when(answer.createSecret(any(Secret.class)))
             .thenAnswer(invocation -> {
                 var arg = invocation.getArgument(0, Secret.class);
                 allSecrets.put(arg.getMetadata().getName(), arg);
                 return arg;
             });
 
-        when(fleetShard.getOrCreateManagedConnectorCluster())
+        when(answer.getOrCreateManagedConnectorCluster())
             .thenAnswer(invocation -> {
                 return new ManagedConnectorClusterBuilder()
                     .withMetadata(new ObjectMetaBuilder()
@@ -196,7 +198,35 @@ public final class ConnectorTestSupport {
                     .build();
             });
 
-        return fleetShard;
+        return answer;
+    }
+
+    public static FleetManagerClient fleetManagerClient() {
+        FleetManagerClient answer = Mockito.mock(FleetManagerClient.class);
+        return answer;
+    }
+
+    public static FleetShardSyncConfig config() {
+        FleetShardSyncConfig answer = Mockito.mock(FleetShardSyncConfig.class);
+        when(answer.tenancy()).thenAnswer(invocation -> {
+            var tenancy = Mockito.mock(FleetShardSyncConfig.Tenancy.class);
+            when(tenancy.enabled()).thenReturn(false);
+            return tenancy;
+        });
+        when(answer.operators()).thenAnswer(invocation -> {
+            var operators = Mockito.mock(FleetShardSyncConfig.Operators.class);
+            when(operators.namespace()).thenAnswer(i -> uid());
+
+            return operators;
+        });
+        when(answer.connectors()).thenAnswer(invocation -> {
+            var connectors = Mockito.mock(FleetShardSyncConfig.Connectors.class);
+            when(connectors.annotations()).thenReturn(Collections.emptyMap());
+            when(connectors.labels()).thenReturn(Collections.emptyMap());
+            return connectors;
+        });
+
+        return answer;
     }
 
     public static class CamelConnectorMeta {
