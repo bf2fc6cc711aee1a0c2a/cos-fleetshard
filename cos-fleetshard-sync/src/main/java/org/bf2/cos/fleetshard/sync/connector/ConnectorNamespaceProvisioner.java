@@ -46,7 +46,8 @@ public class ConnectorNamespaceProvisioner {
             ns,
             Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration(),
             Resources.ANNOTATION_NAMESPACE_TENAT_KIND, namespace.getTenant().getKind().toString(),
-            Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId());
+            Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId(),
+            Resources.ANNOTATION_NAMESPACE_RESOURCE_VERSION, "" + namespace.getResourceVersion());
 
         fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
     }

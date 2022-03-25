@@ -38,6 +38,7 @@ public final class Resources {
     public static final String ANNOTATION_NAMESPACE_EXPIRATION = "cos.bf2.org/namespace.expiration";
     public static final String ANNOTATION_NAMESPACE_TENAT_KIND = "cos.bf2.org/namespace.tenant.kind";
     public static final String ANNOTATION_NAMESPACE_TENAT_ID = "cos.bf2.org/namespace.tenant.id";
+    public static final String ANNOTATION_NAMESPACE_RESOURCE_VERSION = "cos.bf2.org/namespace.resource.version";
 
     public static final String CONNECTOR_PREFIX = "mctr-";
     public static final String CONNECTOR_SECRET_SUFFIX = "-config";

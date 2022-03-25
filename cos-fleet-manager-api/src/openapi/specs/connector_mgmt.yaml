@@ -1443,10 +1443,32 @@ components:
               - key
               - value
 
+    ConnectorNamespaceQuota:
+      type: object
+      properties:
+        connectors:
+          type: integer
+          format: int32
+        memory_requests:
+          $ref: "#/components/schemas/MemoryQuota"
+        memory_limits:
+          $ref: "#/components/schemas/MemoryQuota"
+        cpu_requests:
+          $ref: "#/components/schemas/CpuQuota"
+        cpu_limits:
+          $ref: "#/components/schemas/CpuQuota"
+
     ConnectorNamespaceMeta:
       allOf:
         - $ref: "#/components/schemas/ObjectMeta"
         - $ref: "#/components/schemas/ConnectorNamespaceRequestMeta"
+        - type: object
+          properties:
+            resource_version:
+              type: integer
+              format: int64
+            quota:
+              $ref: "#/components/schemas/ConnectorNamespaceQuota"
 
     ConnectorNamespaceTenantKind:
       type: string
@@ -1548,9 +1570,19 @@ components:
           required:
             - id
             - name
+            - resource_version
             - cluster_id
             - tenant
             - status
+
+    MemoryQuota:
+      description: Memory quota for limits or requests
+      type: string
+      pattern: "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+    CpuQuota:
+      description: CPU quota for limits or requests
+      type: string
+      pattern: "^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
 
   parameters:
     id:
@@ -1792,14 +1824,14 @@ components:
         name: "MyNamespace"
         cluster_id: "9bsv0s7tne7g02gh5g4g"
         annotations:
-          - key: "connector_mgmt.api.openshift.com/profile"
+          - key: "connector_mgmt.bf2.org/profile"
             value: "default-profile"
     ConnectorNamespaceEvalCreateExample:
       value:
         name: "MyEvalNamespace"
         annotations:
-          - key: "connector_mgmt.api.openshift.com/profile"
-            value: "default-profile"
+          - key: "connector_mgmt.bf2.org/profile"
+            value: "evaluation-profile"
     400CreationExample:
       value:
         id: "103"

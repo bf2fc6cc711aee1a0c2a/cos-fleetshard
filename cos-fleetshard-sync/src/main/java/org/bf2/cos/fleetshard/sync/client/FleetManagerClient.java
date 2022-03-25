@@ -60,16 +60,19 @@ public class FleetManagerClient {
             .build(FleetManagerClientApi.class);
     }
 
-    public void getNamespaces(Consumer<Collection<ConnectorNamespace>> consumer) {
+    public void getNamespaces(long gv, Consumer<Collection<ConnectorNamespace>> consumer) {
         FleetManagerClientHelper.run(() -> {
-            LOGGER.debug("polling for namespaces");
+            LOGGER.debug("polling namespaces with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
             final List<ConnectorNamespace> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 ConnectorNamespaceList list = controlPlane.getConnectorNamespaces(
-                    config.cluster().id());
+                    config.cluster().id(),
+                    Integer.toString(i),
+                    null,
+                    gv);
 
                 if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
                     LOGGER.info("No namespace for cluster {}", config.cluster().id());
@@ -89,7 +92,7 @@ public class FleetManagerClient {
 
     public void getDeployments(long gv, Consumer<Collection<ConnectorDeployment>> consumer) {
         FleetManagerClientHelper.run(() -> {
-            LOGGER.debug("polling with gv: {}", gv);
+            LOGGER.debug("polling deployment with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
             final List<ConnectorDeployment> items = new ArrayList<>();

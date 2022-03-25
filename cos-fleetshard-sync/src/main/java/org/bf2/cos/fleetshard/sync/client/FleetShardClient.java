@@ -75,6 +75,20 @@ public class FleetShardClient {
             .orElse(0);
     }
 
+    public long getMaxNamespaceResourceRevision() {
+        return this.namespaceInformers.getIndexer().list().stream()
+            .mapToLong(c -> {
+                String rv = Resources.getAnnotation(c, Resources.ANNOTATION_NAMESPACE_RESOURCE_VERSION);
+                if (rv == null) {
+                    return 0;
+                }
+
+                return Integer.getInteger(rv);
+            })
+            .max()
+            .orElse(0);
+    }
+
     // *************************************
     //
     // Namespaces
