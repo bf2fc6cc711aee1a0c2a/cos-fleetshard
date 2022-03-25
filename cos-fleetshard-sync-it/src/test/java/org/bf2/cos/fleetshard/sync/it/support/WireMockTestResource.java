@@ -11,7 +11,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 public abstract class WireMockTestResource implements QuarkusTestResourceLifecycleManager {
-    private com.github.tomakehurst.wiremock.WireMockServer server;
+    private WireMockServer server;
 
     private final Map<String, String> args = new HashMap<>();
 
@@ -24,10 +24,12 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
 
     @Override
     public Map<String, String> start() {
-        server = new com.github.tomakehurst.wiremock.WireMockServer(wireMockConfig());
+        server = new WireMockServer(wireMockConfig());
         server.start();
 
-        return doStart(server);
+        configure(server);
+
+        return Map.of("control-plane-base-url", server.baseUrl());
     }
 
     protected WireMockConfiguration wireMockConfig() {
@@ -37,7 +39,8 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
             .useChunkedTransferEncoding(Options.ChunkedEncodingPolicy.NEVER);
     }
 
-    protected abstract Map<String, String> doStart(com.github.tomakehurst.wiremock.WireMockServer server);
+    protected void configure(WireMockServer server) {
+    }
 
     @Override
     public synchronized void stop() {
@@ -47,7 +50,7 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
         }
     }
 
-    protected com.github.tomakehurst.wiremock.WireMockServer getServer() {
+    protected WireMockServer getServer() {
         return server;
     }
 
@@ -58,7 +61,13 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
     protected void injectServerInstance(TestInjector testInjector) {
         testInjector.injectIntoFields(
             getServer(),
-            new TestInjector.AnnotatedAndMatchesType(WireMockTestInstance.class,
-                com.github.tomakehurst.wiremock.WireMockServer.class));
+            new TestInjector.AnnotatedAndMatchesType(
+                WireMockTestInstance.class,
+                WireMockServer.class));
+    }
+
+    @Override
+    public void inject(QuarkusTestResourceLifecycleManager.TestInjector testInjector) {
+        injectServerInstance(testInjector);
     }
 }

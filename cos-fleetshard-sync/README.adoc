@@ -79,21 +79,9 @@ To change the default values, use the following system properties:
 | 60s
 | the interval between full re-sync
 
-| cos.connectors.watch
-| true
-| enable/disable observing resources to trigger status update
-
-| cos.connectors.status.resync-interval
-| 60s
-| the interval between full connectors status re-sync
-
-| cos.connectors.status.update-interval
+| cos.resources.update-interval
 | 15s
-| the interval between connectors status update
-
-| cos.cluster.status.sync-interval
-| 30s
-| the interval between cluster status sync
+| the interval between resources update
 
 | mas-sso-base-url
 |

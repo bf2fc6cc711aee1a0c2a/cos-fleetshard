@@ -15,6 +15,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusExtractor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

@@ -12,6 +12,7 @@ import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorDeploymentProvisioner;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 

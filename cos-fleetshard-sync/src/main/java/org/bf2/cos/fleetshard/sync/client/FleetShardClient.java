@@ -28,7 +28,9 @@ import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
+import io.fabric8.kubernetes.client.informers.cache.Cache;
 
 @ApplicationScoped
 public class FleetShardClient {
@@ -169,7 +171,7 @@ public class FleetShardClient {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        final String key = id.getNamespace() + "/" + id.getName();
+        final String key = Cache.namespaceKeyFunc(id.getNamespace(), id.getName());
         final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
@@ -186,7 +188,7 @@ public class FleetShardClient {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
-        final String key = generateNamespaceId(namespaceId) + "/" + generateConnectorId(deploymentId);
+        final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
         final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
@@ -206,6 +208,14 @@ public class FleetShardClient {
         }
 
         connectorsInformer.addEventHandler(Informers.wrap(handler));
+    }
+
+    public void watchConnectors(ResourceEventHandler<ManagedConnector> handler) {
+        if (connectorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        connectorsInformer.addEventHandler(handler);
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {

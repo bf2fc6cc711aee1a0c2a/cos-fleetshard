@@ -74,19 +74,6 @@ public interface FleetShardSyncConfig {
          * @return the cluster id.
          */
         String id();
-
-        Status status();
-
-        interface Status {
-            /**
-             * Define how often the synchronizer should update the status of the {@link ManagedConnectorCluster} to the fleet
-             * manager.
-             *
-             * @return the sync interval.
-             */
-            @WithDefault("60s")
-            String syncInterval();
-        }
     }
 
     interface Operators {
@@ -126,21 +113,18 @@ public interface FleetShardSyncConfig {
         @WithDefault("60s")
         @WithConverter(DurationConverter.class)
         Duration resyncInterval();
+
+        /**
+         * Determine how often the synchronizer should update the status resources to the Control Plane.
+         *
+         * @return the timeout.
+         */
+        @WithDefault("15s")
+        @WithConverter(DurationConverter.class)
+        Duration updateInterval();
     }
 
     interface Connectors {
-
-        /**
-         * Determine if the synchronizer should watch {@link ManagedConnector} and report the related status to the Control
-         * Plane in realtime.
-         *
-         * @return true if the synchronizer should watch {@link ManagedConnector}
-         */
-        @WithDefault("true")
-        boolean watch();
-
-        Status status();
-
         /**
          * An optional map of additional labels to be added to the generated {@link ManagedConnector}.
          *
@@ -154,28 +138,6 @@ public interface FleetShardSyncConfig {
          * @return the additional annotations
          */
         Map<String, String> annotations();
-
-        interface Status {
-            /**
-             * Determine how often the synchronizer should sync the status of all the deployed {@link ManagedConnector} to the
-             * Control Plane.
-             *
-             * @return the re-sync interval
-             */
-            @WithDefault("60s")
-            @WithConverter(DurationConverter.class)
-            Duration resyncInterval();
-
-            /**
-             * Determine how often the synchronizer should update the status of deployed {@link ManagedConnector} to the
-             * Control Plane.
-             *
-             * @return the timeout.
-             */
-            @WithDefault("1s")
-            @WithConverter(DurationConverter.class)
-            Duration updateInterval();
-        }
     }
 
     interface Metrics {

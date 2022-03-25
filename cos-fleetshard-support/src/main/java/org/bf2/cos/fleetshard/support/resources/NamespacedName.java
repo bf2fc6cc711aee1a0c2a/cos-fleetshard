@@ -61,7 +61,7 @@ public class NamespacedName implements Serializable, Comparable<NamespacedName> 
 
     public static NamespacedName of(HasMetadata resource) {
         return new NamespacedName(
-            resource.getMetadata().getName(),
-            resource.getMetadata().getNamespace());
+            resource.getMetadata().getNamespace(),
+            resource.getMetadata().getName());
     }
 }
