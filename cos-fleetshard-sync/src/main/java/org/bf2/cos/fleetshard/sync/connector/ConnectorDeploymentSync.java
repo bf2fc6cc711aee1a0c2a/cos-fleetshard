@@ -42,6 +42,8 @@ public class ConnectorDeploymentSync {
     FleetShardSyncScheduler scheduler;
     @Inject
     FleetManagerClient fleetManager;
+    @Inject
+    FleetShardClient fleetShardClient;
 
     private volatile Future<?> future;
 
@@ -100,7 +102,7 @@ public class ConnectorDeploymentSync {
     public void provision(long timeout) throws InterruptedException {
         if (config.tenancy().enabled()) {
             // TODO: should not be executed each time
-            fleetManager.getNamespaces(this::provisionNamespaces);
+            fleetManager.getNamespaces(0, this::provisionNamespaces);
         }
 
         queue.poll(timeout, TimeUnit.MILLISECONDS, this::provisionConnectors);

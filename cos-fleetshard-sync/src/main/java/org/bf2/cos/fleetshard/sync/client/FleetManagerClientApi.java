@@ -74,8 +74,12 @@ public interface FleetManagerClientApi {
     @Path("/kafka_connector_clusters/{connector_cluster_id}/namespaces")
     @Produces(MediaType.APPLICATION_JSON)
     ConnectorNamespaceList getConnectorNamespaces(
-        @PathParam("connector_cluster_id") String connectorClusterId)
-        throws ApiException, ProcessingException;
+        @PathParam("connector_cluster_id") String connectorClusterId,
+        @QueryParam("page") String page,
+        @QueryParam("size") String size,
+        @QueryParam("gt_version") Long gtVersion)
+            throws ApiException, ProcessingException;
+
 
     /**
      * update the connector deployment status

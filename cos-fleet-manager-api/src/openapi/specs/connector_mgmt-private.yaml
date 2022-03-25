@@ -246,6 +246,14 @@ paths:
           type: string
         in: path
         required: true
+      - $ref: 'connector_mgmt.yaml#/components/parameters/page'
+      - $ref: 'connector_mgmt.yaml#/components/parameters/size'
+      - in: query
+        name: gt_version
+        description: filters the connectors to those with a version greater than the given value
+        schema:
+          type: integer
+          format: int64
     get:
       tags:
         - Connector Clusters Agent
