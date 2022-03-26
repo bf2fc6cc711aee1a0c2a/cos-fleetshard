@@ -3,7 +3,6 @@ package org.bf2.cos.fleetshard.operator.camel
 import groovy.util.logging.Slf4j
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet
 import org.bf2.cos.fleetshard.operator.camel.support.BaseSpec
-import org.bf2.cos.fleetshard.support.json.JacksonUtil
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET
 
@@ -40,8 +39,6 @@ class ReifyErrorHandlerTest extends BaseSpec {
             ])
 
         then:
-            log.info('>>> {}', JacksonUtil.asPrettyPrintedYaml(klb(resources)))
-
             with(klb(resources)) {
                 it.spec.errorHandler.requiredAt("/sink/endpoint/ref/kind").asText() == Kamelet.RESOURCE_KIND
                 it.spec.errorHandler.requiredAt("/sink/endpoint/ref/apiVersion").asText() == Kamelet.RESOURCE_API_VERSION
