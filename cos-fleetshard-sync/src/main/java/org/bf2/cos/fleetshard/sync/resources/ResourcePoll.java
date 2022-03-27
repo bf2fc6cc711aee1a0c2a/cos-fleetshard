@@ -19,6 +19,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class ResourcePoll {
     private static final String JOB_ID = "cos.resources.poll";
     private static final long BEGINNING = 0;
+    public static final String METRICS_SYNC = "connectors.sync";
+    public static final String METRICS_POLL = "connectors.poll";
 
     @Inject
     FleetShardSyncConfig config;
@@ -33,11 +35,13 @@ public class ResourcePoll {
     @Inject
     MeterRegistry registry;
 
-    private volatile MetricsRecorder recorder;
+    private volatile MetricsRecorder syncRecorder;
+    private volatile MetricsRecorder pollRecorder;
     private volatile Instant lastResync;
 
     public void start() throws Exception {
-        recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + JOB_ID);
+        syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
+        pollRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_POLL);
 
         scheduler.schedule(
             JOB_ID,
@@ -51,10 +55,6 @@ public class ResourcePoll {
 
     @Retry(maxRetries = 10, delay = 1, delayUnit = ChronoUnit.SECONDS)
     public void run() {
-        recorder.record(this::poll);
-    }
-
-    private void poll() {
         Instant now = Instant.now();
         boolean resync = lastResync == null;
 
@@ -63,16 +63,22 @@ public class ResourcePoll {
         }
 
         if (resync) {
-            namespaceProvisioner.poll(BEGINNING);
-            connectorsProvisioner.poll(BEGINNING);
-
+            syncRecorder.record(this::sync);
             lastResync = now;
         } else {
-            namespaceProvisioner.poll(
-                connectorClient.getMaxNamespaceResourceRevision());
-            connectorsProvisioner.poll(
-                connectorClient.getMaxDeploymentResourceRevision());
+            pollRecorder.record(this::poll);
         }
     }
 
+    private void sync() {
+        namespaceProvisioner.poll(BEGINNING);
+        connectorsProvisioner.poll(BEGINNING);
+    }
+
+    private void poll() {
+        namespaceProvisioner.poll(
+            connectorClient.getMaxNamespaceResourceRevision());
+        connectorsProvisioner.poll(
+            connectorClient.getMaxDeploymentResourceRevision());
+    }
 }

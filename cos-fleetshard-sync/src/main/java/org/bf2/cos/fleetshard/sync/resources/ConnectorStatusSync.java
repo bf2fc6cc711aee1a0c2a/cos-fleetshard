@@ -20,12 +20,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
 public class ConnectorStatusSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusSync.class);
-    private static final String JOB_ID = "cos.connectors.status.sync";
+
+    public static final String JOB_ID = "cos.connectors.status.sync";
+    public static final String METRICS_SYNC = "connectors.status.sync";
+    public static final String METRICS_UPDATE = "connectors.status.update";
 
     @Inject
     ConnectorStatusUpdater updater;
@@ -38,7 +42,8 @@ public class ConnectorStatusSync {
     @Inject
     MeterRegistry registry;
 
-    private volatile MetricsRecorder recorder;
+    private volatile MetricsRecorder syncRecorder;
+    private volatile MetricsRecorder updateRecorder;
     private volatile Instant lastResync;
     private volatile Instant lastUpdate;
 
@@ -47,7 +52,8 @@ public class ConnectorStatusSync {
     public void start() throws Exception {
         LOGGER.info("Starting connector status sync");
 
-        recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + JOB_ID);
+        syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
+        updateRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_UPDATE);
 
         connectorClient.watchConnectors(new ResourceEventHandler<>() {
             @Override
@@ -77,29 +83,56 @@ public class ConnectorStatusSync {
     }
 
     public void run() {
-        recorder.record(this::update);
-    }
-
-    private void update() {
         final Duration resyncInterval = config.resources().resyncInterval();
         final Instant now = Instant.now();
         final boolean resync = lastResync == null || greater(lastResync, now, resyncInterval);
 
         if (resync) {
-            for (ManagedConnector connector : connectorClient.getAllConnectors()) {
-                updater.update(connector);
-            }
-
+            syncRecorder.record(this::sync);
             lastResync = now;
         } else {
-            for (Map.Entry<NamespacedName, Instant> entry : connectors.entrySet()) {
-                if (entry.getValue().isAfter(lastUpdate)) {
-                    connectorClient.getConnector(entry.getKey()).ifPresent(updater::update);
-                }
-            }
+            updateRecorder.record(this::update);
         }
 
         lastUpdate = now;
+    }
+
+    private void sync() {
+        int count = 0;
+
+        try {
+            for (ManagedConnector connector : connectorClient.getAllConnectors()) {
+                updater.update(connector);
+
+                count++;
+            }
+        } finally {
+            if (count > 0) {
+                Counter.builder(config.metrics().baseName() + "." + METRICS_SYNC + ".total")
+                    .register(registry)
+                    .increment(count);
+            }
+        }
+    }
+
+    private void update() {
+        int count = 0;
+
+        try {
+            for (Map.Entry<NamespacedName, Instant> entry : connectors.entrySet()) {
+                if (entry.getValue().isAfter(lastUpdate)) {
+                    connectorClient.getConnector(entry.getKey()).ifPresent(updater::update);
+
+                    count++;
+                }
+            }
+        } finally {
+            if (count > 0) {
+                Counter.builder(config.metrics().baseName() + "." + METRICS_UPDATE + ".total")
+                    .register(registry)
+                    .increment(count);
+            }
+        }
     }
 
     private static boolean greater(Temporal startInclusive, Temporal endExclusive, Duration interval) {
