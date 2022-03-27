@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
@@ -28,6 +29,7 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
@@ -48,6 +50,9 @@ public class ReSyncTest extends SyncTestSupport {
 
     @WireMockTestInstance
     WireMockServer server;
+
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "test.namespace")
     String ns;
@@ -105,7 +110,6 @@ public class ReSyncTest extends SyncTestSupport {
             server.verify(2, getRequestedFor(urlPathMatching(namespacesUrl)).withQueryParam("gt_version", equalTo("0")));
             server.verify(2, getRequestedFor(urlPathMatching(deploymentsUrl)).withQueryParam("gt_version", equalTo("0")));
         });
-
     }
 
     public static class Profile extends SyncTestProfile {
