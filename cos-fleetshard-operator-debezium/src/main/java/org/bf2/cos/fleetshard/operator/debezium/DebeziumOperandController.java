@@ -1,7 +1,7 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,10 +76,10 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     static {
         try {
-            METRICS_CONFIG = Files.readString(Paths.get(
-                Objects.requireNonNull(DebeziumOperandController.class.getClassLoader().getResource(METRICS_CONFIG_FILENAME))
-                    .getPath()));
-        } catch (Exception e) {
+            METRICS_CONFIG = Arrays.toString(Objects
+                .requireNonNull(DebeziumOperandController.class.getClassLoader().getResourceAsStream(METRICS_CONFIG_FILENAME))
+                .readAllBytes());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
