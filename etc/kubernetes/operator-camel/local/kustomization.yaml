@@ -18,9 +18,6 @@ patchesJson6902:
       kind: Deployment
       name: cos-fleetshard-operator-camel
     patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/name
-        value: application
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
