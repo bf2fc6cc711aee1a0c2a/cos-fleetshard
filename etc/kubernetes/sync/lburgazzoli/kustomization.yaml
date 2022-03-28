@@ -11,6 +11,21 @@ configMapGenerator:
 
 patchesJson6902:
   - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-sync
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/name
+        value: "application"
+      - op: replace
+        path: /spec/template/spec/containers/0/image
+        value: "quay.io/lburgazzoli/cfs:latest"
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  - target:
       group: rbac.authorization.k8s.io
       version: v1
       kind: ClusterRoleBinding
