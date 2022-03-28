@@ -18,3 +18,4 @@ kamel
 .kube/
 .kind/
 .mvn/mvnd.properties
+.ocm.json

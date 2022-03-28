@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -60,8 +61,14 @@ public class DebeziumOperandControllerTest {
     private static final String SCHEMA_REGISTRY_URL = "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2";
     private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
     private static final String MANAGED_CONNECTOR_UID = "51eba005-daft-punk-afe1-b2178bcb523d";
+    private static final String IMAGE_PULL_SECRET_NAME = "my-pullsecret";
 
     private static final DebeziumOperandConfiguration CONFIGURATION = new DebeziumOperandConfiguration() {
+        @Override
+        public LocalObjectReference imagePullSecretsName() {
+            return new LocalObjectReference(IMAGE_PULL_SECRET_NAME);
+        }
+
         @Override
         public KafkaConnect kafkaConnect() {
             return Map::of;
@@ -206,7 +213,7 @@ public class DebeziumOperandControllerTest {
             .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
                 assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
                 assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
-                    .contains(DebeziumConstants.IMAGE_PULL_SECRET);
+                    .contains(CONFIGURATION.imagePullSecretsName());
                 assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
                 assertThat(kc.getSpec().getMetricsConfig()).isInstanceOfSatisfying(JmxPrometheusExporterMetrics.class,
                     jmxMetricsConfig -> {

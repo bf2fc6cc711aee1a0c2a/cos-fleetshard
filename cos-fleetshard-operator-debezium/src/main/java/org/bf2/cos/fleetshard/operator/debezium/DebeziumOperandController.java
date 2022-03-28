@@ -53,7 +53,6 @@ import io.strimzi.api.kafka.model.template.PodTemplateBuilder;
 
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.IMAGE_PULL_SECRET;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_CLIENT_SECRET_KEY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURCE_TYPES;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
@@ -153,7 +152,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .build())
             .withTemplate(new KafkaConnectTemplateBuilder()
                 .withPod(new PodTemplateBuilder()
-                    .withImagePullSecrets(IMAGE_PULL_SECRET)
+                    .withImagePullSecrets(configuration.imagePullSecretsName())
                     .build())
                 .build())
             .withJmxPrometheusExporterMetricsConfig(
