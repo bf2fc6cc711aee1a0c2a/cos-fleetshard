@@ -37,6 +37,12 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-failure-threshold  | 6                                          |
           | trait.camel.apache.org/health.liveness-period             | 7                                          |
           | trait.camel.apache.org/health.liveness-timeout            | 8                                          |
+
+     And the klb has target-labels containing "cos.bf2.org/deployment.id"
+     And the klb has target-labels containing "cos.bf2.org/connector.id"
+     And the klb has target-labels containing "cos.bf2.org/connector.type.id"
+     And the klb has target-labels containing "cos.bf2.org/operator.type"
+
      And the klb has labels containing:
           | cos.bf2.org/cluster.id                |                               |
           | cos.bf2.org/connector.id              |                               |

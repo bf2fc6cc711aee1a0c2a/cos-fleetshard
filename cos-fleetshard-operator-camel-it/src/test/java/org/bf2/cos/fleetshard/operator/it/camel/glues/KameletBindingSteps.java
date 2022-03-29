@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
+import org.bf2.cos.fleetshard.operator.camel.CamelConstants;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 
@@ -214,6 +215,27 @@ public class KameletBindingSteps extends StepsSupport {
             .isNotNull();
         assertThatDataTable(table, ctx::resolvePlaceholders)
             .matches(res.getMetadata().getAnnotations());
+    }
+
+    @And("the klb has target-labels containing {string}")
+    public void klb_target_labels_contains(String value) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThat(res.getMetadata().getAnnotations())
+            .isNotEmpty();
+
+        assertThat(res.getMetadata().getAnnotations())
+            .isNotEmpty();
+        assertThat(res.getMetadata().getAnnotations())
+            .containsKey(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS);
+
+        String labels = res.getMetadata().getAnnotations().get(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS);
+
+        assertThatJson(labels)
+            .isArray()
+            .contains(value);
     }
 
     @And("the klb has labels containing:")
