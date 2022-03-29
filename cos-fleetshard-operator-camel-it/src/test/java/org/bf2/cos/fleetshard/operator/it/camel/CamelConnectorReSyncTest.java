@@ -25,7 +25,6 @@ public class CamelConnectorReSyncTest extends CucumberQuarkusTest {
             final String ns = "cos-camel-" + uid();
 
             return Map.of(
-                "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns);
         }
     }

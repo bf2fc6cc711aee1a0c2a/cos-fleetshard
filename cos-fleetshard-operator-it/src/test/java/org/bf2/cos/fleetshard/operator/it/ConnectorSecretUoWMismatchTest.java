@@ -25,7 +25,6 @@ public class ConnectorSecretUoWMismatchTest extends CucumberQuarkusTest {
 
             return Map.of(
                 "test.namespace", ns,
-                "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns);
         }
     }

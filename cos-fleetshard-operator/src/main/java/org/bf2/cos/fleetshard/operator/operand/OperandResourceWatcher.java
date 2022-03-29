@@ -21,7 +21,6 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
     private final ManagedConnectorOperator operator;
     private final ResourceDefinitionContext context;
     private final String contextApiVersion;
-    private final String namespace;
     private final String name;
 
     public OperandResourceWatcher(
@@ -30,9 +29,8 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
         ManagedConnectorOperator operator,
         String apiVersion,
         String kind,
-        String namespace,
         MetricsRecorder recorder) {
-        this(name, client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), namespace, recorder);
+        this(name, client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), recorder);
     }
 
     public OperandResourceWatcher(
@@ -40,14 +38,12 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
         KubernetesClient client,
         ManagedConnectorOperator operator,
         ResourceDefinitionContext context,
-        String namespace,
         MetricsRecorder recorder) {
 
         super(client, recorder);
 
         this.name = name;
         this.operator = operator;
-        this.namespace = namespace;
         this.context = context;
         this.contextApiVersion = context.getGroup() != null
             ? context.getGroup() + "/" + context.getVersion()
@@ -62,25 +58,16 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
 
     @Override
     protected Watch doWatch() {
-        LOGGER.info("Watch resource {}:{}@{}",
+        LOGGER.info("Watch resource {}:{} @ all namespaces",
             contextApiVersion,
-            context.getKind(),
-            namespace);
+            context.getKind());
 
-        if (this.namespace != null) {
-            return getClient()
-                .genericKubernetesResources(context)
-                .inNamespace(namespace)
-                .withLabel(Resources.LABEL_OPERATOR_OWNER, operator.getMetadata().getName())
-                .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
-                .watch(this);
-        } else {
-            return getClient()
-                .genericKubernetesResources(context)
-                .withLabel(Resources.LABEL_OPERATOR_OWNER, operator.getMetadata().getName())
-                .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
-                .watch(this);
-        }
+        return getClient()
+            .genericKubernetesResources(context)
+            .inAnyNamespace()
+            .withLabel(Resources.LABEL_OPERATOR_OWNER, operator.getMetadata().getName())
+            .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
+            .watch(this);
     }
 
     @Override

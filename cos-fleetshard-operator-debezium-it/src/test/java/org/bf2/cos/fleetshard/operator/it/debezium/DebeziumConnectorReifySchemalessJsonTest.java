@@ -25,7 +25,6 @@ public class DebeziumConnectorReifySchemalessJsonTest extends CucumberQuarkusTes
             final String ns = "cos-debezium-" + uid();
 
             return Map.of(
-                "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns);
         }
     }

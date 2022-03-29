@@ -17,25 +17,22 @@ public class ConnectorSecretEventSource extends InstrumentedWatcherEventSource<S
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorSecretEventSource.class);
 
     private final ManagedConnectorOperator operator;
-    private final String namespace;
 
     public ConnectorSecretEventSource(
         KubernetesClient kubernetesClient,
         ManagedConnectorOperator operator,
-        String namespace,
         MetricsRecorder recorder) {
 
         super(kubernetesClient, recorder);
 
         this.operator = operator;
-        this.namespace = namespace;
     }
 
     @Override
     protected Watch doWatch() {
         return getClient()
             .secrets()
-            .inNamespace(namespace)
+            .inAnyNamespace()
             .withLabel(Resources.LABEL_OPERATOR_TYPE, operator.getSpec().getType())
             .withLabel(Resources.LABEL_UOW)
             .watch(this);

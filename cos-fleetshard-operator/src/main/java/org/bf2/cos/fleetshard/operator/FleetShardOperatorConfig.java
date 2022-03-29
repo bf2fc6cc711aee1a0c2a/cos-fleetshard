@@ -3,7 +3,6 @@ package org.bf2.cos.fleetshard.operator;
 import java.util.Optional;
 import java.util.Set;
 
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 
 import io.smallrye.config.ConfigMapping;
@@ -69,13 +68,6 @@ public interface FleetShardOperatorConfig {
     }
 
     interface Connectors {
-        /**
-         * The namespace where {@link ManagedConnector} are placed.
-         *
-         * @return the namespace.
-         */
-        String namespace();
-
         /**
          * An optional set of labels to be transferred to the generated resources
          *

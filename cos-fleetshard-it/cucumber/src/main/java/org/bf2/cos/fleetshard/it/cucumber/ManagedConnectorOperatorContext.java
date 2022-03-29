@@ -8,7 +8,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 @ApplicationScoped
 public class ManagedConnectorOperatorContext {
     @Inject
-    private CosFeatureContext cosCtx;
+    CosFeatureContext cosCtx;
 
     private volatile ManagedConnectorOperator managedConnectorOperator;
 
@@ -25,6 +25,6 @@ public class ManagedConnectorOperatorContext {
     }
 
     public String namespace() {
-        return cosCtx.getConnectorsNamespace();
+        return cosCtx.getOperatorsNamespace();
     }
 }

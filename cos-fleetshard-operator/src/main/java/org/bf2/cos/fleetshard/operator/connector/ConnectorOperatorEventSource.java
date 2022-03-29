@@ -21,20 +21,17 @@ public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource
 
     private final ManagedConnectorOperator operator;
     private final String operatorsNamespace;
-    private final String connectorsNamespace;
 
     public ConnectorOperatorEventSource(
         KubernetesClient kubernetesClient,
         ManagedConnectorOperator operator,
         String operatorsNamespace,
-        String connectorsNamespace,
         MetricsRecorder recorder) {
 
         super(kubernetesClient, recorder);
 
         this.operator = operator;
         this.operatorsNamespace = operatorsNamespace;
-        this.connectorsNamespace = connectorsNamespace;
     }
 
     @Override
@@ -55,7 +52,7 @@ public class ConnectorOperatorEventSource extends InstrumentedWatcherEventSource
 
         getClient()
             .resources(ManagedConnector.class)
-            .inNamespace(connectorsNamespace)
+            .inAnyNamespace()
             .withLabel(Resources.LABEL_OPERATOR_TYPE, resource.getSpec().getType())
             .list().getItems().stream()
             .filter(mc -> mc.getStatus() != null)

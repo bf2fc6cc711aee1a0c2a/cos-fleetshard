@@ -18,11 +18,10 @@ public class CosFeatureContext {
     @ConfigProperty(name = "cos.operator.version")
     String operatorVersion;
     @Inject
-    @ConfigProperty(name = "cos.connectors.namespace")
-    String connectorsNamespace;
-    @Inject
     @ConfigProperty(name = "cos.operators.namespace")
     String operatorsNamespace;
+
+    String connectorsNamespace = "connectors-ns-" + uid();
 
     public String getClusterId() {
         return clusterId;
