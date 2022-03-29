@@ -26,7 +26,6 @@ public class DebeziumConnectorReifyWithTargetMetaTest extends CucumberQuarkusTes
             final String ns = "cos-debezium-" + uid();
 
             return mapOf(
-                "cos.connectors.namespace", ns,
                 "cos.operators.namespace", ns,
                 "cos.connectors.target-labels[0]", "foo/barLabel",
                 "cos.connectors.target-annotations[0]", "foo/barAnnotation");

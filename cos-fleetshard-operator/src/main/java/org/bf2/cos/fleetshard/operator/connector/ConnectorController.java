@@ -132,14 +132,12 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
-                fleetShard.getConnectorsNamespace(),
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
         eventSources.add(
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
-                fleetShard.getConnectorsNamespace(),
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators", tags)));
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
@@ -150,7 +148,6 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                     kubernetesClient,
                     managedConnectorOperator,
                     res,
-                    fleetShard.getConnectorsNamespace(),
                     MetricsRecorder.of(registry, id, tags)));
         }
 
@@ -388,7 +385,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         }
 
         Secret secret = kubernetesClient.secrets()
-            .inNamespace(fleetShard.getConnectorsNamespace())
+            .inNamespace(connector.getMetadata().getNamespace())
             .withName(connector.getSpec().getDeployment().getSecret())
             .get();
 

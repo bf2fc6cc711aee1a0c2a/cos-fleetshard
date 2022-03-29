@@ -36,7 +36,19 @@ spec:
   type: "ClusterIP"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-operator-camel-view"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "view"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-camel"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
 metadata:
   annotations: {}
   labels:
@@ -88,7 +100,7 @@ rules:
   - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
+kind: "ClusterRoleBinding"
 metadata:
   annotations: {}
   labels:
@@ -98,20 +110,8 @@ metadata:
   name: "cos-fleetshard-operator-camel"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-operator-camel"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-operator-camel"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-operator-camel-view"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
   kind: "ClusterRole"
-  name: "view"
+  name: "cos-fleetshard-operator-camel"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-operator-camel"

@@ -24,10 +24,6 @@ public class FleetShardClient {
     @Inject
     FleetShardOperatorConfig config;
 
-    public String getConnectorsNamespace() {
-        return config.connectors().namespace();
-    }
-
     public String getOperatorNamespace() {
         return config.operators().namespace();
     }
@@ -52,7 +48,7 @@ public class FleetShardClient {
     public List<ManagedConnector> lookupManagedConnectors() {
         List<ManagedConnector> answer = kubernetesClient
             .customResources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
+            .inAnyNamespace()
             .list()
             .getItems();
 
@@ -61,19 +57,19 @@ public class FleetShardClient {
 
     public ManagedConnector create(ManagedConnector connector) {
         return kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
+            .inNamespace(connector.getMetadata().getNamespace())
             .createOrReplace(connector);
     }
 
     public ManagedConnector edit(String name, Consumer<ManagedConnector> consumer) {
         return kubernetesClient.customResources(ManagedConnector.class)
-            .inNamespace(getConnectorsNamespace())
-            .withName(name).accept(consumer);
+            .withName(name)
+            .accept(consumer);
     }
 
     public Secret create(Secret secret) {
         return kubernetesClient.secrets()
-            .inNamespace(getConnectorsNamespace())
+            .inNamespace(secret.getMetadata().getNamespace())
             .createOrReplace(secret);
     }
 }
