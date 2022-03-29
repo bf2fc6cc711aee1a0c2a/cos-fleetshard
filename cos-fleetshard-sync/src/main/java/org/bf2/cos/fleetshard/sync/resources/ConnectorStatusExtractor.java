@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.Condition;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_UNASSIGNED;
 
 public class ConnectorStatusExtractor {
     public static ConnectorDeploymentStatus extract(ManagedConnector connector) {
@@ -65,6 +66,8 @@ public class ConnectorStatusExtractor {
             if (DESIRED_STATE_DELETED.equals(deployment.getDesiredState())) {
                 status.setPhase(ConnectorState.DEPROVISIONING);
             } else if (DESIRED_STATE_STOPPED.equals(deployment.getDesiredState())) {
+                status.setPhase(ConnectorState.DEPROVISIONING);
+            } else if (DESIRED_STATE_UNASSIGNED.equals(deployment.getDesiredState())) {
                 status.setPhase(ConnectorState.DEPROVISIONING);
             }
         }

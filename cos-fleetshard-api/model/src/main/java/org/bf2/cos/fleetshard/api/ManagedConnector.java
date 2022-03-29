@@ -30,6 +30,7 @@ public class ManagedConnector
 
     public static final String DESIRED_STATE_READY = "ready";
     public static final String DESIRED_STATE_DELETED = "deleted";
+    public static final String DESIRED_STATE_UNASSIGNED = "unassigned";
     public static final String DESIRED_STATE_STOPPED = "stopped";
 
     public static final String STATE_PROVISIONING = "provisioning";
