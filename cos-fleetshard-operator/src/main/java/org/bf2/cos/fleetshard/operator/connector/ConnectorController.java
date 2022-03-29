@@ -59,6 +59,7 @@ import io.micrometer.core.instrument.Timer;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_UNASSIGNED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_DE_PROVISIONING;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
@@ -327,6 +328,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
         setCondition(connector, ManagedConnectorConditions.Type.Ready, false, "Initialization");
 
         switch (connector.getSpec().getDeployment().getDesiredState()) {
+            case DESIRED_STATE_UNASSIGNED:
             case DESIRED_STATE_DELETED: {
                 setCondition(
                     connector,
@@ -746,6 +748,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
                         connector.getStatus().setPhase(ManagedConnectorStatus.PhaseType.Stopping);
                         connector.getStatus().setDeployment(connector.getSpec().getDeployment());
                         break;
+                    case DESIRED_STATE_UNASSIGNED:
                     case DESIRED_STATE_DELETED:
                         setCondition(
                             connector,

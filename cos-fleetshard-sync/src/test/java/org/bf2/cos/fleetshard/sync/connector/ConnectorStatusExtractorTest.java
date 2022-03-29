@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_STOPPED;
+import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_UNASSIGNED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_FAILED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.STATE_READY;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -44,6 +45,9 @@ public class ConnectorStatusExtractorTest {
                 ConnectorState.DEPROVISIONING),
             arguments(
                 DESIRED_STATE_DELETED,
+                ConnectorState.DEPROVISIONING),
+            arguments(
+                DESIRED_STATE_UNASSIGNED,
                 ConnectorState.DEPROVISIONING));
     }
 
