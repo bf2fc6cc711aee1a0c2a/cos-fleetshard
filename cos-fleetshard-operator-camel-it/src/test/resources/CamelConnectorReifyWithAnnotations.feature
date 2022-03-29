@@ -44,12 +44,13 @@ Feature: Camel Connector Reify With Annotations
 
     Then the klb exists
      And the klb has annotations containing:
-          | trait.camel.apache.org/container.image          | quay.io/foo/bar |
-          | trait.camel.apache.org/container.request-memory | 256Mi           |
-          | trait.camel.apache.org/kamelets.enabled         | false           |
-          | trait.camel.apache.org/jvm.enabled              | false           |
-          | trait.camel.apache.org/logging.json             | false           |
-          | trait.camel.apache.org/owner.target-labels      | ${cos.ignore}   |
+          | camel.apache.org/operator.id                    | ${cos.operator.id}    |
+          | trait.camel.apache.org/container.image          | quay.io/foo/bar       |
+          | trait.camel.apache.org/container.request-memory | 256Mi                 |
+          | trait.camel.apache.org/kamelets.enabled         | false                 |
+          | trait.camel.apache.org/jvm.enabled              | false                 |
+          | trait.camel.apache.org/logging.json             | false                 |
+          | trait.camel.apache.org/owner.target-labels      | ${cos.ignore}         |
      And the klb has labels containing:
           | cos.bf2.org/cluster.id    |      |
           | cos.bf2.org/connector.id  |      |

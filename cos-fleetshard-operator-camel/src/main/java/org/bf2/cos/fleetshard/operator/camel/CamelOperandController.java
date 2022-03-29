@@ -17,7 +17,6 @@ import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +32,7 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.KAMEL_OPERATOR_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_ID_PLACEHOLDER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_SECRET_PLACEHOLDER;
@@ -52,7 +52,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.KAMEL_OPERATOR_ID;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.configureKameletProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
@@ -226,7 +225,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         // Camel Operator Annotation
         String kamel_operator_id = connector.getStatus().getConnectorStatus().getAssignedOperator().getId();
         if (kamel_operator_id != null) {
-            annotations.putIfAbsent(KAMEL_OPERATOR_ID, connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
+            annotations.putIfAbsent(KAMEL_OPERATOR_ID, kamel_operator_id);
         }
 
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage());
