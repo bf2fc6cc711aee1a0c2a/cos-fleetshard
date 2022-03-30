@@ -223,9 +223,9 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         }
 
         // Camel Operator Annotation
-        String kamel_operator_id = connector.getStatus().getConnectorStatus().getAssignedOperator().getId();
-        if (kamel_operator_id != null) {
-            annotations.putIfAbsent(KAMEL_OPERATOR_ID, kamel_operator_id);
+        String kamelOperatorId = connector.getStatus().getConnectorStatus().getAssignedOperator().getId();
+        if (kamelOperatorId != null) {
+            annotations.putIfAbsent(KAMEL_OPERATOR_ID, kamelOperatorId);
         }
 
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage());
