@@ -67,7 +67,7 @@ To change the default values, use the following system properties:
 |===
 | Property | Default | Description
 
-| cos.operators.namespace
+| cos.namespace
 | ${kubernetes.namespace}
 | the namespace where operators are installed
 

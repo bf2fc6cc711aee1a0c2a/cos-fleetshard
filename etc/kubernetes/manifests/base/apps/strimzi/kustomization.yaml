@@ -1,0 +1,10 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+commonLabels:
+  app: strimzi
+ 
+resources:
+  - crds
+  - operator

@@ -8,6 +8,7 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -78,8 +79,8 @@ public class ClusterStatusUpdaterWithOperatorTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "1s",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled");

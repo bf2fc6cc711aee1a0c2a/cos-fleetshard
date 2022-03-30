@@ -1,0 +1,18 @@
+#kubectl create clusterrolebinding strimzi-cluster-operator-namespaced 
+#  --clusterrole=strimzi-cluster-operator-namespaced 
+#  --serviceaccount my-namespace:strimzi-cluster-operator
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: strimzi
+  name: strimzi-cluster-operator-namespaced
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: strimzi-cluster-operator-namespaced
+subjects:
+- kind: ServiceAccount
+  name: strimzi-cluster-operator
+  namespace: myproject

@@ -44,7 +44,7 @@ public class FleetShardClient {
 
     public void start() {
         operatorsInformer = kubernetesClient.resources(ManagedConnectorOperator.class)
-            .inNamespace(config.operators().namespace())
+            .inNamespace(config.namespace())
             .inform();
         namespaceInformers = kubernetesClient.namespaces()
             .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
@@ -111,9 +111,6 @@ public class FleetShardClient {
     }
 
     public String generateNamespaceId(String namespaceId) {
-        if (!config.tenancy().enabled()) {
-            return namespaceId;
-        }
 
         String prefix = config.tenancy().namespacePrefix();
         if (!prefix.endsWith("-")) {
@@ -258,7 +255,7 @@ public class FleetShardClient {
     public Optional<ManagedConnectorCluster> getConnectorCluster() {
         return Optional.ofNullable(
             kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(this.config.operators().namespace())
+                .inNamespace(this.config.namespace())
                 .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + getClusterId())
                 .get());
     }
@@ -276,7 +273,7 @@ public class FleetShardClient {
                 .build();
 
             return kubernetesClient.resources(ManagedConnectorCluster.class)
-                .inNamespace(this.config.operators().namespace())
+                .inNamespace(this.config.namespace())
                 .withName(cluster.getMetadata().getName())
                 .createOrReplace(cluster);
         });

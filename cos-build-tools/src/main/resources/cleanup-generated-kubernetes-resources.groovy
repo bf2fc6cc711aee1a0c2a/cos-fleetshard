@@ -11,6 +11,8 @@ if (!(inputFile as File).exists()) {
 log.info("Input file: ${inputFile}")
 log.info("Output file: ${outputFile}")
 
+(outputFile as File).createParentDirectories()
+
 def factory = new YAMLFactory().disable(YAMLGenerator.Feature.USE_NATIVE_TYPE_ID)
 def mapper = new ObjectMapper(factory).configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
 def parser = factory.createParser(inputFile as File)

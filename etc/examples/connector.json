@@ -1,10 +1,7 @@
 {
     "name": "cos_logger",
     "channel": "stable",
-    "deployment_location": {
-        "kind": "addon",
-        "cluster_id": ""
-    },
+    "namespace_id": "",,
     "desired_state": "ready",
     "kafka": {
         "id": "",

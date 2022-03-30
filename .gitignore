@@ -19,3 +19,4 @@ kamel
 .kind/
 .mvn/mvnd.properties
 .ocm.json
+bundle.Dockerfile

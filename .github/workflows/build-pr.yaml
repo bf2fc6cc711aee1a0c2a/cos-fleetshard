@@ -4,6 +4,13 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'etc/kubernetes/manifests/**'
   workflow_dispatch:
 
 concurrency:
@@ -30,8 +37,6 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           server-id: github
-          server-username: COS_PACKAGES_USERNAME
-          server-password: COS_PACKAGES_TOKEN
       - name: 'SetUp KinD'
         uses: container-tools/kind-action@v1
         with:
@@ -43,9 +48,5 @@ jobs:
           ./etc/scripts/deploy_camel-k_crds.sh
           ./etc/scripts/deploy_strimzi_crds.sh
       - name: "Build"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COS_PACKAGES_ACCOUNT: ${{secrets.COS_PACKAGES_USERNAME}}
-          COS_PACKAGES_TOKEN: ${{secrets.COS_PACKAGES_TOKEN}}
         run: |
           ./etc/scripts/build.sh

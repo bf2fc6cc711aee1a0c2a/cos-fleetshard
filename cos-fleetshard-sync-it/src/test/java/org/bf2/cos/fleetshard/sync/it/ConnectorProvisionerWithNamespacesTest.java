@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
@@ -95,8 +96,8 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
             return Map.of(
                 "test.deployment.id", uid(),
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled");

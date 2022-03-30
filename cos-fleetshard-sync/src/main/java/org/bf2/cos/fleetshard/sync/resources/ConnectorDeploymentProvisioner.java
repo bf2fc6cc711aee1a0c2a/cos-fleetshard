@@ -73,11 +73,6 @@ public class ConnectorDeploymentProvisioner {
     public void provision(ConnectorDeployment deployment) {
         final String uow = uid();
 
-        if (config != null && !config.tenancy().enabled()) {
-            LOGGER.info("tenancy is not enabled, defaulting to namespace: {}", config.operators().namespace());
-            deployment.getSpec().setNamespaceId(config.operators().namespace());
-        }
-
         LOGGER.info("Got cluster_id: {}, namespace_d: {}, connector_id: {}, deployment_id: {}, resource_version: {}, uow: {}",
             fleetShard.getClusterId(),
             deployment.getSpec().getNamespaceId(),

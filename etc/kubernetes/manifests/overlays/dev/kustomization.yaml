@@ -1,0 +1,9 @@
+
+resources:
+  - namespace.yaml
+  - strimzi
+  - camel-k
+  - ../../base/crds
+  - cos-fleetshard-sync
+  - cos-fleetshard-operator-camel
+  - cos-fleetshard-operator-debezium

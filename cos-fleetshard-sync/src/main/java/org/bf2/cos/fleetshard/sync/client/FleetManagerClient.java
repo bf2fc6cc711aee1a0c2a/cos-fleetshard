@@ -47,10 +47,8 @@ public class FleetManagerClient {
     public FleetManagerClient(FleetShardSyncConfig config) {
         this.config = config;
 
-        UriBuilder builder = UriBuilder.fromUri(config.manager().uri()).path("/api/connector_mgmt/v1");
-        if (config.tenancy().enabled()) {
-            builder = builder.path("/agent");
-        }
+        UriBuilder builder = UriBuilder.fromUri(config.manager().uri())
+            .path("/api/connector_mgmt/v1/agent");
 
         this.controlPlane = RestClientBuilder.newBuilder()
             .baseUri(builder.build())
@@ -157,25 +155,23 @@ public class FleetManagerClient {
                 .forEach(
                     status::addOperatorsItem);
 
-            if (config.tenancy().enabled()) {
-                namespaces.stream().map(
-                    n -> {
-                        ConnectorNamespaceState phase = ConnectorNamespaceState.DISCONNECTED;
-                        if (n.getStatus() != null) {
-                            if (Objects.equals(Namespaces.STATUS_ACTIVE, n.getStatus().getPhase())) {
-                                phase = ConnectorNamespaceState.READY;
-                            } else if (Objects.equals(Namespaces.STATUS_TERMINATING, n.getStatus().getPhase())) {
-                                phase = ConnectorNamespaceState.DELETING;
-                            }
+            namespaces.stream().map(
+                n -> {
+                    ConnectorNamespaceState phase = ConnectorNamespaceState.DISCONNECTED;
+                    if (n.getStatus() != null) {
+                        if (Objects.equals(Namespaces.STATUS_ACTIVE, n.getStatus().getPhase())) {
+                            phase = ConnectorNamespaceState.READY;
+                        } else if (Objects.equals(Namespaces.STATUS_TERMINATING, n.getStatus().getPhase())) {
+                            phase = ConnectorNamespaceState.DELETING;
                         }
+                    }
 
-                        return new ConnectorNamespaceStatus()
-                            .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
-                            .phase(phase);
-                    })
-                    .forEach(
-                        status::addNamespacesItem);
-            }
+                    return new ConnectorNamespaceStatus()
+                        .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
+                        .phase(phase);
+                })
+                .forEach(
+                    status::addNamespacesItem);
 
             controlPlane.updateConnectorClusterStatus(
                 config.cluster().id(),

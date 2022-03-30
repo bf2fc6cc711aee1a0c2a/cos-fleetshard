@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
@@ -101,8 +102,8 @@ public class NamespaceProvisionerWithCustomPrefixTest extends SyncTestSupport {
                 "test.deployment.id.1", uid(),
                 "test.deployment.id.2", uid(),
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.tenancy.namespace-prefix", "foo",
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",

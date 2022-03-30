@@ -1,0 +1,49 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+commonLabels:
+  app: strimzi
+ 
+resources:
+  - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.28.0/strimzi-cluster-operator-0.28.0.yaml
+  - strimzi-cluster-operator-namespaced.yaml
+  - strimzi-cluster-operator-entity-operator-delegation.yaml
+  - strimzi-cluster-operator-topic-operator-delegation.yaml
+
+patches:
+  # the strimzi-cluster-operator yaml is an convenient way to install the
+  # operator so it includes everithing that is needed including the CRDs
+  # however in our case, CRD and operators shoud be kept separated as we
+  # want to get the latest CRDs but we can have a number of operators
+  # installed side by side
+  - target:
+      kind: CustomResourceDefinition
+    patch: |-
+      $patch: delete
+      kind: CustomResourceDefinition
+      apiVersion: apiextensions.k8s.io/v1
+      metadata:
+        name: ".*.strimzi.io"
+  # By setting the value of the STRIMZI_NAMESPACE environment variable
+  # to *, the Cluster Operator will watch resources across all namespaces
+  - target:
+      group: apps
+      kind: Deployment
+      name: strimzi-cluster-operator
+      version: v1
+    patch: |-
+      kind: Deployment
+      apiVersion: apps/v1
+      metadata:
+        name: strimzi-cluster-operator
+      spec:
+        template:
+          spec:
+            containers:
+            - name: strimzi-cluster-operator
+              env:
+              - name: STRIMZI_NAMESPACE            
+                valueFrom:
+                  $patch: delete  
+                value: "*"

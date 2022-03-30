@@ -11,18 +11,18 @@ import io.smallrye.config.WithDefault;
 @ConfigMapping(prefix = "cos")
 public interface FleetShardOperatorConfig {
     /**
+     * The main cos namespace.
+     *
+     * @return the namespace.
+     */
+    String namespace();
+
+    /**
      * Configuration options for the {@link ManagedConnectorOperator}
      *
      * @return {@link Operator}
      */
     Operator operator();
-
-    /**
-     * Configuration options for operators.
-     *
-     * @return {@link Operators}
-     */
-    Operators operators();
 
     /**
      * Configuration options for connectors.
@@ -56,15 +56,6 @@ public interface FleetShardOperatorConfig {
          * @return the operator version.
          */
         String version();
-    }
-
-    interface Operators {
-        /**
-         * The namespace where {@link ManagedConnectorOperator} are placed.
-         *
-         * @return the namespace.
-         */
-        String namespace();
     }
 
     interface Connectors {

@@ -25,7 +25,7 @@ public class CamelConnectorReifyWithDisabledLabelSelectionTest extends CucumberQ
             final String ns = "cos-camel-" + uid();
 
             return Map.of(
-                "cos.operators.namespace", ns,
+                "cos.namespace", ns,
                 "cos.operator.camel.label-selection.enabled", "false");
         }
     }

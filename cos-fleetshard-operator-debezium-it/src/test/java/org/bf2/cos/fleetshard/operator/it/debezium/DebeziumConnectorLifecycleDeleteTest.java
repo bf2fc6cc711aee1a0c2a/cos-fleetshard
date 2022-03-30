@@ -25,7 +25,7 @@ public class DebeziumConnectorLifecycleDeleteTest extends CucumberQuarkusTest {
             final String ns = "cos-debezium-" + uid();
 
             return Map.of(
-                "cos.operators.namespace", ns);
+                "cos.namespace", ns);
         }
     }
 }

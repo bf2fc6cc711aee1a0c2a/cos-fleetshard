@@ -1,0 +1,25 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: cos-fleetshard-sync
+spec:
+  customresourcedefinitions:
+    owned:
+      - kind: ManagedConnectorCluster
+        name: managedconnectorclusters.cos.bf2.org
+        version: v1alpha1
+      - kind: ManagedConnectorOperator
+        name: managedconnectoroperators.cos.bf2.org
+        version: v1alpha1
+      - kind: ManagedConnector
+        name: managedconnectors.cos.bf2.org
+        version: v1alpha1
+  displayName: cos-fleetshard-sync
+  install:
+    spec:
+      clusterPermissions:
+      deployments:
+    strategy: deployment
+  installModes:
+    - supported: true
+      type: AllNamespaces

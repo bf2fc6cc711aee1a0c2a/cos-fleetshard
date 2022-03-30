@@ -1,0 +1,22 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - ../../../base/apps/cos-fleetshard-sync
+
+configMapGenerator:
+  - name: cos-fleetshard-sync-config
+    files:
+      - application.properties=app-config/application.properties
+
+patchesJson6902:
+  - target:
+      group: rbac.authorization.k8s.io
+      version: v1
+      kind: ClusterRoleBinding
+      name: cos-fleetshard-sync-connectors
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: "redhat-openshift-connectors"

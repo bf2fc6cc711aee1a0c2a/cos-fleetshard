@@ -1,0 +1,9 @@
+
+resources:
+  - camel-k
+  - strimzi
+  - ../../base/crds
+  - cos-fleetshard-sync
+  - cos-fleetshard-operator-camel
+  - cos-fleetshard-operator-debezium
+

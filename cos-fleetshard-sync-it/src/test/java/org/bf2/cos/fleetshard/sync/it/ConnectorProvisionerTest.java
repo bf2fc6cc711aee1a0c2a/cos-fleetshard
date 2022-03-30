@@ -10,6 +10,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
@@ -185,8 +186,8 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
                 "cos.resources.update-interval", "disabled");

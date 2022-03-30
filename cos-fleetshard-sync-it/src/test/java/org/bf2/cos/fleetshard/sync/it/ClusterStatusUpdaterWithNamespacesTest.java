@@ -72,8 +72,8 @@ public class ClusterStatusUpdaterWithNamespacesTest extends SyncTestSupport {
                 "test.deployment.id.1", uid(),
                 "test.deployment.id.2", uid(),
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "1s",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled");

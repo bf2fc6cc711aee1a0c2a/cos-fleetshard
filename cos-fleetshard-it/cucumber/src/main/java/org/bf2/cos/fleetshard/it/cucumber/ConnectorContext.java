@@ -23,7 +23,7 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
 public class ConnectorContext {
-    public static final String COS_OPERATORS_NAMESPACE = "cos.operators.namespace";
+    public static final String COS_NAMESPACE = "cos.namespace";
     public static final String COS_CLUSTER_ID = "cos.cluster.id";
     public static final String COS_OPERATOR_ID = "cos.operator.id";
     public static final String COS_OPERATOR_VERSION = "cos.operator.version";
@@ -104,7 +104,7 @@ public class ConnectorContext {
 
     private Map<String, Object> getPlaceholders() {
         Map<String, Object> placeholders = new HashMap<>();
-        placeholders.put(COS_OPERATORS_NAMESPACE, cosCtx.getOperatorsNamespace());
+        placeholders.put(COS_NAMESPACE, cosCtx.getOperatorsNamespace());
         placeholders.put(COS_CLUSTER_ID, clusterId());
         placeholders.put(COS_OPERATOR_ID, operatorId());
         placeholders.put(COS_OPERATOR_VERSION, operatorVersion());

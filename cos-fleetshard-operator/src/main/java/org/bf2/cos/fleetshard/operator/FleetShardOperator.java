@@ -30,7 +30,7 @@ public class FleetShardOperator {
             managedConnectorOperator.getSpec().getVersion());
 
         client.resources(ManagedConnectorOperator.class)
-            .inNamespace(config.operators().namespace())
+            .inNamespace(config.namespace())
             .createOrReplace(managedConnectorOperator);
 
         operator.start();
