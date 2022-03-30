@@ -34,3 +34,12 @@ patchesJson6902:
       - op: replace
         path: /spec/template/spec/containers/0/imagePullPolicy
         value: "Never"
+  - target:
+      group: rbac.authorization.k8s.io
+      version: v1
+      kind: ClusterRoleBinding
+      name: cos-fleetshard-operator-camel
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: "default" 
