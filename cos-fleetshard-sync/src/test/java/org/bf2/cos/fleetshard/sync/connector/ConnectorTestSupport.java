@@ -208,17 +208,6 @@ public final class ConnectorTestSupport {
 
     public static FleetShardSyncConfig config() {
         FleetShardSyncConfig answer = Mockito.mock(FleetShardSyncConfig.class);
-        when(answer.tenancy()).thenAnswer(invocation -> {
-            var tenancy = Mockito.mock(FleetShardSyncConfig.Tenancy.class);
-            when(tenancy.enabled()).thenReturn(false);
-            return tenancy;
-        });
-        when(answer.operators()).thenAnswer(invocation -> {
-            var operators = Mockito.mock(FleetShardSyncConfig.Operators.class);
-            when(operators.namespace()).thenAnswer(i -> uid());
-
-            return operators;
-        });
         when(answer.connectors()).thenAnswer(invocation -> {
             var connectors = Mockito.mock(FleetShardSyncConfig.Connectors.class);
             when(connectors.annotations()).thenReturn(Collections.emptyMap());

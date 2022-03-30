@@ -1,0 +1,76 @@
+name: Build and Tag
+
+on:
+  push:
+    tags:
+      - "v*"
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'etc/kubernetes/manifests/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  LANG: en_US.UTF-8
+  IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
+  IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
+  OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
+  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        kubernetes:
+          - 'v1.22.1'
+    steps:
+      - name: 'Checkout Project'
+        uses: actions/checkout@v2
+      - name: 'Validate Project'
+        run: |
+          TAG=$(git describe --abbrev=0 2>/dev/null)
+          
+          if [ -z ${TAG} ]; then
+            echo "No tags to build"
+            exit 1
+          else
+            echo "Image Tag: ${TAG}-${{ github.sha }}"
+          fi
+          
+          echo "IMAGE_VERSION=${TAG}-${{ github.sha }}" >> $GITHUB_ENV
+      - name: 'Set up JDK 11'
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          server-id: github
+      - name: 'Login to quay.io'
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.IMAGE_REPO_USERNAME }}
+          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
+      - name: 'SetUp KinD'
+        uses: container-tools/kind-action@v1
+        with:
+          registry: false
+          node_image: kindest/node:${{ matrix.kubernetes }}
+      - name: 'SetUp Kubernetes Cluster'
+        run: |
+          ./etc/scripts/deploy_fleetshard_crds.sh
+          ./etc/scripts/deploy_camel-k_crds.sh
+          ./etc/scripts/deploy_strimzi_crds.sh
+      - name: 'Build and push container images'
+        run: |          
+          ./etc/scripts/build.sh
+          ./etc/scripts/build_image.sh cos-fleetshard-sync
+          ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
+          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium

@@ -1,0 +1,17 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - ../../../base/apps/camel-k
+
+patches:
+  - target:
+      group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: camel-k-operator.*
+      version: v1
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: "cos"    

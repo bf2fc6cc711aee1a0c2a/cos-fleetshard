@@ -25,7 +25,7 @@ public class DebeziumConnectorReifyWithExternalConfigTest extends CucumberQuarku
             final String ns = "cos-debezium-" + uid();
 
             return Map.of(
-                "cos.operators.namespace", ns,
+                "cos.namespace", ns,
                 "cos.operator.debezium.kafka-connect.config.\"config.storage.replication.factor\"", "3");
         }
     }

@@ -1,0 +1,41 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+- ../../../base/apps/cos-fleetshard-sync
+
+configMapGenerator:
+- files:
+  - application.properties=app-config/application.properties
+  name: cos-fleetshard-sync-config
+secretGenerator:
+- files:
+  - application.properties=app-secret/application.properties
+  name: addon-connectors-operator-parameters
+
+patchesStrategicMerge:
+- delete-servicemonitor.yaml
+
+patchesJson6902:
+- patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 0
+    - op: replace
+      path: /spec/template/spec/containers/0/imagePullPolicy
+      value: "Never"
+  target:
+    group: apps
+    kind: Deployment
+    name: cos-fleetshard-sync
+    version: v1
+- patch: |-
+    - op: replace
+      path: /subjects/0/namespace
+      value: "default"
+  target:
+    group: rbac.authorization.k8s.io
+    kind: ClusterRoleBinding
+    name: cos-fleetshard-sync-connectors
+    version: v1

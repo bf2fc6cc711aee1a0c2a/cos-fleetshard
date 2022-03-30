@@ -1,0 +1,43 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+commonLabels:
+  app: camel-k
+ 
+resources:
+  - https://github.com/apache/camel-k//config/manager/?ref=release-1.8.x
+  - https://github.com/apache/camel-k//config/crd/?ref=release-1.8.x
+  - https://github.com/apache/camel-k//config/rbac/?ref=release-1.8.x
+  - https://github.com/apache/camel-k//config/rbac/openshift/?ref=release-1.8.x
+
+patchesStrategicMerge:
+- patches/delete-camel-k-edit.yaml
+- patches/delete-camel-k-clusterrole-console.yaml
+- patches/delete-camel-k-clusterrole-console-binding.yaml
+- patches/delete-camel-k-role-knative.yaml
+- patches/delete-camel-k-role-keda.yaml
+- patches/delete-camel-k-role-strimzi.yaml
+- patches/delete-camel-k-rolebinding-knative.yaml
+- patches/delete-camel-k-rolebinding-keda.yaml
+- patches/delete-camel-k-rolebinding-strimzi.yaml
+- patches/patch-camel-k-deployment.yaml
+
+patches:
+  - path: patches/patch-roles.yaml
+    target:
+      group: rbac.authorization.k8s.io
+      kind: Role
+      name: camel-k-operator.*
+      version: v1
+  - path: patches/patch-rolebindings.yaml
+    target:
+      group: rbac.authorization.k8s.io
+      kind: RoleBinding
+      name: camel-k-operator.*
+      version: v1
+
+images:
+  - name: docker.io/apache/camel-k
+    newName: quay.io/rhoas/cos-camel-k
+    newTag: release-1.8.x

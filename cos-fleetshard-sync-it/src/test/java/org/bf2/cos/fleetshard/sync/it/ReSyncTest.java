@@ -117,8 +117,8 @@ public class ReSyncTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.cluster.id", getId(),
-                "test.namespace", getId(),
-                "cos.operators.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "5s");

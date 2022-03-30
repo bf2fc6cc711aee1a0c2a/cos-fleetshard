@@ -1,5 +1,3 @@
-#!/bin/bash -ex
-
-#export MAVEN_ARGS="-V -ntp -Dhttp.keepAlive=false -e"
+#!/bin/bash -e
 
 ./mvnw ${MAVEN_ARGS} clean install -Psourcecheck "$@"

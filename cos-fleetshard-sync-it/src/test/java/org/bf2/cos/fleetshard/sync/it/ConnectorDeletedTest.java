@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -132,9 +133,9 @@ public class ConnectorDeletedTest extends SyncTestSupport {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                "test.namespace", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.cluster.id", getId(),
-                "cos.operators.namespace", getId(),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "1s",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "1s");

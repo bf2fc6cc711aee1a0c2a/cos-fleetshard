@@ -1,0 +1,17 @@
+
+resources:
+  - namespace.yaml
+  - strimzi
+  - camel-k
+  - ../../base/crds
+  - cos-fleetshard-sync
+  - cos-fleetshard-operator-camel
+  - cos-fleetshard-operator-debezium
+
+images:
+  - name: quay.io/rhoas/cos-fleetshard-operator-camel
+    newTag: latest
+  - name: quay.io/rhoas/cos-fleetshard-operator-debezium
+    newTag: latest
+  - name: quay.io/rhoas/cos-fleetshard-sync
+    newTag: latest

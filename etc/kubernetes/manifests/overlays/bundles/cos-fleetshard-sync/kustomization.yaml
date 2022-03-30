@@ -1,0 +1,24 @@
+generatorOptions:
+  disableNameSuffixHash: true
+
+resources:
+  - ../../../base/crds
+  - ../../../base/apps/cos-fleetshard-sync
+
+#images:
+#  - name: "quay.io/rhoas/cos-fleetshard-sync:latest"
+#    newTag: "v1.0.3"
+
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-sync
+    patch: |-
+      - op: add
+        path: /metadata/labels/control-plane
+        value: "controller-manager"
+      - op: add
+        path: /spec/template/spec/containers/0/name
+        value: "manager"

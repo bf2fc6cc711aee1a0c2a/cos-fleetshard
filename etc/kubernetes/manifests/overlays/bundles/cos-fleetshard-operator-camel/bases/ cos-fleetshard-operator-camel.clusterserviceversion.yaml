@@ -1,0 +1,14 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: cos-fleetshard-operator-camel
+spec:
+  displayName: cos-fleetshard-operator-camel
+  install:
+    spec:
+      clusterPermissions:
+      deployments:
+    strategy: deployment
+  installModes:
+    - supported: true
+      type: AllNamespaces

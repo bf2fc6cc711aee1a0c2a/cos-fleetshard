@@ -1,0 +1,14 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: cos-fleetshard-operator-debezium
+spec:
+  displayName: cos-fleetshard-operator-debezium
+  install:
+    spec:
+      clusterPermissions:
+      deployments:
+    strategy: deployment
+  installModes:
+    - supported: true
+      type: AllNamespaces

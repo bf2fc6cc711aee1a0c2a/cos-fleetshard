@@ -18,7 +18,7 @@ public class CosFeatureContext {
     @ConfigProperty(name = "cos.operator.version")
     String operatorVersion;
     @Inject
-    @ConfigProperty(name = "cos.operators.namespace")
+    @ConfigProperty(name = "cos.namespace")
     String operatorsNamespace;
 
     String connectorsNamespace = "connectors-ns-" + uid();

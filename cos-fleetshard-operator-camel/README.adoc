@@ -51,7 +51,7 @@ To change the default values, use the following system properties:
 |
 | the version of the operator
 
-| cos.operators.namespace
+| cos.namespace
 | ${kubernetes.namespace}
 | the namespace where operator related resources are created
 |===

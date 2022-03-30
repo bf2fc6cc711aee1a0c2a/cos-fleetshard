@@ -59,11 +59,13 @@
         <maven-pmd-plugin.version>3.16.0</maven-pmd-plugin.version>
         <openapi-generator-maven-plugin.version>5.4.0</openapi-generator-maven-plugin.version>
         <versions-maven-plugin.version>2.10.0</versions-maven-plugin.version>
+        <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
     </properties>
 
     <modules>
         <module>cos-build-tools</module>
         <module>cos-fleet-manager-api</module>
+        <module>cos-fleetshard-poms</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
         <module>cos-fleetshard-it</module>
@@ -104,6 +106,11 @@
             <dependency>
                 <groupId>io.quarkiverse.operatorsdk</groupId>
                 <artifactId>quarkus-operator-sdk</artifactId>
+                <version>${quarkus-operator-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkiverse.operatorsdk</groupId>
+                <artifactId>quarkus-operator-sdk-csv-generator</artifactId>
                 <version>${quarkus-operator-sdk.version}</version>
             </dependency>
             <dependency>
@@ -509,10 +516,32 @@
                     <artifactId>versions-maven-plugin</artifactId>
                     <version>${versions-maven-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>io.github.git-commit-id</groupId>
+                    <artifactId>git-commit-id-maven-plugin</artifactId>
+                    <version>${git-commit-id-maven-plugin.version}</version>
+                </plugin>
             </plugins>
 
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/META-INF/git.properties</generateGitPropertiesFilename>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

@@ -6,6 +6,13 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+    paths-ignore:
+      - 'LICENSE'
+      - '**/.gitignore'
+      - '**.md'
+      - '**.adoc'
+      - '*.txt'
+      - 'etc/kubernetes/manifests/**'
 
 jobs:
   triage:

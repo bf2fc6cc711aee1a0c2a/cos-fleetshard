@@ -26,7 +26,7 @@ public class CamelConnectorReifyWithTargetMetaTest extends CucumberQuarkusTest {
             final String ns = "cos-camel-" + uid();
 
             return mapOf(
-                "cos.operators.namespace", ns,
+                "cos.namespace", ns,
                 "cos.connectors.target-labels[0]", "foo/barLabel",
                 "cos.connectors.target-annotations[0]", "foo/barAnnotation");
         }

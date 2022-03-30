@@ -27,7 +27,7 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
 
             final Map<String, String> configs = new HashMap<>();
 
-            configs.put("cos.operators.namespace", ns);
+            configs.put("cos.namespace", ns);
             configs.put("cos.operator.camel.route-controller.backoff-delay", "2s");
             configs.put("cos.operator.camel.route-controller.initial-delay", "1s");
             configs.put("cos.operator.camel.route-controller.backoff-multiplier", "2");

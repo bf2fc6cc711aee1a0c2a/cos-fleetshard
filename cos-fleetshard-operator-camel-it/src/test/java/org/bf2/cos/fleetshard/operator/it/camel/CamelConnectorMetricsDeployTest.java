@@ -25,7 +25,7 @@ public class CamelConnectorMetricsDeployTest extends CucumberQuarkusTest {
             final String ns = "cos-camel-" + uid();
 
             return Map.of(
-                "cos.operators.namespace", ns);
+                "cos.namespace", ns);
         }
     }
 }

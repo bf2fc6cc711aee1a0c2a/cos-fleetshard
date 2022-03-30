@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.support.DurationConverter;
 
 import io.smallrye.config.ConfigMapping;
@@ -16,18 +15,18 @@ import io.smallrye.config.WithDefault;
 @ConfigMapping(prefix = "cos")
 public interface FleetShardSyncConfig {
     /**
+     * The main cos namespace.
+     *
+     * @return the namespace.
+     */
+    String namespace();
+
+    /**
      * Configuration options for the {@link ManagedConnectorCluster}
      *
      * @return {@link Cluster}
      */
     Cluster cluster();
-
-    /**
-     * Configuration options for operators.
-     *
-     * @return {@link Operators}
-     */
-    Operators operators();
 
     /**
      * Configuration options for connectors.
@@ -76,24 +75,7 @@ public interface FleetShardSyncConfig {
         String id();
     }
 
-    interface Operators {
-        /**
-         * The namespace where {@link ManagedConnectorOperator} are placed.
-         *
-         * @return the namespace.
-         */
-        String namespace();
-    }
-
     interface Tenancy {
-        /**
-         * If tenancy is supported
-         *
-         * @return the namespace.
-         */
-        @WithDefault("true")
-        boolean enabled();
-
         @WithDefault("redhat-openshift-connectors")
         String namespacePrefix();
     }

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rhoc
+spec:
+  ignoreDifferences:
+    - kind: ServiceAccount
+      jsonPointers:
+        - /imagePullSecrets
+        - /secrets
+  destination:
+    namespace: cos
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: etc/kubernetes/manifests/overlays/dev
+    repoURL: https://github.com/bf2fc6cc711aee1a0c2a/cos-fleetshard
+    targetRevision: bundle
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+      - CreateNamespace=true

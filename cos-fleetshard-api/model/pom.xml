@@ -72,7 +72,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/../../etc/kubernetes</outputDirectory>
+                            <outputDirectory>${project.basedir}/../../etc/kubernetes/manifests/base/crds</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/target/classes/META-INF/fabric8/</directory>

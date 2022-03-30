@@ -49,17 +49,7 @@ This is an example installation that consists in:
 +
 [source,shell]
 ----
-# you may need to tune cpus and memory depending on your laptop config
-minikube start --profile cos --cpus=4 --memory=4096
-----
-
-* *install camel-k 1.8.x*
-+
-This will install Camel K in the running cluster, needed to create connectors based on it, so make sure the `minikube start` was successful.
-+
-[source,shell]
-----
-kamel install --olm=false --skip-registry-setup
+./etc/scripts/start_minikube.sh
 ----
 
 * *install latest strimzi*
@@ -96,22 +86,11 @@ kubectl create secret generic addon-pullsecret \
     --type=kubernetes.io/dockerconfigjson
 ----
 
-* *install CRDs*
-+
-This will install the CRDs for Managed Connectors, it's Operators and Clusters.
+* *install the service*
 +
 [source,shell]
 ----
-./etc/scripts/deploy_fleetshard_crds.sh
-----
-
-* *install operators and sync*
-+
-[source,shell]
-----
-kubectl apply -k etc/kubernetes/operator-camel/local
-kubectl apply -k etc/kubernetes/operator-debezium/local
-kubectl apply -k etc/kubernetes/sync/local
+kubectl apply -k etc/kubernetes/manifests/overlays/local
 ----
 +
 At this point, operators and sync are deployed, but they are not running as replica is set to 0 by default because some resources have to be configured.
@@ -163,7 +142,7 @@ Although this section expects you to use a completely new kubernetes cluster, yo
 [source,shell]
 ----
 # you may need to tune this command
-minikube start --profile cos-testing
+./etc/scripts/start_minikube.sh
 ----
 
 * *install CRDs*

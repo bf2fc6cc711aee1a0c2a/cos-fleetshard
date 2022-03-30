@@ -3,10 +3,12 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+
     <parent>
         <groupId>org.bf2</groupId>
-        <artifactId>cos-fleetshard</artifactId>
+        <artifactId>cos-fleetshard-app</artifactId>
         <version>999-SNAPSHOT</version>
+        <relativePath>../cos-fleetshard-poms/app</relativePath>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -15,27 +17,25 @@
     <packaging>jar</packaging>
 
     <properties>
+        <app-secret.name>addon-connectors-operator-parameters</app-secret.name>
+        <app-config.name>cos-fleetshard-sync-config</app-config.name>
+
         <!-- CRD -->
         <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
 
         <!-- secret -->
-        <quarkus.kubernetes.secret-volumes.app-secret.secret-name>cos-fleetshard-sync-config</quarkus.kubernetes.secret-volumes.app-secret.secret-name>
+        <quarkus.kubernetes.secret-volumes.app-secret.secret-name>${app-secret.name}</quarkus.kubernetes.secret-volumes.app-secret.secret-name>
         <quarkus.kubernetes.secret-volumes.app-secret.default-mode>0644</quarkus.kubernetes.secret-volumes.app-secret.default-mode>
         <quarkus.kubernetes.mounts.app-secret.path>/mnt/app-secret</quarkus.kubernetes.mounts.app-secret.path>
 
         <!-- config map -->
-        <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>cos-fleetshard-sync-config</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
+        <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>${app-config.name}</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
         <quarkus.kubernetes.config-map-volumes.app-config.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config.default-mode>
         <quarkus.kubernetes.mounts.app-config.path>/mnt/app-config</quarkus.kubernetes.mounts.app-config.path>
 
         <!-- smallrye -->
         <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>/mnt/app-config</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>
         <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>/mnt/app-secret</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>
-
-        <!--
-        <quarkus.kubernetes.app-secret>cos-fleetshard-sync-config</quarkus.kubernetes.app-secret>
-        <quarkus.kubernetes.app-config-map>cos-fleetshard-sync-config</quarkus.kubernetes.app-config-map>
-        -->
 
         <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
         <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
@@ -49,13 +49,6 @@
         <quarkus.kubernetes.resources.requests.cpu>500m</quarkus.kubernetes.resources.requests.cpu>
         <quarkus.kubernetes.resources.limits.memory>512Mi</quarkus.kubernetes.resources.limits.memory>
         <quarkus.kubernetes.resources.limits.cpu>1500m</quarkus.kubernetes.resources.limits.cpu>
-
-        <!-- container image -->
-        <quarkus.container-image.build>false</quarkus.container-image.build>
-        <quarkus.container-image.registry>quay.io</quarkus.container-image.registry>
-        <quarkus.container-image.group>rhoas</quarkus.container-image.group>
-        <quarkus.container-image.name>cos-fleetshard-sync</quarkus.container-image.name>
-        <quarkus.container-image.tag>latest</quarkus.container-image.tag>
     </properties>
 
     <dependencies>
@@ -182,19 +175,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
-                <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus.version}</version>
-                <executions>
-                    <execution>
-                        <id>build</id>
-                        <goals>
-                            <goal>build</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
                 <version>${gmavenplus-plugin.version}</version>
@@ -215,7 +195,7 @@
                         </property>
                         <property>
                             <name>outputFile</name>
-                            <value>${project.basedir}/../etc/kubernetes/sync/base/kubernetes.yml</value>
+                            <value>${project.basedir}/../etc/kubernetes/manifests/base/apps/${project.artifactId}/kubernetes.yml</value>
                         </property>
                     </properties>
                     <scripts>
@@ -237,69 +217,10 @@
                     </dependency>
                 </dependencies>
             </plugin>
-            <plugin>
-                <groupId>net.revelc.code.formatter</groupId>
-                <artifactId>formatter-maven-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.bf2</groupId>
-                        <artifactId>cos-build-tools</artifactId>
-                        <version>${project.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>net.revelc.code</groupId>
-                <artifactId>impsort-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
     <profiles>
-        <profile>
-            <id>container-build</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <quarkus.container-image.push>false</quarkus.container-image.push>
-                <quarkus.container-image.build>true</quarkus.container-image.build>
-            </properties>
-        </profile>
-        <profile>
-            <id>container-push</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <quarkus.container-image.push>true</quarkus.container-image.push>
-                <quarkus.container-image.build>true</quarkus.container-image.build>
-            </properties>
-        </profile>
         <profile>
             <id>local</id>
             <activation>
@@ -330,62 +251,15 @@
 
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
                                 <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
-                                <quarkus.kubernetes-config.secrets>cos-fleetshard-sync-config</quarkus.kubernetes-config.secrets>
-                                <quarkus.kubernetes-config.config-maps>cos-fleetshard-sync-config</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.secrets>${app-secret.name}</quarkus.kubernetes-config.secrets>
+                                <quarkus.kubernetes-config.config-maps>${app-config.name}</quarkus.kubernetes-config.config-maps>
                                 <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
-                                <quarkus.kubernetes-config.namespace>${env.KUBERNETES_NAMESPACE}</quarkus.kubernetes-config.namespace>
                                 <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
                             </systemProperties>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>native</id>
-            <activation>
-                <property>
-                    <name>native</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.package.type>native</quarkus.package.type>
-            </properties>
-        </profile>
-        <profile>
-            <id>jvm</id>
-            <activation>
-                <property>
-                    <name>!native</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.jib.jvm-arguments>-XX:+UseShenandoahGC,-Djava.util.logging.manager=org.jboss.logmanager.LogManager</quarkus.jib.jvm-arguments>
-            </properties>
-        </profile>
-        <profile>
-            <id>docker</id>
-            <activation>
-                <property>
-                    <name>docker</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.native.container-build>true</quarkus.native.container-build>
-                <quarkus.native.container-runtime>docker</quarkus.native.container-runtime>
-            </properties>
-        </profile>
-        <profile>
-            <id>podman</id>
-            <activation>
-                <property>
-                    <name>podman</name>
-                </property>
-            </activation>
-            <properties>
-                <quarkus.native.container-build>true</quarkus.native.container-build>
-                <quarkus.native.container-runtime>podman</quarkus.native.container-runtime>
-            </properties>
         </profile>
     </profiles>
 
