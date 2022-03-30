@@ -67,6 +67,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard-operator-debezium
+  namespace: placeholder
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

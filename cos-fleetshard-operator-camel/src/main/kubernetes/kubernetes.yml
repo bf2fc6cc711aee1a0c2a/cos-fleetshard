@@ -66,6 +66,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: cos-fleetshard-operator-camel
+  namespace: placeholder
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
