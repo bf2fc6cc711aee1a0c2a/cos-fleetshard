@@ -26,9 +26,6 @@ patchesJson6902:
         value:
           name: COS_OPERATOR_VERSION
           value: "1.5.0"
-      - op: replace
-        path: /subjects/0/namespace
-        value: "cos"
   - target:
       group: rbac.authorization.k8s.io
       version: v1
@@ -37,5 +34,4 @@ patchesJson6902:
     patch: |-
       - op: replace
         path: /subjects/0/namespace
-        value: "cos" 
-        
+        value: "cos"
