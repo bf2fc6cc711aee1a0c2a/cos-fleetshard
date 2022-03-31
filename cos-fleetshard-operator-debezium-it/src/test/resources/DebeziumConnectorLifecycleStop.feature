@@ -22,8 +22,8 @@ Feature: Debezium Connector Lifecycle
     Then the kc exists
     Then the kctr exists
 
-    When the connector desired status is set to "stopped"
-    When the kctr status is set to "PAUSED"
-    Then the connector is in phase "Stopped"
-    Then the kc exists
-    Then the kctr exists
+    When the connector desired status is set to "deleted"
+    Then the connector is in phase "Deleted"
+    Then the connector secret exists
+    Then the kc does not exists
+    Then the kctr does not exists

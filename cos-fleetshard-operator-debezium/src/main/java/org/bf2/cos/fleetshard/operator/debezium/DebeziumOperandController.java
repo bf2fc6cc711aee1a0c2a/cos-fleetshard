@@ -14,7 +14,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.debezium.model.KeyAndValueConverters;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -208,23 +207,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     @Override
     public boolean stop(ManagedConnector connector) {
-        return lookupConnector(getKubernetesClient(), connector).map(kc -> {
-            if (kc.getSpec().getPause() != null && kc.getSpec().getPause()) {
-                return connector(kc)
-                    .map(c -> KafkaConnectorStatus.STATE_PAUSED.equals(c.state))
-                    .orElse(false);
-            }
-
-            kc.getSpec().setPause(true);
-
-            getKubernetesClient()
-                .resources(KafkaConnector.class)
-                .inNamespace(connector.getMetadata().getNamespace())
-                .withName(kc.getMetadata().getName())
-                .patch(kc);
-
-            return false;
-        }).orElse(true);
+        return delete(connector);
     }
 
     @Override
