@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +43,6 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
-import io.javaoperatorsdk.operator.api.reconciler.Constants;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
@@ -88,9 +86,9 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.copyLabel;
 
 @ControllerConfiguration(
     name = "connector",
-    finalizerName = Constants.NO_FINALIZER,
     generationAwareEventProcessing = false)
-public class ConnectorController extends AbstractResourceController<ManagedConnector> implements EventSourceInitializer {
+public class ConnectorController extends AbstractResourceController<ManagedConnector>
+    implements EventSourceInitializer<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
     @Inject
@@ -127,29 +125,27 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     @Override
-    public List<EventSource> prepareEventSources(EventSourceContext context) {
-        var eventSources = new ArrayList<EventSource>();
-        eventSources.add(
+    public Map<String, EventSource> prepareEventSources(EventSourceContext<ManagedConnector> context) {
+        final var eventSources = EventSourceInitializer.nameEventSources(
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
-        eventSources.add(
+                MetricsRecorder.of(registry,
+                    config.metrics().baseName() + ".controller.event.secrets", tags)),
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getOperatorNamespace(),
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators", tags)));
+                MetricsRecorder.of(registry,
+                    config.metrics().baseName() + ".controller.event.operators", tags)));
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
             final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
-            eventSources.add(
-                new OperandResourceWatcher(
-                    id,
-                    kubernetesClient,
-                    managedConnectorOperator,
-                    res,
-                    MetricsRecorder.of(registry, id, tags)));
+            eventSources.put(id, new OperandResourceWatcher(
+                kubernetesClient,
+                managedConnectorOperator,
+                res,
+                MetricsRecorder.of(registry, id, tags)));
         }
 
         return eventSources;
