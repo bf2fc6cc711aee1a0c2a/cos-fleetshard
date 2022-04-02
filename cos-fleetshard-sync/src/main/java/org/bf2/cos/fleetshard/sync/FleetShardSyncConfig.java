@@ -93,6 +93,9 @@ public interface FleetShardSyncConfig {
          */
         @WithDefault("true")
         boolean enabled();
+
+        @WithDefault("redhat-openshift-connectors")
+        String namespacePrefix();
     }
 
     interface Resources {

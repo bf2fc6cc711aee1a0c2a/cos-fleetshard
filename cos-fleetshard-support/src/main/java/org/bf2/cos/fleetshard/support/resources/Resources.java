@@ -54,9 +54,10 @@ public final class Resources {
     public static final String LABEL_KUBERNETES_MANAGED_BY = "app.kubernetes.io/managed-by";
     public static final String LABEL_KUBERNETES_CREATED_BY = "app.kubernetes.io/created-by";
 
-    public static final String COMPONENT_CLUSTER = "cluster";
-    public static final String COMPONENT_CONNECTOR = "connector";
-    public static final String COMPONENT_NAMESPACE = "namespace";
+    public static final String COMPONENT_CLUSTER = "cos-cluster";
+    public static final String COMPONENT_OPERATOR = "cos-operator";
+    public static final String COMPONENT_CONNECTOR = "cos-connector";
+    public static final String COMPONENT_NAMESPACE = "cos-namespace";
 
     private Resources() {
     }

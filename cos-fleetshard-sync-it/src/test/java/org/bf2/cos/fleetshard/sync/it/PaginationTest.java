@@ -12,7 +12,6 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -87,8 +86,8 @@ public class PaginationTest extends SyncTestSupport {
                 "test.deployment.id.1", uid(),
                 "test.deployment.id.2", uid(),
                 "cos.cluster.id", getId(),
-                "test.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "test.namespace", getId(),
+                "cos.operators.namespace", getId(),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled");

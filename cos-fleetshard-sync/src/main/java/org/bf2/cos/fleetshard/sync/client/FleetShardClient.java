@@ -17,7 +17,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.watch.Informers;
@@ -112,9 +111,18 @@ public class FleetShardClient {
     }
 
     public String generateNamespaceId(String namespaceId) {
-        return config.tenancy().enabled()
-            ? Namespaces.generateNamespaceId(namespaceId)
-            : namespaceId;
+        if (!config.tenancy().enabled()) {
+            return namespaceId;
+        }
+
+        String prefix = config.tenancy().namespacePrefix();
+        if (!prefix.endsWith("-")) {
+            prefix = prefix + "-";
+        }
+
+        return namespaceId.startsWith(prefix)
+            ? namespaceId
+            : prefix + namespaceId;
     }
 
     // *************************************

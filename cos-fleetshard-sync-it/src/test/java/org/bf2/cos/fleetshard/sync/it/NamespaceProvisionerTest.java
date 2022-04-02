@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -36,6 +38,10 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 public class NamespaceProvisionerTest extends SyncTestSupport {
     @WireMockTestInstance
     WireMockServer server;
+    @Inject
+    FleetShardClient client;
+    @Inject
+    FleetShardSyncConfig config;
 
     @Test
     void namespaceIsProvisioned() {
@@ -53,7 +59,9 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
 
         assertThat(ns1).satisfies(item -> {
             assertThat(item.getMetadata().getName())
-                .isEqualTo(Namespaces.generateNamespaceId(deployment1));
+                .isEqualTo(client.generateNamespaceId(deployment1));
+            assertThat(item.getMetadata().getName())
+                .startsWith(config.tenancy().namespacePrefix());
 
             assertThat(item.getMetadata().getLabels())
                 .containsEntry(Resources.LABEL_CLUSTER_ID, fleetShardClient.getClusterId())
@@ -71,7 +79,7 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
 
         assertThat(ns2).satisfies(item -> {
             assertThat(item.getMetadata().getName())
-                .isEqualTo(Namespaces.generateNamespaceId(deployment2));
+                .isEqualTo(client.generateNamespaceId(deployment2));
 
             assertThat(item.getMetadata().getLabels())
                 .containsEntry(Resources.LABEL_CLUSTER_ID, fleetShardClient.getClusterId())
@@ -91,8 +99,8 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
                 "test.deployment.id.1", uid(),
                 "test.deployment.id.2", uid(),
                 "cos.cluster.id", getId(),
-                "test.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "test.namespace", getId(),
+                "cos.operators.namespace", getId(),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled");

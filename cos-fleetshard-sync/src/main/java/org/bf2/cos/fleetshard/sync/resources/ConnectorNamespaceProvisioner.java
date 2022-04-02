@@ -5,7 +5,6 @@ import java.util.Collection;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
@@ -60,7 +59,7 @@ public class ConnectorNamespaceProvisioner {
         Namespace ns = new Namespace();
 
         KubernetesResourceUtil.getOrCreateMetadata(ns)
-            .setName(Namespaces.generateNamespaceId(namespace.getId()));
+            .setName(fleetShard.generateNamespaceId(namespace.getId()));
 
         Resources.setLabels(
             ns,

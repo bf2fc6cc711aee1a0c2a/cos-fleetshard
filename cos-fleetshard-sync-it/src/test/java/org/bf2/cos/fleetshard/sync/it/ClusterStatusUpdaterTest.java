@@ -3,7 +3,6 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
@@ -47,8 +46,8 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.cluster.id", getId(),
-                "test.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "test.namespace", getId(),
+                "cos.operators.namespace", getId(),
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
                 "cos.resources.update-interval", "1s");

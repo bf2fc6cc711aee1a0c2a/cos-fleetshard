@@ -28,7 +28,7 @@ Feature: Debezium Connector Reify
        | cos.bf2.org/deployment.id        | ${cos.deployment.id}          |
        | app.kubernetes.io/managed-by     | ${cos.operator.id}            |
        | app.kubernetes.io/created-by     | ${cos.operator.id}            |
-       | app.kubernetes.io/component      | connector                     |
+       | app.kubernetes.io/component      | cos-connector                 |
        | app.kubernetes.io/version        | 1                             |
        | app.kubernetes.io/part-of        | ${cos.cluster.id}             |
        | app.kubernetes.io/name           | ${cos.connector.id}           |
@@ -71,7 +71,7 @@ Feature: Debezium Connector Reify
        | strimzi.io/cluster               | ${cos.managed.connector.name} |
        | app.kubernetes.io/managed-by     | ${cos.operator.id}            |
        | app.kubernetes.io/created-by     | ${cos.operator.id}            |
-       | app.kubernetes.io/component      | connector                     |
+       | app.kubernetes.io/component      | cos-connector                 |
        | app.kubernetes.io/version        | 1                             |
        | app.kubernetes.io/part-of        | ${cos.cluster.id}             |
        | app.kubernetes.io/name           | ${cos.connector.id}           |
