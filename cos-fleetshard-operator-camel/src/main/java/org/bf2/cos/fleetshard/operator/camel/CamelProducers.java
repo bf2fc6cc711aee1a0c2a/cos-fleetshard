@@ -21,6 +21,7 @@ public class CamelProducers {
                 .withName(config.operator().id())
                 .addToLabels(Resources.LABEL_OPERATOR_TYPE, CamelConstants.OPERATOR_TYPE)
                 .addToLabels(Resources.LABEL_OPERATOR_VERSION, config.operator().version())
+                .addToLabels(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_OPERATOR)
                 .build())
             .withSpec(new ManagedConnectorOperatorSpecBuilder()
                 .withVersion(config.operator().version())

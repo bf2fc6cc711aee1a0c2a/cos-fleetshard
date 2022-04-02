@@ -10,7 +10,6 @@ import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
@@ -49,9 +48,6 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
     @WireMockTestInstance
     WireMockServer server;
 
-    @ConfigProperty(name = "test.namespace")
-    String ns;
-
     @ConfigProperty(name = "cos.cluster.id")
     String clusterId;
 
@@ -64,13 +60,13 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
             .post("/test/provisioner/all");
 
         Secret secret = until(
-            () -> fleetShardClient.getSecret(ns, clusterId),
+            () -> fleetShardClient.getSecret(clusterId, clusterId),
             item -> Objects.equals(
                 "1",
                 Resources.getLabel(item, Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
         ManagedConnector mc = until(
-            () -> fleetShardClient.getConnector(ns, clusterId),
+            () -> fleetShardClient.getConnector(clusterId, clusterId),
             item -> {
                 return item.getSpec().getDeployment().getDeploymentResourceVersion() == 1L
                     && item.getSpec().getDeployment().getSecret() != null;
@@ -87,8 +83,8 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return mapOf(
                 "cos.cluster.id", getId(),
-                "test.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "test.namespace", getId(),
+                "cos.operators.namespace", getId(),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
@@ -113,8 +109,11 @@ public class ConnectorProvisionerWithMetaTest extends SyncTestSupport {
                 RequestMethod.GET,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
                 resp -> {
+                    JsonNode body = namespaceList(
+                        namespace(clusterId, clusterId));
+
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                        .withJsonBody(namespaceList());
+                        .withJsonBody(body);
                 });
 
             server.stubMatching(

@@ -508,7 +508,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
             labels.put(LABEL_KUBERNETES_NAME, spec.getConnectorId());
             labels.put(LABEL_KUBERNETES_INSTANCE, spec.getDeploymentId());
             labels.put(LABEL_KUBERNETES_VERSION, rv);
-            labels.put(LABEL_KUBERNETES_COMPONENT, "connector");
+            labels.put(LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_CONNECTOR);
             labels.put(LABEL_KUBERNETES_PART_OF, spec.getClusterId());
             labels.put(LABEL_KUBERNETES_MANAGED_BY, managedConnectorOperator.getMetadata().getName());
             labels.put(LABEL_KUBERNETES_CREATED_BY, managedConnectorOperator.getMetadata().getName());

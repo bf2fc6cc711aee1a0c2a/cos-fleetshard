@@ -25,6 +25,7 @@ public class FleetShardSyncProducers {
             .withMetadata(new ObjectMetaBuilder()
                 .withName(Clusters.CONNECTOR_CLUSTER_PREFIX + "-" + clusterId)
                 .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
+                .addToLabels(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_CLUSTER)
                 .build())
             .withSpec(new ManagedConnectorClusterSpecBuilder()
                 .withClusterId(clusterId)

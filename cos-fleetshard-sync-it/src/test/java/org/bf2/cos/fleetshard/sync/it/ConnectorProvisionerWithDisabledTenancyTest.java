@@ -9,7 +9,6 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
@@ -84,8 +83,8 @@ public class ConnectorProvisionerWithDisabledTenancyTest extends SyncTestSupport
         public Map<String, String> getConfigOverrides() {
             return Map.of(
                 "cos.cluster.id", getId(),
-                "test.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.operators.namespace", Namespaces.generateNamespaceId(getId()),
+                "test.namespace", getId(),
+                "cos.operators.namespace", getId(),
                 "cos.tenancy.enabled", "false",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
