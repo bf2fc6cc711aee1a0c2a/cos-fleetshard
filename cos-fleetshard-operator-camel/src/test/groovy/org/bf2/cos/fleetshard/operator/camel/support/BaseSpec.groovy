@@ -30,6 +30,8 @@ import org.eclipse.microprofile.config.spi.ConfigProviderResolver
 import org.mockito.Mockito
 import spock.lang.Specification
 
+import static org.mockito.Mockito.when
+
 class BaseSpec extends Specification {
     public static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid"
     public static final Long DEFAULT_CONNECTOR_REVISION = 1L
@@ -48,7 +50,7 @@ class BaseSpec extends Specification {
     public static final YAMLMapper YAML = new YAMLMapper()
 
     public static final KubernetesClient CLIENT = Mockito.mock(KubernetesClient.class)
-    public static final CamelOperandConfiguration CONF =  Mockito.mock(CamelOperandConfiguration.class)
+    public static final CamelOperandConfiguration CONF =  mockConfiguration()
     public static final CamelOperandController CONTROLLER =  new CamelOperandController(CLIENT, CONF)
 
     void setupSpec() {
@@ -165,5 +167,18 @@ class BaseSpec extends Specification {
         } catch (Exception e) {
             throw new RuntimeException(e)
         }
+    }
+
+    static CamelOperandConfiguration mockConfiguration() {
+        def answer = Mockito.mock(CamelOperandConfiguration.class)
+
+        when(answer.labelSelection()).thenAnswer(invocation -> {
+            var labelSelection = Mockito.mock(CamelOperandConfiguration.LabelSelection.class);
+            when(labelSelection.enabled()).thenAnswer(i -> true);
+
+            return labelSelection;
+        });
+
+        return answer
     }
 }
