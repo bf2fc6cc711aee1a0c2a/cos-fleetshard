@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration.Health;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
@@ -222,10 +223,11 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             annotations.putAll(shardMetadata.getAnnotations());
         }
 
-        // Camel Operator Annotation
-        String kamelOperatorId = connector.getStatus().getConnectorStatus().getAssignedOperator().getId();
-        if (kamelOperatorId != null) {
-            annotations.putIfAbsent(KAMEL_OPERATOR_ID, kamelOperatorId);
+        if (configuration.labelSelection().enabled()) {
+            Operator assigned =  connector.getStatus().getConnectorStatus().getAssignedOperator();
+            if (assigned != null && assigned.getId() != null) {
+                annotations.putIfAbsent(KAMEL_OPERATOR_ID, assigned.getId());
+            }
         }
 
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE, shardMetadata.getConnectorImage());
