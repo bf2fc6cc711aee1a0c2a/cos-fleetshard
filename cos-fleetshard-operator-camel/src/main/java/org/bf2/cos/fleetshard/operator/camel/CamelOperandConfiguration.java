@@ -5,11 +5,18 @@ import io.smallrye.config.WithDefault;
 
 @ConfigMapping(prefix = "cos.operator.camel")
 public interface CamelOperandConfiguration {
+    LabelSelection labelSelection();
+
     RouteController routeController();
 
     Health health();
 
     ExchangePooling exchangePooling();
+
+    interface LabelSelection {
+        @WithDefault("true")
+        boolean enabled();
+    }
 
     interface RouteController {
         @WithDefault("10s")

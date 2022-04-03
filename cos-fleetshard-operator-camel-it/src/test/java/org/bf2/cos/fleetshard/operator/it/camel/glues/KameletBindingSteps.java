@@ -217,6 +217,36 @@ public class KameletBindingSteps extends StepsSupport {
             .matches(res.getMetadata().getAnnotations());
     }
 
+    @And("the klb annotations contains {string}")
+    public void klb_annotations_contains(String annotation) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThat(res.getMetadata().getAnnotations())
+            .containsKey(annotation);
+    }
+
+    @And("the klb annotations contains {string} with value {string}")
+    public void klb_annotations_contains(String annotation, String value) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThat(res.getMetadata().getAnnotations())
+            .containsEntry(annotation, value);
+    }
+
+    @And("the klb annotations does not contain {string}")
+    public void klb_annotations_does_not_contain(String annotation) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThat(res.getMetadata().getAnnotations())
+            .doesNotContainKey(annotation);
+    }
+
     @And("the klb has target-labels containing {string}")
     public void klb_target_labels_contains(String value) {
         KameletBinding res = klb();
