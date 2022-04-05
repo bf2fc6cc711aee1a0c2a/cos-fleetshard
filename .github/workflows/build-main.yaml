@@ -80,7 +80,7 @@ jobs:
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         uses: mikefarah/yq@master
         env:
-          OVERLAY_PATH: kubernetes/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
           NEW_TAG: main-${{ github.sha }}
         with:
           cmd: |
