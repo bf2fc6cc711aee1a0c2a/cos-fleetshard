@@ -90,13 +90,14 @@ jobs:
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PR }}
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ github.sha }}"
           NEW_TAG: main-${{ github.sha }}
         run: |
+          echo ""
           echo "tag     : $NEW_TAG"
           echo "branch  : $BRANCH_NAME"
+          echo ""
 
           cat ${OVERLAY_PATH}/kustomization.yaml
 
@@ -111,6 +112,10 @@ jobs:
 
           # GH CLI can't find the branch on remote... needs some time :)
           sleep 15
+
+          printf {{ secrets.GH_PR }} > /tmp/token.txt
+          gh auth login --with-token < /tmp/token.txt
+          gh config set prompt disabled
 
           gh pr create \
             --fill \
