@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Build PR
 
 on:
   pull_request:

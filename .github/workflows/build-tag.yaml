@@ -1,4 +1,4 @@
-name: Build and Tag
+name: Build Tag
 
 on:
   push:
@@ -27,6 +27,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      imagetag: ${{ steps.images.outputs.tag }}
     strategy:
       matrix:
         kubernetes:
@@ -73,4 +75,66 @@ jobs:
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
-          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
+          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium  
+      - name: 'Set output'
+        id: 'images'
+        run: |
+          echo "::set-output name=tag::$IMAGE_VERSION"
+
+  kustomize:
+    needs: "build"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay:
+          - "staging"
+    steps:
+      - name: "Checkout cos-manifests project"
+        uses: actions/checkout@v2
+        with:
+          repository: bf2fc6cc711aee1a0c2a/cos-manifests
+          token: ${{ secrets.GH_TOKEN }}
+      - name: "Update Kustomize overlay ${{ matrix.overlay }}"
+        uses: mikefarah/yq@master
+        env:
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          NEW_TAG: ${{needs.build.outputs.imagetag}}
+        with:
+          cmd: |
+            yq -i ".images[0].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[1].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[2].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+
+      - name: "Create PR for ${{ matrix.overlay }}"
+        env:
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{needs.build.outputs.imagetag}}"
+          NEW_TAG: ${{needs.build.outputs.imagetag}}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo ""
+          echo "tag     : $NEW_TAG"
+          echo "branch  : $BRANCH_NAME"
+          echo ""
+
+          cat ${OVERLAY_PATH}/kustomization.yaml
+
+          git config user.email "mas-connectors@redhat.com" 
+          git config user.name "mas-connectors"
+
+          git checkout -b ${BRANCH_NAME}
+          git add ${OVERLAY_PATH}
+          git commit -m "Update kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
+          git reset --hard
+          git push -u origin ${BRANCH_NAME}
+
+          # GH CLI can't find the branch on remote... needs some time :)
+          sleep 15
+
+          gh config set prompt disabled
+
+          gh pr create \
+            --fill \
+            --base main \
+            --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
+            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${NEW_TAG}"
