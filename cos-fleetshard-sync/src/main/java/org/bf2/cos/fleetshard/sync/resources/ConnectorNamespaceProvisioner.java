@@ -5,26 +5,35 @@ import java.util.Collection;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 @ApplicationScoped
 public class ConnectorNamespaceProvisioner {
+    public static final String DEFAULT_ADDON_PULLSECRET_NAME = "addon-pullsecret";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorNamespaceProvisioner.class);
 
     private final FleetShardClient fleetShard;
     private final FleetManagerClient fleetManager;
+    private final FleetShardSyncConfig config;
 
     public ConnectorNamespaceProvisioner(
+        FleetShardSyncConfig config,
         FleetShardClient connectorClient,
         FleetManagerClient fleetManager) {
 
+        this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
     }
@@ -41,6 +50,20 @@ public class ConnectorNamespaceProvisioner {
         for (ConnectorNamespace namespace : namespaces) {
             provision(namespace);
         }
+    }
+
+    private void copyAddonPullSecret(Namespace namespace) {
+        Secret addonPullSecret = fleetShard.getSecret(new NamespacedName(config.namespace(), config.imagePullSecretsName()))
+            .get();
+
+        Secret tenantPullSecret = new Secret();
+        ObjectMeta addonPullSecretMetadata = new ObjectMeta();
+        addonPullSecretMetadata.setNamespace(namespace.getMetadata().getName());
+        addonPullSecretMetadata.setName(addonPullSecret.getMetadata().getName());
+        tenantPullSecret.setMetadata(addonPullSecretMetadata);
+        tenantPullSecret.setType(addonPullSecret.getType());
+        tenantPullSecret.setData(addonPullSecret.getData());
+        fleetShard.createSecret(tenantPullSecret);
     }
 
     public void provision(ConnectorNamespace namespace) {
@@ -72,5 +95,7 @@ public class ConnectorNamespaceProvisioner {
             Resources.ANNOTATION_NAMESPACE_RESOURCE_VERSION, "" + namespace.getResourceVersion());
 
         fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
+
+        copyAddonPullSecret(ns);
     }
 }

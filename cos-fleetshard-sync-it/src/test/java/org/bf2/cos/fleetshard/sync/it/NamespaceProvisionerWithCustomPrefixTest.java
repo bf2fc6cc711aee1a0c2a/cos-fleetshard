@@ -14,7 +14,6 @@ import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -37,8 +36,6 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @QuarkusTest
 @TestProfile(NamespaceProvisionerWithCustomPrefixTest.Profile.class)
 public class NamespaceProvisionerWithCustomPrefixTest extends SyncTestSupport {
-    @WireMockTestInstance
-    WireMockServer server;
     @Inject
     FleetShardClient client;
 

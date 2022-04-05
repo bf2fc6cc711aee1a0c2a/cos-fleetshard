@@ -1,15 +1,20 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
+import java.util.Map;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.sync.FleetShardSync;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.Mock;
 
@@ -18,6 +23,12 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_I
 @Mock
 @ApplicationScoped
 public class TestFleetShardSync extends FleetShardSync {
+    public final static String CUSTOM_ADDON_PULL_SECRET_NAME = ConnectorNamespaceProvisioner.DEFAULT_ADDON_PULLSECRET_NAME
+        + "-custom";
+    public final static String ADDON_SECRET_TYPE = "kubernetes.io/dockerconfigjson";
+    public final static String ADDON_SECRET_FIELD = ".dockerconfigjson";
+    public final static String ADDON_SECRET_VALUE = "ewogICJhdXRocyI6IHsKICAgICJxdWF5LmlvIjogewogICAgICAiYXV0aCI6ICJjbWh2WVhNclpHVjJaV3h2Y0dWeUxXUmxjR3h2ZVdWeU9rUkJSbFJRVlU1TCIsCiAgICAgICJlbWFpbCI6ICIiCiAgICB9CiAgfQp9Cg==";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(TestFleetShardSync.class);
 
     @Inject
@@ -42,6 +53,18 @@ public class TestFleetShardSync extends FleetShardSync {
                 .withName(namespace)
                 .endMetadata()
                 .build());
+
+        Secret addonPullSecret = new Secret();
+        ObjectMeta addonPullSecretMetadata = new ObjectMeta();
+        addonPullSecretMetadata.setNamespace(namespace);
+        addonPullSecretMetadata.setName(ConnectorNamespaceProvisioner.DEFAULT_ADDON_PULLSECRET_NAME);
+        addonPullSecret.setMetadata(addonPullSecretMetadata);
+        addonPullSecret.setType(ADDON_SECRET_TYPE);
+        addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
+        client.secrets().create(addonPullSecret);
+        addonPullSecretMetadata.setName(CUSTOM_ADDON_PULL_SECRET_NAME);
+        addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
+        client.secrets().create(addonPullSecret);
 
         super.start();
     }

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.support.DurationConverter;
+import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithConverter;
@@ -20,6 +21,9 @@ public interface FleetShardSyncConfig {
      * @return the namespace.
      */
     String namespace();
+
+    @WithDefault(ConnectorNamespaceProvisioner.DEFAULT_ADDON_PULLSECRET_NAME)
+    String imagePullSecretsName();
 
     /**
      * Configuration options for the {@link ManagedConnectorCluster}

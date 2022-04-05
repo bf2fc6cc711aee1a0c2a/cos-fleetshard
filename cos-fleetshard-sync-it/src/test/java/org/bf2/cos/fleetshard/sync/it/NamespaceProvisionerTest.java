@@ -13,32 +13,20 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
-import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
-import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
-import io.restassured.RestAssured;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
 @TestProfile(NamespaceProvisionerTest.Profile.class)
-public class NamespaceProvisionerTest extends SyncTestSupport {
-    @WireMockTestInstance
-    WireMockServer server;
+public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
     @Inject
     FleetShardClient client;
     @Inject
@@ -49,7 +37,7 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
         final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
         final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
 
-        RestAssured.given()
+        given()
             .contentType(MediaType.TEXT_PLAIN)
             .body(0L)
             .post("/test/provisioner/namespaces");
@@ -74,6 +62,8 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
                 .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment1);
         });
 
+        checkAddonPullSecretCopiedSuccessfullyToNamespace(ns1);
+
         Namespace ns2 = until(
             () -> fleetShardClient.getNamespace(deployment2),
             Objects::nonNull);
@@ -91,6 +81,8 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
                 .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
                 .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment2);
         });
+
+        checkAddonPullSecretCopiedSuccessfullyToNamespace(ns2);
     }
 
     public static class Profile extends SyncTestProfile {
@@ -112,39 +104,6 @@ public class NamespaceProvisionerTest extends SyncTestSupport {
             return List.of(
                 new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
-        }
-    }
-
-    public static class FleetManagerTestResource extends WireMockTestResource {
-        @Override
-        protected void configure(WireMockServer server) {
-            final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
-            final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
-
-            server.stubMatching(
-                RequestMethod.GET,
-                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
-                resp -> {
-                    JsonNode body = namespaceList(
-                        namespace(deployment1, deployment1),
-                        namespace(deployment2, deployment2));
-
-                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                        .withJsonBody(body);
-                });
-
-            server.stubMatching(
-                RequestMethod.GET,
-                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
-                resp -> {
-                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                        .withJsonBody(deploymentList());
-                });
-
-            server.stubMatching(
-                RequestMethod.GET,
-                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
-                () -> WireMock.ok());
         }
     }
 }
