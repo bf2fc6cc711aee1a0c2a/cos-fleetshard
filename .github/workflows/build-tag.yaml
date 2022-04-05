@@ -36,6 +36,8 @@ jobs:
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 
       - name: 'Validate Project'
         run: |
           TAG=$(git describe --abbrev=0 2>/dev/null)
