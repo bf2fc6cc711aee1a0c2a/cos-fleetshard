@@ -113,7 +113,7 @@ jobs:
           # GH CLI can't find the branch on remote... needs some time :)
           sleep 15
 
-          printf {{ secrets.GH_PR }} > /tmp/token.txt
+          printf "${{ secrets.GH_PR }}"" > /tmp/token.txt
           gh auth login --with-token < /tmp/token.txt
           gh config set prompt disabled
 
