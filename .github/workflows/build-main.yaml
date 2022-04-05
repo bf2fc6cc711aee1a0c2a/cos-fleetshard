@@ -101,6 +101,9 @@ jobs:
           echo $BRANCH_NAME
           echo $OVERLAY_PATH
 
+          git config user.email "mas-connectors@redhat.com" 
+          git config user.name "mas-connectors"
+
           git checkout -b ${BRANCH_NAME}
           git add ${OVERLAY_PATH}
           git commit -m "Update kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
