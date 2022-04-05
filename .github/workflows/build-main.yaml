@@ -1,4 +1,4 @@
-name: Build and Deploy
+name: Build Main
 
 on:
   push:
@@ -58,42 +58,45 @@ jobs:
           ./etc/scripts/deploy_camel-k_crds.sh
           ./etc/scripts/deploy_strimzi_crds.sh
       - name: 'Build and push container images'
+        id: "images"
         run: |
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
           ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
 
-#  deploy:
-#    needs: build
-#    runs-on: ubuntu-latest
-#    container: openshift/origin-cli:latest
-#    steps:
-#      - name: 'Checkout Project'
-#        uses: actions/checkout@v2
-#      - name: 'Install OpenShift CLI tools'
-#        uses: redhat-actions/openshift-tools-installer@v1
-#        with:
-#          source: "mirror"
-#          skip_cache: "true"
-#          oc: "latest"
-#      - name: 'Verify OpenShift CLI tools'
-#        run: |
-#          oc version
-#          kubectl version
-#      - name: 'Log-in to OpenShift cluster and set context'
-#        uses: redhat-actions/oc-login@v1
-#        with:
-#          openshift_server_url: ${{ secrets.K8S_CLUSTER_DEV }}
-#          openshift_token: ${{ secrets.K8S_CLUSTER_DEV_TOKEN }}
-#          insecure_skip_tls_verify: false
-#          namespace: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
-#      - name: 'Deploy FleetShard CRDs'
-#        run: |
-#          ./etc/scripts/deploy_fleetshard_crds.sh
-#      - name: 'Deploy FleetShard'
-#        env:
-#          KUSTOMIZE_PROFILE: ${{ secrets.KUSTOMIZE_PROFILE }}
-#        run: |
-#          kubectl delete mctr --all -n ${OC_PROJECT}
-#          ./etc/scripts/deploy_fleetshard.sh
+  kustomize:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        overlay:
+          - 'dev'
+    steps:
+      - name: 'Checkout cos-manifests project'
+        uses: actions/checkout@v2
+        with:
+          repository: bf2fc6cc711aee1a0c2a/cos-manifests
+      - name: "Update Kustomize overlay ${{ matrix.overlay }}"
+        uses: mikefarah/yq@master
+        env:
+          OVERLAY_PATH: kubernetes/overlays/${{ matrix.overlay }}
+          NEW_TAG: main-${{ github.sha }}
+        with:
+          cmd: |
+            yq -i ".images[0].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[1].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[2].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+
+      - name: "Create PR for ${{ matrix.overlay }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OVERLAY_PATH: kubernetes/overlays/${{ matrix.overlay }}
+          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ github.sha }}"
+          NEW_TAG: main-${{ github.sha }}
+        run: |
+          cat ${OVERLAY_PATH}/kustomization.yaml
+          
+          echo $NEW_TAG
+          echo $BRANCH_NAME
+          echo $OVERLAY_PATH
