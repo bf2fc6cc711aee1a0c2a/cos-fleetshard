@@ -11,7 +11,7 @@ for env_var in IMAGE_REPO_USERNAME IMAGE_REPO_PASSWORD IMAGE_VERSION; do
   [ -z "${!env_var}" ] && print_exit "Make sure to set the ${env_var} environment variable."
 done
 
-./mvnw "${MAVEN_ARGS}" \
+./mvnw ${MAVEN_ARGS} \
   clean package \
   -Dquarkus.container-image.username="${IMAGE_REPO_USERNAME}" \
   -Dquarkus.container-image.password="${IMAGE_REPO_PASSWORD}" \
