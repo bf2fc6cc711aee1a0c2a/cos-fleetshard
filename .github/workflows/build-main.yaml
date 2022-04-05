@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'LICENSE'
-      - '**/.gitignore'
-      - '**.md'
-      - '**.adoc'
-      - '*.txt'
-      - 'etc/kubernetes/manifests/**'
+      - "LICENSE"
+      - "**/.gitignore"
+      - "**.md"
+      - "**.adoc"
+      - "*.txt"
+      - "etc/kubernetes/manifests/**"
   workflow_dispatch:
 
 concurrency:
@@ -31,33 +31,33 @@ jobs:
     strategy:
       matrix:
         kubernetes:
-        - 'v1.22.1'
+          - "v1.22.1"
     steps:
-      - name: 'Checkout Project'
+      - name: "Checkout Project"
         uses: actions/checkout@v2
-      - name: 'Set up JDK 11'
+      - name: "Set up JDK 11"
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
-          distribution: 'temurin'
+          java-version: "11"
+          distribution: "temurin"
           server-id: github
-      - name: 'Login to quay.io'
+      - name: "Login to quay.io"
         uses: docker/login-action@v1
         with:
           registry: quay.io
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
-      - name: 'SetUp KinD'
+      - name: "SetUp KinD"
         uses: container-tools/kind-action@v1
         with:
           registry: false
           node_image: kindest/node:${{ matrix.kubernetes }}
-      - name: 'SetUp Kubernetes Cluster'
+      - name: "SetUp Kubernetes Cluster"
         run: |
           ./etc/scripts/deploy_fleetshard_crds.sh
           ./etc/scripts/deploy_camel-k_crds.sh
           ./etc/scripts/deploy_strimzi_crds.sh
-      - name: 'Build and push container images'
+      - name: "Build and push container images"
         id: "images"
         run: |
           ./etc/scripts/build.sh
@@ -71,9 +71,9 @@ jobs:
     strategy:
       matrix:
         overlay:
-          - 'dev'
+          - "dev"
     steps:
-      - name: 'Checkout cos-manifests project'
+      - name: "Checkout cos-manifests project"
         uses: actions/checkout@v2
         with:
           repository: bf2fc6cc711aee1a0c2a/cos-manifests
@@ -91,12 +91,28 @@ jobs:
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OVERLAY_PATH: kubernetes/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ github.sha }}"
           NEW_TAG: main-${{ github.sha }}
         run: |
           cat ${OVERLAY_PATH}/kustomization.yaml
-          
+
           echo $NEW_TAG
           echo $BRANCH_NAME
           echo $OVERLAY_PATH
+
+          git checkout -b ${BRANCH_NAME}
+          git add ${OVERLAY_PATH}
+          git commit -m "Update kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
+          git reset --hard
+          git push -u origin ${BRANCH_NAME}
+
+          # GH CLI can't find the branch on remote... needs some time :)
+          sleep 15
+
+          gh pr create \
+            --fill \
+            --draft \
+            --base main \
+            --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
+            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${NEW_TAG}"
