@@ -119,7 +119,6 @@ jobs:
 
           gh pr create \
             --fill \
-            --draft \
             --base main \
             --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
             --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${NEW_TAG}"
