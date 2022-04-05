@@ -90,16 +90,15 @@ jobs:
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_PR }}
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ github.sha }}"
           NEW_TAG: main-${{ github.sha }}
         run: |
-          cat ${OVERLAY_PATH}/kustomization.yaml
+          echo "tag     : $NEW_TAG"
+          echo "branch  : $BRANCH_NAME"
 
-          echo $NEW_TAG
-          echo $BRANCH_NAME
-          echo $OVERLAY_PATH
+          cat ${OVERLAY_PATH}/kustomization.yaml
 
           git config user.email "mas-connectors@redhat.com" 
           git config user.name "mas-connectors"
