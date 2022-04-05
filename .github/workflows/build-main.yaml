@@ -27,7 +27,6 @@ env:
 
 jobs:
   build:
-    if: "false"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -67,6 +66,8 @@ jobs:
           ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
 
   kustomize:
+    if: "false"
+    needs: "build"
     runs-on: ubuntu-latest
     strategy:
       matrix:
