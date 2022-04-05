@@ -32,9 +32,9 @@ import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
-import io.restassured.RestAssured;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +61,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
     @Test
     void connectorIsProvisioned() {
         {
-            RestAssured.given()
+            given()
                 .contentType(MediaType.TEXT_PLAIN)
                 .body(0L)
                 .post("/test/provisioner/namespaces");
@@ -76,7 +76,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             // Deployment v1
             //
 
-            RestAssured.given()
+            given()
                 .contentType(MediaType.TEXT_PLAIN)
                 .accept(MediaType.TEXT_PLAIN)
                 .body(0L)
@@ -130,7 +130,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
             // Deployment v2
             //
 
-            RestAssured.given()
+            given()
                 .contentType(MediaType.TEXT_PLAIN)
                 .accept(MediaType.TEXT_PLAIN)
                 .body(1L)
