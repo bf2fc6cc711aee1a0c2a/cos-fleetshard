@@ -1,7 +1,7 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,9 +75,9 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     static {
         try {
-            METRICS_CONFIG = Arrays.toString(Objects
+            METRICS_CONFIG = new String(Objects
                 .requireNonNull(DebeziumOperandController.class.getClassLoader().getResourceAsStream(METRICS_CONFIG_FILENAME))
-                .readAllBytes());
+                .readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
