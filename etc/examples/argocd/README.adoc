@@ -1,0 +1,18 @@
+= ArgoCD
+
+There seems to be an issue with an cluster wide ArgoCD installation that prevents the operator to work properly. An env var need to be added to the subscription config:
+
+  ARGOCD_CLUSTER_CONFIG_NAMESPACES=openshift-operators
+
+[source,yaml]
+----
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: argocd-operator
+spec:
+  config:
+    env:
+      - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+        value: openshift-operators
+----
