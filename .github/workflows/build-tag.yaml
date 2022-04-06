@@ -85,7 +85,7 @@ jobs:
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          RESOURCE_REF: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/?ref${{ github.ref_name }}
+          RESOURCE_REF: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/?ref=${{ github.ref_name }}
         with:
           cmd: |
             yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
