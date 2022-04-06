@@ -86,9 +86,9 @@ jobs:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
         with:
           cmd: |
-            yq -i ".images[0].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[1].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[2].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[1].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[2].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
