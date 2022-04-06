@@ -14,15 +14,15 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.ref }}-${{ github.workflow }}
+  group: ${{ _name }}-${{ github.workflow }}
   cancel-in-progress: true
 
 env:
   LANG: en_US.UTF-8
   IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
   IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
-  IMAGE_TAG: ${{ github.ref }}-${{ github.sha }}
-  DEPLOY_TAG: ${{ github.ref }}-${{ github.sha }}
+  IMAGE_TAG: ${{ _name }}-${{ github.sha }}
+  DEPLOY_TAG: ${{ _name }}-${{ github.sha }}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
