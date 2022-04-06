@@ -1,2 +1,11 @@
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: cos-fleetshard-operator-debezium-config
+    files:
+      - application.properties=app-config/application.properties
+
 resources:
   - ./kubernetes.yml
