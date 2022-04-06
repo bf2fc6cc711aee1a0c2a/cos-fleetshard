@@ -93,7 +93,7 @@ jobs:
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ needs.build.outputs.imagetag }}"
+          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           echo ""
