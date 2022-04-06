@@ -29,14 +29,3 @@ patches:
       - op: replace
         path: /subjects/0/namespace
         value: "redhat-openshift-connectors"
-  - target:
-      group: monitoring.coreos.com
-      version: v1
-      kind: ServiceMonitor
-      name: "cos-fleetshard-.*"
-    patch: |-
-      $patch: delete
-      apiVersion: monitoring.coreos.com/v1
-      kind: ServiceMonitor
-      metadata:
-        name: cos-fleetshard-.*

@@ -9,7 +9,7 @@ spec:
         - /imagePullSecrets
         - /secrets
   destination:
-    namespace: cos
+    namespace: redhat-openshift-connectors
     server: https://kubernetes.default.svc
   project: default
   source:
@@ -22,4 +22,4 @@ spec:
       selfHeal: true
     syncOptions:
       - PruneLast=true
-      - CreateNamespace=true
+      - CreateNamespace=false
