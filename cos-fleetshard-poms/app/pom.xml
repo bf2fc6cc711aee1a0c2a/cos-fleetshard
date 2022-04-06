@@ -21,7 +21,6 @@
         <quarkus.container-image.group>rhoas</quarkus.container-image.group>
         <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
         <quarkus.container-image.tag>latest</quarkus.container-image.tag>
-        <quarkus.container-image.additional-tags>${git.branch}-${git.commit.id},${git.branch}</quarkus.container-image.additional-tags>
     </properties>
 
     <build>
