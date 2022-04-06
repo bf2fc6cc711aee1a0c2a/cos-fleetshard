@@ -1,9 +1,42 @@
 
 resources:
   - namespace.yaml
-  - strimzi
   - camel-k
+  - strimzi
   - ../../base/crds
   - cos-fleetshard-sync
   - cos-fleetshard-operator-camel
   - cos-fleetshard-operator-debezium
+
+namespace: redhat-openshift-connectors
+
+patches:
+  - target:
+      group: rbac.authorization.k8s.io
+      version: v1
+      kind: ClusterRoleBinding
+      name: ".*"
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: "redhat-openshift-connectors"
+  - target:
+      group: rbac.authorization.k8s.io
+      version: v1
+      kind: RoleBinding
+      name: "strimzi.*"
+    patch: |-
+      - op: replace
+        path: /subjects/0/namespace
+        value: "redhat-openshift-connectors"
+  - target:
+      group: monitoring.coreos.com
+      version: v1
+      kind: ServiceMonitor
+      name: "cos-fleetshard-.*"
+    patch: |-
+      $patch: delete
+      apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        name: cos-fleetshard-.*

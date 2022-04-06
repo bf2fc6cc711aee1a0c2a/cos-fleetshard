@@ -62,6 +62,33 @@ eval $(minikube --profile cos docker-env)
 ./mvnw clean install -DskipTests=true -Pcontainer-build
 ----
 
+* *install the service*
++
+[source,shell]
+----
+kubectl apply -k etc/kubernetes/manifests/overlays/local
+----
++
+At this point, operators and sync are deployed in the *redhat-openshift-connectors*, but they are not running as replica is set to 0 by default because some resources have to be configured.
++
+Point to the cos namespace
++
+[source,shell]
+----
+kubectl config set-context --current --namespace=redhat-openshift-connectors
+----
++
+[source,shell]
+----
+➜ kubectl get deployments -n redhat-openshift-connectors
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+camel-k-operator                   1/1     1            1           2d3h
+cos-fleetshard-operator-camel      0/0     0            0           6s
+cos-fleetshard-operator-debezium   0/0     0            0           5s
+cos-fleetshard-sync                0/0     0            0           4s
+strimzi-cluster-operator           1/1     1            1           2d3h
+----
+
 * *configure pull secret*
 +
 In order to use private image on quay a pull secret need to be crated:
@@ -76,26 +103,6 @@ kubectl create secret generic addon-pullsecret \
     --type=kubernetes.io/dockerconfigjson
 ----
 
-* *install the service*
-+
-[source,shell]
-----
-kubectl apply -k etc/kubernetes/manifests/overlays/local
-----
-+
-At this point, operators and sync are deployed, but they are not running as replica is set to 0 by default because some resources have to be configured.
-+
-[source,shell]
-----
-➜ kubectl get deployments
-NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
-camel-k-operator                   1/1     1            1           2d3h
-cos-fleetshard-operator-camel      0/0     0            0           6s
-cos-fleetshard-operator-debezium   0/0     0            0           5s
-cos-fleetshard-sync                0/0     0            0           4s
-strimzi-cluster-operator           1/1     1            1           2d3h
-----
-+
 * *create cluster and configure secrets*
 +
 This section expects you to have https://github.com/bf2fc6cc711aee1a0c2a/cos-tools/tree/main/bin[cos-tools/bin] in your PATH, but you may also just run the scripts from inside the bin directory.
@@ -108,7 +115,7 @@ This creates a new cluster for you on the fleet manager, remember to delete it o
 [source,shell]
 ----
 SUFFIX=$(uuidgen | tr -d '-')
-create-cluster-secret $(create-cluster "$USER-$SUFFIX" | jq -r '.id') cos-fleetshard-sync-config
+create-cluster-secret $(create-cluster "$USER-$SUFFIX" | jq -r '.id')
 ----
 +
 When you're done you may query for created clusters with `get-clusters` and delete it with `delete-clusters <cluster id>`.

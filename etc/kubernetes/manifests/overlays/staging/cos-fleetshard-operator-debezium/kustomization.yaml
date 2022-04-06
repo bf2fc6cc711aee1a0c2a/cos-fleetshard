@@ -1,14 +1,6 @@
 
-generatorOptions:
-  disableNameSuffixHash: true
-
 resources:
   - ../../../base/apps/cos-fleetshard-operator-debezium
-
-configMapGenerator:
-  - name: cos-fleetshard-operator-debezium-config
-    files:
-      - application.properties=app-config/application.properties
 
 patchesJson6902:
   - target:
@@ -27,12 +19,6 @@ patchesJson6902:
         value:
           name: COS_OPERATOR_VERSION
           value: "1.5.0"
-  - target:
-      group: rbac.authorization.k8s.io
-      version: v1
-      kind: ClusterRoleBinding
-      name: cos-fleetshard-operator-debezium
-    patch: |-
       - op: replace
-        path: /subjects/0/namespace
-        value: "redhat-openshift-connectors"
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: "IfNotPresent"
