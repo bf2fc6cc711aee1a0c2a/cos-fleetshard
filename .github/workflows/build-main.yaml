@@ -23,7 +23,7 @@ env:
   IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
   IMAGE_TAG: latest
   IMAGE_ADDITIONAL_TAGS: ${{github.ref_name_name}},${{ github.ref_name }}-${{ github.sha }}
-  DEPLOY_TAG: ${{github.ref_name}},${{ github.ref_name }}-${{ github.sha }}
+  DEPLOY_TAG: ${{ github.ref_name }}-${{ github.sha }}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
