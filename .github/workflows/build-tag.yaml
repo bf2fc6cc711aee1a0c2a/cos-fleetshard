@@ -21,14 +21,14 @@ env:
   LANG: en_US.UTF-8
   IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
   IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
+  IMAGE_TAG: ${{ github.ref }}-${{ github.sha }}
+  DEPLOY_TAG: ${{ github.ref }}-${{ github.sha }}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      imagetag: ${{ steps.images.outputs.tag }}
     strategy:
       matrix:
         kubernetes:
@@ -38,19 +38,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main
-          fetch-depth: 0 
-      - name: 'Validate Project'
-        run: |
-          TAG=$(git describe --abbrev=0 2>/dev/null)
-          
-          if [ -z ${TAG} ]; then
-            echo "No tags to build"
-            exit 1
-          else
-            echo "Image Tag: ${TAG}-${{ github.sha }}"
-          fi
-          
-          echo "IMAGE_VERSION=${TAG}-${{ github.sha }}" >> $GITHUB_ENV
+          fetch-depth: 0
       - name: 'Set up JDK 11'
         uses: actions/setup-java@v2
         with:
@@ -78,11 +66,7 @@ jobs:
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
-          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium  
-      - name: 'Set output'
-        id: 'images'
-        run: |
-          echo "::set-output name=tag::$IMAGE_VERSION"
+          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
 
   kustomize:
     needs: "build"
@@ -101,26 +85,24 @@ jobs:
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          NEW_TAG: ${{needs.build.outputs.imagetag}}
         with:
           cmd: |
-            yq -i ".images[0].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[1].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[2].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[0].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[1].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[2].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{needs.build.outputs.imagetag}}"
-          NEW_TAG: ${{needs.build.outputs.imagetag}}
+          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ needs.build.outputs.imagetag }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           echo ""
-          echo "tag     : $NEW_TAG"
+          echo "tag     : $DEPLOY_TAG"
           echo "branch  : $BRANCH_NAME"
           echo ""
-
           cat ${OVERLAY_PATH}/kustomization.yaml
+          echo ""
 
           git config user.email "mas-connectors@redhat.com" 
           git config user.name "mas-connectors"
@@ -140,4 +122,4 @@ jobs:
             --fill \
             --base main \
             --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
-            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${NEW_TAG}"
+            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}"

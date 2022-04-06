@@ -21,7 +21,9 @@ env:
   LANG: en_US.UTF-8
   IMAGE_REPO_USERNAME: ${{secrets.IMAGE_REPO_USERNAME}}
   IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
-  IMAGE_VERSION: main
+  IMAGE_TAG: latest
+  IMAGE_ADDITIONAL_TAGS: ${{github.ref}},${{ github.ref }}-${{ github.sha }}
+  DEPLOY_TAG: ${{github.ref}},${{ github.ref }}-${{ github.sha }}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
@@ -82,26 +84,24 @@ jobs:
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          NEW_TAG: main-${{ github.sha }}
         with:
           cmd: |
-            yq -i ".images[0].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[1].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[2].newTag = env(NEW_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[0].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[1].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i ".images[2].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ github.sha }}"
-          NEW_TAG: main-${{ github.sha }}
+          BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ needs.build.outputs.imagetag }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           echo ""
-          echo "tag     : $NEW_TAG"
+          echo "tag     : $DEPLOY_TAG"
           echo "branch  : $BRANCH_NAME"
           echo ""
-
           cat ${OVERLAY_PATH}/kustomization.yaml
+          echo ""
 
           git config user.email "mas-connectors@redhat.com" 
           git config user.name "mas-connectors"
@@ -121,4 +121,4 @@ jobs:
             --fill \
             --base main \
             --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
-            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${NEW_TAG}"
+            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}"
