@@ -85,13 +85,13 @@ jobs:
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          REF: ${{ github.ref_name}}
+          RESOURCE_REF: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/?ref${{ github.ref_name }}
         with:
           cmd: |
-            yq -i ".images[0].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[1].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".images[2].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
-            yq -i ".resources[0] = https://gitub.com/bf2fc6cc711aee1a0c2a/cos-manifests//etc/kubernetes/manifests/overlays/staging/?ref=env(REF)" ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[1].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[2].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.resources[0] = strenv(RESOURCE_REF)' ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
