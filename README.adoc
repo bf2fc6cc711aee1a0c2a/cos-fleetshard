@@ -52,16 +52,6 @@ This is an example installation that consists in:
 ./etc/scripts/start_minikube.sh
 ----
 
-* *install latest strimzi*
-+
-This will install strimzi in the running cluster, needed to create connectors based on Debezium, so make sure the `minikube start` was successful.
-+
-[source,shell]
-----
-kubectl apply -f 'https://strimzi.io/install/latest?namespace=default'
-----
-
-
 * *install images*
 +
 This step is only necessary if you want to run everything inside the cluster. For developing purposes, if you want to run the synchronizer and operators with `quarkus:dev`, that's not needed.
@@ -128,6 +118,13 @@ When you're done you may query for created clusters with `get-clusters` and dele
 [source,shell]
 ----
 kubectl scale deployment -l "app.kubernetes.io/part-of=cos" --replicas=1
+----
+
+* *uninstall the service*
++
+[source,shell]
+----
+kubectl delete -k etc/kubernetes/manifests/overlays/local
 ----
 
 == testing
