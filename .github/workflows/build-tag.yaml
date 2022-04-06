@@ -90,6 +90,12 @@ jobs:
             yq -i ".images[0].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
             yq -i ".images[1].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
             yq -i ".images[2].newTag = env(DEPLOY_TAG)" ${OVERLAY_PATH}/kustomization.yaml
+            
+            #
+            # this need to be improved once moving the staging overlay to
+            # the bf2fc6cc711aee1a0c2a/cos-manifests repository
+            #
+            yq -i ".resources[0] = env(GITHUB_SERVER_URL)/env(GITHUB_REPOSITORY)//etc/kubernetes/manifests/overlays/staging/?ref=env(GITHUB_REF_NAME)" ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
