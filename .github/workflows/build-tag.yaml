@@ -24,7 +24,7 @@ env:
   IMAGE_TAG: ${{ github.ref_name}}-${{ github.sha }}
   DEPLOY_TAG: ${{ github.ref_name}}-${{ github.sha }}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
-  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
+  MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -DskipTests=true -e
 
 jobs:
   build:
