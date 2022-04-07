@@ -85,13 +85,19 @@ jobs:
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
-          RESOURCE_REF: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/?ref=${{ github.ref_name }}
+          RESOURCE_REF_SYNC: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-sync/?ref=${{ github.ref_name }}
+          RESOURCE_REF_CAMEL: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-operator-camel/?ref=${{ github.ref_name }}
+          RESOURCE_REF_DEBEZIUM: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-operator-debezium/?ref=${{ github.ref_name }}
         with:
           cmd: |
-            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[1].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[2].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.resources[0] = strenv(RESOURCE_REF)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/cos-fleetshard-sync/kustomization.yaml
+            yq -i '.resources[0] = strenv(RESOURCE_REF_SYNC)' ${OVERLAY_PATH}/cos-fleetshard-sync/kustomization.yaml
+            
+            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/cos-fleetshard-operator-camel/kustomization.yaml
+            yq -i '.resources[0] = strenv(RESOURCE_REF_CAMEL)' ${OVERLAY_PATH}/cos-fleetshard-operator-camel/kustomization.yaml
+            
+            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/cos-fleetshard-operator-debezium/kustomization.yaml            
+            yq -i '.resources[0] = strenv(RESOURCE_REF_DEBEZIUM)' ${OVERLAY_PATH}/cos-fleetshard-operator-debezium/kustomization.yaml   
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
