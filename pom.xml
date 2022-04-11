@@ -28,7 +28,7 @@
         <quarkus-operator-sdk.version>3.0.7</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <sundrio.version>0.50.2</sundrio.version>
-        <wiremock.version>2.32.0</wiremock.version>
+        <wiremock.version>2.33.1</wiremock.version>
         <spock.version>2.2-M1-groovy-4.0</spock.version>
         <groovy.version>4.0.1</groovy.version>
         <json-unit.version>2.33.0</json-unit.version>
