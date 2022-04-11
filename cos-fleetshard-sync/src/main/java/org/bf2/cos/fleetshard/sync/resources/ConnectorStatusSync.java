@@ -11,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -24,7 +25,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
-public class ConnectorStatusSync {
+public class ConnectorStatusSync implements Service {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusSync.class);
 
     public static final String JOB_ID = "cos.connectors.status.sync";
@@ -49,6 +50,7 @@ public class ConnectorStatusSync {
 
     private final ConcurrentMap<NamespacedName, Instant> connectors = new ConcurrentHashMap<>();
 
+    @Override
     public void start() throws Exception {
         LOGGER.info("Starting connector status sync");
 
@@ -78,6 +80,7 @@ public class ConnectorStatusSync {
             config.resources().updateInterval());
     }
 
+    @Override
     public void stop() {
         scheduler.shutdownQuietly(JOB_ID);
     }

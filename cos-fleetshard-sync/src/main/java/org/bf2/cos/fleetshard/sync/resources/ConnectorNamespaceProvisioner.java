@@ -53,17 +53,25 @@ public class ConnectorNamespaceProvisioner {
     }
 
     private void copyAddonPullSecret(Namespace namespace) {
-        Secret addonPullSecret = fleetShard.getSecret(new NamespacedName(config.namespace(), config.imagePullSecretsName()))
-            .get();
+        var named = new NamespacedName(config.namespace(), config.imagePullSecretsName());
 
-        Secret tenantPullSecret = new Secret();
-        ObjectMeta addonPullSecretMetadata = new ObjectMeta();
-        addonPullSecretMetadata.setNamespace(namespace.getMetadata().getName());
-        addonPullSecretMetadata.setName(addonPullSecret.getMetadata().getName());
-        tenantPullSecret.setMetadata(addonPullSecretMetadata);
-        tenantPullSecret.setType(addonPullSecret.getType());
-        tenantPullSecret.setData(addonPullSecret.getData());
-        fleetShard.createSecret(tenantPullSecret);
+        fleetShard.getSecret(named).ifPresentOrElse(
+            addonPullSecret -> {
+                Secret tenantPullSecret = new Secret();
+
+                ObjectMeta addonPullSecretMetadata = new ObjectMeta();
+                addonPullSecretMetadata.setNamespace(namespace.getMetadata().getName());
+                addonPullSecretMetadata.setName(addonPullSecret.getMetadata().getName());
+
+                tenantPullSecret.setMetadata(addonPullSecretMetadata);
+                tenantPullSecret.setType(addonPullSecret.getType());
+                tenantPullSecret.setData(addonPullSecret.getData());
+
+                fleetShard.createSecret(tenantPullSecret);
+            },
+            () -> {
+                LOGGER.debug("Pull Secret {} does not exists", named);
+            });
     }
 
     public void provision(ConnectorNamespace namespace) {
@@ -85,14 +93,15 @@ public class ConnectorNamespaceProvisioner {
             Resources.LABEL_KUBERNETES_CREATED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_PART_OF, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE,
-            Resources.LABEL_KUBERNETES_INSTANCE, namespace.getId());
+            Resources.LABEL_KUBERNETES_INSTANCE, namespace.getId(),
+            Resources.LABEL_KUBERNETES_VERSION, "" + namespace.getResourceVersion());
 
         Resources.setAnnotations(
             ns,
+            Resources.ANNOTATION_NAMESPACE_STATE, namespace.getStatus().getState().getValue(),
             Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration(),
             Resources.ANNOTATION_NAMESPACE_TENAT_KIND, namespace.getTenant().getKind().toString(),
-            Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId(),
-            Resources.ANNOTATION_NAMESPACE_RESOURCE_VERSION, "" + namespace.getResourceVersion());
+            Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId());
 
         fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
 

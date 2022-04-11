@@ -122,6 +122,26 @@ public class FleetShardClient {
             : prefix + namespaceId;
     }
 
+    public Boolean deleteNamespace(Namespace namespace) {
+        return kubernetesClient.namespaces().delete(namespace);
+    }
+
+    public void watchNamespaces(Consumer<Namespace> handler) {
+        if (namespaceInformers == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        namespaceInformers.addEventHandler(Informers.wrap(handler));
+    }
+
+    public void watchNamespaces(ResourceEventHandler<Namespace> handler) {
+        if (namespaceInformers == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        namespaceInformers.addEventHandler(handler);
+    }
+
     // *************************************
     //
     // Secrets
@@ -205,6 +225,18 @@ public class FleetShardClient {
         }
 
         return connectorsInformer.getIndexer().list();
+    }
+
+    public List<ManagedConnector> getConnectors(String namespace) {
+        if (connectorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        return connectorsInformer.getIndexer().byIndex(Cache.NAMESPACE_INDEX, namespace);
+    }
+
+    public List<ManagedConnector> getConnectors(Namespace namespace) {
+        return getConnectors(namespace.getMetadata().getName());
     }
 
     public void watchConnectors(Consumer<ManagedConnector> handler) {
