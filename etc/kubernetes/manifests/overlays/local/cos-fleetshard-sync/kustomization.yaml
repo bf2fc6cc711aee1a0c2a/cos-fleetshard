@@ -15,3 +15,26 @@ patchesJson6902:
     name: cos-fleetshard-sync
     version: v1
 
+patches:    
+- target:
+    group: rbac.authorization.k8s.io
+    version: v1
+    kind: Role
+    name: cos-fleetshard-sync-addon
+  patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: cos-fleetshard-sync-addon
+- target:
+    group: rbac.authorization.k8s.io
+    version: v1
+    kind: RoleBinding
+    name: cos-fleetshard-sync-addon
+  patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: cos-fleetshard-sync-addon

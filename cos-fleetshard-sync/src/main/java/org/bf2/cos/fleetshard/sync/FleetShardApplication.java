@@ -22,5 +22,6 @@ public class FleetShardApplication {
     void onStop(
         @Observes @Priority(Interceptor.Priority.APPLICATION + 10) ShutdownEvent ignored) {
         sync.stop();
+        sync.stopCleanup();
     }
 }

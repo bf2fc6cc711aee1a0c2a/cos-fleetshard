@@ -38,6 +38,21 @@ spec:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "Role"
 metadata:
+  name: "cos-fleetshard-sync-addon"
+rules:
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - "ClusterServiceVersion"
+  verbs:
+  - "delete"
+  - "get"
+  - "list"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
   name: "cos-fleetshard-sync-operators"
 rules:
 - apiGroups:
@@ -64,6 +79,18 @@ rules:
   - "get"
   - "list"
   - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-addon"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "cos-fleetshard-sync-addon"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "RoleBinding"

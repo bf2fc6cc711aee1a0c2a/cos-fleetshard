@@ -88,6 +88,14 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
                 return item.getSpec().getDeployment().getDeploymentResourceVersion() == 1L
                     && item.getSpec().getDeployment().getSecret() != null;
             });
+
+        RestAssured.given()
+            .contentType(MediaType.TEXT_PLAIN)
+            .post("/test/provisioner/cleanup");
+
+        getConditionFactory().until(
+            () -> fleetShardClient.getNamespace(deploymentId),
+            item -> item.isEmpty());
     }
 
     public static class Profile extends SyncTestProfile {

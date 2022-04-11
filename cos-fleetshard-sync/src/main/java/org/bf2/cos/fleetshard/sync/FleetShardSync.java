@@ -4,9 +4,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.resources.ConnectorClusterStatusSync;
-import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusSync;
-import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
+import org.bf2.cos.fleetshard.sync.resources.*;
 
 @ApplicationScoped
 public class FleetShardSync {
@@ -18,6 +16,10 @@ public class FleetShardSync {
     ConnectorStatusSync statusSync;
     @Inject
     ConnectorClusterStatusSync clusterStatusSync;
+    @Inject
+    AddonCleanup addonCleanup;
+    @Inject
+    AddonConfigMapWatcher addonConfigMapWatcher;
 
     public void start() {
         try {
@@ -27,6 +29,7 @@ public class FleetShardSync {
             resourceSync.start();
             statusSync.start();
             clusterStatusSync.start();
+            addonConfigMapWatcher.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -39,8 +42,22 @@ public class FleetShardSync {
             clusterStatusSync.stop();
 
             fleetShardClient.stop();
+            addonConfigMapWatcher.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void startCleanup() {
+        this.stop();
+        try {
+            addonCleanup.start();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void stopCleanup() {
+        addonCleanup.stop();
     }
 }
