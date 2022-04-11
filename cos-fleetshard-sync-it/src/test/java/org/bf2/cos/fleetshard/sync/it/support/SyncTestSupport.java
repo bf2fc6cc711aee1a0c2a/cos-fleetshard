@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ThrowingRunnable;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
@@ -107,12 +108,16 @@ public class SyncTestSupport {
     }
 
     public static <T> T until(Callable<Optional<T>> supplier, Predicate<? super T> predicate) {
+        return getConditionFactory()
+            .until(supplier, item -> item.filter(predicate).isPresent())
+            .get();
+    }
+
+    public static ConditionFactory getConditionFactory() {
         return Awaitility.await()
             .atMost(30, TimeUnit.SECONDS)
             .pollDelay(100, TimeUnit.MILLISECONDS)
-            .pollInterval(500, TimeUnit.MILLISECONDS)
-            .until(supplier, item -> item.filter(predicate).isPresent())
-            .get();
+            .pollInterval(500, TimeUnit.MILLISECONDS);
     }
 
     public static void untilAsserted(ThrowingRunnable runnable) {

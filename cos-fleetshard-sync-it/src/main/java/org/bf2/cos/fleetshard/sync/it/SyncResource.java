@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleetshard.sync.resources.AddonCleanup;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorDeploymentProvisioner;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
@@ -18,6 +19,8 @@ public class SyncResource {
     ConnectorNamespaceProvisioner namespaceProvisioner;
     @Inject
     ConnectorDeploymentProvisioner deploymentProvisioner;
+    @Inject
+    AddonCleanup addonCleanup;
     @Inject
     ResourcePoll resourceSync;
 
@@ -48,5 +51,12 @@ public class SyncResource {
     @Consumes(MediaType.TEXT_PLAIN)
     public void sync() {
         resourceSync.run();
+    }
+
+    @Path("/provisioner/cleanup")
+    @POST
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void cleanup() {
+        addonCleanup.cleanup();
     }
 }
