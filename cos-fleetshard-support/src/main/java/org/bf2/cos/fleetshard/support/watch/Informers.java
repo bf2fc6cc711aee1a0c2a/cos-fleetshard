@@ -2,29 +2,27 @@ package org.bf2.cos.fleetshard.support.watch;
 
 import java.util.function.Consumer;
 
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 
 public final class Informers {
     private Informers() {
     }
 
-    public static ResourceEventHandler<ManagedConnector> wrap(Consumer<ManagedConnector> delegate) {
+    public static <T> ResourceEventHandler<T> wrap(Consumer<T> delegate) {
         return new ResourceEventHandler<>() {
             @Override
-            public void onAdd(ManagedConnector connector) {
-                delegate.accept(connector);
+            public void onAdd(T resource) {
+                delegate.accept(resource);
             }
 
             @Override
-            public void onUpdate(ManagedConnector oldConnector, ManagedConnector newConnector) {
-                delegate.accept(newConnector);
+            public void onUpdate(T oldResource, T newResource) {
+                delegate.accept(newResource);
             }
 
             @Override
-            public void onDelete(ManagedConnector connector, boolean deletedFinalStateUnknown) {
-                delegate.accept(connector);
+            public void onDelete(T resource, boolean deletedFinalStateUnknown) {
+                delegate.accept(resource);
             }
         };
     }

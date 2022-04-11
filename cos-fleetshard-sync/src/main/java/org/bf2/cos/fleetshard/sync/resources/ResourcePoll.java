@@ -7,6 +7,7 @@ import java.time.temporal.ChronoUnit;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
@@ -16,7 +17,7 @@ import org.eclipse.microprofile.faulttolerance.Retry;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
-public class ResourcePoll {
+public class ResourcePoll implements Service {
     private static final String JOB_ID = "cos.resources.poll";
     private static final long BEGINNING = 0;
     public static final String METRICS_SYNC = "connectors.sync";
@@ -39,6 +40,7 @@ public class ResourcePoll {
     private volatile MetricsRecorder pollRecorder;
     private volatile Instant lastResync;
 
+    @Override
     public void start() throws Exception {
         syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
         pollRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_POLL);
@@ -49,7 +51,8 @@ public class ResourcePoll {
             config.resources().pollInterval());
     }
 
-    public void stop() {
+    @Override
+    public void stop() throws Exception {
         scheduler.shutdownQuietly(JOB_ID);
     }
 

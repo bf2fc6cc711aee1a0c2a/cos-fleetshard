@@ -118,6 +118,15 @@ public interface FleetShardSyncConfig {
         @WithDefault("15s")
         @WithConverter(DurationConverter.class)
         Duration updateInterval();
+
+        /**
+         * Determine how often the synchronizer should perform house keeping tasks.
+         *
+         * @return the housekeeping interval
+         */
+        @WithDefault("30s")
+        @WithConverter(DurationConverter.class)
+        Duration housekeeperInterval();
     }
 
     interface Addon {

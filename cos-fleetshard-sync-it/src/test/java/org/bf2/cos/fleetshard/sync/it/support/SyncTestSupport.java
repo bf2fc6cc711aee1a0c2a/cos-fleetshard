@@ -18,6 +18,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -83,6 +85,7 @@ public class SyncTestSupport {
             .id(uid())
             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
+        answer.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
         answer.setTenant(tenant);
         answer.setExpiration(new Date().toString());
 

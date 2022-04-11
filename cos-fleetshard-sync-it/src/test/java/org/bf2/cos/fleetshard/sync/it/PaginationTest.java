@@ -8,6 +8,8 @@ import java.util.Objects;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDesiredState;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
@@ -123,6 +125,7 @@ public class PaginationTest extends SyncTestSupport {
                             .id(uid())
                             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
+                        ns.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
                         ns.setTenant(tenant);
                         ns.setExpiration(new Date().toString());
                     }));
@@ -151,6 +154,7 @@ public class PaginationTest extends SyncTestSupport {
                             .id(uid())
                             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
+                        ns.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
                         ns.setTenant(tenant);
                         ns.setExpiration(new Date().toString());
                     }));

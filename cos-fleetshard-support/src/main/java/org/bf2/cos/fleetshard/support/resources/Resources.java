@@ -36,6 +36,7 @@ public final class Resources {
     public static final String ANNOTATION_UPDATED_TIMESTAMP = "cos.bf2.org/update.timestamp";
     public static final String ANNOTATION_NAMESPACE_NAME = "cos.bf2.org/namespace.name";
     public static final String ANNOTATION_NAMESPACE_EXPIRATION = "cos.bf2.org/namespace.expiration";
+    public static final String ANNOTATION_NAMESPACE_STATE = "cos.bf2.org/namespace.state";
     public static final String ANNOTATION_NAMESPACE_TENAT_KIND = "cos.bf2.org/namespace.tenant.kind";
     public static final String ANNOTATION_NAMESPACE_TENAT_ID = "cos.bf2.org/namespace.tenant.id";
     public static final String ANNOTATION_NAMESPACE_RESOURCE_VERSION = "cos.bf2.org/namespace.resource.version";

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -12,28 +11,18 @@ import java.util.function.Consumer;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.UriBuilder;
 
-import org.bf2.cos.fleet.manager.model.ConnectorClusterState;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperators;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.support.resources.Operators;
-import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
 
@@ -134,44 +123,12 @@ public class FleetManagerClient {
         });
     }
 
-    public void updateClusterStatus(Collection<ManagedConnectorOperator> operators, Collection<Namespace> namespaces) {
+    public void updateClusterStatus(ConnectorClusterStatus status) {
         FleetManagerClientHelper.run(() -> {
             LOGGER.info("Update cluster status: cluster_id={}, operators={}, namespaces={}",
                 config.cluster().id(),
-                operators.size(),
-                namespaces.size());
-
-            ConnectorClusterStatus status = new ConnectorClusterStatus();
-            status.setPhase(ConnectorClusterState.READY);
-
-            operators.stream().map(
-                o -> new ConnectorClusterStatusOperators()
-                    .namespace(o.getMetadata().getNamespace())
-                    .operator(new ConnectorOperator()
-                        .id(o.getMetadata().getName())
-                        .type(o.getSpec().getType())
-                        .version(o.getSpec().getVersion()))
-                    .status(Operators.PHASE_READY))
-                .forEach(
-                    status::addOperatorsItem);
-
-            namespaces.stream().map(
-                n -> {
-                    ConnectorNamespaceState phase = ConnectorNamespaceState.DISCONNECTED;
-                    if (n.getStatus() != null) {
-                        if (Objects.equals(Namespaces.STATUS_ACTIVE, n.getStatus().getPhase())) {
-                            phase = ConnectorNamespaceState.READY;
-                        } else if (Objects.equals(Namespaces.STATUS_TERMINATING, n.getStatus().getPhase())) {
-                            phase = ConnectorNamespaceState.DELETING;
-                        }
-                    }
-
-                    return new ConnectorNamespaceStatus()
-                        .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
-                        .phase(phase);
-                })
-                .forEach(
-                    status::addNamespacesItem);
+                status.getOperators() != null ? status.getOperators().size() : 0,
+                status.getNamespaces() != null ? status.getNamespaces().size() : 0);
 
             controlPlane.updateConnectorClusterStatus(
                 config.cluster().id(),

@@ -9,10 +9,12 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.ContentPattern;
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.matching.StringValuePattern;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport.untilAsserted;
 
 public class WireMockServer extends com.github.tomakehurst.wiremock.WireMockServer {
     public WireMockServer(Options options) {
@@ -144,5 +146,13 @@ public class WireMockServer extends com.github.tomakehurst.wiremock.WireMockServ
         ResponseDefinitionBuilder response = supplier.get();
 
         stubFor(request.willReturn(response));
+    }
+
+    public void until(RequestPatternBuilder requestPatternBuilder) {
+        untilAsserted(() -> verify(requestPatternBuilder));
+    }
+
+    public void until(int count, RequestPatternBuilder requestPatternBuilder) {
+        untilAsserted(() -> verify(0, requestPatternBuilder));
     }
 }

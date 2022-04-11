@@ -55,16 +55,20 @@ public class TestFleetShardSync extends FleetShardSync {
                 .build());
 
         Secret addonPullSecret = new Secret();
+
         ObjectMeta addonPullSecretMetadata = new ObjectMeta();
         addonPullSecretMetadata.setNamespace(namespace);
         addonPullSecretMetadata.setName(ConnectorNamespaceProvisioner.DEFAULT_ADDON_PULLSECRET_NAME);
         addonPullSecret.setMetadata(addonPullSecretMetadata);
         addonPullSecret.setType(ADDON_SECRET_TYPE);
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
-        client.secrets().create(addonPullSecret);
+
+        client.secrets().inNamespace(namespace).create(addonPullSecret);
+
         addonPullSecretMetadata.setName(CUSTOM_ADDON_PULL_SECRET_NAME);
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
-        client.secrets().create(addonPullSecret);
+
+        client.secrets().inNamespace(namespace).create(addonPullSecret);
 
         super.start();
     }
