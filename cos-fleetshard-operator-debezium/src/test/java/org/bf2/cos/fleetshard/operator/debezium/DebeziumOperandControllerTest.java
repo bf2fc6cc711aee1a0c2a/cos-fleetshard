@@ -16,7 +16,6 @@ import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.AbstractApicurioConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.ApicurioAvroConverter;
-import org.bf2.cos.fleetshard.operator.debezium.model.ApicurioJsonConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectJsonConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
@@ -161,7 +160,7 @@ public class DebeziumOperandControllerTest {
     }
 
     private ObjectNode addSchemalessJsonToConnectorConfig(ObjectNode baseConfig) {
-        baseConfig.with("data_shape").put("key", "JSON without schema").put("value", "JSON_WITHOUT_SCHEMA");
+        baseConfig.with("data_shape").put("key", "JSON without schema").put("value", "JSON without schema");
         return baseConfig;
     }
 
@@ -324,7 +323,17 @@ public class DebeziumOperandControllerTest {
 
     @Test
     void testReifyWithJsonWithSchema() {
-        this.reify(addJsonWithSchemaToConnectorConfig(getSpec()), getApicurioChecks(ApicurioJsonConverter.CONVERTER_CLASS));
+        this.reify(addJsonWithSchemaToConnectorConfig(getSpec()),
+            kafkaConnect -> {
+                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                    KafkaConnectJsonConverter.CONVERTER_CLASS);
+                assertThat(kafkaConnect.getSpec().getConfig())
+                    .containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable", "true");
+                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                    KafkaConnectJsonConverter.CONVERTER_CLASS);
+                assertThat(kafkaConnect.getSpec().getConfig())
+                    .containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable", "true");
+            });
     }
 
     @ParameterizedTest

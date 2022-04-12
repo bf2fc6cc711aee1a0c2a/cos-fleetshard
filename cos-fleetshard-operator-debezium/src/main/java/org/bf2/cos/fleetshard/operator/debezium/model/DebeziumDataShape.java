@@ -18,11 +18,10 @@ public class DebeziumDataShape {
     private static KafkaConnectConverter createConverter(String converterType) {
         switch (converterType) {
             case CONVERTER_TYPE_JSON:
-                return new ApicurioJsonConverter();
+                return new KafkaConnectJsonWithSchemaConverter();
             case CONVERTER_TYPE_AVRO:
                 return new ApicurioAvroConverter();
             default:
-            case "JSON_WITHOUT_SCHEMA":
             case CONVERTER_TYPE_JSON_WITHOUT_SCHEMA:
                 return new KafkaConnectJsonConverter();
         }
