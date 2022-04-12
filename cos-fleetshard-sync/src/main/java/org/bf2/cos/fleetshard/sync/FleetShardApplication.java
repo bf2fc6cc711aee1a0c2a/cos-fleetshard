@@ -15,13 +15,12 @@ public class FleetShardApplication {
     FleetShardSync sync;
 
     void onStart(
-        @Observes @Priority(Interceptor.Priority.APPLICATION + 10) StartupEvent ignored) {
+        @Observes @Priority(Interceptor.Priority.APPLICATION + 10) StartupEvent ignored) throws Exception {
         sync.start();
     }
 
     void onStop(
-        @Observes @Priority(Interceptor.Priority.APPLICATION + 10) ShutdownEvent ignored) {
+        @Observes @Priority(Interceptor.Priority.APPLICATION + 10) ShutdownEvent ignored) throws Exception {
         sync.stop();
-        sync.stopCleanup();
     }
 }

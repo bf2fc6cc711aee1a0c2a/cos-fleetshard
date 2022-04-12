@@ -44,7 +44,7 @@ public class TestFleetShardSync extends FleetShardSync {
     String clusterId;
 
     @Override
-    public void start() {
+    public void start() throws Exception {
         LOGGER.info("Creating namespace {}", namespace);
 
         client.namespaces().create(
@@ -74,7 +74,7 @@ public class TestFleetShardSync extends FleetShardSync {
     }
 
     @Override
-    public void stop() {
+    public void stop() throws Exception {
         super.stop();
 
         if (namespaceDelete) {

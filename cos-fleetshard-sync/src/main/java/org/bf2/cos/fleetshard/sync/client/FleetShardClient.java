@@ -14,6 +14,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
@@ -32,7 +33,7 @@ import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
 
 @ApplicationScoped
-public class FleetShardClient {
+public class FleetShardClient implements Service {
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -42,7 +43,8 @@ public class FleetShardClient {
     private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
     private volatile SharedIndexInformer<Namespace> namespaceInformers;
 
-    public void start() {
+    @Override
+    public void start() throws Exception {
         operatorsInformer = kubernetesClient.resources(ManagedConnectorOperator.class)
             .inNamespace(config.namespace())
             .inform();
@@ -55,7 +57,8 @@ public class FleetShardClient {
             .inform();
     }
 
-    public void stop() {
+    @Override
+    public void stop() throws Exception {
         Resources.closeQuietly(operatorsInformer);
         Resources.closeQuietly(namespaceInformers);
         Resources.closeQuietly(connectorsInformer);

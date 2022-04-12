@@ -70,7 +70,7 @@ public class ConnectorNamespaceProvisioner {
                 fleetShard.createSecret(tenantPullSecret);
             },
             () -> {
-                LOGGER.debug("Pull Secret {} does not exists", named);
+                LOGGER.warn("Pull Secret {} does not exists", named);
             });
     }
 
