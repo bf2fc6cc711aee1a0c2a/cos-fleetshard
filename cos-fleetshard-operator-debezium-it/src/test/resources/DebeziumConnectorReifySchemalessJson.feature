@@ -53,8 +53,8 @@ Feature: Debezium Connector Reify
        | group.id                          | ${cos.managed.connector.name}        |
        | connector.secret.name             | ${cos.managed.connector.name}-config |
        | connector.secret.checksum         | ${cos.ignore}                        |
-       | key.converter                     | org.apache.kafka.connect.json.JsonConverter                                                                       |
-       | value.converter                   | org.apache.kafka.connect.json.JsonConverter                                                                       |
+       | key.converter                     | org.apache.kafka.connect.json.JsonConverter |
+       | value.converter                   | org.apache.kafka.connect.json.JsonConverter |
        | key.converter.schemas.enable      | false                                |
        | value.converter.schemas.enable    | false                                |
 

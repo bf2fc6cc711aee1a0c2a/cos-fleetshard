@@ -53,14 +53,10 @@ Feature: Debezium Connector Reify
        | group.id                          | ${cos.managed.connector.name}        |
        | connector.secret.name             | ${cos.managed.connector.name}-config |
        | connector.secret.checksum         | ${cos.ignore}                        |
-       | key.converter                     | io.apicurio.registry.utils.converter.ExtJsonConverter                                                             |
-       | value.converter                   | io.apicurio.registry.utils.converter.ExtJsonConverter                                                             |
-       | key.converter.apicurio.registry.url           |  https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2          |
-       | value.converter.apicurio.registry.url         |  https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2          |
-       | key.converter.apicurio.auth.client.id         |  ${kafka.client.id}      |
-       | value.converter.apicurio.auth.client.id       |  ${kafka.client.id}      |
-       | key.converter.apicurio.auth.client.secret     |  ${dir:/opt/kafka/external-configuration/connector-configuration:_kafka.client.secret}                    |
-       | value.converter.apicurio.auth.client.secret   |  ${dir:/opt/kafka/external-configuration/connector-configuration:_kafka.client.secret}                    |
+       | key.converter                     | org.apache.kafka.connect.json.JsonConverter |
+       | value.converter                   | org.apache.kafka.connect.json.JsonConverter |
+       | key.converter.schemas.enable      | true                                |
+       | value.converter.schemas.enable    | true                                |
 
 
     Then the kctr exists
