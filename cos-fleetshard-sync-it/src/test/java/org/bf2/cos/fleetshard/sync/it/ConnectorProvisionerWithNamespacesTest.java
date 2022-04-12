@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.sync.it;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
@@ -95,7 +96,7 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
 
         getConditionFactory().until(
             () -> fleetShardClient.getNamespace(deploymentId),
-            item -> item.isEmpty());
+            Optional::isEmpty);
     }
 
     public static class Profile extends SyncTestProfile {
