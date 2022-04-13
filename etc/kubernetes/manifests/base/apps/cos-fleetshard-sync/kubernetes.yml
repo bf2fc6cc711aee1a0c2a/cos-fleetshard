@@ -166,6 +166,20 @@ rules:
   - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
+  name: "cos-fleetshard-sync-quota"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "resourcequotas"
+  verbs:
+  - "delete"
+  - "get"
+  - "list"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRoleBinding"
 metadata:
   name: "cos-fleetshard-sync-connectors"
@@ -186,6 +200,19 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "ClusterRole"
   name: "cos-fleetshard-sync-events"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-quota"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-quota"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"

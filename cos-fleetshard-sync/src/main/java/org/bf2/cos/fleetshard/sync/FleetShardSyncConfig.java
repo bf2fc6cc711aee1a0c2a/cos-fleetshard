@@ -68,11 +68,13 @@ public interface FleetShardSyncConfig {
     Manager manager();
 
     /**
-     * Configuration options for the tenancyr.
+     * Configuration options for the tenancy.
      *
      * @return {@link Tenancy}
      */
     Tenancy tenancy();
+
+    Quota quota();
 
     interface Cluster {
         /**
@@ -89,6 +91,11 @@ public interface FleetShardSyncConfig {
     interface Tenancy {
         @WithDefault("redhat-openshift-connectors")
         String namespacePrefix();
+    }
+
+    interface Quota {
+        @WithDefault("true")
+        boolean enabled();
     }
 
     interface Resources {

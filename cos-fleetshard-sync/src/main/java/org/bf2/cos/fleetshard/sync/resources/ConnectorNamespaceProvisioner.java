@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -19,6 +20,9 @@ import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceQuota;
+import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -33,12 +37,18 @@ public class ConnectorNamespaceProvisioner {
     public static final String TAG_NAMESPACE_REVISION = "revision";
     public static final String METRICS_SUFFIX = ".namespace.provision";
 
+    public static final String RESOURCE_QUOTA_LIMITS_CPU = "limits.cpu";
+    public static final String RESOURCE_QUOTA_LIMITS_MEMORY = "limits.memory";
+    public static final String RESOURCE_QUOTA_REQUESTS_CPU = "requests.cpu";
+    public static final String RESOURCE_QUOTA_REQUESTS_MEMORY = "requests.memory";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorNamespaceProvisioner.class);
 
     private final FleetShardClient fleetShard;
     private final FleetManagerClient fleetManager;
     private final FleetShardSyncConfig config;
     private final MetricsRecorder recorder;
+    private final NamespacedName pullSecretName;
 
     public ConnectorNamespaceProvisioner(
         FleetShardSyncConfig config,
@@ -50,6 +60,7 @@ public class ConnectorNamespaceProvisioner {
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
         this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
+        this.pullSecretName = new NamespacedName(config.namespace(), config.imagePullSecretsName());
     }
 
     public void poll(long revision) {
@@ -106,45 +117,84 @@ public class ConnectorNamespaceProvisioner {
         }
     }
 
-    private void copyAddonPullSecret(Namespace namespace) {
-        var named = new NamespacedName(config.namespace(), config.imagePullSecretsName());
-
-        fleetShard.getSecret(named).ifPresentOrElse(
+    private void copyAddonPullSecret(String uow, Namespace namespace) {
+        fleetShard.getSecret(pullSecretName).ifPresentOrElse(
             addonPullSecret -> {
-                Secret tenantPullSecret = new Secret();
-
                 ObjectMeta addonPullSecretMetadata = new ObjectMeta();
                 addonPullSecretMetadata.setNamespace(namespace.getMetadata().getName());
                 addonPullSecretMetadata.setName(addonPullSecret.getMetadata().getName());
 
+                Secret tenantPullSecret = new Secret();
                 tenantPullSecret.setMetadata(addonPullSecretMetadata);
                 tenantPullSecret.setType(addonPullSecret.getType());
                 tenantPullSecret.setData(addonPullSecret.getData());
 
+                Resources.setLabels(
+                    tenantPullSecret,
+                    Resources.LABEL_UOW, uow);
+
                 fleetShard.createSecret(tenantPullSecret);
             },
             () -> {
-                LOGGER.warn("Pull Secret {} does not exists", named);
+                LOGGER.warn("Pull Secret {} does not exists", pullSecretName);
             });
     }
 
-    public void provision(ConnectorNamespace namespace) {
+    private void createResourceQuota(String uow, ConnectorNamespace connectorNamespace) {
+        if (connectorNamespace.getQuota() == null) {
+            return;
+        }
+
+        ResourceQuotaSpec spec = new ResourceQuotaSpec();
+        spec.setHard(new TreeMap<>());
+
+        if (connectorNamespace.getQuota().getCpuLimits() != null) {
+            spec.getHard().put(RESOURCE_QUOTA_LIMITS_CPU, new Quantity(connectorNamespace.getQuota().getCpuLimits()));
+        }
+        if (connectorNamespace.getQuota().getMemoryLimits() != null) {
+            spec.getHard().put(RESOURCE_QUOTA_LIMITS_MEMORY, new Quantity(connectorNamespace.getQuota().getMemoryLimits()));
+        }
+        if (connectorNamespace.getQuota().getCpuRequests() != null) {
+            spec.getHard().put(RESOURCE_QUOTA_REQUESTS_CPU, new Quantity(connectorNamespace.getQuota().getCpuRequests()));
+        }
+        if (connectorNamespace.getQuota().getMemoryRequests() != null) {
+            spec.getHard().put(RESOURCE_QUOTA_REQUESTS_MEMORY, new Quantity(connectorNamespace.getQuota().getMemoryRequests()));
+        }
+
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(fleetShard.generateNamespaceId(fleetShard.generateNamespaceId(connectorNamespace.getId()) + "-quota"));
+
+        ResourceQuota quota = new ResourceQuota();
+        quota.setMetadata(meta);
+        quota.setSpec(spec);
+
+        Resources.setLabels(
+            quota,
+            Resources.LABEL_UOW, uow);
+
+        fleetShard.getKubernetesClient().resourceQuotas()
+            .inNamespace(fleetShard.generateNamespaceId(connectorNamespace.getId()))
+            .createOrReplace(quota);
+    }
+
+    public void provision(ConnectorNamespace connectorNamespace) {
         LOGGER.info("Got cluster_id: {}, namespace_d: {}, state: {}, connectors_deployed: {}",
             fleetShard.getClusterId(),
-            namespace.getId(),
-            namespace.getStatus().getState(),
-            namespace.getStatus().getConnectorsDeployed());
+            connectorNamespace.getId(),
+            connectorNamespace.getStatus().getState(),
+            connectorNamespace.getStatus().getConnectorsDeployed());
 
+        String uow = uid();
         String state = Namespaces.PHASE_READY;
 
-        switch (namespace.getStatus().getState()) {
+        switch (connectorNamespace.getStatus().getState()) {
             case DELETED:
             case DELETING:
-                if (namespace.getStatus().getConnectorsDeployed() == 0) {
-                    if (fleetShard.getNamespace(namespace.getId()).isEmpty()) {
+                if (connectorNamespace.getStatus().getConnectorsDeployed() == 0) {
+                    if (fleetShard.getNamespace(connectorNamespace.getId()).isEmpty()) {
                         LOGGER.info(
                             "Namespace {} is being deleted and does not exists, skip provisioning",
-                            namespace.getId());
+                            connectorNamespace.getId());
 
                         return;
                     }
@@ -157,33 +207,53 @@ public class ConnectorNamespaceProvisioner {
                 break;
         }
 
+        boolean quota = hasQuota(connectorNamespace);
         Namespace ns = new Namespace();
 
         KubernetesResourceUtil.getOrCreateMetadata(ns)
-            .setName(fleetShard.generateNamespaceId(namespace.getId()));
+            .setName(fleetShard.generateNamespaceId(connectorNamespace.getId()));
 
         Resources.setLabels(
             ns,
-            Resources.LABEL_UOW, uid(),
+            Resources.LABEL_UOW, uow,
             Resources.LABEL_CLUSTER_ID, fleetShard.getClusterId(),
-            Resources.LABEL_NAMESPACE_ID, namespace.getId(),
+            Resources.LABEL_NAMESPACE_ID, connectorNamespace.getId(),
             Resources.LABEL_NAMESPACE_STATE, state,
-            Resources.LABEL_KUBERNETES_NAME, KubernetesResourceUtil.sanitizeName(namespace.getName()),
+            Resources.LABEL_KUBERNETES_NAME, KubernetesResourceUtil.sanitizeName(connectorNamespace.getName()),
             Resources.LABEL_KUBERNETES_MANAGED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_CREATED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_PART_OF, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE,
-            Resources.LABEL_KUBERNETES_INSTANCE, namespace.getId(),
-            Resources.LABEL_KUBERNETES_VERSION, "" + namespace.getResourceVersion(),
-            Resources.LABEL_NAMESPACE_TENANT_KIND, namespace.getTenant().getKind().getValue(),
-            Resources.LABEL_NAMESPACE_TENANT_ID, KubernetesResourceUtil.sanitizeName(namespace.getTenant().getId()));
+            Resources.LABEL_KUBERNETES_INSTANCE, connectorNamespace.getId(),
+            Resources.LABEL_KUBERNETES_VERSION, "" + connectorNamespace.getResourceVersion(),
+            Resources.LABEL_NAMESPACE_TENANT_KIND, connectorNamespace.getTenant().getKind().getValue(),
+            Resources.LABEL_NAMESPACE_TENANT_ID, KubernetesResourceUtil.sanitizeName(connectorNamespace.getTenant().getId()));
 
         Resources.setAnnotations(
             ns,
-            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration());
+            Resources.ANNOTATION_NAMESPACE_EXPIRATION, connectorNamespace.getExpiration(),
+            Resources.ANNOTATION_NAMESPACE_QUOTA, Boolean.toString(quota));
 
         fleetShard.createNamespace(ns);
 
-        copyAddonPullSecret(ns);
+        if (quota) {
+            createResourceQuota(uow, connectorNamespace);
+        }
+
+        copyAddonPullSecret(uow, ns);
+    }
+
+    private boolean hasQuota(ConnectorNamespace connectorNamespace) {
+        if (config.quota() != null && !config.quota().enabled()) {
+            return false;
+        }
+        if (connectorNamespace.getQuota() == null) {
+            return false;
+        }
+
+        return connectorNamespace.getQuota().getCpuLimits() != null
+            || connectorNamespace.getQuota().getCpuRequests() != null
+            || connectorNamespace.getQuota().getMemoryLimits() != null
+            || connectorNamespace.getQuota().getMemoryRequests() != null;
     }
 }
