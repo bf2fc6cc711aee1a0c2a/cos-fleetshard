@@ -24,6 +24,6 @@ Feature: Debezium Connector Status
 
     When the kctr has conditions:
       | message   | reason   | status     | type     | lastTransitionTime        |
-      | a message | a reason | Trus       | Ready    | 2021-06-12T12:35:09+02:00 |
+      | a message | a reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
     Then the connector is in phase "Monitor"
     Then the deployment is in phase "ready"

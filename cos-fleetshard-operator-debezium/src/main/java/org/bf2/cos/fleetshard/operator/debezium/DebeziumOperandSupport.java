@@ -145,51 +145,95 @@ public class DebeziumOperandSupport {
                 .get());
     }
 
-    public static void computeStatus(ConnectorStatusSpec statusSpec, KafkaConnector kafkaConnector) {
+    public static Optional<KafkaConnect> lookupKafkaConnect(KubernetesClient client, ManagedConnector connector) {
+        return Optional.ofNullable(
+            client.resources(KafkaConnect.class)
+                .inNamespace(connector.getMetadata().getNamespace())
+                .withName(connector.getMetadata().getName())
+                .get());
+    }
+
+    public static void computeStatus(ConnectorStatusSpec statusSpec, KafkaConnect kafkaConnect, KafkaConnector kafkaConnector) {
         statusSpec.setConditions(new ArrayList<>());
 
-        for (Condition condition : kafkaConnector.getStatus().getConditions()) {
-            switch (condition.getType()) {
-                case "Ready":
-                    statusSpec.setPhase(ManagedConnector.STATE_READY);
-                    break;
-                case "NotReady":
-                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                    if ("ConnectRestException".equals(condition.getReason())) {
-                        statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                    }
-                    break;
-                default:
-                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                    break;
-            }
+        statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+        if (null != kafkaConnector) {
+            for (Condition condition : kafkaConnector.getStatus().getConditions()) {
 
-            var rc = new io.fabric8.kubernetes.api.model.Condition();
-            rc.setMessage(condition.getMessage());
-            rc.setReason(condition.getReason());
-            rc.setStatus(condition.getStatus());
-            rc.setType(condition.getType());
-            rc.setLastTransitionTime(condition.getLastTransitionTime());
+                var rc = new io.fabric8.kubernetes.api.model.Condition();
+                rc.setReason(condition.getReason());
+                rc.setMessage(condition.getMessage());
+                rc.setStatus(condition.getStatus());
+                rc.setType("KafkaConnector:" + condition.getType());
+                rc.setLastTransitionTime(condition.getLastTransitionTime());
 
-            statusSpec.getConditions().add(rc);
-        }
-
-        connector(kafkaConnector)
-            .map(KafkaConnectorStatus::getState)
-            .ifPresent(state -> {
-                switch (state) {
-                    case KafkaConnectorStatus.STATE_FAILED:
-                        statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                switch (condition.getType()) {
+                    case "Ready":
+                        if ("True".equals(condition.getStatus())) {
+                            statusSpec.setPhase(ManagedConnector.STATE_READY);
+                        }
                         break;
-                    case KafkaConnectorStatus.STATE_UNASSIGNED:
-                        statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                        break;
-                    case KafkaConnectorStatus.STATE_PAUSED:
-                        statusSpec.setPhase(ManagedConnector.STATE_STOPPED);
+                    case "NotReady":
+                        if ("ConnectRestException".equals(condition.getReason())) {
+                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                            break;
+                        }
                         break;
                     default:
                         break;
                 }
-            });
+                statusSpec.getConditions().add(rc);
+            }
+        }
+
+        if (null != kafkaConnect) {
+            for (Condition condition : kafkaConnect.getStatus().getConditions()) {
+                var rc = new io.fabric8.kubernetes.api.model.Condition();
+                rc.setReason(condition.getReason());
+                rc.setMessage(condition.getMessage());
+                rc.setStatus(condition.getStatus());
+                rc.setType("KafkaConnect:" + condition.getType());
+                rc.setLastTransitionTime(condition.getLastTransitionTime());
+
+                switch (condition.getType()) {
+                    case "Ready":
+                        if (!"True".equals(condition.getStatus())) {
+                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+                        }
+                        break;
+                    case "NotReady":
+                        if ("TimeoutException".equals(condition.getReason())) {
+                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                            rc.setReason("KafkaClusterUnreachable");
+                            rc.setMessage("The configured Kafka Cluster is unreachable.");
+                            break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                statusSpec.getConditions().add(rc);
+            }
+        }
+
+        if (null != kafkaConnector) {
+            connector(kafkaConnector)
+                .map(KafkaConnectorStatus::getState)
+                .ifPresent(state -> {
+                    switch (state) {
+                        case KafkaConnectorStatus.STATE_FAILED:
+                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                            break;
+                        case KafkaConnectorStatus.STATE_UNASSIGNED:
+                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+                            break;
+                        case KafkaConnectorStatus.STATE_PAUSED:
+                            statusSpec.setPhase(ManagedConnector.STATE_STOPPED);
+                            break;
+                        default:
+                            break;
+                    }
+                });
+        }
     }
 }

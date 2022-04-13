@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -36,9 +37,12 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.Constants;
 import io.strimzi.api.kafka.model.JmxPrometheusExporterMetrics;
 import io.strimzi.api.kafka.model.KafkaConnect;
+import io.strimzi.api.kafka.model.KafkaConnectBuilder;
 import io.strimzi.api.kafka.model.KafkaConnector;
 import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
+import io.strimzi.api.kafka.model.status.Condition;
 import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.status.KafkaConnectStatusBuilder;
 import io.strimzi.api.kafka.model.status.KafkaConnectorStatusBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,40 +82,6 @@ public class DebeziumOperandControllerTest {
             return Map::of;
         }
     };
-
-    public static Stream<Arguments> computeStatus() {
-        return Stream.of(
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                "Ready",
-                "reason",
-                ManagedConnector.STATE_READY),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                "NotReady",
-                "reason",
-                ManagedConnector.STATE_PROVISIONING),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                "NotReady",
-                "ConnectRestException",
-                ManagedConnector.STATE_FAILED),
-            arguments(
-                KafkaConnectorStatus.STATE_FAILED,
-                "Foo",
-                "Bar",
-                ManagedConnector.STATE_FAILED),
-            arguments(
-                KafkaConnectorStatus.STATE_PAUSED,
-                "Foo",
-                "Bar",
-                ManagedConnector.STATE_STOPPED),
-            arguments(
-                KafkaConnectorStatus.STATE_UNASSIGNED,
-                "Foo",
-                "Bar",
-                ManagedConnector.STATE_PROVISIONING));
-    }
 
     @Test
     void declaresExpectedResourceTypes() {
@@ -340,24 +310,90 @@ public class DebeziumOperandControllerTest {
             });
     }
 
+    private static Condition createCondition(String type, String status, String reason) {
+        return new ConditionBuilder().withType(type).withStatus(status).withReason(reason).build();
+    }
+
+    private static List<Condition> createConditions(
+        String readyConditionStatus, String readyConditionReason,
+        String notReadyConditionReason) {
+        return List.of(
+            createCondition("Ready", readyConditionStatus, readyConditionReason),
+            createCondition("NotReady", "True", notReadyConditionReason));
+    }
+
+    private static List<Condition> createConditions(
+        String readyConditionStatus, String readyConditionReason) {
+        return List.of(createCondition("Ready", readyConditionStatus, readyConditionReason));
+    }
+
+    public static Stream<Arguments> computeStatus() {
+        return Stream.of(
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("True", null),
+                createConditions("True", null),
+                ManagedConnector.STATE_READY,
+                null),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("True", null),
+                createConditions("False", "reason", "TimeoutException"),
+                ManagedConnector.STATE_FAILED,
+                "KafkaClusterUnreachable"),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("False", "reason", "reason"),
+                createConditions("True", null),
+                ManagedConnector.STATE_PROVISIONING,
+                "reason"),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("False", "reason", "ConnectRestException"),
+                createConditions("True", null),
+                ManagedConnector.STATE_FAILED,
+                "ConnectRestException"),
+            arguments(
+                KafkaConnectorStatus.STATE_FAILED,
+                List.of(createCondition("Foo", "True", "Bar")),
+                createConditions("True", null),
+                ManagedConnector.STATE_FAILED,
+                null),
+            arguments(
+                KafkaConnectorStatus.STATE_PAUSED,
+                List.of(createCondition("Foo", "True", "Bar")),
+                createConditions("True", null),
+                ManagedConnector.STATE_STOPPED,
+                null),
+            arguments(
+                KafkaConnectorStatus.STATE_UNASSIGNED,
+                List.of(createCondition("Foo", "True", "Bar")),
+                createConditions("True", null),
+                ManagedConnector.STATE_PROVISIONING,
+                null));
+    }
+
     @ParameterizedTest
     @MethodSource
     void computeStatus(
         String connectorState,
-        String conditionType,
-        String conditionReason,
-        String expectedConnectorState) {
+        List<Condition> connectorConditions,
+        List<Condition> connectConditions,
+        String expectedManagedConnectorState,
+        String expectedReason) {
 
         ConnectorStatusSpec status = new ConnectorStatusSpec();
 
         DebeziumOperandSupport.computeStatus(
             status,
+            new KafkaConnectBuilder()
+                .withStatus(new KafkaConnectStatusBuilder()
+                    .addAllToConditions(connectConditions)
+                    .build())
+                .build(),
             new KafkaConnectorBuilder()
                 .withStatus(new KafkaConnectorStatusBuilder()
-                    .addToConditions(new ConditionBuilder()
-                        .withType(conditionType)
-                        .withReason(conditionReason)
-                        .build())
+                    .addAllToConditions(connectorConditions)
                     .addToConnectorStatus("connector",
                         new org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatusBuilder()
                             .withState(connectorState)
@@ -365,11 +401,25 @@ public class DebeziumOperandControllerTest {
                     .build())
                 .build());
 
-        assertThat(status.getPhase()).isEqualTo(expectedConnectorState);
-        assertThat(status.getConditions()).anySatisfy(condition -> {
-            assertThat(condition)
-                .hasFieldOrPropertyWithValue("type", conditionType)
-                .hasFieldOrPropertyWithValue("reason", conditionReason);
-        });
+        assertThat(status.getPhase()).isEqualTo(expectedManagedConnectorState);
+        if ("KafkaClusterUnreachable".equals(expectedReason)) {
+            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
+                .hasFieldOrPropertyWithValue("type", "KafkaConnect:NotReady")
+                .hasFieldOrPropertyWithValue("status", "True")
+                .hasFieldOrPropertyWithValue("reason", expectedReason));
+        } else if ("ConnectRestException".equals(expectedReason)) {
+            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
+                .hasFieldOrPropertyWithValue("type", "KafkaConnector:NotReady")
+                .hasFieldOrPropertyWithValue("status", "True")
+                .hasFieldOrPropertyWithValue("reason", expectedReason));
+        } else {
+            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
+                .hasFieldOrPropertyWithValue("status", null == expectedReason ? "True" : "False")
+                .hasFieldOrPropertyWithValue("reason", expectedReason));
+            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
+                .hasFieldOrPropertyWithValue("type", "KafkaConnect:Ready")
+                .hasFieldOrPropertyWithValue("status", "True")
+                .hasFieldOrPropertyWithValue("reason", null));
+        }
     }
 }
