@@ -31,9 +31,11 @@ public class CucumberDataTableAssert extends AbstractAssert<CucumberDataTableAss
                     .describedAs("The key %s exists with any value", k)
                     .containsKey(k);
             } else {
+                assertThat(elements)
+                    .describedAs("The key %s exists", k)
+                    .containsKey(k);
                 assertThat(elements.get(k))
                     .describedAs("The key %s exists with value %s", k, v)
-                    .isNotNull()
                     .hasToString(v);
             }
         });

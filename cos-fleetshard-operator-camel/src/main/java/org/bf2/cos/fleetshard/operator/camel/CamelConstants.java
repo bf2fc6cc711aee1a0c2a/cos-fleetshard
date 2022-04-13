@@ -21,6 +21,8 @@ public final class CamelConstants {
 
     public static final String TRAIT_CAMEL_APACHE_ORG_ENV = "trait.camel.apache.org/environment.%s";
     public static final String TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE = "trait.camel.apache.org/container.image";
+    public static final String TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED = "trait.camel.apache.org/prometheus.enabled";
+    public static final String TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR = "trait.camel.apache.org/prometheus.pod-monitor";
     public static final String TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED = "trait.camel.apache.org/kamelets.enabled";
     public static final String TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED = "trait.camel.apache.org/jvm.enabled";
     public static final String TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON = "trait.camel.apache.org/logging.json";
