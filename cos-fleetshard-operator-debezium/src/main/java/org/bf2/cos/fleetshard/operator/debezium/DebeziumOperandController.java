@@ -62,6 +62,7 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.co
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupKafkaConnect;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
@@ -229,9 +230,11 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     @Override
     public void status(ManagedConnector connector) {
-        lookupConnector(getKubernetesClient(), connector)
-            .filter(kc -> kc.getStatus() != null)
-            .ifPresent(kbs -> computeStatus(connector.getStatus().getConnectorStatus(), kbs));
+        KafkaConnector kctr = lookupConnector(getKubernetesClient(), connector)
+            .filter(_kctr -> _kctr.getStatus() != null).orElse(null);
+        KafkaConnect kc = lookupKafkaConnect(getKubernetesClient(), connector)
+            .filter(_kc -> _kc.getStatus() != null).orElse(null);
+        computeStatus(connector.getStatus().getConnectorStatus(), kc, kctr);
     }
 
     @Override
