@@ -31,7 +31,7 @@
         <wiremock.version>2.33.1</wiremock.version>
         <spock.version>2.2-M1-groovy-4.0</spock.version>
         <groovy.version>4.0.1</groovy.version>
-        <json-unit.version>2.33.0</json-unit.version>
+        <json-unit.version>2.34.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <strimzi.version>0.28.0</strimzi.version>
         <bson.version>4.5.1</bson.version>
