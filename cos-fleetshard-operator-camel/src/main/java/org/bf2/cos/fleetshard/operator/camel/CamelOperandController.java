@@ -9,7 +9,6 @@ import javax.inject.Singleton;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
-import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration.Health;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpec;
@@ -245,7 +244,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED, "true");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED, "true");
 
-        Health health = configuration.health();
+        CamelOperandConfiguration.Health health = configuration.health();
         if (health != null) {
             annotations.putIfAbsent(
                 TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD,
@@ -271,6 +270,22 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             annotations.putIfAbsent(
                 TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT,
                 health.livenessTimeoutSeconds());
+        }
+
+        if (configuration.connectors() != null) {
+            if (configuration.connectors().traits() != null) {
+                annotations.putAll(configuration.connectors().traits());
+            }
+
+            if (configuration.connectors().types() != null) {
+                final String typeId = connector.getSpec().getDeployment().getConnectorTypeId();
+                final CamelOperandConfiguration.ConnectorConfiguration typeConfig = configuration.connectors().types()
+                    .get(typeId);
+
+                if (typeConfig != null && typeConfig.traits() != null) {
+                    annotations.putAll(typeConfig.traits());
+                }
+            }
         }
 
         return List.of(secret, binding);
