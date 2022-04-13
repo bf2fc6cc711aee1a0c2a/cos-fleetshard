@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -59,7 +60,9 @@ public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
                 .containsEntry(Resources.LABEL_KUBERNETES_CREATED_BY, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_PART_OF, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
-                .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment1);
+                .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment1)
+                .containsEntry(Resources.LABEL_NAMESPACE_TENANT_KIND, ConnectorNamespaceTenantKind.ORGANISATION.getValue())
+                .containsKey(Resources.LABEL_NAMESPACE_TENANT_ID);
         });
 
         checkAddonPullSecretCopiedSuccessfullyToNamespace(ns1);
@@ -79,7 +82,9 @@ public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
                 .containsEntry(Resources.LABEL_KUBERNETES_CREATED_BY, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_PART_OF, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
-                .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment2);
+                .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment2)
+                .containsEntry(Resources.LABEL_NAMESPACE_TENANT_KIND, ConnectorNamespaceTenantKind.ORGANISATION.getValue())
+                .containsKey(Resources.LABEL_NAMESPACE_TENANT_ID);
         });
 
         checkAddonPullSecretCopiedSuccessfullyToNamespace(ns2);
