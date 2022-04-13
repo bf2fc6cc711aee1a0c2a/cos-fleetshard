@@ -94,14 +94,14 @@ public class ConnectorNamespaceProvisioner {
             Resources.LABEL_KUBERNETES_PART_OF, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE,
             Resources.LABEL_KUBERNETES_INSTANCE, namespace.getId(),
-            Resources.LABEL_KUBERNETES_VERSION, "" + namespace.getResourceVersion());
+            Resources.LABEL_KUBERNETES_VERSION, "" + namespace.getResourceVersion(),
+            Resources.LABEL_NAMESPACE_TENANT_KIND, namespace.getTenant().getKind().getValue(),
+            Resources.LABEL_NAMESPACE_TENANT_ID, namespace.getTenant().getId());
 
         Resources.setAnnotations(
             ns,
             Resources.ANNOTATION_NAMESPACE_STATE, namespace.getStatus().getState().getValue(),
-            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration(),
-            Resources.ANNOTATION_NAMESPACE_TENAT_KIND, namespace.getTenant().getKind().toString(),
-            Resources.ANNOTATION_NAMESPACE_TENAT_ID, namespace.getTenant().getId());
+            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration());
 
         fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
 
