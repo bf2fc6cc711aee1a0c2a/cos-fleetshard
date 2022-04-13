@@ -1,5 +1,7 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import java.util.Map;
+
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -12,6 +14,8 @@ public interface CamelOperandConfiguration {
     Health health();
 
     ExchangePooling exchangePooling();
+
+    Connectors connectors();
 
     interface LabelSelection {
         @WithDefault("true")
@@ -64,5 +68,13 @@ public interface CamelOperandConfiguration {
 
         @WithDefault("false")
         String exchangeFactoryStatisticsEnabled();
+    }
+
+    interface ConnectorConfiguration {
+        Map<String, String> traits();
+    }
+
+    interface Connectors extends ConnectorConfiguration {
+        Map<String, ConnectorConfiguration> types();
     }
 }
