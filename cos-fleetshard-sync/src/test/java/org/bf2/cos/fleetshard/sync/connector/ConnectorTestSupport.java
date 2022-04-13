@@ -225,6 +225,9 @@ public final class ConnectorTestSupport {
             when(metrics.baseName()).thenReturn("base");
             return metrics;
         });
+        when(answer.quota()).thenAnswer(invocation -> {
+            return Mockito.mock(FleetShardSyncConfig.Quota.class);
+        });
 
         return answer;
     }

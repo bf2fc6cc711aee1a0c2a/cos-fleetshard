@@ -33,7 +33,7 @@ public class NamespaceProvisionerTestBase extends SyncTestSupport {
         //
         Secret copiedAddonPullSecret = until(
             () -> fleetShardClient
-                .getSecret(new NamespacedName(ns.getMetadata().getName(), config.imagePullSecretsName())),
+                .getSecret(new NamespacedName(config.namespace(), config.imagePullSecretsName())),
             Objects::nonNull);
         assertThat(copiedAddonPullSecret.getType()).isEqualTo(TestFleetShardSync.ADDON_SECRET_TYPE);
         assertThat(copiedAddonPullSecret.getData().get(TestFleetShardSync.ADDON_SECRET_FIELD))

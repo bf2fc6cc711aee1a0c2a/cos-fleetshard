@@ -76,6 +76,9 @@ public class SyncTestSupport {
 
         consumer.accept(answer);
 
+        if (answer.getStatus() == null) {
+            answer.setStatus(new ConnectorNamespaceStatus1());
+        }
         if (answer.getStatus().getConnectorsDeployed() == null) {
             answer.getStatus().setConnectorsDeployed(0);
         }
