@@ -25,7 +25,7 @@ Feature: Camel Connector Reify
 
     Then the klb exists
      And the klb has annotations containing:
-          | camel.apache.org/operator.id                              | ${cos.operator.id}              |
+          | camel.apache.org/operator.id                              | ${cos.operator.id}                         |
           | trait.camel.apache.org/container.image                    | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
           | trait.camel.apache.org/health.enabled                     | true                                       |
           | trait.camel.apache.org/health.liveness-probe-enabled      | true                                       |
@@ -38,6 +38,8 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-failure-threshold  | 6                                          |
           | trait.camel.apache.org/health.liveness-period             | 7                                          |
           | trait.camel.apache.org/health.liveness-timeout            | 8                                          |
+          | trait.camel.apache.org/prometheus.enabled                 | true                                       |
+          | trait.camel.apache.org/prometheus.pod-monitor             | false                                      |
 
      And the klb has target-labels containing "cos.bf2.org/deployment.id"
      And the klb has target-labels containing "cos.bf2.org/connector.id"

@@ -53,6 +53,8 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.configureKameletProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
@@ -235,6 +237,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED, "true");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR, "false");
 
         // health check annotations
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED, "true");
