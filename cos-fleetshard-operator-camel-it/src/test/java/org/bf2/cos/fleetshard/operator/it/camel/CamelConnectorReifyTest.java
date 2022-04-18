@@ -31,6 +31,7 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
             configs.put("cos.operator.camel.route-controller.backoff-delay", "2s");
             configs.put("cos.operator.camel.route-controller.initial-delay", "1s");
             configs.put("cos.operator.camel.route-controller.backoff-multiplier", "2");
+            configs.put("cos.operator.camel.route-controller.backoff-max-attempts", "3");
             configs.put("cos.operator.camel.health.readiness-success-threshold", "1");
             configs.put("cos.operator.camel.health.readiness-failure-threshold", "2");
             configs.put("cos.operator.camel.health.readiness-period-seconds", "3");
