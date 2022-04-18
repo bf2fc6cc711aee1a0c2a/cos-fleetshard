@@ -94,6 +94,7 @@ Feature: Camel Connector Reify
           | camel.main.route-controller-backoff-delay           | 2s                         |
           | camel.main.route-controller-initial-delay           | 1s                         |
           | camel.main.route-controller-backoff-multiplier      | 2                          |
+          | camel.main.route-controller-backoff-max-attempts    | 3                          |
           | camel.main.route-controller-unhealthy-on-exhausted  | true                       |
           | camel.main.exchange-factory                         | prototype                  |
           | camel.main.exchange-factory-capacity                | 31                         |

@@ -31,6 +31,9 @@ public interface CamelOperandConfiguration {
 
         @WithDefault("1")
         String backoffMultiplier();
+
+        @WithDefault("6")
+        String backoffMaxAttempts();
     }
 
     interface Health {

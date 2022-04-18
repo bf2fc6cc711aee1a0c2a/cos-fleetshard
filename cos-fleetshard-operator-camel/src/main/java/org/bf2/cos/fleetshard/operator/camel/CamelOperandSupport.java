@@ -325,6 +325,7 @@ public final class CamelOperandSupport {
             props.put("camel.main.route-controller-backoff-delay", cfg.routeController().backoffDelay());
             props.put("camel.main.route-controller-initial-delay", cfg.routeController().initialDelay());
             props.put("camel.main.route-controller-backoff-multiplier", cfg.routeController().backoffMultiplier());
+            props.put("camel.main.route-controller-backoff-max-attempts", cfg.routeController().backoffMaxAttempts());
         }
 
         if (cfg.exchangePooling() != null) {
