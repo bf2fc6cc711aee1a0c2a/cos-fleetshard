@@ -57,7 +57,6 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.RESOURC
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_DOMAIN;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.STRIMZI_IO_USE_CONNECTOR_RESOURCES;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.computeStatus;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.connector;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createConfig;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.createSecretsData;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lookupConnector;
@@ -72,6 +71,9 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumOperandController.class);
     public static final String KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX = "-metrics";
+    public static final String CLASS_NAME_POSTGRES_CONNECTOR = "io.debezium.connector.postgresql.PostgresConnector";
+    public static final String CONFIG_OPTION_POSTGRES_PLUGIN_NAME = "plugin.name";
+    public static final String PLUGIN_NAME_PGOUTPUT = "pgoutput";
 
     static {
         try {
@@ -181,6 +183,19 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .withSpec(kcsb.build())
             .build();
 
+        Map<String, Object> connectorConfig = createConfig(configuration, connectorConfiguration.getConnectorSpec());
+
+        // handle connector config defaults
+        switch (shardMetadata.getConnectorClass()) {
+            case CLASS_NAME_POSTGRES_CONNECTOR:
+                if (!connectorConfig.containsKey(CONFIG_OPTION_POSTGRES_PLUGIN_NAME)) {
+                    connectorConfig.put(CONFIG_OPTION_POSTGRES_PLUGIN_NAME, PLUGIN_NAME_PGOUTPUT);
+                }
+                break;
+            default:
+                break;
+        }
+
         final KafkaConnector kctr = new KafkaConnectorBuilder()
             .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnector.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
@@ -191,7 +206,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withClassName(shardMetadata.getConnectorClass())
                 .withTasksMax(1)
                 .withPause(false)
-                .withConfig(createConfig(configuration, connectorConfiguration.getConnectorSpec()))
+                .withConfig(connectorConfig)
                 .build())
             .build();
 
