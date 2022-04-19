@@ -80,7 +80,5 @@ Feature: Debezium Connector Reify
      And the kctr has an entry at path "$.spec.tasksMax" with value 1
      And the kctr has an entry at path "$.spec.class" with value "io.debezium.connector.postgresql.PostgresConnector"
      And the kctr has config containing:
-       | database.password                 | ${file:/opt/kafka/external-configuration/connector-configuration/debezium-connector.properties:database.password} |
-
-
-
+       | database.password           | ${file:/opt/kafka/external-configuration/connector-configuration/debezium-connector.properties:database.password} |
+       | plugin.name                 | pgoutput                                                                                                          |

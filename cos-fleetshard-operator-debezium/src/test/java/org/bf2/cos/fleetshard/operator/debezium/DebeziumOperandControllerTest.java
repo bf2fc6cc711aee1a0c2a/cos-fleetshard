@@ -240,14 +240,18 @@ public class DebeziumOperandControllerTest {
             .filteredOn(DebeziumOperandSupport::isKafkaConnector)
             .hasSize(1)
             .first()
-            .isInstanceOfSatisfying(KafkaConnector.class, kc -> assertThat(
-                kc.getSpec().getConfig()).containsEntry(
-                    "database.password",
-                    "${file:/opt/kafka/external-configuration/"
-                        + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
-                        + "/"
-                        + EXTERNAL_CONFIG_FILE
-                        + ":database.password}"));
+            .isInstanceOfSatisfying(KafkaConnector.class, kctr -> {
+                assertThat(
+                    kctr.getSpec().getConfig()).containsEntry(
+                        "database.password",
+                        "${file:/opt/kafka/external-configuration/"
+                            + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
+                            + "/"
+                            + EXTERNAL_CONFIG_FILE
+                            + ":database.password}");
+                assertThat(kctr.getSpec().getConfig().get(DebeziumOperandController.CONFIG_OPTION_POSTGRES_PLUGIN_NAME))
+                    .isEqualTo(DebeziumOperandController.PLUGIN_NAME_PGOUTPUT);
+            });
 
         assertThat(resources)
             .filteredOn(DebeziumOperandSupport::isKafkaConnect)
