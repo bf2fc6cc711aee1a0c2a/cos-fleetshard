@@ -44,6 +44,9 @@ public class CamelShardMetadata {
     @JsonProperty("produces_class")
     private String producesClass;
 
+    @JsonProperty("error_handler_strategy")
+    private String errorHandlerStrategy;
+
     public String getConnectorImage() {
         return connectorImage;
     }
@@ -124,6 +127,14 @@ public class CamelShardMetadata {
         this.producesClass = producesClass;
     }
 
+    public String getErrorHandlerStrategy() {
+        return errorHandlerStrategy;
+    }
+
+    public void setErrorHandlerStrategy(String errorHandlerStrategy) {
+        this.errorHandlerStrategy = errorHandlerStrategy;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -141,7 +152,8 @@ public class CamelShardMetadata {
             && Objects.equals(getConsumes(), metadata.getConsumes())
             && Objects.equals(getConsumesClass(), metadata.getConsumesClass())
             && Objects.equals(getProduces(), metadata.getProduces())
-            && Objects.equals(getProducesClass(), metadata.getProducesClass());
+            && Objects.equals(getProducesClass(), metadata.getProducesClass())
+            && Objects.equals(getErrorHandlerStrategy(), metadata.getErrorHandlerStrategy());
     }
 
     @Override
@@ -155,7 +167,8 @@ public class CamelShardMetadata {
             getConsumes(),
             getConsumesClass(),
             getProduces(),
-            getProducesClass());
+            getProducesClass(),
+            getErrorHandlerStrategy());
     }
 
     @Override
@@ -170,6 +183,7 @@ public class CamelShardMetadata {
             ", producesClass='" + producesClass + '\'' +
             ", operators=" + operators +
             ", kamelets=" + kamelets +
+            ", errorHandlerStrategy=" + errorHandlerStrategy +
             '}';
     }
 }

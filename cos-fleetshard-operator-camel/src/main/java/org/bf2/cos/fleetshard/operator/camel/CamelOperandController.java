@@ -95,7 +95,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             serviceAccountSpec,
             configuration);
 
-        final ObjectNode errorHandler = createErrorHandler(
+        final ObjectNode errorHandler = createErrorHandler(shardMetadata,
             connector,
             connectorConfiguration.getErrorHandlerSpec());
 

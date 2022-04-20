@@ -22,6 +22,8 @@ import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -48,6 +50,7 @@ import static org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint.kamele
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandSupport.class);
 
     private CamelOperandSupport() {
     }
@@ -413,20 +416,39 @@ public final class CamelOperandSupport {
         }
     }
 
-    public static ObjectNode createErrorHandler(ManagedConnector connector, ObjectNode errorHandlerSpec) {
-        if (errorHandlerSpec != null) {
+    public static ObjectNode createErrorHandler(
+        CamelShardMetadata shardMetadata,
+        ManagedConnector connector,
+        ObjectNode errorHandlerSpec) {
+
+        if (errorHandlerSpec != null && !errorHandlerSpec.isEmpty()) {
             // Assume only one is populated because of prior validation
-            if (errorHandlerSpec.get(ERROR_HANDLER_TYPE_LOG) != null) {
+            String errorHandlerType = errorHandlerSpec.fieldNames().next();
+            return createErrorHandler(errorHandlerType, connector, errorHandlerSpec);
+        } else if (StringUtils.isNotBlank(shardMetadata.getErrorHandlerStrategy())) {
+            return createErrorHandler(shardMetadata.getErrorHandlerStrategy(), connector, null);
+        } else {
+            LOGGER.warn("No error handler specified and no default found for connector: {}", connector.getSpec());
+        }
+        return null;
+    }
+
+    public static ObjectNode createErrorHandler(
+        String errorHandlerType,
+        ManagedConnector connector,
+        ObjectNode errorHandlerSpec) {
+
+        switch (errorHandlerType.toLowerCase(Locale.ROOT)) {
+            case ERROR_HANDLER_TYPE_LOG:
                 return createLogErrorHandler();
-            } else if (errorHandlerSpec.get(ERROR_HANDLER_TYPE_STOP) != null) {
+            case ERROR_HANDLER_TYPE_STOP:
                 return createStopErrorHandler();
-            } else if (errorHandlerSpec.get(ERROR_HANDLER_TYPE_DLQ) != null) {
+            case ERROR_HANDLER_TYPE_DLQ:
                 return createDeadLetterQueueErrorHandler(connector, errorHandlerSpec);
-            } else {
+            default: {
                 throw new RuntimeException("Invalid error handling specification: " + errorHandlerSpec.asText());
             }
         }
-        return null;
     }
 
     public static ObjectNode createLogErrorHandler() {
