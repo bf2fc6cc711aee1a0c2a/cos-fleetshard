@@ -25,7 +25,7 @@ public class FleetShardSyncScheduler {
 
     public void schedule(String id, Class<? extends Job> jobType, Duration interval) throws SchedulerException {
         if (interval.isZero()) {
-            LOGGER.debug("Skipping scheduling job of type {} with id {} as the duration is zero", id, jobType);
+            LOGGER.info("Skipping scheduling job of type {} with id {} as the duration is zero", id, jobType);
             return;
         }
 

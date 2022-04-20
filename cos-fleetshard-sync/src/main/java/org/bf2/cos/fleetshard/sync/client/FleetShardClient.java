@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.sync.client;
 
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -24,13 +27,17 @@ import org.bf2.cos.fleetshard.support.watch.Informers;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.cache.Cache;
+import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 @ApplicationScoped
 public class FleetShardClient implements Service {
@@ -317,5 +324,39 @@ public class FleetShardClient implements Service {
                 .withName(cluster.getMetadata().getName())
                 .createOrReplace(cluster);
         });
+    }
+
+    // *************************************
+    //
+    // Event
+    //
+    // *************************************
+
+    public void broadcast(String type, String reason, String message, HasMetadata involved) {
+        ObjectReference ref = new ObjectReference();
+        ref.setApiVersion(involved.getApiVersion());
+        ref.setKind(involved.getKind());
+        ref.setName(involved.getMetadata().getName());
+        ref.setNamespace(involved.getMetadata().getNamespace());
+        ref.setUid(involved.getMetadata().getUid());
+
+        Event event = new Event();
+        event.setType(type);
+        event.setReason(reason);
+        event.setMessage(message);
+        event.setInvolvedObject(ref);
+        event.setLastTimestamp(ZonedDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+
+        KubernetesResourceUtil.getOrCreateMetadata(event).setGenerateName("cos-fleetshard-sync");
+        KubernetesResourceUtil.getOrCreateMetadata(event).setNamespace(involved.getMetadata().getNamespace());
+
+        broadcast(event);
+    }
+
+    public void broadcast(Event event) {
+        kubernetesClient.v1()
+            .events()
+            .inNamespace(event.getMetadata().getNamespace())
+            .create(event);
     }
 }

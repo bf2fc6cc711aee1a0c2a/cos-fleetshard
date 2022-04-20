@@ -218,7 +218,7 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 });
 
             server.stubMatching(
-                RequestMethod.GET,
+                RequestMethod.PUT,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
                 () -> WireMock.ok());
 

@@ -220,6 +220,11 @@ public final class ConnectorTestSupport {
         when(answer.namespace()).thenAnswer(invocation -> {
             return "bar";
         });
+        when(answer.metrics()).thenAnswer(invocation -> {
+            var metrics = Mockito.mock(FleetShardSyncConfig.Metrics.class);
+            when(metrics.baseName()).thenReturn("base");
+            return metrics;
+        });
 
         return answer;
     }

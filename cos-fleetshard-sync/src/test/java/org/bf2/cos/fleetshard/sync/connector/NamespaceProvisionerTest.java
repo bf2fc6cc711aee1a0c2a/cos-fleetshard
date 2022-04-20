@@ -16,9 +16,11 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.micrometer.core.instrument.MeterRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_NAME;
@@ -52,7 +54,9 @@ public class NamespaceProvisionerTest {
         final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
-        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner(config, fleetShard, fleetManager);
+        final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
+        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner(config, fleetShard, fleetManager,
+            registry);
         final ArgumentCaptor<Namespace> nc = ArgumentCaptor.forClass(Namespace.class);
 
         //
