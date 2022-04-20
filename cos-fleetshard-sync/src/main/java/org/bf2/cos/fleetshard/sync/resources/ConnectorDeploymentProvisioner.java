@@ -66,7 +66,11 @@ public class ConnectorDeploymentProvisioner {
         LOGGER.debug("deployments: {}", deployments.size());
 
         for (ConnectorDeployment deployment : deployments) {
-            provision(deployment);
+            try {
+                provision(deployment);
+            } catch (Exception e) {
+                LOGGER.error("Failure while trying to provision connector deployment: {}", deployment);
+            }
         }
     }
 

@@ -48,7 +48,11 @@ public class ConnectorNamespaceProvisioner {
         LOGGER.debug("namespaces: {}", namespaces.size());
 
         for (ConnectorNamespace namespace : namespaces) {
-            provision(namespace);
+            try {
+                provision(namespace);
+            } catch (Exception e) {
+                LOGGER.error("Failure while trying to provision namespace: {}", namespace);
+            }
         }
     }
 
