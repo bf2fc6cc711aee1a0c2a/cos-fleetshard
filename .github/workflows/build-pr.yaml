@@ -24,10 +24,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        kubernetes:
-        - 'v1.22.1'
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v2
@@ -37,16 +33,50 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           server-id: github
-      - name: 'SetUp KinD'
-        uses: container-tools/kind-action@v1
-        with:
-          registry: false
-          node_image: kindest/node:${{ matrix.kubernetes }}
-      - name: 'SetUp Kubernetes Cluster'
-        run: |
-          ./etc/scripts/deploy_fleetshard_crds.sh
-          ./etc/scripts/deploy_camel-k_crds.sh
-          ./etc/scripts/deploy_strimzi_crds.sh
       - name: "Build"
         run: |
-          ./etc/scripts/build.sh
+          ./mvnw ${MAVEN_ARGS} clean install -Pskip-it
+      - name: "Tar Maven Repo"
+        shell: bash
+        run: |
+          tar -czf ${{ runner.temp }}/maven-repo.tgz -C ~ .m2/repository
+          ls -lh ${{ runner.temp }}/maven-repo.tgz
+          df -h /
+      - name: "Persist Maven Repo"
+        uses: actions/upload-artifact@v2
+        with:
+          name: maven-repo
+          path: ${{ runner.temp }}/maven-repo.tgz
+          retention-days: 1
+
+  sync-it:
+    needs:
+      - build
+    uses: ./.github/workflows/build-it.yaml
+    with:
+      module: "cos-fleetshard-sync-it"
+      kubeVersion: 'v1.23.3'
+
+  operator-it:
+    needs:
+      - build
+    uses: ./.github/workflows/build-it.yaml
+    with:
+      module: "cos-fleetshard-operator-it"
+      kubeVersion: 'v1.23.3'
+
+  operator-camel-it:
+    needs:
+      - build
+    uses: ./.github/workflows/build-it.yaml
+    with:
+      module: "cos-fleetshard-operator-camel-it"
+      kubeVersion: 'v1.23.3'
+
+  operator-debezium-it:
+    needs:
+      - build
+    uses: ./.github/workflows/build-it.yaml
+    with:
+      module: "cos-fleetshard-operator-debezium-it"
+      kubeVersion: 'v1.23.3'
