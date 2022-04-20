@@ -344,7 +344,7 @@
                             <configuration>
                                 <rules>
                                     <requireMavenVersion>
-                                        <version>${maven.version}</version>
+                                        <version>3.8.3</version>
                                     </requireMavenVersion>
                                 </rules>
                             </configuration>

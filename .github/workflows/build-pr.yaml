@@ -33,15 +33,27 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           server-id: github
+      - name: 'Install Maven'
+        uses: sdkman/sdkman-action@master
+        id: sdkman-mvn
+        with:
+          candidate: maven
+          version: 3.8.5
+      - name: 'Install Maven Daemon'
+        run: |
+          wget https://github.com/apache/maven-mvnd/releases/download/0.7.1/mvnd-0.7.1-linux-amd64.zip -O ${{ runner.temp }}/mvnd.zip
+          unzip ${{ runner.temp }}/mvnd.zip -d ${{ runner.temp }}
+
       - name: "Build"
         run: |
-          ./mvnw ${MAVEN_ARGS} clean install -Pskip-it
+          ${{ runner.temp }}/mvnd-0.7.1-linux-amd64/bin/mvnd ${MAVEN_ARGS} clean install -Pskip-it
+
       - name: "Tar Maven Repo"
         shell: bash
         run: |
           tar -czf ${{ runner.temp }}/maven-repo.tgz -C ~ .m2/repository
           ls -lh ${{ runner.temp }}/maven-repo.tgz
-          df -h /
+          df -h /q
       - name: "Persist Maven Repo"
         uses: actions/upload-artifact@v2
         with:
