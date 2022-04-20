@@ -45,7 +45,7 @@ jobs:
       - name: "Persist Maven Repo"
         uses: actions/upload-artifact@v2
         with:
-          name: maven-repo
+          name: maven-repo-${{ github.run_id }}
           path: ${{ runner.temp }}/maven-repo.tgz
           retention-days: 1
 

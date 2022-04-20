@@ -29,7 +29,7 @@ jobs:
       - name: "Download Maven Repo"
         uses: actions/download-artifact@v2
         with:
-          name: maven-repo
+          name: maven-repo-${{ github.run_id }}
           path: ..
       - name: "Extract Maven Repo"
         shell: bash
