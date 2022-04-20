@@ -26,7 +26,6 @@ Feature: Camel Connector Reify
     Then the klb exists
      And the klb has an empty object at path "$.spec.errorHandler.log"
 
-
   Scenario: reify dlq error handler
     Given a Connector with:
       | connector.type.id           | log_sink_0.1                    |
@@ -84,3 +83,25 @@ Feature: Camel Connector Reify
     When the klb phase is "error"
     Then the connector is in phase "Monitor"
      And the connector operand status is in phase "failed"
+
+  Scenario: reify default error handler
+    Given a Connector with:
+      | connector.type.id           | log_sink_0.1                    |
+      | desired.state               | ready                           |
+      | kafka.bootstrap             | kafka.acme.com:443              |
+      | operator.id                 | cos-fleetshard-operator-camel   |
+      | operator.type               | camel-connector-operator        |
+      | operator.version            | [1.0.0,2.0.0)                   |
+    And with sample camel connector
+
+    When deploy
+    Then the connector exists
+    And the connector secret exists
+    And the connector is in phase "Monitor"
+
+    Then the klb exists
+    And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "rc:fail?routeId=current"
+
+    When the klb phase is "error"
+    Then the connector is in phase "Monitor"
+    And the connector operand status is in phase "failed"

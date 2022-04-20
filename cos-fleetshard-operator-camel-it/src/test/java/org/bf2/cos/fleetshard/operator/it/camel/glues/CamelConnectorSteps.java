@@ -34,6 +34,8 @@ public class CamelConnectorSteps extends StepsSupport {
             .put("name", "managed-kafka-source")
             .put("prefix", "kafka");
 
+        meta.put("error_handler_strategy", "stop");
+
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, connector);
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_META, meta);
     }
