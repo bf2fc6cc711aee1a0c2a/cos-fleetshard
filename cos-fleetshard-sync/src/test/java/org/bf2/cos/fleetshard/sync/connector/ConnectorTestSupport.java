@@ -214,6 +214,12 @@ public final class ConnectorTestSupport {
             when(connectors.labels()).thenReturn(Collections.emptyMap());
             return connectors;
         });
+        when(answer.imagePullSecretsName()).thenAnswer(invocation -> {
+            return "foo";
+        });
+        when(answer.namespace()).thenAnswer(invocation -> {
+            return "bar";
+        });
 
         return answer;
     }

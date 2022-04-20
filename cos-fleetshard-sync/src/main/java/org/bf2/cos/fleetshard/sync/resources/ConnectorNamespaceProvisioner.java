@@ -88,7 +88,7 @@ public class ConnectorNamespaceProvisioner {
             ns,
             Resources.LABEL_CLUSTER_ID, fleetShard.getClusterId(),
             Resources.LABEL_NAMESPACE_ID, namespace.getId(),
-            Resources.LABEL_KUBERNETES_NAME, namespace.getName(),
+            Resources.LABEL_KUBERNETES_NAME, KubernetesResourceUtil.sanitizeName(namespace.getName()),
             Resources.LABEL_KUBERNETES_MANAGED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_CREATED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_PART_OF, fleetShard.getClusterId(),
@@ -103,7 +103,7 @@ public class ConnectorNamespaceProvisioner {
             Resources.ANNOTATION_NAMESPACE_STATE, namespace.getStatus().getState().getValue(),
             Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration());
 
-        fleetShard.getKubernetesClient().namespaces().createOrReplace(ns);
+        fleetShard.createNamespace(ns);
 
         copyAddonPullSecret(ns);
     }
