@@ -6,14 +6,18 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.KafkaConnectionSettings;
+import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleet.manager.model.SchemaRegistryConnectionSettings;
+import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.KafkaSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -28,6 +32,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
@@ -40,20 +46,29 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
 public class ConnectorDeploymentProvisioner {
+
+    public static final String TAG_DEPLOYMENT_ID = "id";
+    public static final String TAG_DEPLOYMENT_REVISION = "revision";
+    public static final String METRICS_SUFFIX = ".deployment.provision";
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
 
     private final FleetShardClient fleetShard;
     private final FleetManagerClient fleetManager;
     private final FleetShardSyncConfig config;
 
+    private final MetricsRecorder recorder;
+
     public ConnectorDeploymentProvisioner(
         FleetShardSyncConfig config,
         FleetShardClient connectorClient,
-        FleetManagerClient fleetManager) {
+        FleetManagerClient fleetManager,
+        MeterRegistry registry) {
 
         this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
+        this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
     }
 
     public void poll(long revision) {
@@ -63,14 +78,50 @@ public class ConnectorDeploymentProvisioner {
     }
 
     private void provisionConnectors(Collection<ConnectorDeployment> deployments) {
-        LOGGER.debug("deployments: {}", deployments.size());
-
         for (ConnectorDeployment deployment : deployments) {
-            try {
-                provision(deployment);
-            } catch (Exception e) {
-                LOGGER.error("Failure while trying to provision connector deployment: {}", deployment);
-            }
+            this.recorder.record(
+                () -> provision(deployment),
+                Tags.of(TAG_DEPLOYMENT_ID, deployment.getId()),
+                e -> {
+                    LOGGER.error("Failure while trying to provision connector deployment: id={}, revision={}",
+                        deployment.getId(),
+                        deployment.getMetadata().getResourceVersion(),
+                        e);
+
+                    try {
+                        MetaV1Condition condition = new MetaV1Condition();
+                        condition.setType(Conditions.TYPE_READY);
+                        condition.setStatus(Conditions.STATUS_FALSE);
+                        condition.setReason(Conditions.FAILED_TO_CREATE_OR_UPDATE_RESOURCE_REASON);
+                        condition.setMessage(e.getMessage());
+
+                        ConnectorDeploymentStatus status = new ConnectorDeploymentStatus();
+                        status.setResourceVersion(deployment.getMetadata().getResourceVersion());
+                        status.addConditionsItem(condition);
+
+                        fleetManager.updateConnectorStatus(
+                            fleetShard.getClusterId(),
+                            deployment.getId(),
+                            status);
+                    } catch (Exception ex) {
+                        LOGGER.warn("Error wile reporting failure to the control plane", e);
+                    }
+
+                    try {
+                        fleetShard.getConnectorCluster().ifPresent(cc -> {
+                            fleetShard.broadcast(
+                                "Warning",
+                                "FailedToCreateOrUpdateResource",
+                                String.format("Unable to create or update deployment %s, revision: %s, reason: %s",
+                                    deployment.getId(),
+                                    deployment.getMetadata().getResourceVersion(),
+                                    e.getMessage()),
+                                cc);
+                        });
+                    } catch (Exception ex) {
+                        LOGGER.warn("Error while broadcasting events", e);
+                    }
+                });
         }
     }
 

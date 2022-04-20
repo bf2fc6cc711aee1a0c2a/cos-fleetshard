@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.support.metrics;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 
@@ -31,11 +32,23 @@ public class MetricsRecorder {
         record(action, subId, Tags.empty());
     }
 
+    public void record(Runnable action, Iterable<Tag> additionalTags, Consumer<Exception> exceptionHandler) {
+        record(action, "", additionalTags, exceptionHandler);
+    }
+
     public void record(Runnable action, Iterable<Tag> additionalTags) {
-        record(action, "", Tags.empty());
+        record(action, "", additionalTags);
     }
 
     public void record(Runnable action, String subId, Iterable<Tag> additionalTags) {
+        record(action, subId, additionalTags, e -> {
+            throw new WrappedRuntimeException(
+                "Failure recording method execution (id: " + id + subId + ")",
+                e);
+        });
+    }
+
+    public void record(Runnable action, String subId, Iterable<Tag> additionalTags, Consumer<Exception> exceptionHandler) {
         try {
             Timer.builder(id + subId + ".time")
                 .tags(tags)
@@ -50,7 +63,6 @@ public class MetricsRecorder {
                 .tags(additionalTags)
                 .register(registry)
                 .increment();
-
         } catch (Exception e) {
             Counter.builder(id + subId + ".count.failure")
                 .tags(tags)
@@ -59,7 +71,7 @@ public class MetricsRecorder {
                 .register(registry)
                 .increment();
 
-            throw new RuntimeException("Failure recording method execution (id: " + id + subId + ")", e);
+            exceptionHandler.accept(e);
         }
     }
 
@@ -76,6 +88,15 @@ public class MetricsRecorder {
     }
 
     public <T> T recordCallable(Callable<T> action, String subId, Iterable<Tag> additionalTags) {
+        return recordCallable(action, subId, additionalTags, e -> {
+            throw new WrappedRuntimeException(
+                "Failure recording method execution (id: " + id + subId + ")",
+                e);
+        });
+    }
+
+    public <T> T recordCallable(Callable<T> action, String subId, Iterable<Tag> additionalTags,
+        Consumer<Exception> exceptionHandler) {
         try {
             var answer = Timer.builder(id + subId + ".time")
                 .tags(tags)
@@ -100,10 +121,10 @@ public class MetricsRecorder {
                 .register(registry)
                 .increment();
 
-            throw new WrappedRuntimeException(
-                "Failure recording method execution (id: " + id + subId + ")",
-                e);
+            exceptionHandler.accept(e);
         }
+
+        return null;
     }
 
     public static MetricsRecorder of(MeterRegistry registry, String id) {

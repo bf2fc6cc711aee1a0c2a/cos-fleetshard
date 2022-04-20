@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -114,6 +115,11 @@ public class SyncTestSupport {
         return getConditionFactory()
             .until(supplier, item -> item.filter(predicate).isPresent())
             .get();
+    }
+
+    public static <T> Collection<T> untilAny(Callable<Collection<T>> supplier, Predicate<? super T> predicate) {
+        return getConditionFactory()
+            .until(supplier, item -> item.stream().anyMatch(predicate));
     }
 
     public static ConditionFactory getConditionFactory() {

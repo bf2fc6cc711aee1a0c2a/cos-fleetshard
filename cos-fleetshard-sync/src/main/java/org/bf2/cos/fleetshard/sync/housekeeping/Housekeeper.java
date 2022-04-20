@@ -9,12 +9,16 @@ import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.arc.All;
 
 @ApplicationScoped
 public class Housekeeper implements Service {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Housekeeper.class);
+
     private static final String JOB_ID = "cos.resources.housekeeping";
     public static final String METRICS_ID = "housekeeping";
 
@@ -32,6 +36,11 @@ public class Housekeeper implements Service {
 
     @Override
     public void start() throws Exception {
+        if (config.resources().housekeeperInterval().isZero()) {
+            LOGGER.info("Skipping starting house keeper as interval is zero");
+            return;
+        }
+
         for (Task task : tasks) {
             if (task instanceof Service) {
                 ((Service) task).start();

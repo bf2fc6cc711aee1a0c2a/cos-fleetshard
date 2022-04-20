@@ -14,8 +14,8 @@ import io.quarkus.test.junit.TestProfile;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
-@TestProfile(NamespaceReaperDeletingTest.Profile.class)
-public class NamespaceReaperDeletingTest extends NamespaceReaperDelTestBase {
+@TestProfile(NamespaceReaperDeletingNoReprovisionTest.Profile.class)
+public class NamespaceReaperDeletingNoReprovisionTest extends NamespaceReaperDelNoReprovisionTestBase {
     public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
@@ -25,10 +25,10 @@ public class NamespaceReaperDeletingTest extends NamespaceReaperDelTestBase {
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
-                "cos.resources.update-interval", "1s",
+                "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
-                "cos.resources.housekeeper-interval", "1s");
+                "cos.resources.housekeeper-interval", "disabled");
         }
 
         @Override

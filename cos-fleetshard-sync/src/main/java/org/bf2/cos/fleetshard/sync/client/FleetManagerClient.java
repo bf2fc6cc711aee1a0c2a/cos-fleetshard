@@ -110,15 +110,22 @@ public class FleetManagerClient {
     }
 
     public void updateConnectorStatus(ManagedConnector connector, ConnectorDeploymentStatus status) {
+        updateConnectorStatus(
+            connector.getSpec().getClusterId(),
+            connector.getSpec().getDeploymentId(),
+            status);
+    }
+
+    public void updateConnectorStatus(String clusterId, String deploymentId, ConnectorDeploymentStatus status) {
         FleetManagerClientHelper.run(() -> {
             LOGGER.info("Update connector status: cluster_id={}, deployment_id={}, status={}",
-                connector.getSpec().getClusterId(),
-                connector.getSpec().getDeploymentId(),
+                clusterId,
+                deploymentId,
                 Serialization.asJson(status));
 
             controlPlane.updateConnectorDeploymentStatus(
-                connector.getSpec().getClusterId(),
-                connector.getSpec().getDeploymentId(),
+                clusterId,
+                deploymentId,
                 status);
         });
     }
