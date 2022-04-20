@@ -52,7 +52,7 @@ public class NamespaceProvisionerTestBase extends SyncTestSupport {
                 resp -> {
                     JsonNode body = namespaceList(
                         namespace(deployment1, deployment1),
-                        namespace(deployment2, deployment2));
+                        namespace(deployment2, "--eval"));
 
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                         .withJsonBody(body);

@@ -61,6 +61,7 @@ public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
                 .containsEntry(Resources.LABEL_KUBERNETES_PART_OF, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
                 .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment1)
+                .containsEntry(Resources.LABEL_KUBERNETES_NAME, deployment1)
                 .containsEntry(Resources.LABEL_NAMESPACE_TENANT_KIND, ConnectorNamespaceTenantKind.ORGANISATION.getValue())
                 .containsKey(Resources.LABEL_NAMESPACE_TENANT_ID);
         });
@@ -83,6 +84,7 @@ public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
                 .containsEntry(Resources.LABEL_KUBERNETES_PART_OF, fleetShardClient.getClusterId())
                 .containsEntry(Resources.LABEL_KUBERNETES_COMPONENT, Resources.COMPONENT_NAMESPACE)
                 .containsEntry(Resources.LABEL_KUBERNETES_INSTANCE, deployment2)
+                .containsEntry(Resources.LABEL_KUBERNETES_NAME, "a--eval")
                 .containsEntry(Resources.LABEL_NAMESPACE_TENANT_KIND, ConnectorNamespaceTenantKind.ORGANISATION.getValue())
                 .containsKey(Resources.LABEL_NAMESPACE_TENANT_ID);
         });

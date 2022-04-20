@@ -145,6 +145,11 @@ public class FleetShardClient implements Service {
         namespaceInformers.addEventHandler(handler);
     }
 
+    public Namespace createNamespace(Namespace namespace) {
+        return this.kubernetesClient.namespaces()
+            .createOrReplace(namespace);
+    }
+
     // *************************************
     //
     // Secrets
