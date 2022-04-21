@@ -28,6 +28,8 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
@@ -142,6 +144,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
             .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
+            .addToConfig("topic.creation.enable", "true")
             // added to trigger a re-deployment if the secret changes
             .addToConfig("connector.secret.name", secret.getMetadata().getName())
             .addToConfig("connector.secret.checksum", Secrets.computeChecksum(secret))
@@ -170,6 +173,12 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                         .withSecretName(secret.getMetadata().getName())
                         .build())
                     .build())
+                .build())
+            .withResources(new ResourceRequirementsBuilder()
+                .addToRequests("cpu", new Quantity("10m"))
+                .addToRequests("memory", new Quantity("256Mi"))
+                .addToLimits("cpu", new Quantity("500m"))
+                .addToLimits("memory", new Quantity("1Gi"))
                 .build());
 
         kcsb.withImage(shardMetadata.getContainerImage());
@@ -207,6 +216,11 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .withTasksMax(1)
                 .withPause(false)
                 .withConfig(connectorConfig)
+                .addToConfig("topic.creation.default.replication.factor", -1)
+                .addToConfig("topic.creation.default.partitions", -1)
+                .addToConfig("topic.creation.default.cleanup.policy", "compact")
+                .addToConfig("topic.creation.default.compression.type", "lz4")
+                .addToConfig("topic.creation.default.delete.retention.ms", 2_678_400_000L)
                 .build())
             .build();
 
