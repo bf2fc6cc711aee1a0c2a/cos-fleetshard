@@ -44,7 +44,7 @@ public class NamespaceProvisionerTest {
             .id(uid())
             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-        namespace.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+        namespace.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
         namespace.setTenant(tenant);
         namespace.setExpiration(new Date().toString());
 
