@@ -28,6 +28,8 @@ public class NamespaceReaperTestSupport extends SyncTestSupport {
         protected void configure(WireMockServer server) {
             final String deployment = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
             final String state = ConfigProvider.getConfig().getValue("test.namespace.delete.state", String.class);
+            final Integer connectors = ConfigProvider.getConfig().getOptionalValue("test.deployment.connectors", Integer.class)
+                .orElse(0);
 
             server.stubMatching(
                 RequestMethod.GET,
@@ -42,7 +44,8 @@ public class NamespaceReaperTestSupport extends SyncTestSupport {
                                     .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
                                 ns.setStatus(new ConnectorNamespaceStatus1()
-                                    .state(ConnectorNamespaceState.DISCONNECTED));
+                                    .state(ConnectorNamespaceState.DISCONNECTED)
+                                    .connectorsDeployed(connectors));
 
                                 ns.setResourceVersion(0L);
                                 ns.setTenant(tenant);
@@ -66,7 +69,8 @@ public class NamespaceReaperTestSupport extends SyncTestSupport {
                                     .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
                                 ns.setStatus(new ConnectorNamespaceStatus1()
-                                    .state(ConnectorNamespaceState.fromValue(state)));
+                                    .state(ConnectorNamespaceState.fromValue(state))
+                                    .connectorsDeployed(connectors));
 
                                 ns.setResourceVersion(1L);
                                 ns.setTenant(tenant);
