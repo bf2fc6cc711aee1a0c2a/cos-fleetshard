@@ -150,7 +150,7 @@ public class ConnectorNamespaceProvisioner {
             Resources.LABEL_KUBERNETES_INSTANCE, namespace.getId(),
             Resources.LABEL_KUBERNETES_VERSION, "" + namespace.getResourceVersion(),
             Resources.LABEL_NAMESPACE_TENANT_KIND, namespace.getTenant().getKind().getValue(),
-            Resources.LABEL_NAMESPACE_TENANT_ID, namespace.getTenant().getId());
+            Resources.LABEL_NAMESPACE_TENANT_ID, KubernetesResourceUtil.sanitizeName(namespace.getTenant().getId()));
 
         Resources.setAnnotations(
             ns,
