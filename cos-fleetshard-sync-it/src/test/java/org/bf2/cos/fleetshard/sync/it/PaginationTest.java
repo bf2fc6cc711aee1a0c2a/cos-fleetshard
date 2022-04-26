@@ -125,7 +125,8 @@ public class PaginationTest extends SyncTestSupport {
                             .id(uid())
                             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-                        ns.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+                        ns.setStatus(
+                            new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                         ns.setTenant(tenant);
                         ns.setExpiration(new Date().toString());
                     }));
@@ -154,7 +155,8 @@ public class PaginationTest extends SyncTestSupport {
                             .id(uid())
                             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-                        ns.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+                        ns.setStatus(
+                            new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                         ns.setTenant(tenant);
                         ns.setExpiration(new Date().toString());
                     }));

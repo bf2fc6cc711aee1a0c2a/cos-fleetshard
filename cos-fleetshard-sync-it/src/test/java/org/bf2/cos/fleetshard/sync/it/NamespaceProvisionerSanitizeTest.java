@@ -133,7 +133,8 @@ public class NamespaceProvisionerSanitizeTest extends SyncTestSupport {
                                 .id(deploymentOwner1)
                                 .kind(ConnectorNamespaceTenantKind.USER);
 
-                            n.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+                            n.setStatus(
+                                new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                             n.setTenant(tenant);
                             n.setExpiration(new Date().toString());
                         }),
@@ -142,7 +143,8 @@ public class NamespaceProvisionerSanitizeTest extends SyncTestSupport {
                                 .id(deploymentOwner2)
                                 .kind(ConnectorNamespaceTenantKind.USER);
 
-                            n.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+                            n.setStatus(
+                                new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                             n.setTenant(tenant);
                             n.setExpiration(new Date().toString());
                         }));

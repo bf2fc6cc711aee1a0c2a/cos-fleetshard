@@ -71,6 +71,11 @@ public class NamespacesReaper implements Housekeeper.Task, Service {
                 continue;
             }
 
+            String connectors = Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_CONNECTORS);
+            if (!"0".equals(connectors)) {
+                continue;
+            }
+
             if (fleetShardClient.getConnectors(ns).isEmpty()) {
                 try {
                     LOGGER.info("Deleting namespace: {} (id: {}, state: {}, expiration: {})",

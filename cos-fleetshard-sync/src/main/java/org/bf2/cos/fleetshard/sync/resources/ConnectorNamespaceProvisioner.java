@@ -109,27 +109,30 @@ public class ConnectorNamespaceProvisioner {
     }
 
     public void provision(ConnectorNamespace namespace) {
-        LOGGER.info("Got cluster_id: {}, namespace_d: {}, state: {}",
+        LOGGER.info("Got cluster_id: {}, namespace_d: {}, state: {}, connectors_deployed: {}",
             fleetShard.getClusterId(),
             namespace.getId(),
-            namespace.getStatus().getState());
+            namespace.getStatus().getState(),
+            namespace.getStatus().getConnectorsDeployed());
 
-        switch (namespace.getStatus().getState()) {
-            case DELETED:
-            case DELETING:
-                Optional<Namespace> ns = fleetShard.getNamespace(namespace.getId())
-                    .filter(n -> {
-                        String state = Resources.getAnnotation(n, Resources.ANNOTATION_NAMESPACE_STATE);
-                        return !ConnectorNamespaceState.DELETED.getValue().equals(state)
-                            && !ConnectorNamespaceState.DELETING.getValue().equals(state);
-                    });
+        if (namespace.getStatus().getConnectorsDeployed() == 0) {
+            switch (namespace.getStatus().getState()) {
+                case DELETED:
+                case DELETING:
+                    Optional<Namespace> ns = fleetShard.getNamespace(namespace.getId())
+                        .filter(n -> {
+                            String state = Resources.getAnnotation(n, Resources.ANNOTATION_NAMESPACE_STATE);
+                            return !ConnectorNamespaceState.DELETED.getValue().equals(state)
+                                && !ConnectorNamespaceState.DELETING.getValue().equals(state);
+                        });
 
-                if (ns.isEmpty()) {
-                    LOGGER.info("Namespace {} is being deleted or does not exists, skip provisioning",
-                        namespace.getId());
-                    return;
-                }
-                break;
+                    if (ns.isEmpty()) {
+                        LOGGER.info("Namespace {} is being deleted or does not exists, skip provisioning",
+                            namespace.getId());
+                        return;
+                    }
+                    break;
+            }
         }
 
         Namespace ns = new Namespace();
@@ -155,7 +158,8 @@ public class ConnectorNamespaceProvisioner {
         Resources.setAnnotations(
             ns,
             Resources.ANNOTATION_NAMESPACE_STATE, namespace.getStatus().getState().getValue(),
-            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration());
+            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration(),
+            Resources.ANNOTATION_NAMESPACE_CONNECTORS, "" + namespace.getStatus().getConnectorsDeployed());
 
         fleetShard.createNamespace(ns);
 

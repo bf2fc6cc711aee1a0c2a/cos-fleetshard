@@ -76,6 +76,10 @@ public class SyncTestSupport {
 
         consumer.accept(answer);
 
+        if (answer.getStatus().getConnectorsDeployed() == null) {
+            answer.getStatus().setConnectorsDeployed(0);
+        }
+
         return answer;
     }
 
@@ -86,7 +90,7 @@ public class SyncTestSupport {
             .id(uid())
             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-        answer.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY));
+        answer.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
         answer.setTenant(tenant);
         answer.setExpiration(new Date().toString());
 
