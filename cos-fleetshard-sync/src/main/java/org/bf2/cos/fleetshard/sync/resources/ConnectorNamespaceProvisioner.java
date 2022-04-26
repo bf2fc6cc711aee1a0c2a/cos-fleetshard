@@ -80,7 +80,7 @@ public class ConnectorNamespaceProvisioner {
                                 cc);
                         });
                     } catch (Exception ex) {
-                        LOGGER.warn("Error while broadcasting events", e);
+                        LOGGER.warn("Error while broadcasting events", ex);
                     }
                 });
         }

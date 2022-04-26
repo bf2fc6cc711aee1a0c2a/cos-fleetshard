@@ -119,7 +119,7 @@ public class ConnectorDeploymentProvisioner {
                                 cc);
                         });
                     } catch (Exception ex) {
-                        LOGGER.warn("Error while broadcasting events", e);
+                        LOGGER.warn("Error while broadcasting events", ex);
                     }
                 });
         }
