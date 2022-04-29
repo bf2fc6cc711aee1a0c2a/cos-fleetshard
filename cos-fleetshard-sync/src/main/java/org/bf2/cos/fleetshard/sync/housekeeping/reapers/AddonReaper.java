@@ -115,6 +115,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
             .withGroup(config.addon().olmOperatorsGroup())
             .withVersion(config.addon().olmOperatorsApiVersion())
             .withKind(config.addon().olmOperatorsKind())
+            .withNamespaced(true)
             .build();
 
         kubernetesClient.genericKubernetesResources(rdc)
