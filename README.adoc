@@ -54,8 +54,6 @@ This is an example installation that consists in:
 
 * *install images*
 +
-This step is only necessary if you want to run everything inside the cluster. For developing purposes, if you want to run the synchronizer and operators with `quarkus:dev`, that's not needed.
-+
 [source,shell]
 ----
 eval $(minikube --profile cos docker-env)
@@ -132,6 +130,46 @@ kubectl scale deployment -l "app.kubernetes.io/part-of=cos" --replicas=1
 [source,shell]
 ----
 kubectl delete -k etc/kubernetes/manifests/overlays/local
+----
+
+== local development
+
+You may want to use `quarkus:dev` for local development, or if you want to run connected to a local fleet-manager. In this case, do the following:
+
+* *stop running containers*
++
+Scale to 0 the components you want to run locally. For e.g., if you want to run the sync:
++
+[source,shell]
+----
+kubectl scale deployment cos-fleetshard-sync --replicas=0
+----
++
+* *check env vars*
++
+*If* you are also running the `fleet-manager` locally, you need to change `COS_BASE_PATH` accordingly:
++
+[source,shell]
+----
+export COS_BASE_PATH=<your_fleet_manager>
+----
++
+* *make sure secret is correct*
++
+If you change the `COS_BASE_PATH` variable, you need to recreate the cluster secret:
++
+[source,shell]
+----
+create-cluster-secret <your-cluster-id>
+----
++
+* *run using local profile*
++
+Use the `local` maven profile to run the application. It will use `quarkus:dev` under the hoods, use an available port, set our namespace, and also import properties values from kubernetes secrets and configmaps:
++
+[source,shell]
+----
+mvn -Dlocal
 ----
 
 == testing
