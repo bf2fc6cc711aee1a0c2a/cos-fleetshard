@@ -69,6 +69,13 @@ eval $(minikube --profile cos docker-env)
 kubectl apply -k etc/kubernetes/manifests/overlays/local
 ----
 +
+If the previous command ends with an error like `error: unable to recognize "etc/kubernetes/manifests/overlays/local": no matches for kind "IntegrationPlatform" in version "camel.apache.org/v1"`, then run the following:
++
+[source,shell]
+----
+kubectl apply -f etc/kubernetes/manifests/overlays/local/camel-k/integration-platform.yaml
+----
++
 At this point, operators and sync are deployed in the *redhat-openshift-connectors*, but they are not running as replica is set to 0 by default because some resources have to be configured.
 +
 Point to the cos namespace
