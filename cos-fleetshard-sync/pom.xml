@@ -247,7 +247,7 @@
                                 <quarkus.test.continuous-testing>disabled</quarkus.test.continuous-testing>
                                 <quarkus.http.port>0</quarkus.http.port>
                                 <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
-
+                                <cos.namespace>redhat-openshift-connectors</cos.namespace>
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
                                 <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
                                 <quarkus.kubernetes-config.secrets>${app-secret.name}</quarkus.kubernetes-config.secrets>
