@@ -1,3 +1,4 @@
 resources:
   - ../../../base/apps/camel-k
+  - integration-platform.yaml
 

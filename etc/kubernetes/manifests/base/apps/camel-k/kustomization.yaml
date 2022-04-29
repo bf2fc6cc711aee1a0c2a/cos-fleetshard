@@ -10,7 +10,6 @@ resources:
   - https://github.com/apache/camel-k//config/crd/?ref=release-1.8.x
   - https://github.com/apache/camel-k//config/rbac/?ref=release-1.8.x
   - https://github.com/apache/camel-k//config/rbac/openshift/?ref=release-1.8.x
-  - integration-platform.yaml
 
 patchesStrategicMerge:
 - patches/delete-camel-k-edit.yaml
