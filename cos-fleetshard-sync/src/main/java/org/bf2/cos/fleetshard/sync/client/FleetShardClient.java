@@ -25,6 +25,8 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.watch.Informers;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.Event;
@@ -41,6 +43,8 @@ import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
 @ApplicationScoped
 public class FleetShardClient implements Service {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FleetShardClient.class);
+
     @Inject
     KubernetesClient kubernetesClient;
     @Inject
@@ -354,9 +358,13 @@ public class FleetShardClient implements Service {
     }
 
     public void broadcast(Event event) {
-        kubernetesClient.v1()
-            .events()
-            .inNamespace(event.getMetadata().getNamespace())
-            .create(event);
+        try {
+            kubernetesClient.v1()
+                .events()
+                .inNamespace(event.getMetadata().getNamespace())
+                .create(event);
+        } catch (Exception e) {
+            LOGGER.warn("Error while broadcasting events", e);
+        }
     }
 }

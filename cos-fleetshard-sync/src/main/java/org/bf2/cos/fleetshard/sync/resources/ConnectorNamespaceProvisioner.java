@@ -1,14 +1,15 @@
 package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
@@ -54,10 +55,10 @@ public class ConnectorNamespaceProvisioner {
     public void poll(long revision) {
         fleetManager.getNamespaces(
             revision,
-            this::provisionNamespaces);
+            items -> provisionNamespaces(items, revision == 0));
     }
 
-    private void provisionNamespaces(Collection<ConnectorNamespace> namespaces) {
+    private void provisionNamespaces(Collection<ConnectorNamespace> namespaces, boolean sync) {
         for (ConnectorNamespace namespace : namespaces) {
             this.recorder.record(
                 () -> provision(namespace),
@@ -68,21 +69,40 @@ public class ConnectorNamespaceProvisioner {
                         namespace.getResourceVersion(),
                         e);
 
-                    try {
-                        fleetShard.getConnectorCluster().ifPresent(cc -> {
-                            fleetShard.broadcast(
-                                "Warning",
-                                "FailedToCreateOrUpdateResource",
-                                String.format("Unable to create or update namespace %s, revision: %s, reason: %s",
-                                    namespace.getId(),
-                                    namespace.getResourceVersion(),
-                                    e.getMessage()),
-                                cc);
-                        });
-                    } catch (Exception ex) {
-                        LOGGER.warn("Error while broadcasting events", ex);
-                    }
+                    fleetShard.getConnectorCluster().ifPresent(cc -> {
+                        fleetShard.broadcast(
+                            "Warning",
+                            "FailedToCreateOrUpdateResource",
+                            String.format("Unable to create or update namespace %s, revision: %s, reason: %s",
+                                namespace.getId(),
+                                namespace.getResourceVersion(),
+                                e.getMessage()),
+                            cc);
+                    });
                 });
+        }
+
+        if (sync) {
+            Set<String> knownIds = namespaces.stream().map(ConnectorNamespace::getId).collect(Collectors.toSet());
+
+            for (Namespace namespace : fleetShard.getNamespaces()) {
+                String nsId = Resources.getLabel(namespace, Resources.LABEL_NAMESPACE_ID);
+                if (nsId == null || knownIds.contains(nsId)) {
+                    continue;
+                }
+
+                try {
+                    Resources.setLabels(namespace, Resources.LABEL_NAMESPACE_STATE, Namespaces.PHASE_DELETED);
+                    Resources.setLabels(namespace, Resources.LABEL_NAMESPACE_STATE_FORCED, "true");
+
+                    fleetShard.getKubernetesClient()
+                        .namespaces()
+                        .withName(namespace.getMetadata().getName())
+                        .replace(namespace);
+                } catch (Exception e) {
+                    LOGGER.warn("Error marking na {} for deletion (sync)", namespace.getMetadata().getName(), e);
+                }
+            }
         }
     }
 
@@ -115,24 +135,26 @@ public class ConnectorNamespaceProvisioner {
             namespace.getStatus().getState(),
             namespace.getStatus().getConnectorsDeployed());
 
-        if (namespace.getStatus().getConnectorsDeployed() == 0) {
-            switch (namespace.getStatus().getState()) {
-                case DELETED:
-                case DELETING:
-                    Optional<Namespace> ns = fleetShard.getNamespace(namespace.getId())
-                        .filter(n -> {
-                            String state = Resources.getAnnotation(n, Resources.ANNOTATION_NAMESPACE_STATE);
-                            return !ConnectorNamespaceState.DELETED.getValue().equals(state)
-                                && !ConnectorNamespaceState.DELETING.getValue().equals(state);
-                        });
+        String state = Namespaces.PHASE_READY;
 
-                    if (ns.isEmpty()) {
-                        LOGGER.info("Namespace {} is being deleted or does not exists, skip provisioning",
+        switch (namespace.getStatus().getState()) {
+            case DELETED:
+            case DELETING:
+                if (namespace.getStatus().getConnectorsDeployed() == 0) {
+                    if (fleetShard.getNamespace(namespace.getId()).isEmpty()) {
+                        LOGGER.info(
+                            "Namespace {} is being deleted and does not exists, skip provisioning",
                             namespace.getId());
+
                         return;
                     }
-                    break;
-            }
+
+                    state = Namespaces.PHASE_DELETED;
+                }
+                break;
+            default:
+                state = Namespaces.PHASE_READY;
+                break;
         }
 
         Namespace ns = new Namespace();
@@ -145,6 +167,7 @@ public class ConnectorNamespaceProvisioner {
             Resources.LABEL_UOW, uid(),
             Resources.LABEL_CLUSTER_ID, fleetShard.getClusterId(),
             Resources.LABEL_NAMESPACE_ID, namespace.getId(),
+            Resources.LABEL_NAMESPACE_STATE, state,
             Resources.LABEL_KUBERNETES_NAME, KubernetesResourceUtil.sanitizeName(namespace.getName()),
             Resources.LABEL_KUBERNETES_MANAGED_BY, fleetShard.getClusterId(),
             Resources.LABEL_KUBERNETES_CREATED_BY, fleetShard.getClusterId(),
@@ -157,9 +180,7 @@ public class ConnectorNamespaceProvisioner {
 
         Resources.setAnnotations(
             ns,
-            Resources.ANNOTATION_NAMESPACE_STATE, namespace.getStatus().getState().getValue(),
-            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration(),
-            Resources.ANNOTATION_NAMESPACE_CONNECTORS, "" + namespace.getStatus().getConnectorsDeployed());
+            Resources.ANNOTATION_NAMESPACE_EXPIRATION, namespace.getExpiration());
 
         fleetShard.createNamespace(ns);
 

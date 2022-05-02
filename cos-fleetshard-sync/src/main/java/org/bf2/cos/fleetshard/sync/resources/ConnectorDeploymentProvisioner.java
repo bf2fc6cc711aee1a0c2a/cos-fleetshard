@@ -107,20 +107,16 @@ public class ConnectorDeploymentProvisioner {
                         LOGGER.warn("Error wile reporting failure to the control plane", e);
                     }
 
-                    try {
-                        fleetShard.getConnectorCluster().ifPresent(cc -> {
-                            fleetShard.broadcast(
-                                "Warning",
-                                "FailedToCreateOrUpdateResource",
-                                String.format("Unable to create or update deployment %s, revision: %s, reason: %s",
-                                    deployment.getId(),
-                                    deployment.getMetadata().getResourceVersion(),
-                                    e.getMessage()),
-                                cc);
-                        });
-                    } catch (Exception ex) {
-                        LOGGER.warn("Error while broadcasting events", ex);
-                    }
+                    fleetShard.getConnectorCluster().ifPresent(cc -> {
+                        fleetShard.broadcast(
+                            "Warning",
+                            "FailedToCreateOrUpdateResource",
+                            String.format("Unable to create or update deployment %s, revision: %s, reason: %s",
+                                deployment.getId(),
+                                deployment.getMetadata().getResourceVersion(),
+                                e.getMessage()),
+                            cc);
+                    });
                 });
         }
     }

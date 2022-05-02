@@ -1,12 +1,14 @@
 package org.bf2.cos.fleetshard.sync.housekeeping.reapers;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.Informers;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -61,34 +63,35 @@ public class NamespacesReaper implements Housekeeper.Task, Service {
 
     private void doRun() {
         for (Namespace ns : fleetShardClient.getNamespaces()) {
-            String annotation = Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_STATE);
-            if (annotation == null) {
-                continue;
+            String state = Resources.getLabel(ns, Resources.LABEL_NAMESPACE_STATE);
+
+            if (Objects.equals(Namespaces.PHASE_DELETED, state)) {
+                delete(ns);
+            }
+        }
+    }
+
+    private void delete(Namespace ns) {
+        Collection<ManagedConnector> connectors = fleetShardClient.getConnectors(ns);
+
+        try {
+            LOGGER.info("Deleting namespace: {} (id: {}, state: {}, expiration: {}, connectors {}",
+                ns.getMetadata().getName(),
+                Resources.getLabel(ns, Resources.LABEL_NAMESPACE_ID),
+                Resources.getLabel(ns, Resources.LABEL_NAMESPACE_STATE),
+                Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_EXPIRATION),
+                connectors.size());
+
+            fleetShardClient.deleteNamespace(ns);
+
+            if (!connectors.isEmpty()) {
+                LOGGER.warn("Namespace {} has been deleted but was not empty (connectors {})",
+                    ns.getMetadata().getName(),
+                    connectors.size());
             }
 
-            if (!Objects.equals(ConnectorNamespaceState.DELETING.getValue(), annotation) &&
-                !Objects.equals(ConnectorNamespaceState.DELETED.getValue(), annotation)) {
-                continue;
-            }
-
-            String connectors = Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_CONNECTORS);
-            if (!"0".equals(connectors)) {
-                continue;
-            }
-
-            if (fleetShardClient.getConnectors(ns).isEmpty()) {
-                try {
-                    LOGGER.info("Deleting namespace: {} (id: {}, state: {}, expiration: {})",
-                        ns.getMetadata().getName(),
-                        Resources.getLabel(ns, Resources.LABEL_NAMESPACE_ID),
-                        Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_STATE),
-                        Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_EXPIRATION));
-
-                    fleetShardClient.deleteNamespace(ns);
-                } catch (Exception e) {
-                    LOGGER.debug("Failure deleting namespace {}", ns.getMetadata().getName());
-                }
-            }
+        } catch (Exception e) {
+            LOGGER.debug("Failure deleting namespace {}", ns.getMetadata().getName());
         }
     }
 }

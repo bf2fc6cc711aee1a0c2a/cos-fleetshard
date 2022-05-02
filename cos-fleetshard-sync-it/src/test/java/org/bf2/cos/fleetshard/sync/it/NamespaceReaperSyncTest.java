@@ -6,12 +6,6 @@ import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
-import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
-import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
@@ -20,98 +14,76 @@ import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
 
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
-@TestProfile(NamespaceReaperWithLeftoversTest.Profile.class)
-public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport {
+@TestProfile(NamespaceReaperSyncTest.Profile.class)
+public class NamespaceReaperSyncTest extends NamespaceReaperSyncTestBase {
+
     @WireMockTestInstance
     WireMockServer server;
 
     @Test
     void namespaceIsProvisioned() {
-        final String deploymentId = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
+        final String ns1 = ConfigProvider.getConfig().getValue("test.ns.id.1", String.class);
+        final String ns2 = ConfigProvider.getConfig().getValue("test.ns.id.2", String.class);
         final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
-        final String namespaceName = fleetShardClient.generateNamespaceId(deploymentId);
-
-        given()
-            .contentType(MediaType.TEXT_PLAIN)
-            .body(0L)
-            .post("/test/provisioner/namespaces");
-
-        until(
-            () -> fleetShardClient.getNamespace(deploymentId),
-            Objects::nonNull);
-
-        server.until(
-            putRequestedFor(urlEqualTo(statusUrl))
-                .withHeader(ContentTypeHeader.KEY, equalTo(APPLICATION_JSON))
-                .withRequestBody(jp("$.namespaces.size()", "1"))
-                .withRequestBody(jp("$.namespaces[0].phase", Namespaces.PHASE_READY))
-                .withRequestBody(jp("$.namespaces[0].version", "0"))
-                .withRequestBody(jp("$.namespaces[0].connectors_deployed", "0")));
-
-        final ManagedConnector connector = new ManagedConnectorBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(Connectors.generateConnectorId(deploymentId))
-                .withNamespace(namespaceName)
-                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
-                .addToLabels(LABEL_CONNECTOR_ID, deploymentId)
-                .addToLabels(LABEL_DEPLOYMENT_ID, deploymentId)
-                .build())
-            .withSpec(new ManagedConnectorSpecBuilder()
-                .withClusterId(config.cluster().id())
-                .withConnectorId(deploymentId)
-                .withDeploymentId(deploymentId)
-                .withOperatorSelector(new OperatorSelectorBuilder().withId(deploymentId).build())
-                .build())
-            .build();
-
-        kubernetesClient
-            .resources(ManagedConnector.class)
-            .inNamespace(connector.getMetadata().getNamespace())
-            .create(connector);
-
-        untilAsserted(() -> {
-            assertThat(fleetShardClient.getAllConnectors()).isNotEmpty();
-            assertThat(fleetShardClient.getConnectors(connector.getMetadata().getNamespace())).isNotEmpty();
-        });
 
         given()
             .contentType(MediaType.TEXT_PLAIN)
             .body(1L)
             .post("/test/provisioner/namespaces");
 
+        until(
+            () -> fleetShardClient.getNamespace(ns1),
+            Objects::nonNull);
+        until(
+            () -> fleetShardClient.getNamespace(ns2),
+            Objects::nonNull);
+
         server.until(
             putRequestedFor(urlEqualTo(statusUrl))
                 .withHeader(ContentTypeHeader.KEY, equalTo(APPLICATION_JSON))
-                .withRequestBody(matchingJsonPath("$.namespaces", WireMock.absent())));
+                .withRequestBody(jp("$.namespaces.size()", "2"))
+                .withRequestBody(jp("$.namespaces[0].phase", Namespaces.PHASE_READY))
+                .withRequestBody(jp("$.namespaces[1].phase", Namespaces.PHASE_READY)));
 
+        given()
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(0L)
+            .post("/test/provisioner/namespaces");
+
+        untilAsserted(() -> {
+            assertThat(fleetShardClient.getNamespace(ns1)).isPresent();
+        });
+        untilAsserted(() -> {
+            assertThat(fleetShardClient.getNamespace(ns2)).isNotPresent();
+        });
+
+        server.until(
+            putRequestedFor(urlEqualTo(statusUrl))
+                .withHeader(ContentTypeHeader.KEY, equalTo(APPLICATION_JSON))
+                .withRequestBody(jp("$.namespaces.size()", "1"))
+                .withRequestBody(jp("$.namespaces[0].phase", Namespaces.PHASE_READY)));
     }
 
     public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                "test.namespace.delete.state", ConnectorNamespaceState.DELETING.getValue(),
-                "test.deployment.id", uid(),
+                "test.ns.id.1", uid(),
+                "test.ns.id.2", uid(),
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
