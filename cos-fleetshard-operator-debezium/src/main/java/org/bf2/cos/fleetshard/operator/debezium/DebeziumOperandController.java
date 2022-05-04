@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -211,8 +210,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
         if (isDatabaseHistorySupported(shardMetadata)) {
             final Map<String, Object> databaseHistoryConfigs = new LinkedHashMap<>();
-            final String password = new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()),
-                StandardCharsets.UTF_8);
 
             databaseHistoryConfigs.put("database.history.kafka.bootstrap.servers",
                 connector.getSpec().getDeployment().getKafka().getUrl());
@@ -223,10 +220,22 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             databaseHistoryConfigs.put("database.history.consumer.sasl.mechanism", "PLAIN");
             databaseHistoryConfigs.put("database.history.producer.sasl.jaas.config",
                 "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                    + serviceAccountSpec.getClientId() + "\" password=\"" + password + "\";");
+                    + serviceAccountSpec.getClientId()
+                    + "\" password=\""
+                    + "${dir:/opt/kafka/external-configuration/"
+                    + EXTERNAL_CONFIG_DIRECTORY
+                    + ":"
+                    + KAFKA_CLIENT_SECRET_KEY
+                    + "}\";");
             databaseHistoryConfigs.put("database.history.consumer.sasl.jaas.config",
                 "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                    + serviceAccountSpec.getClientId() + "\" password=\"" + password + "\";");
+                    + serviceAccountSpec.getClientId()
+                    + "\" password=\""
+                    + "${dir:/opt/kafka/external-configuration/"
+                    + EXTERNAL_CONFIG_DIRECTORY
+                    + ":"
+                    + KAFKA_CLIENT_SECRET_KEY
+                    + "}\";");
 
             connectorConfig.putAll(databaseHistoryConfigs);
         }
