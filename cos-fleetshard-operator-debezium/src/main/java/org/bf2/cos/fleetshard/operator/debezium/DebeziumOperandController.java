@@ -2,7 +2,9 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -75,6 +77,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     private static final Logger LOGGER = LoggerFactory.getLogger(DebeziumOperandController.class);
     public static final String KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX = "-metrics";
     public static final String CLASS_NAME_POSTGRES_CONNECTOR = "io.debezium.connector.postgresql.PostgresConnector";
+    public static final String CLASS_NAME_MONGODB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
     public static final String CONFIG_OPTION_POSTGRES_PLUGIN_NAME = "plugin.name";
     public static final String PLUGIN_NAME_PGOUTPUT = "pgoutput";
 
@@ -206,6 +209,28 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 break;
         }
 
+        if (isDatabaseHistorySupported(shardMetadata)) {
+            final Map<String, Object> databaseHistoryConfigs = new LinkedHashMap<>();
+            final String password = new String(Base64.getDecoder().decode(serviceAccountSpec.getClientSecret()),
+                StandardCharsets.UTF_8);
+
+            databaseHistoryConfigs.put("database.history.kafka.bootstrap.servers",
+                connector.getSpec().getDeployment().getKafka().getUrl());
+            databaseHistoryConfigs.put("database.history.kafka.topic", connector.getMetadata().getName() + "-database-history");
+            databaseHistoryConfigs.put("database.history.producer.security.protocol", "SASL_SSL");
+            databaseHistoryConfigs.put("database.history.consumer.security.protocol", "SASL_SSL");
+            databaseHistoryConfigs.put("database.history.producer.sasl.mechanism", "PLAIN");
+            databaseHistoryConfigs.put("database.history.consumer.sasl.mechanism", "PLAIN");
+            databaseHistoryConfigs.put("database.history.producer.sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                    + serviceAccountSpec.getClientId() + "\" password=\"" + password + "\";");
+            databaseHistoryConfigs.put("database.history.consumer.sasl.jaas.config",
+                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                    + serviceAccountSpec.getClientId() + "\" password=\"" + password + "\";");
+
+            connectorConfig.putAll(databaseHistoryConfigs);
+        }
+
         final KafkaConnector kctr = new KafkaConnectorBuilder()
             .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnector.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
@@ -268,5 +293,15 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             secret);
 
         return kctr && kc && secret;
+    }
+
+    private boolean isDatabaseHistorySupported(DebeziumShardMetadata shardMetadata) {
+        switch (shardMetadata.getConnectorClass()) {
+            case CLASS_NAME_MONGODB_CONNECTOR:
+            case CLASS_NAME_POSTGRES_CONNECTOR:
+                return false;
+            default:
+                return true;
+        }
     }
 }
