@@ -40,7 +40,7 @@
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.3</pmd.asm.version>
         <findsecbugs.version>1.12.0</findsecbugs.version>
-        <spotbugs.version>4.6.0</spotbugs.version>
+        <spotbugs.version>4.7.0</spotbugs.version>
 
         <formatter-maven-plugin.version>2.18.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.6.2</impsort-maven-plugin.version>
