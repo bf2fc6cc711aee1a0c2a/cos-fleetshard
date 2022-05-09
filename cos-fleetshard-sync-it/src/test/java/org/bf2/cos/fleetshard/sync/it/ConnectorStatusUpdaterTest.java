@@ -135,8 +135,18 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 });
 
             server.stubMatching(
-                RequestMethod.POST,
+                RequestMethod.PUT,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
+                () -> WireMock.ok());
+
+            server.stubMatching(
+                RequestMethod.PUT,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces/.*/status",
+                () -> WireMock.ok());
+
+            server.stubMatching(
+                RequestMethod.PUT,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/status",
                 () -> WireMock.ok());
         }
     }

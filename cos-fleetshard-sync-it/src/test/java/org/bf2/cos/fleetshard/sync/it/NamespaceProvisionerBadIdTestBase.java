@@ -5,13 +5,17 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
+import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
+import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -23,6 +27,9 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +40,9 @@ public class NamespaceProvisionerBadIdTestBase extends SyncTestSupport {
     @Inject
     FleetShardSyncConfig config;
 
+    @WireMockTestInstance
+    WireMockServer server;
+
     @Test
     void namespaceIsProvisioned() {
         final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
@@ -42,6 +52,17 @@ public class NamespaceProvisionerBadIdTestBase extends SyncTestSupport {
             .contentType(MediaType.TEXT_PLAIN)
             .body(0L)
             .post("/test/provisioner/namespaces");
+
+        server.until(
+            putRequestedFor(urlPathMatching("/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces/.*/status"))
+                .withHeader(ContentTypeHeader.KEY, equalTo(APPLICATION_JSON))
+                .withRequestBody(jp("$.id", deployment1))
+                .withRequestBody(jp("$.version", "1"))
+                .withRequestBody(jp("$.phase", ConnectorNamespaceState.DISCONNECTED.getValue()))
+                .withRequestBody(jp("$.conditions.size()", "1"))
+                .withRequestBody(jp("$.conditions[0].type", Conditions.TYPE_READY))
+                .withRequestBody(jp("$.conditions[0].status", Conditions.STATUS_FALSE))
+                .withRequestBody(jp("$.conditions[0].reason", Conditions.FAILED_TO_CREATE_OR_UPDATE_RESOURCE_REASON)));
 
         untilAsserted(() -> {
             assertThat(fleetShardClient.getKubernetesClient().v1().events().inNamespace(config.namespace()).list().getItems())
@@ -86,9 +107,13 @@ public class NamespaceProvisionerBadIdTestBase extends SyncTestSupport {
                 RequestMethod.GET,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
                 resp -> {
-                    JsonNode body = namespaceList(
-                        namespace(deploymentId1, deploymentName1),
-                        namespace(deploymentId2, deploymentName2));
+                    ConnectorNamespace ns1 = namespace(deploymentId1, deploymentName1);
+                    ns1.resourceVersion(1L);
+
+                    ConnectorNamespace ns2 = namespace(deploymentId2, deploymentName2);
+                    ns2.resourceVersion(2L);
+
+                    JsonNode body = namespaceList(ns1, ns2);
 
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                         .withJsonBody(body);
@@ -100,8 +125,13 @@ public class NamespaceProvisionerBadIdTestBase extends SyncTestSupport {
                 resp -> resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON).withJsonBody(deploymentList()));
 
             server.stubMatching(
-                RequestMethod.GET,
+                RequestMethod.PUT,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
+                () -> WireMock.ok());
+
+            server.stubMatching(
+                RequestMethod.PUT,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces/.*/status",
                 () -> WireMock.ok());
         }
     }
