@@ -17,6 +17,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -126,6 +127,20 @@ public class FleetManagerClient {
             controlPlane.updateConnectorDeploymentStatus(
                 clusterId,
                 deploymentId,
+                status);
+        });
+    }
+
+    public void updateNamespaceStatus(String clusterId, String namespaceId, ConnectorNamespaceStatus status) {
+        FleetManagerClientHelper.run(() -> {
+            LOGGER.info("Update namespace status: cluster_id={}, namespace_id={}, status={}",
+                clusterId,
+                namespaceId,
+                Serialization.asJson(status));
+
+            controlPlane.updateConnectorNamespaceStatus(
+                clusterId,
+                namespaceId,
                 status);
         });
     }

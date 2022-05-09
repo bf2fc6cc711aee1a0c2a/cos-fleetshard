@@ -348,6 +348,63 @@ paths:
                   $ref: 'connector_mgmt.yaml#/components/examples/500Example'
           description: Unexpected error occurred
 
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/namespaces/{namespace_id}/status':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: namespace_id
+        description: The id of the namespace
+        schema:
+          type: string
+        in: path
+        required: true
+    put:
+      tags:
+        - Connector Clusters Agent
+      operationId: updateConnectorNamespaceStatus
+      summary: update the connector namespace status
+      description: update the connector namespace status
+      security:
+        - Bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectorNamespaceStatus'
+        required: true
+      responses:
+        '200':
+          description: Cluster status is updated
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                400InvalidIdExample:
+                  $ref: '#/components/examples/400InvalidIdExample'
+          description: id value is not valid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                404Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/404Example'
+          # This is deliberate to hide the endpoints for unauthorised users
+          description: Auth token is not valid.
+        '410':
+          description: namespace has been deleted
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+
 components:
   schemas:
 
@@ -362,9 +419,6 @@ components:
           type: string
         status:
           type: string
-        lastTransitionTime:
-          type: string
-          deprecated: true
         last_transition_time:
           type: string
           #format: date-time # enable this?? or just set it as pure plain string?
@@ -391,6 +445,11 @@ components:
           properties:
             metadata:
               type: object
+              required:
+                - created_at
+                - updated_at
+                - resource_version
+                - resolved_secrets
               properties:
                 created_at:
                   format: date-time
@@ -401,6 +460,8 @@ components:
                 resource_version:
                   type: integer
                   format: int64
+                resolved_secrets:
+                  type: boolean
             spec:
               $ref: '#/components/schemas/ConnectorDeploymentSpec'
             status:
@@ -427,10 +488,6 @@ components:
           type: string
         connector_spec:
           type: object
-        allow_upgrade:
-          description: allow the connector to upgrade to a new operator
-          type: boolean
-          deprecated: true
         operator_id:
           description: an optional operator id that the connector should be run under.
           type: string
@@ -448,9 +505,6 @@ components:
         resource_version:
           type: integer
           format: int64
-        available_upgrades:
-          type: string
-          deprecated: true
         operators:
           type: object
           properties:

@@ -29,6 +29,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 
 public interface FleetManagerClientApi {
 
@@ -81,7 +82,7 @@ public interface FleetManagerClientApi {
         throws ApiException, ProcessingException;
 
     /**
-     * update the connector deployment status
+     * Update the status of a connector deployment
      */
     @PUT
     @Path("/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}/status")
@@ -91,6 +92,20 @@ public interface FleetManagerClientApi {
         @PathParam("connector_cluster_id") String connectorClusterId,
         @PathParam("deployment_id") String deploymentId,
         ConnectorDeploymentStatus connectorDeploymentStatus)
+        throws ApiException, ProcessingException;
+
+    /**
+     * Update the status of a connector namespace
+     *
+     */
+    @PUT
+    @Path("/kafka_connector_clusters/{connector_cluster_id}/namespaces/{namespace_id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    void updateConnectorNamespaceStatus(
+        @PathParam("connector_cluster_id") String connectorClusterId,
+        @PathParam("namespace_id") String namespaceId,
+        ConnectorNamespaceStatus connectorNamespaceStatus)
         throws ApiException, ProcessingException;
 
     /**

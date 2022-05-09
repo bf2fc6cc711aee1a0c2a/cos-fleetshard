@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -8,6 +9,10 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
+import org.bf2.cos.fleet.manager.model.MetaV1Condition;
+import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -79,6 +84,27 @@ public class ConnectorNamespaceProvisioner {
                         namespace.getId(),
                         namespace.getResourceVersion(),
                         e);
+
+                    try {
+                        MetaV1Condition condition = new MetaV1Condition();
+                        condition.setType(Conditions.TYPE_READY);
+                        condition.setStatus(Conditions.STATUS_FALSE);
+                        condition.setReason(Conditions.FAILED_TO_CREATE_OR_UPDATE_RESOURCE_REASON);
+                        condition.setMessage(e.getMessage());
+
+                        ConnectorNamespaceStatus status = new ConnectorNamespaceStatus()
+                            .id(namespace.getId())
+                            .version("" + namespace.getResourceVersion())
+                            .phase(ConnectorNamespaceState.DISCONNECTED)
+                            .conditions(List.of(condition));
+
+                        fleetManager.updateNamespaceStatus(
+                            fleetShard.getClusterId(),
+                            namespace.getId(),
+                            status);
+                    } catch (Exception ex) {
+                        LOGGER.warn("Error wile reporting failure to the control plane", e);
+                    }
 
                     fleetShard.getConnectorCluster().ifPresent(cc -> {
                         fleetShard.broadcast(
