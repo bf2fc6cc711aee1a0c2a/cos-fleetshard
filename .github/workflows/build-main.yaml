@@ -83,7 +83,7 @@ jobs:
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         uses: mikefarah/yq@master
         env:
-          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
         with:
           cmd: |
             yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
@@ -92,7 +92,7 @@ jobs:
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
-          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
