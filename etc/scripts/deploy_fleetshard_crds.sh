@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-kubectl apply -k etc/kubernetes/manifests/base/crds
+kubectl apply -k etc/kubernetes/manifests/base/apps/cos-fleetshard-sync/crds

@@ -2,7 +2,6 @@ generatorOptions:
   disableNameSuffixHash: true
 
 resources:
-  - ../../../base/crds
   - ../../../base/apps/cos-fleetshard-sync
 
 #images:
