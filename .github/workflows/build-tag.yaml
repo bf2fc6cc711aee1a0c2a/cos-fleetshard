@@ -74,7 +74,7 @@ jobs:
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         uses: mikefarah/yq@master
         env:
-          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
           RESOURCE_REF_SYNC: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-sync/?ref=${{ github.ref_name }}
           RESOURCE_REF_CAMEL: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-operator-camel/?ref=${{ github.ref_name }}
           RESOURCE_REF_DEBEZIUM: ${{ github.server_url}}/${{ github.repository}}//etc/kubernetes/manifests/overlays/staging/cos-fleetshard-operator-debezium/?ref=${{ github.ref_name }}
@@ -91,7 +91,7 @@ jobs:
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
-          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}
+          OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |

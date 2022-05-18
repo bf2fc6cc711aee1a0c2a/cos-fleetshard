@@ -13,7 +13,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: kustomize/overlays/dev/
+    path: kustomize/overlays/dev/data-plane/
     repoURL: https://github.com/bf2fc6cc711aee1a0c2a/cos-manifests
     targetRevision: main
   syncPolicy:
