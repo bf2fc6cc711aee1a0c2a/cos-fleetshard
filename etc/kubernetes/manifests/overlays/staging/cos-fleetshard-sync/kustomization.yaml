@@ -1,6 +1,20 @@
 resources:
 - ../../../base/apps/cos-fleetshard-sync
 
+configMapGenerator:
+  - files:
+      - application.properties=app-config/application.properties
+    name: cos-fleetshard-sync-config
+    behavior: replace
+
+patchesStrategicMerge: 
+  - |- 
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: cos-fleetshard-sync-view
+
 patchesJson6902:
 - target:
     group: apps
