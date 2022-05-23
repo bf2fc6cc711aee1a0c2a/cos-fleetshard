@@ -228,6 +228,12 @@ public final class ConnectorTestSupport {
         when(answer.quota()).thenAnswer(invocation -> {
             return Mockito.mock(FleetShardSyncConfig.Quota.class);
         });
+        when(answer.quota().defaultLimits()).thenAnswer(invocation -> {
+            return Mockito.mock(FleetShardSyncConfig.DefaultLimits.class);
+        });
+        when(answer.quota().defaultRequest()).thenAnswer(invocation -> {
+            return Mockito.mock(FleetShardSyncConfig.DefaultRequest.class);
+        });
 
         return answer;
     }

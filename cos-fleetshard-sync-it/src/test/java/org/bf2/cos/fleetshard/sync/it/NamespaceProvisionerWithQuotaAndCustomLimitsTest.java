@@ -45,8 +45,8 @@ import static org.bf2.cos.fleetshard.support.CollectionUtils.mapOf;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
-@TestProfile(NamespaceProvisionerWithQuotaTest.Profile.class)
-public class NamespaceProvisionerWithQuotaTest extends SyncTestSupport {
+@TestProfile(NamespaceProvisionerWithQuotaAndCustomLimitsTest.Profile.class)
+public class NamespaceProvisionerWithQuotaAndCustomLimitsTest extends SyncTestSupport {
     @Inject
     FleetShardClient client;
 
@@ -109,13 +109,21 @@ public class NamespaceProvisionerWithQuotaTest extends SyncTestSupport {
 
                     assertThat(item.getSpec().getLimits().get(0).getDefault())
                         .describedAs("LimitRanges (limits)")
-                        .containsEntry(ConnectorNamespaceProvisioner.LIMITS_CPU, new Quantity("0.5"))
-                        .containsEntry(ConnectorNamespaceProvisioner.LIMITS_MEMORY, new Quantity("0.5G"));
+                        .containsEntry(
+                            ConnectorNamespaceProvisioner.LIMITS_CPU,
+                            cfg.getValue("cos.quota.default-limits.cpu", Quantity.class))
+                        .containsEntry(
+                            ConnectorNamespaceProvisioner.LIMITS_MEMORY,
+                            cfg.getValue("cos.quota.default-limits.memory", Quantity.class));
 
                     assertThat(item.getSpec().getLimits().get(0).getDefaultRequest())
                         .describedAs("LimitRanges (request)")
-                        .containsEntry(ConnectorNamespaceProvisioner.LIMITS_CPU, new Quantity("200m"))
-                        .containsEntry(ConnectorNamespaceProvisioner.LIMITS_MEMORY, new Quantity("128m"));
+                        .containsEntry(
+                            ConnectorNamespaceProvisioner.LIMITS_CPU,
+                            cfg.getValue("cos.quota.default-request.cpu", Quantity.class))
+                        .containsEntry(
+                            ConnectorNamespaceProvisioner.LIMITS_MEMORY,
+                            cfg.getValue("cos.quota.default-request.memory", Quantity.class));
                 });
             });
 
@@ -137,16 +145,16 @@ public class NamespaceProvisionerWithQuotaTest extends SyncTestSupport {
             assertThat(item.getSpec().getHard())
                 .containsEntry(
                     ConnectorNamespaceProvisioner.RESOURCE_QUOTA_LIMITS_CPU,
-                    cfg.getValue("test.ns.id.1.limits.cpu", Quantity.class))
+                    new Quantity(cfg.getValue("test.ns.id.1.limits.cpu", String.class)))
                 .containsEntry(
                     ConnectorNamespaceProvisioner.RESOURCE_QUOTA_REQUESTS_CPU,
-                    cfg.getValue("test.ns.id.1.requests.cpu", Quantity.class))
+                    new Quantity(cfg.getValue("test.ns.id.1.requests.cpu", String.class)))
                 .containsEntry(
                     ConnectorNamespaceProvisioner.RESOURCE_QUOTA_LIMITS_MEMORY,
-                    cfg.getValue("test.ns.id.1.limits.memory", Quantity.class))
+                    new Quantity(cfg.getValue("test.ns.id.1.limits.memory", String.class)))
                 .containsEntry(
                     ConnectorNamespaceProvisioner.RESOURCE_QUOTA_REQUESTS_MEMORY,
-                    cfg.getValue("test.ns.id.1.requests.memory", Quantity.class));
+                    new Quantity(cfg.getValue("test.ns.id.1.requests.memory", String.class)));
         });
     }
 
@@ -155,18 +163,21 @@ public class NamespaceProvisionerWithQuotaTest extends SyncTestSupport {
         public Map<String, String> getConfigOverrides() {
             return mapOf(
                 "test.ns.id.1", uid(),
-                "test.ns.id.1.connectors", "4",
-                "test.ns.id.1.limits.cpu", "2",
-                "test.ns.id.1.limits.memory", "2G",
-                "test.ns.id.1.requests.cpu", "1",
-                "test.ns.id.1.requests.memory", "1G",
+                "test.ns.id.1.limits.cpu", "0.2",
+                "test.ns.id.1.requests.cpu", "01",
+                "test.ns.id.1.limits.memory", "20m",
+                "test.ns.id.1.requests.memory", "10m",
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
-                "cos.resources.housekeeper-interval", "disabled");
+                "cos.resources.housekeeper-interval", "disabled",
+                "cos.quota.default-limits.cpu", "401m",
+                "cos.quota.default-limits.memory", "402m",
+                "cos.quota.default-request.cpu", "301m",
+                "cos.quota.default-request.memory", "302m");
         }
 
         @Override
@@ -191,10 +202,9 @@ public class NamespaceProvisionerWithQuotaTest extends SyncTestSupport {
                         n.status(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                         n.tenant(new ConnectorNamespaceTenant().id(uid()).kind(ConnectorNamespaceTenantKind.ORGANISATION));
                         n.quota(new ConnectorNamespaceQuota()
-                            .connectors(cfg.getValue("test.ns.id.1.connectors", Integer.class))
                             .cpuLimits(cfg.getValue("test.ns.id.1.limits.cpu", String.class))
-                            .memoryLimits(cfg.getValue("test.ns.id.1.limits.memory", String.class))
                             .cpuRequests(cfg.getValue("test.ns.id.1.requests.cpu", String.class))
+                            .memoryLimits(cfg.getValue("test.ns.id.1.limits.memory", String.class))
                             .memoryRequests(cfg.getValue("test.ns.id.1.requests.memory", String.class)));
                     });
 

@@ -3,12 +3,14 @@ package org.bf2.cos.fleetshard.sync;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.support.DurationConverter;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithConverter;
 import io.smallrye.config.WithDefault;
@@ -96,6 +98,24 @@ public interface FleetShardSyncConfig {
     interface Quota {
         @WithDefault("true")
         boolean enabled();
+
+        DefaultLimits defaultLimits();
+
+        DefaultRequest defaultRequest();
+    }
+
+    interface DefaultLimits {
+        Optional<Quantity> cpu();
+
+        Optional<Quantity> memory();
+    }
+
+    interface DefaultRequest {
+        @WithDefault("200m")
+        Quantity cpu();
+
+        @WithDefault("128m")
+        Quantity memory();
     }
 
     interface Resources {
