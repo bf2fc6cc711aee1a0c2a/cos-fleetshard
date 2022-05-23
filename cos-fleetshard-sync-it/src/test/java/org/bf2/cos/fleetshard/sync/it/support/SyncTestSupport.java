@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import org.assertj.core.api.ThrowingConsumer;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ThrowingRunnable;
@@ -35,6 +36,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class SyncTestSupport {
@@ -142,6 +144,15 @@ public class SyncTestSupport {
             .pollDelay(100, TimeUnit.MILLISECONDS)
             .pollInterval(500, TimeUnit.MILLISECONDS)
             .untilAsserted(runnable);
+    }
+
+    public static <T> void untilAsserted(Callable<Optional<T>> supplier, ThrowingConsumer<T> consumer) {
+        getConditionFactory().untilAsserted(() -> {
+            assertThat(supplier.call())
+                .isPresent()
+                .get()
+                .satisfies(consumer);
+        });
     }
 
     public static StringValuePattern jp(String expression, String expected) {

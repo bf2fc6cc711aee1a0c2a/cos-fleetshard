@@ -13,6 +13,7 @@ import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
+import io.fabric8.kubernetes.api.model.LimitRange;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ResourceQuota;
 import io.restassured.RestAssured;
@@ -70,6 +71,17 @@ public abstract class NamespaceProvisionerWithNoQuotaTestBase extends SyncTestSu
                     .resourceQuotas()
                     .inNamespace(ns.getMetadata().getName())
                     .withName(ns.getMetadata().getName() + "-quota")
+                    .get();
+
+                assertThat(answer).isNull();
+            });
+
+        untilAsserted(
+            () -> {
+                LimitRange answer = fleetShardClient.getKubernetesClient()
+                    .limitRanges()
+                    .inNamespace(ns.getMetadata().getName())
+                    .withName(ns.getMetadata().getName() + "-limits")
                     .get();
 
                 assertThat(answer).isNull();

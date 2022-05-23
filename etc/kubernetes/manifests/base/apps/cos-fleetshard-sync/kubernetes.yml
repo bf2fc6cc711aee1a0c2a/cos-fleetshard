@@ -168,6 +168,23 @@ rules:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
 metadata:
+  name: "cos-fleetshard-sync-limits"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "limitranges"
+  verbs:
+  - "create"
+  - "patch"
+  - "get"
+  - "list"
+  - "watch"
+  - "update"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
   name: "cos-fleetshard-sync-quota"
 rules:
 - apiGroups:
@@ -175,9 +192,12 @@ rules:
   resources:
   - "resourcequotas"
   verbs:
-  - "delete"
+  - "create"
+  - "patch"
   - "get"
   - "list"
+  - "watch"
+  - "update"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRoleBinding"
@@ -200,6 +220,19 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "ClusterRole"
   name: "cos-fleetshard-sync-events"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-limits"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-limits"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
@@ -256,10 +289,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
-        - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
-          value: "/mnt/app-secret"
         - name: "SMALLRYE_CONFIG_LOCATIONS"
           value: "/mnt/app-config"
+        - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
+          value: "/mnt/app-secret"
         image: "quay.io/rhoas/cos-fleetshard-sync:latest"
         imagePullPolicy: "Always"
         livenessProbe:

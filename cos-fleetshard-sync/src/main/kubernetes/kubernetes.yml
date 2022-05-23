@@ -59,6 +59,23 @@ rules:
     - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cos-fleetshard-sync-limits
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - limitranges
+    verbs:
+      - create
+      - patch
+      - get
+      - list
+      - watch
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cos-fleetshard-sync-connectors
@@ -79,6 +96,19 @@ roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
   name: cos-fleetshard-sync-quota
+subjects:
+  - kind: ServiceAccount
+    name: cos-fleetshard-sync
+    namespace: placeholder
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cos-fleetshard-sync-limits
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-sync-limits
 subjects:
   - kind: ServiceAccount
     name: cos-fleetshard-sync

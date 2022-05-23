@@ -23,6 +23,9 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.fabric8.kubernetes.api.model.LimitRange;
+import io.fabric8.kubernetes.api.model.LimitRangeItem;
+import io.fabric8.kubernetes.api.model.LimitRangeSpec;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -41,6 +44,10 @@ public class ConnectorNamespaceProvisioner {
     public static final String TAG_NAMESPACE_ID = "id";
     public static final String TAG_NAMESPACE_REVISION = "revision";
     public static final String METRICS_SUFFIX = ".namespace.provision";
+
+    public static final String LIMITS_TYPE_CONTAINER = "Container";
+    public static final String LIMITS_CPU = "cpu";
+    public static final String LIMITS_MEMORY = "memory";
 
     public static final String RESOURCE_QUOTA_LIMITS_CPU = "limits.cpu";
     public static final String RESOURCE_QUOTA_LIMITS_MEMORY = "limits.memory";
@@ -203,6 +210,76 @@ public class ConnectorNamespaceProvisioner {
             .createOrReplace(quota);
     }
 
+    private void createResourceLimit(String uow, ConnectorNamespace connectorNamespace) {
+        if (connectorNamespace.getQuota() == null) {
+            return;
+        }
+
+        LimitRangeItem limit = new LimitRangeItem();
+        limit.setType(LIMITS_TYPE_CONTAINER);
+        limit.setDefault(new TreeMap<>());
+        limit.setDefaultRequest(new TreeMap<>());
+
+        if (config.quota().defaultLimits() != null) {
+            config.quota().defaultLimits().cpu()
+                .ifPresent(value -> limit.getDefault().put(LIMITS_CPU, value));
+            config.quota().defaultLimits().memory()
+                .ifPresent(value -> limit.getDefault().put(LIMITS_MEMORY, value));
+
+            if (connectorNamespace.getQuota().getCpuLimits() != null && connectorNamespace.getQuota().getConnectors() != null) {
+                limit.getDefault().computeIfAbsent(LIMITS_CPU, s -> {
+                    Quantity value = new Quantity(connectorNamespace.getQuota().getCpuLimits());
+                    double newAmount = Double.parseDouble(value.getAmount()) / connectorNamespace.getQuota().getConnectors();
+                    value.setAmount(Double.toString(newAmount));
+
+                    return value;
+                });
+            }
+
+            if (connectorNamespace.getQuota().getMemoryLimits() != null
+                && connectorNamespace.getQuota().getConnectors() != null) {
+                limit.getDefault().computeIfAbsent(LIMITS_MEMORY, s -> {
+                    Quantity value = new Quantity(connectorNamespace.getQuota().getMemoryLimits());
+                    double newAmount = Double.parseDouble(value.getAmount()) / connectorNamespace.getQuota().getConnectors();
+                    value.setAmount(Double.toString(newAmount));
+
+                    return value;
+                });
+            }
+        }
+
+        if (config.quota().defaultRequest() != null) {
+            if (config.quota().defaultRequest().cpu() != null) {
+                limit.getDefaultRequest().put(LIMITS_CPU, config.quota().defaultRequest().cpu());
+            }
+            if (config.quota().defaultRequest().memory() != null) {
+                limit.getDefaultRequest().put(LIMITS_MEMORY, config.quota().defaultRequest().memory());
+            }
+        }
+
+        if (limit.getDefault().isEmpty() && limit.getDefaultRequest().isEmpty()) {
+            return;
+        }
+
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(fleetShard.generateNamespaceId(fleetShard.generateNamespaceId(connectorNamespace.getId()) + "-limits"));
+
+        LimitRangeSpec spec = new LimitRangeSpec();
+        spec.setLimits(List.of(limit));
+
+        LimitRange limits = new LimitRange();
+        limits.setMetadata(meta);
+        limits.setSpec(spec);
+
+        Resources.setLabels(
+            limits,
+            Resources.LABEL_UOW, uow);
+
+        fleetShard.getKubernetesClient().limitRanges()
+            .inNamespace(fleetShard.generateNamespaceId(connectorNamespace.getId()))
+            .createOrReplace(limits);
+    }
+
     public void provision(ConnectorNamespace connectorNamespace) {
         LOGGER.info("Got cluster_id: {}, namespace_d: {}, state: {}, connectors_deployed: {}",
             fleetShard.getClusterId(),
@@ -263,6 +340,10 @@ public class ConnectorNamespaceProvisioner {
         fleetShard.createNamespace(ns);
 
         if (quota) {
+            LOGGER.debug("Creating LimitRange for namespace: {}", ns.getMetadata().getName());
+            createResourceLimit(uow, connectorNamespace);
+
+            LOGGER.debug("Creating ResourceQuota for namespace: {}", ns.getMetadata().getName());
             createResourceQuota(uow, connectorNamespace);
         }
 
