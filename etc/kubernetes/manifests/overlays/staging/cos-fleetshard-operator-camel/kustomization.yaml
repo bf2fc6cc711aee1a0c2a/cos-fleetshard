@@ -2,6 +2,20 @@
 resources:
   - ../../../base/apps/cos-fleetshard-operator-camel
 
+configMapGenerator:
+  - name: cos-fleetshard-operator-camel-config
+    files:
+      - application.properties=app-config/application.properties
+    behavior: replace
+
+patchesStrategicMerge: 
+  - |- 
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: cos-fleetshard-operator-camel-view
+
 patchesJson6902:
   - target:
       group: apps
