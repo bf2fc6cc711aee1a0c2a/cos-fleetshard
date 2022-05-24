@@ -65,7 +65,7 @@ jobs:
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
-          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
+          ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium          
 
   kustomize:
     needs: "build"
@@ -80,15 +80,20 @@ jobs:
         with:
           repository: bf2fc6cc711aee1a0c2a/cos-manifests
           token: ${{ secrets.GH_TOKEN }}
+
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
         with:
           cmd: |
-            yq -i '.images[0].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[1].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[2].newTag = strenv(DEPLOY_TAG)' ${OVERLAY_PATH}/kustomization.yaml
+            export SHA256_SYNC=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-sync:${DEPLOY_TAG} | jq -r '.config.digest')
+            export SHA256_CAMEL=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-operator-camel:${DEPLOY_TAG} | jq -r '.config.digest')
+            export SHA256_DEBEZIUM=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-operator-debezium:${DEPLOY_TAG} | jq -r '.config.digest')
+
+            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-sync").newTag = strenv(SHA256_SYNC)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-operator-camel").newTag = strenv(SHA256_CAMEL)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-operator-debezium").newTag = strenv(SHA256_DEBEZIUM)' ${OVERLAY_PATH}/kustomization.yaml
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
@@ -121,4 +126,4 @@ jobs:
             --fill \
             --base main \
             --title "chore(kustomize): update kustomization images overlay ${{ matrix.overlay }}" \
-            --body "sha ${{ github.sha }}, overlay ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}"
+            --body "sha: ${{ github.sha }}, overlay: ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}"
