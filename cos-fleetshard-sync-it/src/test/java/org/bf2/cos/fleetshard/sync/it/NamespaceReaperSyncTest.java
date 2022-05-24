@@ -7,10 +7,9 @@ import java.util.Objects;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +30,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @TestProfile(NamespaceReaperSyncTest.Profile.class)
 public class NamespaceReaperSyncTest extends NamespaceReaperSyncTestBase {
 
-    @WireMockTestInstance
-    WireMockServer server;
+    @FleetManagerTestInstance
+    FleetManagerMockServer server;
 
     @Test
     void namespaceIsProvisioned() {
@@ -96,7 +95,6 @@ public class NamespaceReaperSyncTest extends NamespaceReaperSyncTestBase {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

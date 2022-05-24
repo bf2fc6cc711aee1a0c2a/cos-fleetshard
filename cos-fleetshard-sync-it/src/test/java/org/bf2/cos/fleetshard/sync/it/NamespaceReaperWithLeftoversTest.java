@@ -13,10 +13,9 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
 
@@ -42,8 +41,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 @QuarkusTest
 @TestProfile(NamespaceReaperWithLeftoversTest.Profile.class)
 public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport {
-    @WireMockTestInstance
-    WireMockServer server;
+    @FleetManagerTestInstance
+    FleetManagerMockServer server;
 
     @Test
     void namespaceIsProvisioned() {
@@ -124,7 +123,6 @@ public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

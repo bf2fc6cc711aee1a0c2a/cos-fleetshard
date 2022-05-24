@@ -15,4 +15,15 @@ public class WrappedRuntimeException extends RuntimeException {
     public WrappedRuntimeException(Throwable cause) {
         super(cause);
     }
+
+    public static RuntimeException launderThrowable(Exception e) {
+        if (e instanceof WrappedRuntimeException) {
+            return (RuntimeException) e;
+        }
+        if (e instanceof RuntimeException) {
+            return (RuntimeException) e;
+        }
+
+        return new WrappedRuntimeException(e);
+    }
 }

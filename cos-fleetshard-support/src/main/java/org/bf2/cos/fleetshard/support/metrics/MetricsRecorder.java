@@ -32,6 +32,10 @@ public class MetricsRecorder {
         record(action, subId, Tags.empty());
     }
 
+    public void record(Runnable action, Consumer<Exception> exceptionHandler) {
+        record(action, "", Tags.empty(), exceptionHandler);
+    }
+
     public void record(Runnable action, Iterable<Tag> additionalTags, Consumer<Exception> exceptionHandler) {
         record(action, "", additionalTags, exceptionHandler);
     }
@@ -41,11 +45,15 @@ public class MetricsRecorder {
     }
 
     public void record(Runnable action, String subId, Iterable<Tag> additionalTags) {
-        record(action, subId, additionalTags, e -> {
-            throw new WrappedRuntimeException(
-                "Failure recording method execution (id: " + id + subId + ")",
-                e);
-        });
+        record(
+            action,
+            subId,
+            additionalTags,
+            e -> {
+                throw new WrappedRuntimeException(
+                    "Failure recording method execution (id: " + id + subId + ")",
+                    e);
+            });
     }
 
     public void record(Runnable action, String subId, Iterable<Tag> additionalTags, Consumer<Exception> exceptionHandler) {
@@ -86,11 +94,19 @@ public class MetricsRecorder {
     }
 
     public <T> T recordCallable(Callable<T> action, String subId, Iterable<Tag> additionalTags) {
-        return recordCallable(action, subId, additionalTags, e -> {
-            throw new WrappedRuntimeException(
-                "Failure recording method execution (id: " + id + subId + ")",
-                e);
-        });
+        return recordCallable(
+            action,
+            subId,
+            additionalTags,
+            e -> {
+                throw new WrappedRuntimeException(
+                    "Failure recording method execution (id: " + id + subId + ")",
+                    e);
+            });
+    }
+
+    public <T> T recordCallable(Callable<T> action, Consumer<Exception> exceptionHandler) {
+        return recordCallable(action, "", Tags.empty(), exceptionHandler);
     }
 
     public <T> T recordCallable(Callable<T> action, String subId, Iterable<Tag> additionalTags,

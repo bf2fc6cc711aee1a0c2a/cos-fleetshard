@@ -237,6 +237,31 @@ public interface FleetShardSyncConfig {
         URI uri();
 
         /**
+         * The {@link URI} of the SSO URI.
+         *
+         * @return the sso {@link URI}.
+         */
+        URI ssoProviderUri();
+
+        /**
+         * The timeout for sso provider refresh;
+         *
+         * @return the timeout.
+         */
+        @WithDefault("1h")
+        @WithConverter(DurationConverter.class)
+        Duration ssoProviderRefreshTimeout();
+
+        /**
+         * The timeout for sso operations;
+         *
+         * @return the timeout.
+         */
+        @WithDefault("10s")
+        @WithConverter(DurationConverter.class)
+        Duration ssoTimeout();
+
+        /**
          * The connect timeout;
          *
          * @return the timeout.

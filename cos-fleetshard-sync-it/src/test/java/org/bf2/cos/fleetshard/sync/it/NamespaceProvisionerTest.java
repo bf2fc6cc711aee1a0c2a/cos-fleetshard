@@ -12,7 +12,6 @@ import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -109,7 +108,6 @@ public class NamespaceProvisionerTest extends NamespaceProvisionerTestBase {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

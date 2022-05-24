@@ -6,10 +6,9 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.bf2.cos.fleetshard.sync.it.support.TestFleetShardSync;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -40,9 +39,9 @@ public class NamespaceProvisionerTestBase extends SyncTestSupport {
             .isEqualTo(TestFleetShardSync.ADDON_SECRET_VALUE);
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
             final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
 

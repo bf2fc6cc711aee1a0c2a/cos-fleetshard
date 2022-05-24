@@ -6,8 +6,8 @@ import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.support.resources.Resources;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -19,8 +19,8 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSupport {
-    @WireMockTestInstance
-    WireMockServer server;
+    @FleetManagerTestInstance
+    FleetManagerMockServer server;
     @Inject
     MeterRegistry registry;
 

@@ -13,12 +13,10 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
@@ -52,8 +50,8 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
     public static final String KAFKA_CLIENT_ID = uid();
     public static final String KAFKA_CLIENT_SECRET = toBase64(uid());
 
-    @WireMockTestInstance
-    WireMockServer server;
+    @FleetManagerTestInstance
+    FleetManagerMockServer server;
 
     @ConfigProperty(name = "cos.cluster.id")
     String clusterId;
@@ -196,14 +194,13 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
 
             server.stubMatching(

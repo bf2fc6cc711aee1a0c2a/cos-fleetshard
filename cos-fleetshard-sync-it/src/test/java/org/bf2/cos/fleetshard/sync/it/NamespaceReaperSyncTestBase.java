@@ -7,9 +7,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -22,9 +21,9 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public abstract class NamespaceReaperSyncTestBase extends SyncTestSupport {
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final String nsId1 = ConfigProvider.getConfig().getValue("test.ns.id.1", String.class);
             final String nsId2 = ConfigProvider.getConfig().getValue("test.ns.id.2", String.class);
 

@@ -18,11 +18,9 @@ import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -183,14 +181,13 @@ public class NamespaceProvisionerWithQuotaAndCustomLimitsTest extends SyncTestSu
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final Config cfg = ConfigProvider.getConfig();
             final String nsId1 = cfg.getValue("test.ns.id.1", String.class);
 

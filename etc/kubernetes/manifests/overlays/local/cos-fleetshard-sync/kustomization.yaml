@@ -1,6 +1,15 @@
 resources:
 - ../../../base/apps/cos-fleetshard-sync
 
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - files:
+      - application.properties=app-config/application.properties
+    name: cos-fleetshard-sync-config
+    behavior: replace
+
 patchesJson6902:
 - patch: |-
     - op: replace
@@ -15,7 +24,7 @@ patchesJson6902:
     name: cos-fleetshard-sync
     version: v1
 
-patches:    
+patches:
 - target:
     group: rbac.authorization.k8s.io
     version: v1

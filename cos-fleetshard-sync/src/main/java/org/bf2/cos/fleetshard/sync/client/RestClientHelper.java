@@ -11,18 +11,17 @@ import org.bf2.cos.fleetshard.support.function.ThrowingRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FleetManagerClientHelper {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClientHelper.class);
+public class RestClientHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestClientHelper.class);
 
     public static <T extends Throwable> void run(ThrowingRunnable<T> runnable) {
         try {
             runnable.run();
         } catch (WebApplicationException e) {
             final Response response = e.getResponse();
-            final String error = response.readEntity(String.class);
 
             LOGGER.warn("error={}, status={}, message={}",
-                error,
+                response.hasEntity() ? response.readEntity(String.class) : "undefined",
                 response.getStatus(),
                 e.getMessage());
 
@@ -44,10 +43,9 @@ public class FleetManagerClientHelper {
             return callable.call();
         } catch (WebApplicationException e) {
             final Response response = e.getResponse();
-            final String error = response.readEntity(String.class);
 
             LOGGER.warn("error={}, status={}, message={}",
-                error,
+                response.hasEntity() ? response.readEntity(String.class) : "undefined",
                 response.getStatus(),
                 e.getMessage());
 
