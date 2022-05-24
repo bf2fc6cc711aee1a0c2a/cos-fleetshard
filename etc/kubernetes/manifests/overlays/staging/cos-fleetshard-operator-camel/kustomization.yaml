@@ -2,6 +2,9 @@
 resources:
   - ../../../base/apps/cos-fleetshard-operator-camel
 
+generatorOptions:
+    disableNameSuffixHash: true
+
 configMapGenerator:
   - name: cos-fleetshard-operator-camel-config
     files:

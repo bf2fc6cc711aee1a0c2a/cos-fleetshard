@@ -2,6 +2,9 @@
 resources:
   - ../../../base/apps/cos-fleetshard-operator-debezium
 
+generatorOptions:
+    disableNameSuffixHash: true
+
 configMapGenerator:
   - name: cos-fleetshard-operator-debezium-config
     files:
