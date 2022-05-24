@@ -1,6 +1,9 @@
 resources:
 - ../../../base/apps/cos-fleetshard-sync
 
+generatorOptions:
+    disableNameSuffixHash: true
+
 configMapGenerator:
   - files:
       - application.properties=app-config/application.properties
