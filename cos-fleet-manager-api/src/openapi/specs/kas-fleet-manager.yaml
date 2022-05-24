@@ -2,7 +2,7 @@ openapi: 3.0.0 # need this as first line to allow some IDEs to know this is an o
 # All endpoints defined here will be discoverable by all users. If there is a need to keep some endpoints "private", add them to the "managed-services-api-private.yaml" file
 info:
   title: Kafka Service Fleet Manager
-  version: 1.5.0
+  version: 1.7.1
   description: Kafka Service Fleet Manager is a Rest API to manage Kafka instances.
 servers:
   - url: https://api.openshift.com
@@ -474,8 +474,8 @@ paths:
             type: string
           required: false
           examples:
-            eval_instance_type:
-              value: "eval"
+            developer_instance_type:
+              value: "developer"
             standard_instance_type:
               value: "standard"
   /api/kafkas_mgmt/v1/instance_types/{cloud_provider}/{cloud_region}:
@@ -750,8 +750,6 @@ paths:
     get:
       summary: Return sso provider info
       operationId: getSsoProviders
-      security:
-        - Bearer: [ ]
       tags:
         - security
       responses:
@@ -985,6 +983,10 @@ components:
             created_at:
               format: date-time
               type: string
+            expires_at:
+              format: date-time
+              type: string
+              nullable: true
             updated_at:
               format: date-time
               type: string
@@ -1114,6 +1116,9 @@ components:
         id:
           description: 'Unique identifier of this Kafka instance size.'
           type: string
+        display_name:
+          description: 'Display name of this Kafka instance size.'
+          type: string
         ingress_throughput_per_sec:
           description: 'Maximum ingress throughput per second available to this Kafka instance size.'
           type: object
@@ -1138,6 +1143,25 @@ components:
         max_connection_attempts_per_sec:
           description: 'Maximium connection attempts per second available to this Kafka instance size.'
           type: integer
+        max_message_size:
+          description: 'Maximum message size available to this Kafka instance size.'
+          type: object
+          $ref: '#/components/schemas/SupportedKafkaSizeBytesValueItem'
+        min_in_sync_replicas:
+          description: "Minimum number of in-sync replicas."
+          type: integer
+        replication_factor:
+          description: "Replication factor available to this Kafka instance size."
+          type: integer
+        supported_az_modes:
+          description: 'List of Availability Zone modes that this Kafka instance size supports. The possible values are "single", "multi".'
+          type: array
+          items:
+            type: string
+        lifespan_seconds:
+          description: 'The limit lifespan of the kafka instance in seconds. If not specified then the instance never expires.'
+          type: integer
+          nullable: true
         quota_consumed:
           description: 'Quota consumed by this Kafka instance size.'
           type: integer
@@ -1147,11 +1171,15 @@ components:
         capacity_consumed:
           description: 'Data plane cluster capacity consumed by this Kafka instance size.'
           type: integer
+        maturity_status:
+          description: 'Maturity level of the size. Can be "stable" or "preview".'
+          type: string
     SupportedKafkaSizeBytesValueItem:
       type: object
       properties:
         bytes:
-          type: number
+          type: integer
+          format: int64
     CloudProviderList:
       allOf:
         - $ref: "#/components/schemas/List"
@@ -1357,6 +1385,9 @@ components:
         - $ref: "#/components/schemas/ObjectReference"
         - type: object
           properties:
+            name:
+              description: "name of the sso provider"
+              type: string
             base_url:
               description: 'base url'
               type: string
@@ -1675,6 +1706,7 @@ components:
           [
             {
               id: x1,
+              display_name: "1",
               ingress_throughput_per_sec: {"bytes": 31457280},
               egress_throughput_per_sec: {"bytes": 31457280},
               total_max_connections: 3000,
@@ -1685,6 +1717,14 @@ components:
               quota_consumed: 1,
               quota_type: "rhosak",
               capacity_consumed: 1,
+              max_message_size: { "bytes": 1048576},
+              min_in_sync_replicas: 1,
+              replication_factor: 1,
+              supported_az_modes: [
+                "single",
+                "multi",
+              ],
+              maturity_status: 'stable'
             },
           ]
     CloudProviderExample:
@@ -1726,8 +1766,7 @@ components:
         created_at: "2021-04-07T16:24:01+05:30"
     SsoProviderExample:
       value:
-        kind: "SsoProvider"
-        href: "/api/kafkas_mgmt/v1/sso_providers"
+        name: "mas_sso"
         base_url: "https://identity.api.redhat.com"
         jwks: "https://identity.api.openshift.com/auth/realms/rhoas/protocol/openid-connect/certs"
         token_url: "https://identity.api.openshift.com/auth/realms/rhoas/protocol/openid-connect/token"
