@@ -10,10 +10,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
@@ -50,14 +48,13 @@ public class NamespaceProvisionerWithQuotaDisabledTest extends NamespaceProvisio
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final Config cfg = ConfigProvider.getConfig();
             final String nsId1 = cfg.getValue("test.ns.id.1", String.class);
 

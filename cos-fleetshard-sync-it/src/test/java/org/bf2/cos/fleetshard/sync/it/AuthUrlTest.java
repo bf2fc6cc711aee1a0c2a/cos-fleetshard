@@ -3,6 +3,8 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.MediaType;
+
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
@@ -10,34 +12,52 @@ import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.junit.jupiter.api.Test;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
+import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
-import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
+import static io.restassured.RestAssured.given;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @QuarkusTest
-@TestProfile(ClusterStatusUpdaterTest.Profile.class)
-public class ClusterStatusUpdaterTest extends SyncTestSupport {
+@TestProfile(AuthUrlTest.Profile.class)
+public class AuthUrlTest extends SyncTestSupport {
     @FleetManagerTestInstance
     FleetManagerMockServer server;
 
     @Test
-    void statusIsUpdated() {
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+    void namespaceIsProvisioned() {
+
+        UrlPathPattern cosUrl = urlPathMatching("/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces");
+        UrlPathPattern ssoUrl = urlPathMatching("/api/kafkas_mgmt/v1/sso_providers");
+
+        given()
+            .contentType(MediaType.TEXT_PLAIN)
+            .body(0L)
+            .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            server.verify(putRequestedFor(urlEqualTo(statusUrl))
-                .withHeader(ContentTypeHeader.KEY, equalTo(APPLICATION_JSON))
-                .withRequestBody(matchingJsonPath("$[?($.phase == 'ready')]")));
+            server.verify(exactly(1), getRequestedFor(cosUrl));
+            server.verify(exactly(1), getRequestedFor(ssoUrl));
         });
+
+        untilAsserted(() -> {
+            given()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(0L)
+                .post("/test/provisioner/namespaces");
+
+            server.verify(moreThanOrExactly(2), getRequestedFor(cosUrl));
+            server.verify(moreThanOrExactly(2), getRequestedFor(ssoUrl));
+        });
+
     }
 
     public static class Profile extends SyncTestProfile {
@@ -47,9 +67,11 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.resources.update-interval", "disabled",
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
-                "cos.resources.update-interval", "1s");
+                "cos.resources.housekeeper-interval", "disabled",
+                "cos.manager.sso-provider-refresh-timeout", "1s");
         }
 
         @Override
@@ -69,11 +91,6 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                         .withJsonBody(namespaceList());
                 });
-
-            server.stubMatching(
-                RequestMethod.PUT,
-                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/status",
-                () -> WireMock.ok());
         }
     }
 }

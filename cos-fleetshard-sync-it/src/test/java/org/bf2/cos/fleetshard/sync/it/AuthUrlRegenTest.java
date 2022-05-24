@@ -2,74 +2,54 @@ package org.bf2.cos.fleetshard.sync.it;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
+import org.bf2.cos.fleetshard.sync.it.support.OidcMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
-import org.eclipse.microprofile.config.ConfigProvider;
+import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.junit.jupiter.api.Test;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.RestAssured.given;
-import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @QuarkusTest
-@TestProfile(NamespaceReaperSyncNoHousekeeperTest.Profile.class)
-public class NamespaceReaperSyncNoHousekeeperTest extends NamespaceReaperSyncTestBase {
-
+@TestProfile(AuthUrlRegenTest.Profile.class)
+public class AuthUrlRegenTest extends SyncTestSupport {
     @FleetManagerTestInstance
     FleetManagerMockServer server;
 
     @Test
     void namespaceIsProvisioned() {
-        final String ns1 = ConfigProvider.getConfig().getValue("test.ns.id.1", String.class);
-        final String ns2 = ConfigProvider.getConfig().getValue("test.ns.id.2", String.class);
-
         given()
             .contentType(MediaType.TEXT_PLAIN)
-            .body(1L)
+            .body(0L)
             .post("/test/provisioner/namespaces");
 
-        until(
-            () -> fleetShardClient.getNamespace(ns1),
-            Objects::nonNull);
-        until(
-            () -> fleetShardClient.getNamespace(ns2),
-            Objects::nonNull);
+        server.until(1, getRequestedFor(urlPathMatching("/api/kafkas_mgmt/v1/sso_providers")));
 
         given()
             .contentType(MediaType.TEXT_PLAIN)
             .body(0L)
             .post("/test/provisioner/namespaces");
 
-        until(
-            () -> fleetShardClient.getNamespace(ns1),
-            n -> {
-                return Namespaces.PHASE_READY.equals(Resources.getLabel(n, Resources.LABEL_NAMESPACE_STATE))
-                    && null == Resources.getLabel(n, Resources.LABEL_NAMESPACE_STATE_FORCED);
-            });
-
-        until(
-            () -> fleetShardClient.getNamespace(ns2),
-            n -> {
-                return Namespaces.PHASE_DELETED.equals(Resources.getLabel(n, Resources.LABEL_NAMESPACE_STATE))
-                    && "true".equals(Resources.getLabel(n, Resources.LABEL_NAMESPACE_STATE_FORCED));
-            });
+        server.until(2, getRequestedFor(urlPathMatching("/api/kafkas_mgmt/v1/sso_providers")));
     }
 
     public static class Profile extends SyncTestProfile {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                "test.ns.id.1", uid(),
-                "test.ns.id.2", uid(),
                 "cos.cluster.id", getId(),
                 "test.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
@@ -83,6 +63,24 @@ public class NamespaceReaperSyncNoHousekeeperTest extends NamespaceReaperSyncTes
         public List<TestResourceEntry> testResources() {
             return List.of(
                 new TestResourceEntry(FleetManagerTestResource.class));
+        }
+    }
+
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
+        @Override
+        protected void configure(FleetManagerMockServer server) {
+            server.stubMatching(
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
+                () -> WireMock.status(404));
+        }
+
+        @Override
+        protected void configure(OidcMockServer server) {
+            server.resetMappings();
+
+            server.stubFor(WireMock.post(OidcMockServer.OIDC_TOKEN_URL)
+                .willReturn(WireMock.status(401)));
         }
     }
 }

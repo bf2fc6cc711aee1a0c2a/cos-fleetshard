@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -35,7 +34,6 @@ public class NamespaceProvisionerBadIdDashTest extends NamespaceProvisionerBadId
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

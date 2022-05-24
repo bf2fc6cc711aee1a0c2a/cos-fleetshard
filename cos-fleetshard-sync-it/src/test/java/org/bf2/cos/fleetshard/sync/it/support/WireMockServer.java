@@ -153,6 +153,6 @@ public class WireMockServer extends com.github.tomakehurst.wiremock.WireMockServ
     }
 
     public void until(int count, RequestPatternBuilder requestPatternBuilder) {
-        untilAsserted(() -> verify(0, requestPatternBuilder));
+        untilAsserted(() -> verify(count, requestPatternBuilder));
     }
 }

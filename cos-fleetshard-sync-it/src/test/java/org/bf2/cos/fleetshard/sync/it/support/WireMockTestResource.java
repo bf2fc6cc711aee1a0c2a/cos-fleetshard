@@ -57,17 +57,4 @@ public abstract class WireMockTestResource implements QuarkusTestResourceLifecyc
     protected Map<String, String> getArguments() {
         return Collections.unmodifiableMap(this.args);
     }
-
-    protected void injectServerInstance(TestInjector testInjector) {
-        testInjector.injectIntoFields(
-            getServer(),
-            new TestInjector.AnnotatedAndMatchesType(
-                WireMockTestInstance.class,
-                WireMockServer.class));
-    }
-
-    @Override
-    public void inject(QuarkusTestResourceLifecycleManager.TestInjector testInjector) {
-        injectServerInstance(testInjector);
-    }
 }

@@ -10,11 +10,9 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
@@ -110,14 +108,13 @@ public class NamespaceProvisionerWithCustomPrefixTest extends SyncTestSupport {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
             final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
 

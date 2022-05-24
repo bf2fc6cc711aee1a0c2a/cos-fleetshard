@@ -7,9 +7,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,9 +22,9 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 public class NamespaceReaperTestSupport extends SyncTestSupport {
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             final String deployment = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
             final String state = ConfigProvider.getConfig().getValue("test.namespace.delete.state", String.class);
             final Integer connectors = ConfigProvider.getConfig().getOptionalValue("test.deployment.connectors", Integer.class)

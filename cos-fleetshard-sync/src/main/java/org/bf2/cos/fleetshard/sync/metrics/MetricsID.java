@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.support.metrics;
+package org.bf2.cos.fleetshard.sync.metrics;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -15,4 +15,11 @@ public @interface MetricsID {
      * @return the name.
      */
     String value() default "";
+
+    /**
+     * The tags.
+     *
+     * @return the tags.
+     */
+    String[] tags() default {};
 }

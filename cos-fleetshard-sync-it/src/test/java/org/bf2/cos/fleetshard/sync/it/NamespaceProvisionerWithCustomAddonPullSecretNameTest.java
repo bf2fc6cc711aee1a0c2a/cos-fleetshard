@@ -7,7 +7,6 @@ import java.util.Objects;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.TestFleetShardSync;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -65,7 +64,6 @@ public class NamespaceProvisionerWithCustomAddonPullSecretNameTest extends Names
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }

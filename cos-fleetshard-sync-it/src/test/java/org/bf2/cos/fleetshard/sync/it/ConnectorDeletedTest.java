@@ -11,12 +11,10 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.it.support.OidcTestResource;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
+import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockServer;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestInstance;
-import org.bf2.cos.fleetshard.sync.it.support.WireMockTestResource;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
@@ -48,8 +46,8 @@ public class ConnectorDeletedTest extends SyncTestSupport {
     public static final String DEPLOYMENT_ID = uid();
     public static final String CONNECTOR_ID = uid();
 
-    @WireMockTestInstance
-    WireMockServer server;
+    @FleetManagerTestInstance
+    FleetManagerMockServer server;
 
     @ConfigProperty(name = "test.namespace")
     String ns;
@@ -144,14 +142,13 @@ public class ConnectorDeletedTest extends SyncTestSupport {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(OidcTestResource.class),
                 new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
-    public static class FleetManagerTestResource extends WireMockTestResource {
+    public static class FleetManagerTestResource extends org.bf2.cos.fleetshard.sync.it.support.ControlPlaneTestResource {
         @Override
-        protected void configure(WireMockServer server) {
+        protected void configure(FleetManagerMockServer server) {
             server.stubMatching(
                 RequestMethod.GET,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",

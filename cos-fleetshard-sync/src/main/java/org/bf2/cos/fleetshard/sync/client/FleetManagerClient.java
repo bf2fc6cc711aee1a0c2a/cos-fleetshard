@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.client.utils.Serialization;
-import io.quarkus.oidc.client.filter.OidcClientRequestFilter;
 
 @ApplicationScoped
 public class FleetManagerClient {
@@ -34,7 +33,7 @@ public class FleetManagerClient {
     final FleetShardSyncConfig config;
     final FleetManagerClientApi controlPlane;
 
-    public FleetManagerClient(FleetShardSyncConfig config) {
+    public FleetManagerClient(FleetShardSyncConfig config, AuthRequestFilter filter) {
         this.config = config;
 
         UriBuilder builder = UriBuilder.fromUri(config.manager().uri())
@@ -42,14 +41,14 @@ public class FleetManagerClient {
 
         this.controlPlane = RestClientBuilder.newBuilder()
             .baseUri(builder.build())
-            .register(OidcClientRequestFilter.class)
+            .register(filter)
             .connectTimeout(config.manager().connectTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .readTimeout(config.manager().readTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .build(FleetManagerClientApi.class);
     }
 
     public void getNamespaces(long gv, Consumer<Collection<ConnectorNamespace>> consumer) {
-        FleetManagerClientHelper.run(() -> {
+        RestClientHelper.run(() -> {
             LOGGER.debug("polling namespaces with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
@@ -79,7 +78,7 @@ public class FleetManagerClient {
     }
 
     public void getDeployments(long gv, Consumer<Collection<ConnectorDeployment>> consumer) {
-        FleetManagerClientHelper.run(() -> {
+        RestClientHelper.run(() -> {
             LOGGER.debug("polling deployment with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
@@ -118,7 +117,7 @@ public class FleetManagerClient {
     }
 
     public void updateConnectorStatus(String clusterId, String deploymentId, ConnectorDeploymentStatus status) {
-        FleetManagerClientHelper.run(() -> {
+        RestClientHelper.run(() -> {
             LOGGER.info("Update connector status: cluster_id={}, deployment_id={}, status={}",
                 clusterId,
                 deploymentId,
@@ -132,7 +131,7 @@ public class FleetManagerClient {
     }
 
     public void updateNamespaceStatus(String clusterId, String namespaceId, ConnectorNamespaceStatus status) {
-        FleetManagerClientHelper.run(() -> {
+        RestClientHelper.run(() -> {
             LOGGER.info("Update namespace status: cluster_id={}, namespace_id={}, status={}",
                 clusterId,
                 namespaceId,
@@ -146,7 +145,7 @@ public class FleetManagerClient {
     }
 
     public void updateClusterStatus(ConnectorClusterStatus status) {
-        FleetManagerClientHelper.run(() -> {
+        RestClientHelper.run(() -> {
             LOGGER.info("Update cluster status: cluster_id={}, operators={}, namespaces={}",
                 config.cluster().id(),
                 status.getOperators() != null ? status.getOperators().size() : 0,
