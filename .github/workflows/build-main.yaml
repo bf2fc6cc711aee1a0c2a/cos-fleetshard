@@ -97,7 +97,7 @@ jobs:
             export SHA256=$(docker manifest inspect ${IMAGE}:${DEPLOY_TAG} | jq -r '.config.digest')
             
             yq -i '.images[] |= select(.name == strenv(IMAGE)).digest = strenv(SHA256)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i 'del(.images[] |= select(.name == strenv(IMAGE)).newTag)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i 'del(.images[] | select(.name == strenv(IMAGE)).newTag)' ${OVERLAY_PATH}/kustomization.yaml
           done
     
       - name: "Create PR for ${{ matrix.overlay }}"
