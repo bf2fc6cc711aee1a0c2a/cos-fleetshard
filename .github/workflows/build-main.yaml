@@ -119,7 +119,7 @@ jobs:
 
           git checkout -b ${BRANCH_NAME}
           git add ${OVERLAY_PATH}
-          git commit -m "Update kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
+          git commit -m "Update cos-fleetshard kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
           git reset --hard
           git push -u origin ${BRANCH_NAME}
 
