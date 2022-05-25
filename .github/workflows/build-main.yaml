@@ -91,10 +91,11 @@ jobs:
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
+          XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
         run: |
           for APP in cos-fleetshard-sync cos-fleetshard-operator-camel cos-fleetshard-operator-debezium; do
             export IMAGE=quay.io/rhoas/${APP}
-            export SHA256=$(docker manifest inspect ${IMAGE}:${DEPLOY_TAG} | jq -r '.config.digest')
+            export SHA256=$(skopeo inspect docker://${IMAGE}:${DEPLOY_TAG} --format "{{.Digest}}")
             
             yq -i '.images[] |= select(.name == strenv(IMAGE)).digest = strenv(SHA256)' ${OVERLAY_PATH}/kustomization.yaml
             yq -i 'del(.images[] | select(.name == strenv(IMAGE)).newTag)' ${OVERLAY_PATH}/kustomization.yaml
