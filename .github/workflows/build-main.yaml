@@ -69,7 +69,7 @@ jobs:
 
   kustomize:
     needs: "build"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         overlay:
@@ -81,20 +81,25 @@ jobs:
           repository: bf2fc6cc711aee1a0c2a/cos-manifests
           token: ${{ secrets.GH_TOKEN }}
 
+      - name: "Login to quay.io"
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.IMAGE_REPO_USERNAME }}
+          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
+
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
-        uses: mikefarah/yq@master
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
-        with:
-          cmd: |
-            export SHA256_SYNC=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-sync:${DEPLOY_TAG} | jq -r '.config.digest')
-            export SHA256_CAMEL=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-operator-camel:${DEPLOY_TAG} | jq -r '.config.digest')
-            export SHA256_DEBEZIUM=$(docker manifest inspect quay.io/rhoas/cos-fleetshard-operator-debezium:${DEPLOY_TAG} | jq -r '.config.digest')
-
-            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-sync").newTag = strenv(SHA256_SYNC)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-operator-camel").newTag = strenv(SHA256_CAMEL)' ${OVERLAY_PATH}/kustomization.yaml
-            yq -i '.images[] |= select(.name == "quay.io/rhoas/cos-fleetshard-operator-debezium").newTag = strenv(SHA256_DEBEZIUM)' ${OVERLAY_PATH}/kustomization.yaml
-
+        run: |
+          for APP in cos-fleetshard-sync cos-fleetshard-operator-camel cos-fleetshard-operator-debezium; do
+            export IMAGE=quay.io/rhoas/${APP}
+            export SHA256=$(docker manifest inspect ${IMAGE}:${DEPLOY_TAG} | jq -r '.config.digest')
+            
+            yq -i '.images[] |= select(.name == strenv(IMAGE)).digest = strenv(SHA256)' ${OVERLAY_PATH}/kustomization.yaml
+            yq -i 'del(.images[] |= select(.name == strenv(IMAGE)).newTag)' ${OVERLAY_PATH}/kustomization.yaml
+          done
+    
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
