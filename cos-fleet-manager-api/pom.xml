@@ -47,7 +47,7 @@
                 <plugin>
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
-                    <version>5.4.0</version>
+                    <version>6.0.0</version>
                     <configuration>
                         <inputSpec>${project.basedir}/src/openapi/specs/connector_mgmt-private.yaml</inputSpec>
                         <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
