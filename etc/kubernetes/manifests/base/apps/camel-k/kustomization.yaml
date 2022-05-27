@@ -40,4 +40,4 @@ patches:
 images:
   - name: docker.io/apache/camel-k
     newName: quay.io/rhoas/cos-camel-k
-    newTag: release-1.8.x
+    newTag: 1.9.0-SNAPSHOT-cd1831146a92844fd876cc55df73fe2c9488fafa
