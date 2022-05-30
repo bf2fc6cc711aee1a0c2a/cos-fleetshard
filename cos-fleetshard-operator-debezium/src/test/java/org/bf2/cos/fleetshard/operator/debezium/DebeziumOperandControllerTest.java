@@ -378,6 +378,11 @@ public class DebeziumOperandControllerTest {
         return List.of(createCondition("Ready", readyConditionStatus, readyConditionReason));
     }
 
+    private static List<Condition> createConditions(
+        String readyConditionStatus, String readyConditionReason, Condition otherCondition) {
+        return List.of(createCondition("Ready", readyConditionStatus, readyConditionReason), otherCondition);
+    }
+
     public static Stream<Arguments> computeStatus() {
         return Stream.of(
             arguments(
@@ -409,19 +414,19 @@ public class DebeziumOperandControllerTest {
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_FAILED,
-                null),
+                "Transitioning"),
             arguments(
                 KafkaConnectorStatus.STATE_PAUSED,
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_STOPPED,
-                null),
+                "Transitioning"),
             arguments(
                 KafkaConnectorStatus.STATE_UNASSIGNED,
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_PROVISIONING,
-                null));
+                "Transitioning"));
     }
 
     @ParameterizedTest
@@ -453,24 +458,10 @@ public class DebeziumOperandControllerTest {
                 .build());
 
         assertThat(status.getPhase()).isEqualTo(expectedManagedConnectorState);
-        if ("KafkaClusterUnreachable".equals(expectedReason)) {
-            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
-                .hasFieldOrPropertyWithValue("type", "KafkaConnect:NotReady")
-                .hasFieldOrPropertyWithValue("status", "True")
-                .hasFieldOrPropertyWithValue("reason", expectedReason));
-        } else if ("ConnectRestException".equals(expectedReason)) {
-            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
-                .hasFieldOrPropertyWithValue("type", "KafkaConnector:NotReady")
-                .hasFieldOrPropertyWithValue("status", "True")
-                .hasFieldOrPropertyWithValue("reason", expectedReason));
-        } else {
-            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
-                .hasFieldOrPropertyWithValue("status", null == expectedReason ? "True" : "False")
-                .hasFieldOrPropertyWithValue("reason", expectedReason));
-            assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
-                .hasFieldOrPropertyWithValue("type", "KafkaConnect:Ready")
-                .hasFieldOrPropertyWithValue("status", "True")
-                .hasFieldOrPropertyWithValue("reason", null));
-        }
+
+        assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
+            .hasFieldOrPropertyWithValue("type", "Ready")
+            .hasFieldOrPropertyWithValue("status", null == expectedReason ? "True" : "False")
+            .hasFieldOrPropertyWithValue("reason", expectedReason));
     }
 }
