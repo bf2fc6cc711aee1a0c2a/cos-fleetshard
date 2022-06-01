@@ -6,6 +6,7 @@ commonLabels:
   app: strimzi
  
 resources:
+  # For the workflow pipeline to work the first resource should be the strimzi operator image.
   - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.28.0/strimzi-cluster-operator-0.28.0.yaml
   - strimzi-cluster-operator-namespaced.yaml
   - strimzi-cluster-operator-entity-operator-delegation.yaml

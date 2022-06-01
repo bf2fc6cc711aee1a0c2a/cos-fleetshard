@@ -33,12 +33,13 @@ jobs:
       matrix:
         kubernetes:
           - 'v1.22.1'
+    outputs:
+      camel-k-image: ${{ steps.output-camel-k-image.outputs.camel-k-image }}
+      camel-k-newtag: ${{ steps.output-camel-k-image.outputs.camel-k-newtag }}
+      strimzi-image: ${{ steps.output-strimzi-image.outputs.strimzi-image }}
     steps:
       - name: 'Checkout Project'
         uses: actions/checkout@v2
-        with:
-          ref: main
-          fetch-depth: 0
       - name: 'Set up JDK 11'
         uses: actions/setup-java@v2
         with:
@@ -57,6 +58,24 @@ jobs:
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
           ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
+      - name: "Output camel-k image"
+        id: output-camel-k-image
+        run: |
+          export IMAGE=$(yq '.images[].newName' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+          if [[ -z "${IMAGE}" ]]; then
+              export IMAGE=$(yq '.images[].name' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+          fi
+          export NEWTAG=$(yq '.images[0].newTag' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+
+          echo "::set-output name=camel-k-image::${IMAGE}"
+          echo "::set-output name=camel-k-newtag::${NEWTAG}"
+      - name: "Output strimzi image"
+        id: output-strimzi-image
+        run: |
+          export STRIMZI_YAML=$(yq '.resources[0]' ./etc/kubernetes/manifests/base/apps/strimzi/operator/kustomization.yaml)
+          wget -q -O strimzi.yaml "${STRIMZI_YAML}"
+          export IMAGE=$(yq 'select(.kind=="Deployment").spec.template.spec.containers[0].image' strimzi.yaml)
+          echo "::set-output name=strimzi-image::${IMAGE}"
 
   kustomize:
     needs: "build"
@@ -83,10 +102,75 @@ jobs:
             export IMAGE=quay.io/rhoas/${APP}
             export SHA256=$(skopeo inspect docker://${IMAGE}:${DEPLOY_TAG} --format "{{.Digest}}")
             
+            echo "APP: ${APP}"
+            echo "REF: ${REF}"
+            echo "IMAGE: ${IMAGE}"
+            echo "SHA256: ${SHA256}"
+
             yq -i '.resources[0] = strenv(REF)' ${OVERLAY_PATH}/${APP}/kustomization.yaml
             yq -i '.images[] |= select(.name == strenv(IMAGE)).digest = strenv(SHA256)' ${OVERLAY_PATH}/${APP}/kustomization.yaml
             yq -i 'del(.images[] | select(.name == strenv(IMAGE)).newTag)' ${OVERLAY_PATH}/${APP}/kustomization.yaml
           done
+
+      - name: "Update Camel K Kustomize overlay ${{ matrix.overlay }}"
+        env:
+          OVERLAY_PATH_CAMEL_K: kustomize/overlays/${{ matrix.overlay }}/data-plane/camel-k
+          OVERLAY_REF_REPO: ${{ github.server_url }}/${{ github.repository}}
+          XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
+        run: |
+          export REF=${OVERLAY_REF_REPO}//etc/kubernetes/manifests/overlays/staging/camel-k/?ref=${{ github.ref_name }}
+          export IMAGE=${{ needs.build.outputs.camel-k-image }}
+          export NEWTAG=${{ needs.build.outputs.camel-k-newtag }}
+          export SHA256=$(skopeo inspect docker://${IMAGE}:${NEWTAG} --format "{{.Digest}}")
+
+          echo "REF: ${REF}"
+          echo "IMAGE: ${IMAGE}"
+          echo "NEWTAG: ${NEWTAG}"
+          echo "SHA256: ${SHA256}"
+
+          if [[ -z $(yq '.images[] | select(.name == strenv(IMAGE))' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml) ]]; then
+              yq -i '.images += {"name": strenv(IMAGE), "digest": strenv(SHA256)}' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml
+          else
+              yq -i '.images[] |= select(.name == strenv(IMAGE)).digest = strenv(SHA256)' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml
+          fi
+
+          export VERSION=$(printf '%s' "$NEWTAG" | tr '[:upper:]' '[:lower:]')
+          export VERSION=${VERSION:0:25}
+          echo "VERSION: ${VERSION}"
+
+          sed -i "/camel-k.version=/d" staging.properties
+          echo "camel-k.version=$VERSION" >> staging.properties
+
+
+      - name: "Update Strimzi Kustomize overlay ${{ matrix.overlay }}"
+        env:
+          OVERLAY_PATH_STRIMZI: kustomize/overlays/${{ matrix.overlay }}/data-plane/strimzi
+          OVERLAY_REF_REPO: ${{ github.server_url }}/${{ github.repository}}
+          XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
+        run: |
+          export REF=${OVERLAY_REF_REPO}//etc/kubernetes/manifests/overlays/staging/strimzi/?ref=${{ github.ref_name }}
+          export IMAGE=${{ needs.build.outputs.strimzi-image }}
+          export IMAGE_NAME=$(printf '%s' "$IMAGE" | cut -f 1 -d ':')
+          export IMAGE_VERSION=$(printf '%s' "$IMAGE" | cut -f 2 -d ':')
+          export SHA256=$(skopeo inspect "docker://$IMAGE" --format "{{.Digest}}")
+
+          echo "REF: ${REF}"
+          echo "IMAGE: ${IMAGE}"
+          echo "IMAGE_NAME: ${IMAGE_NAME}"
+          echo "SHA256: ${SHA256}"
+
+          if [[ -z $(yq '.images[] | select(.name == strenv(IMAGE_NAME))' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml) ]]; then
+              yq -i '.images += {"name": strenv(IMAGE_NAME), "digest": strenv(SHA256)}' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml
+          else
+              yq -i '.images[] |= select(.name == strenv(IMAGE_NAME)).digest = strenv(SHA256)' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml
+          fi
+
+          export VERSION=$(printf '%s' "$IMAGE_VERSION" | tr '[:upper:]' '[:lower:]')
+          export VERSION=${VERSION:0:25}
+          echo "VERSION: ${VERSION}"
+
+          sed -i "/strimzi.version=/d" staging.properties
+          echo "strimzi.version=$VERSION" >> staging.properties
 
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
@@ -100,13 +184,16 @@ jobs:
           echo ""
           cat ${OVERLAY_PATH}/kustomization.yaml
           echo ""
+          cat staging.properties
+          echo ""
 
           git config user.email "mas-connectors@redhat.com" 
           git config user.name "mas-connectors"
 
           git checkout -b ${BRANCH_NAME}
           git add ${OVERLAY_PATH}
-          git commit -m "Update cos-fleetshard kustomization images for overlay ${{ matrix.overlay }}" ${OVERLAY_PATH}
+          git add staging.properties
+          git commit -m "Update cos-fleetshard kustomization images for overlay ${{ matrix.overlay }}"
           git reset --hard
           git push -u origin ${BRANCH_NAME}
 
