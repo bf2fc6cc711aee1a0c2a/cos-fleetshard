@@ -90,7 +90,12 @@ jobs:
         with:
           repository: bf2fc6cc711aee1a0c2a/cos-manifests
           token: ${{ secrets.GH_TOKEN }}
-
+      - name: 'Login to quay.io'
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.IMAGE_REPO_USERNAME }}
+          password: ${{ secrets.IMAGE_REPO_PASSWORD }}
       - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
