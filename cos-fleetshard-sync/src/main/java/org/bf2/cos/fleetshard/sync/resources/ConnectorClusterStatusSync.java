@@ -7,7 +7,7 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorClusterState;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperators;
+import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperatorsInner;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
@@ -69,7 +69,7 @@ public class ConnectorClusterStatusSync implements Service {
         status.setPhase(ConnectorClusterState.READY);
 
         fleetShardClient.getOperators().stream().map(
-            o -> new ConnectorClusterStatusOperators()
+            o -> new ConnectorClusterStatusOperatorsInner()
                 .namespace(o.getMetadata().getNamespace())
                 .operator(new ConnectorOperator()
                     .id(o.getMetadata().getName())
