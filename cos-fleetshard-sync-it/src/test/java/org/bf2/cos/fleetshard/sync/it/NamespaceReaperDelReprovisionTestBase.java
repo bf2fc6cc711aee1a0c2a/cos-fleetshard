@@ -36,8 +36,8 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
         untilAsserted(() -> {
             assertThat(
                 registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
-                    .isNotNull()
-                    .satisfies(counter -> assertThat(counter.count()).isEqualTo(1));
+                .isNotNull()
+                .satisfies(counter -> assertThat(counter.count()).isEqualTo(1));
         });
 
         Namespace ns1 = until(
@@ -52,8 +52,8 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
         untilAsserted(() -> {
             assertThat(
                 registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
-                    .isNotNull()
-                    .satisfies(counter -> assertThat(counter.count()).isEqualTo(2));
+                .isNotNull()
+                .satisfies(counter -> assertThat(counter.count()).isEqualTo(2));
         });
 
         Namespace ns2 = until(
@@ -68,8 +68,8 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
         untilAsserted(() -> {
             assertThat(
                 registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
-                    .isNotNull()
-                    .satisfies(counter -> assertThat(counter.count()).isEqualTo(3));
+                .isNotNull()
+                .satisfies(counter -> assertThat(counter.count()).isEqualTo(3));
         });
 
         Namespace ns3 = until(

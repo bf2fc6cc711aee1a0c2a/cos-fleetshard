@@ -123,7 +123,8 @@ public class ConnectorDeletedTest extends SyncTestSupport {
                     .resources(ManagedConnector.class)
                     .inNamespace(ns)
                     .withName(connector.getMetadata().getName())
-                    .get()).isNull();
+                    .get())
+                .isNull();
         });
     }
 
