@@ -104,6 +104,7 @@ jobs:
             
             echo "APP: ${APP}"
             echo "REF: ${REF}"
+            echo "DEPLOY_TAG: ${DEPLOY_TAG}"
             echo "IMAGE: ${IMAGE}"
             echo "SHA256: ${SHA256}"
 
