@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.sync.client;
 
 import java.net.URI;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -30,6 +29,7 @@ import io.quarkus.oidc.client.runtime.TokensHelper;
 public class AuthTokenSupplier implements Supplier<String> {
     private static final Logger LOGGER = LoggerFactory.getLogger(OidcClientRequestFilter.class);
     private static final String METRICS_REFRESH = "connectors.oidc.refresh";
+    private static final String TOKEN_PATH = "/protocol/openid-connect/token";
 
     @Inject
     OidcClients clients;
@@ -51,7 +51,9 @@ public class AuthTokenSupplier implements Supplier<String> {
     @PostConstruct
     public void setUp() {
         this.tokensHelper = new TokensHelper();
-        this.supplier = new OidcClientSupplier(config.manager().ssoProviderRefreshTimeout());
+        this.supplier = config.manager().ssoUri().isPresent()
+            ? new OidcStaticClientSupplier()
+            : new OidcDiscoveryClientSupplier();
     }
 
     @Override
@@ -70,7 +72,7 @@ public class AuthTokenSupplier implements Supplier<String> {
     }
 
     public void reset() {
-        this.supplier.reset();
+        this.supplier.close();
     }
 
     public OidcClient client() {
@@ -78,7 +80,7 @@ public class AuthTokenSupplier implements Supplier<String> {
             return this.supplier.get();
         }, e -> {
             LOGGER.info("Error creating OidcClient: {}", e.getMessage());
-            this.supplier.reset();
+            this.supplier.close();
 
             throw WrappedRuntimeException.launderThrowable(e);
         });
@@ -103,14 +105,69 @@ public class AuthTokenSupplier implements Supplier<String> {
             .build(AuthApi.class);
     }
 
-    private class OidcClientSupplier implements Supplier<OidcClient> {
+    private interface OidcClientSupplier extends Supplier<OidcClient>, AutoCloseable {
+        @Override
+        void close();
+    }
+
+    private class OidcStaticClientSupplier implements OidcClientSupplier {
+        private final URI ssoUri;
+
+        private volatile boolean initialized;
+        private volatile OidcClient value;
+
+        OidcStaticClientSupplier() {
+            this.value = null;
+            this.initialized = false;
+            this.ssoUri = config.manager().ssoUri().orElseThrow(() -> new IllegalArgumentException("Missing SSO URI"));
+        }
+
+        @Override
+        public OidcClient get() {
+            if (!initialized) {
+                synchronized (this) {
+                    if (!initialized) {
+                        OidcClient t = create();
+
+                        if (value != null) {
+                            IOUtils.closeQuietly(value);
+                        }
+
+                        value = t;
+                        initialized = true;
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        @Override
+        public void close() {
+            initialized = false;
+        }
+
+        private OidcClient create() {
+            OidcClientConfig cfg = new OidcClientConfig();
+            cfg.setId(config.cluster().id());
+            cfg.setAuthServerUrl(ssoUri.toString());
+            cfg.setTokenPath(TOKEN_PATH);
+            cfg.setDiscoveryEnabled(false);
+            cfg.setClientId(clientId);
+            cfg.getCredentials().setSecret(clientSecret);
+
+            return clients.newClient(cfg).await().atMost(config.manager().ssoTimeout());
+        }
+    }
+
+    private class OidcDiscoveryClientSupplier implements OidcClientSupplier {
         private final long durationNanos;
 
         private volatile OidcClient value;
         private volatile long expirationNanos;
 
-        OidcClientSupplier(Duration duration) {
-            this.durationNanos = duration.toNanos();
+        OidcDiscoveryClientSupplier() {
+            this.durationNanos = config.manager().ssoProviderRefreshTimeout().toNanos();
             this.expirationNanos = 0;
             this.value = null;
         }
@@ -137,8 +194,6 @@ public class AuthTokenSupplier implements Supplier<String> {
 
                         value = t;
                         expirationNanos = exp;
-
-                        return t;
                     }
                 }
             }
@@ -146,7 +201,8 @@ public class AuthTokenSupplier implements Supplier<String> {
             return value;
         }
 
-        public void reset() {
+        @Override
+        public void close() {
             expirationNanos = 0;
         }
 
@@ -154,7 +210,7 @@ public class AuthTokenSupplier implements Supplier<String> {
             OidcClientConfig cfg = new OidcClientConfig();
             cfg.setId(config.cluster().id());
             cfg.setAuthServerUrl(getAuthServerUrl());
-            cfg.setTokenPath("/protocol/openid-connect/token");
+            cfg.setTokenPath(TOKEN_PATH);
             cfg.setDiscoveryEnabled(false);
             cfg.setClientId(clientId);
             cfg.getCredentials().setSecret(clientSecret);

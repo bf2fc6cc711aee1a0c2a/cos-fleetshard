@@ -237,7 +237,14 @@ public interface FleetShardSyncConfig {
         URI uri();
 
         /**
-         * The {@link URI} of the SSO URI.
+         * The {@link URI} of the SSO.
+         *
+         * @return the sso {@link URI}.
+         */
+        Optional<URI> ssoUri();
+
+        /**
+         * The {@link URI} of the endpoint to discover the SSO URI.
          *
          * @return the sso {@link URI}.
          */
