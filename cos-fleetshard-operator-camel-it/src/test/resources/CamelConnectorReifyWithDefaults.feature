@@ -31,13 +31,13 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-probe-enabled      | true                                       |
           | trait.camel.apache.org/health.readiness-probe-enabled     | true                                       |
           | trait.camel.apache.org/health.readiness-success-threshold | 1                                          |
-          | trait.camel.apache.org/health.readiness-failure-threshold | 2                                          |
-          | trait.camel.apache.org/health.readiness-period            | 3                                          |
-          | trait.camel.apache.org/health.readiness-timeout           | 4                                          |
-          | trait.camel.apache.org/health.liveness-success-threshold  | 5                                          |
-          | trait.camel.apache.org/health.liveness-failure-threshold  | 6                                          |
-          | trait.camel.apache.org/health.liveness-period             | 7                                          |
-          | trait.camel.apache.org/health.liveness-timeout            | 8                                          |
+          | trait.camel.apache.org/health.readiness-failure-threshold | 3                                          |
+          | trait.camel.apache.org/health.readiness-period            | 10                                         |
+          | trait.camel.apache.org/health.readiness-timeout           | 1                                          |
+          | trait.camel.apache.org/health.liveness-success-threshold  | 1                                          |
+          | trait.camel.apache.org/health.liveness-failure-threshold  | 3                                          |
+          | trait.camel.apache.org/health.liveness-period             | 10                                         |
+          | trait.camel.apache.org/health.liveness-timeout            | 1                                          |
           | trait.camel.apache.org/prometheus.enabled                 | true                                       |
           | trait.camel.apache.org/prometheus.pod-monitor             | false                                      |
 
@@ -91,14 +91,14 @@ Feature: Camel Connector Reify
           | camel.health.config[*].parent                       | routes                     |
           | camel.health.config[*].enabled                      | true                       |
           | camel.main.route-controller-supervise-enabled       | true                       |
-          | camel.main.route-controller-backoff-delay           | 2s                         |
-          | camel.main.route-controller-initial-delay           | 1s                         |
-          | camel.main.route-controller-backoff-multiplier      | 2                          |
-          | camel.main.route-controller-backoff-max-attempts    | 3                          |
+          | camel.main.route-controller-backoff-delay           | 10s                        |
+          | camel.main.route-controller-initial-delay           | 0s                         |
+          | camel.main.route-controller-backoff-multiplier      | 1                          |
+          | camel.main.route-controller-backoff-max-attempts    | 6                          |
           | camel.main.route-controller-unhealthy-on-exhausted  | true                       |
-          | camel.main.exchange-factory                         | pooled                     |
-          | camel.main.exchange-factory-capacity                | 31                         |
-          | camel.main.exchange-factory-statistics-enabled      | true                       |
+          | camel.main.exchange-factory                         | prototype                  |
+          | camel.main.exchange-factory-capacity                | 100                        |
+          | camel.main.exchange-factory-statistics-enabled      | false                      |
      And the klb secret has labels containing:
           | cos.bf2.org/cluster.id                | ${cos.cluster.id}             |
           | cos.bf2.org/connector.id              | ${cos.connector.id}           |
