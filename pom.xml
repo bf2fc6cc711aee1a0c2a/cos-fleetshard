@@ -538,8 +538,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/META-INF/git.properties</generateGitPropertiesFilename>
+                    <runOnlyOnce>true</runOnlyOnce>
                 </configuration>
             </plugin>
             <plugin>
