@@ -40,7 +40,7 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
             configs.put("cos.operator.camel.health.liveness-failure-threshold", "6");
             configs.put("cos.operator.camel.health.liveness-period-seconds", "7");
             configs.put("cos.operator.camel.health.liveness-timeout-seconds", "8");
-            configs.put("cos.operator.camel.exchange-pooling.exchange-factory", "prototype");
+            configs.put("cos.operator.camel.exchange-pooling.exchange-factory", "pooled");
             configs.put("cos.operator.camel.exchange-pooling.exchange-factory-capacity", "31");
             configs.put("cos.operator.camel.exchange-pooling.exchange-factory-statistics-enabled", "true");
             return configs;

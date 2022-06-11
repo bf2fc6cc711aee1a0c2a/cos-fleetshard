@@ -63,7 +63,13 @@ public interface CamelOperandConfiguration {
     }
 
     interface ExchangePooling {
-        @WithDefault("pooled")
+        // The pooled exchange factory strategy has side effects on some components:
+        // - https://issues.redhat.com/browse/MGDCTRS-1058
+        // - https://issues.redhat.com/browse/MGDCTRS-1057
+        // - https://issues.apache.org/jira/browse/CAMEL-18187
+        //
+        // Default changed to "prototype" till we get a fix in Apache Camel
+        @WithDefault("prototype")
         String exchangeFactory();
 
         @WithDefault("100")
