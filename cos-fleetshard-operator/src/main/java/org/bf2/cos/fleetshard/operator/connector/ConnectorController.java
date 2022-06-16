@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.operator.connector;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
-import org.bf2.cos.fleetshard.operator.support.AbstractResourceController;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -44,11 +42,11 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.fabric8.zjsonpatch.JsonDiff;
-import io.javaoperatorsdk.operator.api.reconciler.Constants;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.ControllerConfiguration;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceContext;
 import io.javaoperatorsdk.operator.api.reconciler.EventSourceInitializer;
+import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.micrometer.core.instrument.Counter;
@@ -88,9 +86,8 @@ import static org.bf2.cos.fleetshard.support.resources.Resources.copyLabel;
 
 @ControllerConfiguration(
     name = "connector",
-    finalizerName = Constants.NO_FINALIZER,
     generationAwareEventProcessing = false)
-public class ConnectorController extends AbstractResourceController<ManagedConnector> implements EventSourceInitializer {
+public class ConnectorController implements Reconciler<ManagedConnector>, EventSourceInitializer<ManagedConnector> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorController.class);
 
     @Inject
@@ -127,14 +124,18 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     }
 
     @Override
-    public List<EventSource> prepareEventSources(EventSourceContext context) {
-        var eventSources = new ArrayList<EventSource>();
-        eventSources.add(
+    public HashMap<String, EventSource> prepareEventSources(EventSourceContext context) {
+        final HashMap<String, EventSource> eventSources = new HashMap<>();
+
+        eventSources.put(
+            "_secrets",
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
-        eventSources.add(
+
+        eventSources.put(
+            "_operators",
             new ConnectorOperatorEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
@@ -143,9 +144,10 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
             final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
-            eventSources.add(
+
+            eventSources.put(
+                id,
                 new OperandResourceWatcher(
-                    id,
                     kubernetesClient,
                     managedConnectorOperator,
                     res,
@@ -158,7 +160,7 @@ public class ConnectorController extends AbstractResourceController<ManagedConne
     @Override
     public UpdateControl<ManagedConnector> reconcile(
         ManagedConnector connector,
-        Context context) {
+        Context<ManagedConnector> context) {
 
         LOGGER.info("Reconcile {}:{}:{}@{} (phase={})",
             connector.getApiVersion(),
