@@ -22,9 +22,9 @@
         <jsr305.version>3.0.2</jsr305.version>
         <kubernetes-client.version>5.12.2</kubernetes-client.version>
         <lombok.version>1.18.24</lombok.version>
-        <quarkus.version>2.7.6.Final</quarkus.version>
+        <quarkus.version>2.10.0.Final</quarkus.version>
         <quarkus-cucumber.version>0.5.0</quarkus-cucumber.version>
-        <quarkus-operator-sdk.version>4.0.0</quarkus-operator-sdk.version>
+        <quarkus-operator-sdk.version>4.0.0.RC</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.6</swagger-annotations.version>
         <sundrio.version>0.50.2</sundrio.version>
         <wiremock.version>2.33.2</wiremock.version>
@@ -39,6 +39,7 @@
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.3</pmd.asm.version>
         <findsecbugs.version>1.12.0</findsecbugs.version>
+        <assertj.version>3.23.1</assertj.version>
         <spotbugs.version>4.7.1</spotbugs.version>
 
         <formatter-maven-plugin.version>2.20.0</formatter-maven-plugin.version>
@@ -232,6 +233,11 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-annotations</artifactId>
                 <version>${spotbugs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
             </dependency>
 
             <!-- deps :: cos -->
