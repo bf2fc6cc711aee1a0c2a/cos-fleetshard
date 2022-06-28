@@ -27,7 +27,7 @@ public abstract class AbstractOperandController<M, S, D> implements OperandContr
     private final KubernetesClient kubernetesClient;
     private final Class<M> metadataType;
     private final Class<S> connectorSpecType;
-    private Class<D> dataShapeType;
+    private final Class<D> dataShapeType;
 
     public AbstractOperandController(KubernetesClient kubernetesClient, Class<M> metadataType, Class<S> connectorSpecType,
         Class<D> dataShapeType) {
