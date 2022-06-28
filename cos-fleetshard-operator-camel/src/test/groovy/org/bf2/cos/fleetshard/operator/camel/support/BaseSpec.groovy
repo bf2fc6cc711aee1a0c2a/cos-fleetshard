@@ -125,7 +125,6 @@ class BaseSpec extends Specification {
     def sharedMeta() {
         def sm = new CamelShardMetadata()
         sm.connectorImage = DEFAULT_CONNECTOR_IMAGE
-        sm.connectorRevision = DEFAULT_CONNECTOR_REVISION
         sm.connectorType = 'source'
         sm.kamelets.adapter = new EndpointKamelet('test-adapter', 'aws')
         sm.kamelets.kafka = new EndpointKamelet('test-kafka', 'kafka')

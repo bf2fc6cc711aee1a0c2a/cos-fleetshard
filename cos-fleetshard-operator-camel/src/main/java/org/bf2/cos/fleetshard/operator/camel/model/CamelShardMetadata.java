@@ -24,8 +24,7 @@ public class CamelShardMetadata {
     private String connectorImage;
     @JsonProperty("connector_type")
     private String connectorType;
-    @JsonProperty("connector_revision")
-    private String connectorRevision;
+
     @JsonProperty("operators")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Operator> operators = new ArrayList<>();
@@ -34,13 +33,14 @@ public class CamelShardMetadata {
     @JsonProperty("annotations")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, String> annotations = new HashMap<>();
+
     @JsonProperty("consumes")
     private String consumes;
-    @JsonProperty("produces")
-    private String produces;
-
     @JsonProperty("consumes_class")
     private String consumesClass;
+
+    @JsonProperty("produces")
+    private String produces;
     @JsonProperty("produces_class")
     private String producesClass;
 
@@ -61,14 +61,6 @@ public class CamelShardMetadata {
 
     public void setConnectorType(String connectorType) {
         this.connectorType = connectorType;
-    }
-
-    public String getConnectorRevision() {
-        return connectorRevision;
-    }
-
-    public void setConnectorRevision(String connectorRevision) {
-        this.connectorRevision = connectorRevision;
     }
 
     public List<Operator> getOperators() {
@@ -146,7 +138,6 @@ public class CamelShardMetadata {
         CamelShardMetadata metadata = (CamelShardMetadata) o;
         return Objects.equals(getConnectorImage(), metadata.getConnectorImage())
             && Objects.equals(getConnectorType(), metadata.getConnectorType())
-            && Objects.equals(getConnectorRevision(), metadata.getConnectorRevision())
             && Objects.equals(getOperators(), metadata.getOperators())
             && Objects.equals(getKamelets(), metadata.getKamelets())
             && Objects.equals(getConsumes(), metadata.getConsumes())
@@ -161,7 +152,6 @@ public class CamelShardMetadata {
         return Objects.hash(
             getConnectorImage(),
             getConnectorType(),
-            getConnectorRevision(),
             getOperators(),
             getKamelets(),
             getConsumes(),
@@ -176,7 +166,6 @@ public class CamelShardMetadata {
         return "CamelShardMetadata{" +
             "connectorImage='" + connectorImage + '\'' +
             ", connectorType='" + connectorType + '\'' +
-            ", connectorRevision='" + connectorRevision + '\'' +
             ", consumes='" + consumes + '\'' +
             ", consumesClass='" + consumesClass + '\'' +
             ", produces='" + produces + '\'' +
