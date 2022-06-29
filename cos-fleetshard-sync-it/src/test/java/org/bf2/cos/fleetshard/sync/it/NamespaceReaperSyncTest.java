@@ -37,7 +37,8 @@ public class NamespaceReaperSyncTest extends NamespaceReaperSyncTestBase {
     void namespaceIsProvisioned() {
         final String ns1 = ConfigProvider.getConfig().getValue("test.ns.id.1", String.class);
         final String ns2 = ConfigProvider.getConfig().getValue("test.ns.id.2", String.class);
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
 
         given()
             .contentType(MediaType.TEXT_PLAIN)

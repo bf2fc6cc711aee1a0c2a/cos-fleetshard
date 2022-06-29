@@ -28,7 +28,8 @@ public class NamespaceReaperDelTestBase extends NamespaceReaperTestSupport {
     @Test
     void namespaceIsProvisioned() {
         final String deploymentId = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
 
         given()
             .contentType(MediaType.TEXT_PLAIN)

@@ -4,8 +4,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.apache.http.annotation.Obsolete;
+import org.bf2.cos.fleet.manager.client.ClientConfig;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
@@ -28,18 +30,21 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private static final Logger LOGGER = LoggerFactory.getLogger(AddonReaper.class);
     public static final String ID = "addon.cleanup";
 
-    private final KubernetesClient kubernetesClient;
-    private final FleetShardSyncConfig config;
-    private final FleetShardSync fleetShardSync;
+    @Inject
+    KubernetesClient kubernetesClient;
+    @Inject
+    ClientConfig clientConfig;
+    @Inject
+    FleetShardSyncConfig config;
+    @Inject
+    FleetShardSync fleetShardSync;
+
     private final ConfigMapWatcher watcher;
     private final AtomicLong retries;
     private final AtomicBoolean running;
     private final AtomicBoolean taskRunning;
 
-    public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync) {
-        this.kubernetesClient = kubernetesClient;
-        this.config = config;
-        this.fleetShardSync = fleetShardSync;
+    public AddonReaper() {
         this.watcher = new ConfigMapWatcher();
         this.retries = new AtomicLong(0);
         this.running = new AtomicBoolean();
@@ -93,7 +98,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
             deleteAddonResource();
         }
 
-        LOGGER.info("Deleting all namespaces that belong to cluster {}. Try #{}", config.cluster().id(), retries);
+        LOGGER.info("Deleting all namespaces that belong to cluster {}. Try #{}", clientConfig.cluster().id(), retries);
         getNamespaceFilter().delete();
 
         if (getNamespaceFilter().list().getItems().isEmpty()) {
@@ -124,7 +129,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
     }
 
     private FilterWatchListDeletable<Namespace, NamespaceList> getNamespaceFilter() {
-        return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, config.cluster().id());
+        return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, clientConfig.cluster().id());
     }
 
     private class ConfigMapWatcher extends AbstractWatcher<ConfigMap> {
@@ -165,7 +170,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
 
             if ("true".equals(deleteLabel)) {
                 LOGGER.info("ConfigMap for deletion of the Addon was found, starting cleanup of cluster: {} - {}",
-                    config.cluster().id(), configMap);
+                    clientConfig.cluster().id(), configMap);
                 try {
                     fleetShardSync.stopResourcesSync();
                 } catch (Exception e) {

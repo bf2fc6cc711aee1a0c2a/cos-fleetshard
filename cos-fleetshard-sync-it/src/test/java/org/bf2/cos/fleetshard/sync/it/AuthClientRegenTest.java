@@ -5,8 +5,8 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.client.AuthTokenSupplier;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
-import org.bf2.cos.fleetshard.sync.client.AuthTokenSupplier;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;

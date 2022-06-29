@@ -12,6 +12,8 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -39,12 +41,19 @@ public class ConnectorStatusSync implements Service {
     @Inject
     FleetShardSyncConfig config;
     @Inject
+    MetricsConfig metricsConfig;
+    @Inject
     FleetShardSyncScheduler scheduler;
     @Inject
     MeterRegistry registry;
 
-    private volatile MetricsRecorder syncRecorder;
-    private volatile MetricsRecorder updateRecorder;
+    @Inject
+    @MetricsID(METRICS_SYNC)
+    MetricsRecorder syncRecorder;
+    @Inject
+    @MetricsID(METRICS_UPDATE)
+    MetricsRecorder updateRecorder;
+
     private volatile Instant lastResync;
     private volatile Instant lastUpdate;
 
@@ -53,9 +62,6 @@ public class ConnectorStatusSync implements Service {
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting connector status sync");
-
-        syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
-        updateRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_UPDATE);
 
         connectorClient.watchConnectors(new ResourceEventHandler<>() {
             @Override
@@ -111,7 +117,7 @@ public class ConnectorStatusSync implements Service {
             }
         } finally {
             if (count > 0) {
-                Counter.builder(config.metrics().baseName() + "." + METRICS_SYNC + ".total")
+                Counter.builder(metricsConfig.baseName() + "." + METRICS_SYNC + ".total")
                     .register(registry)
                     .increment(count);
             }
@@ -131,7 +137,7 @@ public class ConnectorStatusSync implements Service {
             }
         } finally {
             if (count > 0) {
-                Counter.builder(config.metrics().baseName() + "." + METRICS_UPDATE + ".total")
+                Counter.builder(metricsConfig.baseName() + "." + METRICS_UPDATE + ".total")
                     .register(registry)
                     .increment(count);
             }

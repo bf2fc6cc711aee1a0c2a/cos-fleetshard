@@ -35,7 +35,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
 
         untilAsserted(() -> {
             assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+                registry.find(metricsConfig.baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(1));
         });
@@ -51,7 +51,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
 
         untilAsserted(() -> {
             assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+                registry.find(metricsConfig.baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(2));
         });
@@ -67,7 +67,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
 
         untilAsserted(() -> {
             assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+                registry.find(metricsConfig.baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(3));
         });

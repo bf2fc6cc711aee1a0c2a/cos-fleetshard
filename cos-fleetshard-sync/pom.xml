@@ -67,6 +67,11 @@
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
+            <artifactId>cos-fleet-manager-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-api</artifactId>
         </dependency>
         <dependency>
@@ -82,6 +87,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-kubernetes-config</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-resteasy</artifactId>
@@ -98,6 +104,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc-client-filter</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>

@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -60,6 +61,7 @@ public class ConnectorDeploymentProvisioner {
     private final MetricsRecorder recorder;
 
     public ConnectorDeploymentProvisioner(
+        MetricsConfig metricsConfig,
         FleetShardSyncConfig config,
         FleetShardClient connectorClient,
         FleetManagerClient fleetManager,
@@ -68,7 +70,7 @@ public class ConnectorDeploymentProvisioner {
         this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
-        this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
+        this.recorder = MetricsRecorder.of(registry, metricsConfig.baseName() + METRICS_SUFFIX);
     }
 
     public void poll(long revision) {
