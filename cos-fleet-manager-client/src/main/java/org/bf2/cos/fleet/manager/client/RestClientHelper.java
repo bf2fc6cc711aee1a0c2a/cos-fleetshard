@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.client;
+package org.bf2.cos.fleet.manager.client;
 
 import java.net.ConnectException;
 import java.util.concurrent.Callable;
@@ -25,16 +25,16 @@ public class RestClientHelper {
                 response.getStatus(),
                 e.getMessage());
 
-            throw new FleetManagerClientException(e, response.getStatus());
+            throw new RestClientException(e, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage(), e);
+                throw new RestClientException(e.getMessage(), e);
             } else {
-                throw new FleetManagerClientException(e);
+                throw new RestClientException(e);
             }
         } catch (Throwable e) {
-            throw new FleetManagerClientException(e);
+            throw new RestClientException(e);
         }
     }
 
@@ -49,16 +49,16 @@ public class RestClientHelper {
                 response.getStatus(),
                 e.getMessage());
 
-            throw new FleetManagerClientException(e, response.getStatus());
+            throw new RestClientException(e, response.getStatus());
         } catch (ProcessingException e) {
             if (e.getCause() instanceof ConnectException) {
                 LOGGER.warn("{}", e.getMessage());
-                throw new FleetManagerClientException(e.getMessage(), e);
+                throw new RestClientException(e.getMessage(), e);
             } else {
-                throw new FleetManagerClientException(e);
+                throw new RestClientException(e);
             }
         } catch (Throwable e) {
-            throw new FleetManagerClientException(e);
+            throw new RestClientException(e);
         }
     }
 }

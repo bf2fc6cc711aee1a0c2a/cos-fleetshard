@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.client.ClientConfig;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
@@ -49,6 +50,8 @@ public class FleetShardClient implements Service {
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardSyncConfig config;
+    @Inject
+    ClientConfig clientConfig;
 
     private volatile SharedIndexInformer<ManagedConnector> connectorsInformer;
     private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
@@ -76,7 +79,7 @@ public class FleetShardClient implements Service {
     }
 
     public String getClusterId() {
-        return config.cluster().id();
+        return clientConfig.cluster().id();
     }
 
     public KubernetesClient getKubernetesClient() {

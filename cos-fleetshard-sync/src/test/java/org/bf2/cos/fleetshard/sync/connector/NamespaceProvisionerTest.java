@@ -10,6 +10,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -54,9 +55,16 @@ public class NamespaceProvisionerTest {
         final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
+        final MetricsConfig metricsConfig = ConnectorTestSupport.metricsConfig();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner(config, fleetShard, fleetManager,
+
+        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner(
+            metricsConfig,
+            config,
+            fleetShard,
+            fleetManager,
             registry);
+
         final ArgumentCaptor<Namespace> nc = ArgumentCaptor.forClass(Namespace.class);
 
         //

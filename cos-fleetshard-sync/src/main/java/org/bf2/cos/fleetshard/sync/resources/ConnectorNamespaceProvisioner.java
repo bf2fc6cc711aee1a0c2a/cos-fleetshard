@@ -13,6 +13,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.Conditions;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -63,6 +64,7 @@ public class ConnectorNamespaceProvisioner {
     private final NamespacedName pullSecretName;
 
     public ConnectorNamespaceProvisioner(
+        MetricsConfig metricsConfig,
         FleetShardSyncConfig config,
         FleetShardClient connectorClient,
         FleetManagerClient fleetManager,
@@ -71,7 +73,7 @@ public class ConnectorNamespaceProvisioner {
         this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
-        this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
+        this.recorder = MetricsRecorder.of(registry, metricsConfig.baseName() + METRICS_SUFFIX);
         this.pullSecretName = new NamespacedName(config.namespace(), config.imagePullSecretsName());
     }
 
@@ -311,6 +313,22 @@ public class ConnectorNamespaceProvisioner {
         }
 
         boolean quota = hasQuota(connectorNamespace);
+        Namespace ns = createNamespace(connectorNamespace, uow, state, quota);
+
+        fleetShard.createNamespace(ns);
+
+        if (quota) {
+            LOGGER.debug("Creating LimitRange for namespace: {}", ns.getMetadata().getName());
+            createResourceLimit(uow, connectorNamespace);
+
+            LOGGER.debug("Creating ResourceQuota for namespace: {}", ns.getMetadata().getName());
+            createResourceQuota(uow, connectorNamespace);
+        }
+
+        copyAddonPullSecret(uow, ns);
+    }
+
+    private Namespace createNamespace(ConnectorNamespace connectorNamespace, String uow, String state, boolean quota) {
         Namespace ns = new Namespace();
 
         KubernetesResourceUtil.getOrCreateMetadata(ns)
@@ -337,17 +355,7 @@ public class ConnectorNamespaceProvisioner {
             Resources.ANNOTATION_NAMESPACE_EXPIRATION, connectorNamespace.getExpiration(),
             Resources.ANNOTATION_NAMESPACE_QUOTA, Boolean.toString(quota));
 
-        fleetShard.createNamespace(ns);
-
-        if (quota) {
-            LOGGER.debug("Creating LimitRange for namespace: {}", ns.getMetadata().getName());
-            createResourceLimit(uow, connectorNamespace);
-
-            LOGGER.debug("Creating ResourceQuota for namespace: {}", ns.getMetadata().getName());
-            createResourceQuota(uow, connectorNamespace);
-        }
-
-        copyAddonPullSecret(uow, ns);
+        return ns;
     }
 
     private boolean hasQuota(ConnectorNamespace connectorNamespace) {

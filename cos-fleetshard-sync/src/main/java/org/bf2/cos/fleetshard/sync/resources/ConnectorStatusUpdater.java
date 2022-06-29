@@ -3,9 +3,9 @@ package org.bf2.cos.fleetshard.sync.resources;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.client.RestClientException;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
-import org.bf2.cos.fleetshard.sync.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class ConnectorStatusUpdater {
                 connector,
                 ConnectorStatusExtractor.extract(connector));
 
-        } catch (FleetManagerClientException e) {
+        } catch (RestClientException e) {
             if (e.getStatusCode() == 410) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 if (connectorClient.deleteConnector(connector)) {

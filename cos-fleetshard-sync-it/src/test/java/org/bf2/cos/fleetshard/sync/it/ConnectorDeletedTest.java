@@ -54,7 +54,7 @@ public class ConnectorDeletedTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id();
+        final String clusterUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id();
         final String statusUrl = clusterUrl + "/deployments/" + DEPLOYMENT_ID + "/status";
 
         final Condition condition = new Condition(null, uid(), null, uid(), uid(), uid());
@@ -64,12 +64,12 @@ public class ConnectorDeletedTest extends SyncTestSupport {
             .withMetadata(new ObjectMetaBuilder()
                 .withName(Connectors.generateConnectorId(DEPLOYMENT_ID))
                 .withNamespace(ns)
-                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+                .addToLabels(LABEL_CLUSTER_ID, clientConfig.cluster().id())
                 .addToLabels(LABEL_CONNECTOR_ID, CONNECTOR_ID)
                 .addToLabels(LABEL_DEPLOYMENT_ID, DEPLOYMENT_ID)
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
-                .withClusterId(config.cluster().id())
+                .withClusterId(clientConfig.cluster().id())
                 .withConnectorId(CONNECTOR_ID)
                 .withDeploymentId(DEPLOYMENT_ID)
                 .withOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build())

@@ -56,6 +56,7 @@ public class ConnectorProvisionerTest {
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
         final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(
+            ConnectorTestSupport.metricsConfig(),
             config,
             fleetShard,
             fleetManager,
@@ -162,8 +163,13 @@ public class ConnectorProvisionerTest {
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(
+            ConnectorTestSupport.metricsConfig(),
+            config,
+            fleetShard,
+            fleetManager,
             registry);
+
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -279,8 +285,13 @@ public class ConnectorProvisionerTest {
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(
+            ConnectorTestSupport.metricsConfig(),
+            config,
+            fleetShard,
+            fleetManager,
             registry);
+
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 

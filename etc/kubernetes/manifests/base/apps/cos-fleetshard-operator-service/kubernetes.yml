@@ -1,0 +1,198 @@
+---
+apiVersion: "v1"
+kind: "ServiceAccount"
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/name: "cos-fleetshard-operator-service"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-service"
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations:
+    prometheus.io/path: "/q/metrics"
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: "http"
+    prometheus.io/scrape: "true"
+  labels:
+    app.kubernetes.io/name: "cos-fleetshard-operator-service"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-service"
+spec:
+  ports:
+  - name: "http"
+    port: 80
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: "cos-fleetshard-operator-service"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  type: "ClusterIP"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-operator-service-view"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "view"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-service"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
+  name: "josdk-crd-validating-cluster-role"
+rules:
+- apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - "customresourcedefinitions"
+  verbs:
+  - "get"
+  - "list"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
+  name: "observabilitycontroller-cluster-role"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  - "configmaps/finalizers"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+  - "patch"
+  - "update"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "observabilitycontroller-cluster-role-binding"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "observabilitycontroller-cluster-role"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-service"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "observabilitycontroller-crd-validating-role-binding"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "josdk-crd-validating-cluster-role"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-service"
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  annotations:
+    prometheus.io/path: "/q/metrics"
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: "http"
+    prometheus.io/scrape: "true"
+  labels:
+    app.kubernetes.io/name: "cos-fleetshard-operator-service"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-operator-service"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "cos-fleetshard-operator-service"
+      app.kubernetes.io/part-of: "cos"
+      app.kubernetes.io/version: "latest"
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: "/q/metrics"
+        prometheus.io/port: "8080"
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: "cos-fleetshard-operator-service"
+        app.kubernetes.io/part-of: "cos"
+        app.kubernetes.io/version: "latest"
+    spec:
+      containers:
+      - env:
+        - name: "KUBERNETES_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
+        - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
+          value: "/mnt/app-secret"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config"
+        image: "quay.io/rhoas/cos-fleetshard-operator-service:latest"
+        imagePullPolicy: "Always"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/q/health/live"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        name: "cos-fleetshard-operator-service"
+        ports:
+        - containerPort: 8080
+          name: "http"
+          protocol: "TCP"
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: "/q/health/ready"
+            port: 8080
+            scheme: "HTTP"
+          initialDelaySeconds: 0
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: "1500m"
+            memory: "512Mi"
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+        volumeMounts:
+        - mountPath: "/mnt/app-config"
+          name: "app-config"
+          readOnly: false
+        - mountPath: "/mnt/app-secret"
+          name: "app-secret"
+          readOnly: false
+      serviceAccountName: "cos-fleetshard-operator-service"
+      volumes:
+      - name: "app-secret"
+        secret:
+          defaultMode: 420
+          optional: false
+          secretName: "addon-connectors-operator-parameters"
+      - configMap:
+          defaultMode: 420
+          name: "cos-fleetshard-operator-service-config"
+          optional: false
+        name: "app-config"

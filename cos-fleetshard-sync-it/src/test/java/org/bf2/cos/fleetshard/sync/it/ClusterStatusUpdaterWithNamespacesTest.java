@@ -37,7 +37,8 @@ public class ClusterStatusUpdaterWithNamespacesTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
         final String deployment1 = ConfigProvider.getConfig().getValue("test.deployment.id.1", String.class);
         final String deployment2 = ConfigProvider.getConfig().getValue("test.deployment.id.2", String.class);
 

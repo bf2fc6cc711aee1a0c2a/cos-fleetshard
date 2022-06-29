@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.client;
+package org.bf2.cos.fleet.manager.client;
 
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
@@ -11,9 +11,8 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.io.IOUtils;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
-import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.slf4j.Logger;
@@ -34,7 +33,7 @@ public class AuthTokenSupplier implements Supplier<String> {
     @Inject
     OidcClients clients;
     @Inject
-    FleetShardSyncConfig config;
+    ClientConfig config;
 
     @Inject
     @MetricsID(METRICS_REFRESH)
