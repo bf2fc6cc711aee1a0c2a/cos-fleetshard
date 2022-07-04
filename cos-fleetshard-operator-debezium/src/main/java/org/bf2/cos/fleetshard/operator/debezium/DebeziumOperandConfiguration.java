@@ -12,6 +12,12 @@ public interface DebeziumOperandConfiguration {
     @WithDefault(DebeziumConstants.DEFAULT_IMAGE_PULL_SECRET_NAME)
     LocalObjectReference imagePullSecretsName();
 
+    @WithDefault(DebeziumConstants.DEFAULT_APICURIO_AUTH_SERVICE_URL)
+    String apicurioAuthServiceUrl();
+
+    @WithDefault(DebeziumConstants.DEFAULT_APICURIO_AUTH_REALM)
+    String apicurioAuthRealm();
+
     KafkaConnect kafkaConnect();
 
     KafkaConnector kafkaConnector();

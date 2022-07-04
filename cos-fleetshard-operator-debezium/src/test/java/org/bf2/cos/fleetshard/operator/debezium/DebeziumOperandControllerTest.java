@@ -67,11 +67,23 @@ public class DebeziumOperandControllerTest {
     private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
     private static final String MANAGED_CONNECTOR_UID = "51eba005-daft-punk-afe1-b2178bcb523d";
     private static final String IMAGE_PULL_SECRET_NAME = "my-pullsecret";
+    private static final String APICURIO_AUTH_SERVICE_URL = "https://identity.api.openshift.com/auth";
+    private static final String APICURIO_AUTH_REALM = "rhoas";
 
     private static final DebeziumOperandConfiguration CONFIGURATION = new DebeziumOperandConfiguration() {
         @Override
         public LocalObjectReference imagePullSecretsName() {
             return new LocalObjectReference(IMAGE_PULL_SECRET_NAME);
+        }
+
+        @Override
+        public String apicurioAuthServiceUrl() {
+            return APICURIO_AUTH_SERVICE_URL;
+        }
+
+        @Override
+        public String apicurioAuthRealm() {
+            return APICURIO_AUTH_REALM;
         }
 
         @Override
@@ -291,14 +303,14 @@ public class DebeziumOperandControllerTest {
                 converterClass);
             assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
                 KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.service.url",
-                AbstractApicurioConverter.APICURIO_AUTH_SERVICE_URL);
+                CONFIGURATION.apicurioAuthServiceUrl());
             assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
                 KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.service.url",
-                AbstractApicurioConverter.APICURIO_AUTH_SERVICE_URL);
+                CONFIGURATION.apicurioAuthServiceUrl());
             assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.realm", "rhoas");
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.realm", CONFIGURATION.apicurioAuthRealm());
             assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.realm", "rhoas");
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.realm", CONFIGURATION.apicurioAuthRealm());
             assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
                 KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.url",
                 SCHEMA_REGISTRY_URL);
