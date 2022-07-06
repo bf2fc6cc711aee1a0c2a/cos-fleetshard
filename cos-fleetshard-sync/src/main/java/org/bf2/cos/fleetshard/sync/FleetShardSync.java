@@ -26,6 +26,7 @@ public class FleetShardSync implements Service {
 
     @Override
     public void start() throws Exception {
+        fleetShardClient.setupObservability();
         fleetShardClient.getOrCreateManagedConnectorCluster();
         fleetShardClient.start();
 
