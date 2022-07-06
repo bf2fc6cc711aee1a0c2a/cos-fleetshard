@@ -202,6 +202,7 @@ Although this section expects you to use a completely new kubernetes cluster, yo
 ./etc/scripts/deploy_fleetshard_crds.sh
 ./etc/scripts/deploy_camel-k_crds.sh
 ./etc/scripts/deploy_strimzi_crds.sh
+./etc/scripts/deploy_observability_crds.sh
 ----
 
 * *run tests*

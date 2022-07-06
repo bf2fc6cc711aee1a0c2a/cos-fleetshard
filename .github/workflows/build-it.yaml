@@ -48,6 +48,7 @@ jobs:
           ./etc/scripts/deploy_fleetshard_crds.sh
           ./etc/scripts/deploy_camel-k_crds.sh
           ./etc/scripts/deploy_strimzi_crds.sh
+          ./etc/scripts/deploy_observability_crds.sh
       - name: "Build ${{ inputs.module }}"
         run: |
           ./mvnw ${MAVEN_ARGS} clean install -pl :${{ inputs.module }}
