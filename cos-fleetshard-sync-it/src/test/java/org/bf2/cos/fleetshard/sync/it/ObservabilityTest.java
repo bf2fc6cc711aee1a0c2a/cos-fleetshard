@@ -1,18 +1,20 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
-import com.github.tomakehurst.wiremock.http.RequestMethod;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
+import java.util.List;
+import java.util.Map;
+
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestProfile;
 import org.bf2.cos.fleetshard.sync.it.support.SyncTestSupport;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
+import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
+import com.github.tomakehurst.wiremock.http.RequestMethod;
+
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
