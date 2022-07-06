@@ -78,6 +78,8 @@ public interface FleetShardSyncConfig {
 
     Quota quota();
 
+    Observability observability();
+
     interface Cluster {
         /**
          * The ID assigned to the operator.
@@ -286,4 +288,10 @@ public interface FleetShardSyncConfig {
         @WithConverter(DurationConverter.class)
         Duration readTimeout();
     }
+
+    interface Observability {
+        @WithDefault("false")
+        boolean enabled();
+    }
+
 }
