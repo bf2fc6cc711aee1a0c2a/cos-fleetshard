@@ -85,6 +85,9 @@
                                     <includes>
                                         <include>**/*-v1.yml</include>
                                     </includes>
+                                    <excludes>
+                                        <exclude>*observability*</exclude>
+                                    </excludes>
                                 </resource>
                             </resources>
                         </configuration>
