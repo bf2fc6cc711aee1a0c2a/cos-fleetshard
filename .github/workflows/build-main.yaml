@@ -70,6 +70,7 @@ jobs:
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
           ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
+          ./etc/scripts/deploy_observability_crds.sh
       - name: "Output camel-k image"
         id: output-camel-k-image
         run: |
