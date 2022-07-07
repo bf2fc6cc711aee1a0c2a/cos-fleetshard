@@ -63,6 +63,7 @@ jobs:
           ./etc/scripts/deploy_fleetshard_crds.sh
           ./etc/scripts/deploy_camel-k_crds.sh
           ./etc/scripts/deploy_strimzi_crds.sh
+          ./etc/scripts/deploy_observability_crds.sh
       - name: "Build and push container images"
         id: "images"
         run: |
@@ -70,7 +71,6 @@ jobs:
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
           ./etc/scripts/build_image.sh cos-fleetshard-operator-debezium
-          ./etc/scripts/deploy_observability_crds.sh
       - name: "Output camel-k image"
         id: output-camel-k-image
         run: |
