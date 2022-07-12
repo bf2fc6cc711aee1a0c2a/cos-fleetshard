@@ -8,7 +8,7 @@ Feature: Debezium Connector Reify
 
   Scenario: reify
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
+      | connector.type.id           | debezium-postgres-1.9.4.Final    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |
@@ -38,7 +38,7 @@ Feature: Debezium Connector Reify
      And the kc has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
      And the kc has an entry at path "$.spec.authentication.passwordSecret.secretName" with value "${cos.managed.connector.name}-config"
      And the kc has an entry at path "$.spec.authentication.passwordSecret.password" with value "_kafka.client.secret"
-     And the kc has an entry at path "$.spec.image" with value "quay.io/rhoas/cos-connector-debezium-postgres@sha256:b67d0ef4d4638bd5b6e71e2ccc30d5f7d5f74738db94dae53504077de7df5cff"
+     And the kc has an entry at path "$.spec.image" with value "quay.io/rhoas/cos-connector-debezium-postgres@sha256:d64ee218a912c27b06350290fad003acf196b7739c5a3ba16426a3cdef0b21f2"
      And the kc has an entry at path "$.spec.template.pod.imagePullSecrets[0].name" with value "addon-pullsecret"
     And the kc has an entry at path "$.spec.metricsConfig.type" with value "jmxPrometheusExporter"
     And the kc has an entry at path "$.spec.metricsConfig.valueFrom.configMapKeyRef.name" with value "${cos.managed.connector.name}-metrics"

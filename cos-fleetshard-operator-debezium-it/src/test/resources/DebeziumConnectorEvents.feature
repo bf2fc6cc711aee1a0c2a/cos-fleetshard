@@ -8,7 +8,7 @@ Feature: Debezium Connector Status
 
   Scenario: kctr becomes ready
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
+      | connector.type.id           | debezium-postgres-1.9.4.Final    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |
@@ -22,8 +22,12 @@ Feature: Debezium Connector Status
     Then the kc exists
     Then the kctr exists
 
-    When the kctr has conditions:
-      | message   | reason   | status     | type     | lastTransitionTime        |
-      | a message | a reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
+    When the kctr status is set to "RUNNING"
+    And the kctr has conditions:
+      | message   | reason             | status     | type     | lastTransitionTime        |
+      | a message | a connector reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
+    And the kc has conditions:
+      | message   | reason                 | status     | type     | lastTransitionTime        |
+      | a message | a kafka connect reason | True       | Ready    | 2021-06-12T12:36:09+02:00 |
     Then the connector is in phase "Monitor"
-    Then the deployment is in phase "ready"
+    And the deployment is in phase "ready"

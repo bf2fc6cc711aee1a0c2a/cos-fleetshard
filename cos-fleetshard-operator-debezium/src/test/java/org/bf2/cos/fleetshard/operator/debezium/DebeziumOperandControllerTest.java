@@ -401,43 +401,49 @@ public class DebeziumOperandControllerTest {
                 createConditions("True", null),
                 createConditions("True", null),
                 ManagedConnector.STATE_READY,
-                null),
+                null, false),
             arguments(
                 KafkaConnectorStatus.STATE_RUNNING,
                 createConditions("True", null),
                 createConditions("False", "reason", "TimeoutException"),
                 ManagedConnector.STATE_FAILED,
-                "KafkaClusterUnreachable"),
+                "KafkaClusterUnreachable", false),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("True", null),
+                createConditions("True", null),
+                ManagedConnector.STATE_FAILED,
+                "DebeziumException", true),
             arguments(
                 KafkaConnectorStatus.STATE_RUNNING,
                 createConditions("False", "reason", "reason"),
                 createConditions("True", null),
-                ManagedConnector.STATE_PROVISIONING,
-                "reason"),
+                ManagedConnector.STATE_FAILED,
+                "reason", false),
             arguments(
                 KafkaConnectorStatus.STATE_RUNNING,
                 createConditions("False", "reason", "ConnectRestException"),
                 createConditions("True", null),
                 ManagedConnector.STATE_FAILED,
-                "ConnectRestException"),
+                "ConnectRestException", false),
             arguments(
                 KafkaConnectorStatus.STATE_FAILED,
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_FAILED,
-                "Transitioning"),
+                "Bar", false),
             arguments(
                 KafkaConnectorStatus.STATE_PAUSED,
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_STOPPED,
-                "Transitioning"),
+                "Paused", false),
             arguments(
                 KafkaConnectorStatus.STATE_UNASSIGNED,
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_PROVISIONING,
-                "Transitioning"));
+                "Unassigned", false));
     }
 
     @ParameterizedTest
@@ -447,7 +453,8 @@ public class DebeziumOperandControllerTest {
         List<Condition> connectorConditions,
         List<Condition> connectConditions,
         String expectedManagedConnectorState,
-        String expectedReason) {
+        String expectedReason,
+        boolean withDebeziumException) {
 
         ConnectorStatusSpec status = new ConnectorStatusSpec();
 
@@ -465,6 +472,10 @@ public class DebeziumOperandControllerTest {
                         new org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatusBuilder()
                             .withState(connectorState)
                             .build())
+                    .addToConnectorStatus("tasks",
+                        withDebeziumException ? List.of(Map.of("id", "0", "state", KafkaConnectorStatus.STATE_FAILED, "trace",
+                            "io.debezium.DebeziumException: The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin-changelog.009801, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed."))
+                            : null)
                     .build())
                 .build());
 

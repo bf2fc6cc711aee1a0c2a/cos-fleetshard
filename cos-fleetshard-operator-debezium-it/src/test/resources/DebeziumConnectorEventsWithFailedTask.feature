@@ -1,4 +1,4 @@
-Feature: Debezium Connector Reify With Target Meta
+Feature: Debezium Connector Status
 
   Background:
     Given Await configuration
@@ -6,7 +6,7 @@ Feature: Debezium Connector Reify With Target Meta
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
-  Scenario: reify with target meta
+  Scenario: kctr failes because of failed task
     Given a Connector with:
       | connector.type.id           | debezium-postgres-1.9.4.Final    |
       | desired.state               | ready                            |
@@ -14,23 +14,20 @@ Feature: Debezium Connector Reify With Target Meta
       | operator.id                 | cos-fleetshard-operator-debezium |
       | operator.type               | debezium-connector-operator      |
       | operator.version            | [1.0.0,2.0.0)                    |
-    And set connector annotation "foo/barAnnotation" to "baz"
-    And set connector label "foo/barLabel" to "baz"
     And with a simple Debezium connector
 
     When deploy
     Then the connector exists
-     And the connector secret exists
-
+    Then the connector secret exists
     Then the kc exists
-     And the kc has annotations containing:
-          | foo/barAnnotation  | baz |
-     And the kc has labels containing:
-          | foo/barLabel       | baz |
-
     Then the kctr exists
-     And the kctr has annotations containing:
-          | foo/barAnnotation  | baz |
-     And the kctr has labels containing:
-          | foo/barLabel       | baz |
 
+    When the kctr status is RUNNING with a failed task
+    And the kctr has conditions:
+      | message   | reason             | status     | type     | lastTransitionTime        |
+      | a message | a connector reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
+    And the kc has conditions:
+      | message   | reason                 | status     | type     | lastTransitionTime        |
+      | a message | a kafka connect reason | True       | Ready    | 2021-06-12T12:36:09+02:00 |
+    Then the connector is in phase "Monitor"
+    And the deployment is in phase "failed"

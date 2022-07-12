@@ -29,12 +29,12 @@ import static org.bf2.cos.fleetshard.it.cucumber.assertions.CucumberAssertions.a
 public class KafkaConnectorSteps extends StepsSupport {
     @Then("the kctr exists")
     public void exists() {
-        awaiter.until(() -> kctr() != null);
+        awaiter.until(() -> kafkaConncetor() != null);
     }
 
     @Then("the kctr does not exists")
     public void does_not_exists() {
-        awaiter.until(() -> kctr() == null);
+        awaiter.until(() -> kafkaConncetor() == null);
     }
 
     @When("the kctr path {string} is set to json:")
@@ -52,7 +52,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has an entry at path {string} with value {string}")
     public void kctr_has_a_path_matching_value(String path, String value) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -64,7 +64,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has an entry at path {string} with value {int}")
     public void kctr_has_a_path_matching_value(String path, int value) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -76,7 +76,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has an entry at path {string} with value {bool}")
     public void kctr_has_a_path_matching_value(String path, Boolean value) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -88,7 +88,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has an object at path {string} containing:")
     public void kctr_has_a_path_matching_object(String path, String content) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -100,7 +100,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has an array at path {string} containing:")
     public void kctr_has_a_path_containing_object(String path, DataTable elements) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -116,7 +116,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has annotations containing:")
     public void kctr_annotation_contains(DataTable table) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -126,7 +126,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has labels containing:")
     public void kctr_label_contains(DataTable table) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -136,7 +136,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @And("the kctr has config containing:")
     public void kc_config_contains(DataTable table) {
-        KafkaConnector res = kctr();
+        KafkaConnector res = kafkaConncetor();
 
         assertThat(res)
             .isNotNull();
@@ -146,7 +146,7 @@ public class KafkaConnectorSteps extends StepsSupport {
 
     @Then("the kctr path {string} matches json:")
     public void kctr_path_matches(String path, String payload) {
-        untilKctr(res -> {
+        untilKafkaConnector(res -> {
             JsonNode actual = PARSER.parse(JacksonUtil.asJsonNode(res)).read(path);
             JsonNode expected = PARSER.parse(payload).json();
 
@@ -176,6 +176,33 @@ public class KafkaConnectorSteps extends StepsSupport {
                 return resource;
             });
     }
+    @When("the kctr status is RUNNING with a failed task")
+    public void kctr_with_failed_task() {
+        kubernetesClient.resources(KafkaConnector.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .editStatus(resource -> {
+                if (resource.getStatus() == null) {
+                    resource.setStatus(new KafkaConnectorStatus());
+                }
+                if (resource.getStatus().getConnectorStatus() == null) {
+                    resource.getStatus().setConnectorStatus(new HashMap<>());
+                }
+
+                resource.getStatus().getConnectorStatus().put(
+                    "connector",
+                    Map.of("state", org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus.STATE_RUNNING));
+
+                resource.getStatus().getConnectorStatus().put(
+                    "tasks",
+                    List.of(Map.of("id", "0", "state", org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus.STATE_FAILED, "trace",
+                        "io.debezium.DebeziumException: The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin-changelog.009801, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed.")));
+
+                //System.err.println(JacksonUtil.asPrettyPrintedYaml(resource));
+
+                return resource;
+            });
+    }
 
     @When("the kctr has conditions:")
     public void kctr_and_conditions(DataTable table) {
@@ -188,10 +215,10 @@ public class KafkaConnectorSteps extends StepsSupport {
 
                 for (Map<String, String> columns : rows) {
                     conditions.add(new ConditionBuilder()
-                        .withMessage(columns.get("message"))
-                        .withReason(columns.get("reason"))
-                        .withStatus(columns.get("status"))
                         .withType(columns.get("type"))
+                        .withStatus(columns.get("status"))
+                        .withReason(columns.get("reason"))
+                        .withMessage(columns.get("message"))
                         .withLastTransitionTime(columns.get("lastTransitionTime"))
                         .build());
                 }
@@ -206,16 +233,16 @@ public class KafkaConnectorSteps extends StepsSupport {
             });
     }
 
-    private KafkaConnector kctr() {
+    private KafkaConnector kafkaConncetor() {
         return kubernetesClient.resources(KafkaConnector.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(ctx.connector().getMetadata().getName())
             .get();
     }
 
-    private void untilKctr(Consumer<KafkaConnector> predicate) {
+    private void untilKafkaConnector(Consumer<KafkaConnector> predicate) {
         awaiter.untilAsserted(() -> {
-            KafkaConnector res = kctr();
+            KafkaConnector res = kafkaConncetor();
 
             assertThat(res).isNotNull();
             assertThat(res).satisfies(predicate);
