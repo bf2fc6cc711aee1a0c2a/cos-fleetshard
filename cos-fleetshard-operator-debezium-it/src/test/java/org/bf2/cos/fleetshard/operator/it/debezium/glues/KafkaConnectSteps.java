@@ -1,8 +1,15 @@
 package org.bf2.cos.fleetshard.operator.it.debezium.glues;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import io.cucumber.java.en.Given;
+import io.strimzi.api.kafka.model.status.Condition;
+import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.status.KafkaConnectStatus;
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandController;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
@@ -26,6 +33,35 @@ public class KafkaConnectSteps extends StepsSupport {
     @Then("the kc exists")
     public void exists() {
         awaiter.until(() -> kc() != null);
+    }
+
+    @When("the kc has conditions:")
+    public void kc_add_conditions(DataTable table) {
+        kubernetesClient.resources(KafkaConnect.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .editStatus(resource -> {
+                List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+                List<Condition> conditions = new ArrayList<>(rows.size());
+
+                for (Map<String, String> columns : rows) {
+                    conditions.add(new ConditionBuilder()
+                        .withMessage(columns.get("message"))
+                        .withReason(columns.get("reason"))
+                        .withStatus(columns.get("status"))
+                        .withType(columns.get("type"))
+                        .withLastTransitionTime(columns.get("lastTransitionTime"))
+                        .build());
+                }
+
+                if (resource.getStatus() == null) {
+                    resource.setStatus(new KafkaConnectStatus());
+                }
+
+                resource.getStatus().setConditions(conditions);
+
+                return resource;
+            });
     }
 
     @Then("the kc does not exists")

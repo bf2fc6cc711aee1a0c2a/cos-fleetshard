@@ -8,7 +8,7 @@ Feature: Debezium Connector Metrics
 
   Scenario: delete
     Given a Connector with:
-      | connector.type.id           | debezium-postgres-1.9.0.Alpha2    |
+      | connector.type.id           | debezium-postgres-1.9.4.Final    |
       | desired.state               | ready                            |
       | kafka.bootstrap             | kafka.acme.com:443               |
       | operator.id                 | cos-fleetshard-operator-debezium |

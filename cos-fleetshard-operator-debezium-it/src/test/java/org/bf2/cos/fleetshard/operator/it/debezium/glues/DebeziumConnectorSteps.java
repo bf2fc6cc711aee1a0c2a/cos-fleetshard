@@ -42,7 +42,7 @@ public class DebeziumConnectorSteps extends StepsSupport {
 
         var meta = Serialization.jsonMapper().createObjectNode();
         meta.put("container_image",
-            "quay.io/rhoas/cos-connector-debezium-postgres@sha256:b67d0ef4d4638bd5b6e71e2ccc30d5f7d5f74738db94dae53504077de7df5cff");
+            "quay.io/rhoas/cos-connector-debezium-postgres@sha256:d64ee218a912c27b06350290fad003acf196b7739c5a3ba16426a3cdef0b21f2");
         meta.put("connector_class", "io.debezium.connector.postgresql.PostgresConnector");
         meta.put("connector_type", "source");
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_META, meta);
