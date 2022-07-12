@@ -1,8 +1,11 @@
 package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,6 +14,7 @@ import java.util.TreeMap;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
+import org.bf2.cos.fleetshard.operator.debezium.model.ConnectorStatus;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -66,7 +70,7 @@ public class DebeziumOperandSupport {
             && Objects.equals(KafkaConnector.RESOURCE_KIND, ref.getKind());
     }
 
-    public static Optional<KafkaConnectorStatus> connector(KafkaConnector connector) {
+    public static KafkaConnectorStatus connectorStatus(KafkaConnector connector) {
         KafkaConnectorStatus status = null;
 
         if (connector.getStatus().getConnectorStatus() != null
@@ -76,7 +80,7 @@ public class DebeziumOperandSupport {
                 KafkaConnectorStatus.class);
         }
 
-        return Optional.ofNullable(status);
+        return status;
     }
 
     public static Map<String, Object> createConfig(DebeziumOperandConfiguration configuration, ObjectNode connectorSpec) {
@@ -164,9 +168,11 @@ public class DebeziumOperandSupport {
         return cloneCondition(originalCondition, "");
     }
 
-    private static io.fabric8.kubernetes.api.model.Condition cloneCondition(
-        Condition originalCondition,
+    private static io.fabric8.kubernetes.api.model.Condition cloneCondition(Condition originalCondition,
         String conditionTypePrefix) {
+        if (null == conditionTypePrefix) {
+            conditionTypePrefix = "";
+        }
         var copyiedCondition = new io.fabric8.kubernetes.api.model.Condition();
         copyiedCondition.setReason(originalCondition.getReason());
         copyiedCondition.setMessage(originalCondition.getMessage());
@@ -176,99 +182,160 @@ public class DebeziumOperandSupport {
         return copyiedCondition;
     }
 
-    public static void computeStatus(ConnectorStatusSpec statusSpec, KafkaConnect kafkaConnect, KafkaConnector kafkaConnector) {
-        statusSpec.setConditions(new ArrayList<>());
-
-        statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-
-        var readyCondition = new io.fabric8.kubernetes.api.model.Condition();
-        readyCondition.setType("Ready");
-        readyCondition.setStatus("False");
-        readyCondition.setReason("Transitioning");
-
-        boolean kafkaConnectorFailed = true;
+    private static void computeConnectorStatus(
+        KafkaConnector kafkaConnector,
+        ConnectorStatus connectorStatus) {
 
         if (null != kafkaConnector) {
+            Condition connectorReadyCondition = null;
+            Condition connectorNotReadyCondition = null;
             for (Condition condition : kafkaConnector.getStatus().getConditions()) {
-
-                var rc = cloneCondition(condition, "KafkaConnector:");
-
                 switch (condition.getType()) {
                     case "Ready":
-                        readyCondition = cloneCondition(condition);
-                        if ("True".equals(condition.getStatus())) {
-                            statusSpec.setPhase(ManagedConnector.STATE_READY);
-                            kafkaConnectorFailed = false;
-                        }
+                        connectorReadyCondition = condition;
                         break;
                     case "NotReady":
-                        if ("ConnectRestException".equals(condition.getReason())) {
-                            readyCondition = cloneAsReadyFalseCondition(condition);
-                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            break;
-                        }
+                        connectorNotReadyCondition = condition;
                         break;
                     default:
                         break;
                 }
-
-                statusSpec.getConditions().add(rc);
+                connectorStatus.getStatusSpecConditions().add(cloneCondition(condition, "KafkaConnector:"));
             }
-        }
 
-        if (null != kafkaConnect) {
-            for (Condition condition : kafkaConnect.getStatus().getConditions()) {
-
-                var rc = cloneCondition(condition, "KafkaConnect:");
-
-                switch (condition.getType()) {
-                    case "Ready":
-                        if (!"True".equals(condition.getStatus())) {
-                            if (!kafkaConnectorFailed) {
-                                readyCondition = cloneCondition(condition);
-                            }
-                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                        }
-                        break;
-                    case "NotReady":
-                        if ("TimeoutException".equals(condition.getReason())) {
-                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            if (!kafkaConnectorFailed) {
-                                readyCondition = cloneAsReadyFalseCondition(condition);
-                                readyCondition.setReason("KafkaClusterUnreachable");
-                                readyCondition.setMessage("The configured Kafka Cluster is unreachable or ACLs deny access.");
-                            }
-                            break;
-                        }
-                        break;
+            ConnectorStatusSpec statusSpec = connectorStatus.getStatusSpec();
+            var kafkaConnectorStatus = connectorStatus(kafkaConnector);
+            io.fabric8.kubernetes.api.model.Condition readyCondition = new io.fabric8.kubernetes.api.model.Condition();
+            if (null != kafkaConnectorStatus) {
+                if (null != connectorReadyCondition) {
+                    readyCondition = cloneCondition(connectorReadyCondition);
+                } else {
+                    readyCondition.setType("Ready");
+                    readyCondition.setLastTransitionTime(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                }
+                readyCondition.setStatus("False");
+                switch (kafkaConnectorStatus.getState()) {
+                    case KafkaConnectorStatus.STATE_UNASSIGNED:
+                        readyCondition.setReason("Unassigned");
+                        readyCondition.setMessage("The connector is not yet assigned or rebalancing is in progress.");
+                        statusSpec.setConditions(List.of(readyCondition));
+                        statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+                        return;
+                    case KafkaConnectorStatus.STATE_PAUSED:
+                        readyCondition.setReason("Paused");
+                        readyCondition.setMessage("The connector is paused.");
+                        statusSpec.setConditions(List.of(readyCondition));
+                        statusSpec.setPhase(ManagedConnector.STATE_STOPPED);
+                        return;
                     default:
                         break;
                 }
-
-                statusSpec.getConditions().add(rc);
             }
-        }
 
-        statusSpec.getConditions().add(readyCondition);
+            connectorStatus.setConnectorReady(connectorReadyCondition != null
+                && "True".equals(connectorReadyCondition.getStatus())
+                && (connectorNotReadyCondition == null || !"True".equals(connectorNotReadyCondition.getStatus())));
 
-        if (null != kafkaConnector) {
-            connector(kafkaConnector)
-                .map(KafkaConnectorStatus::getState)
-                .ifPresent(state -> {
-                    switch (state) {
-                        case KafkaConnectorStatus.STATE_FAILED:
-                            statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                            break;
-                        case KafkaConnectorStatus.STATE_UNASSIGNED:
-                            statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                            break;
-                        case KafkaConnectorStatus.STATE_PAUSED:
-                            statusSpec.setPhase(ManagedConnector.STATE_STOPPED);
-                            break;
-                        default:
-                            break;
+            if (connectorStatus.isConnectorReady()) {
+
+                @SuppressWarnings("unchecked")
+                List<Map<String, String>> tasks = new ArrayList<Map<String, String>>((List) kafkaConnector.getStatus()
+                    .getConnectorStatus().getOrDefault("tasks", new ArrayList<>()));
+
+                ArrayList<String> errors = new ArrayList<>();
+                for (Map<String, String> task : tasks) {
+                    if ("FAILED".equals(task.get("state"))) {
+                        errors.add(task.get("trace"));
                     }
-                });
+                }
+
+                if (errors.isEmpty()) {
+                    connectorStatus.setReadyCondition(cloneCondition(connectorReadyCondition));
+                    statusSpec.setPhase(ManagedConnector.STATE_READY);
+                } else {
+                    readyCondition.setType("Ready");
+                    readyCondition.setStatus("False");
+                    readyCondition.setReason("DebeziumException");
+                    readyCondition.setMessage(String.join("; \n", errors));
+                    readyCondition.setLastTransitionTime(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                    connectorStatus.setReadyCondition(readyCondition);
+                    statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+                }
+            } else {
+                if (null != connectorReadyCondition && "False".equals(connectorReadyCondition.getStatus())
+                    && (null == connectorNotReadyCondition || !"True".equals(connectorNotReadyCondition.getStatus()))) {
+                    connectorStatus.setReadyCondition(cloneCondition(connectorReadyCondition));
+                } else if (null != connectorNotReadyCondition && "True".equals(connectorNotReadyCondition.getStatus())) {
+                    connectorStatus.setReadyCondition(cloneAsReadyFalseCondition(connectorNotReadyCondition));
+                } else if (kafkaConnector.getStatus().getConditions().size() > 0) {
+                    connectorStatus
+                        .setReadyCondition(cloneAsReadyFalseCondition(kafkaConnector.getStatus().getConditions().get(0)));
+                }
+                statusSpec.setPhase(ManagedConnector.STATE_FAILED);
+            }
         }
+    }
+
+    private static void computeKafkaConnectStatus(
+        KafkaConnect kafkaConnect,
+        ConnectorStatus connectorStatus) {
+        if (null != kafkaConnect) {
+            Condition kconnectReadyCondition = null;
+            Condition kconnectNotReadyCondition = null;
+
+            for (Condition condition : kafkaConnect.getStatus().getConditions()) {
+                switch (condition.getType()) {
+                    case "Ready":
+                        kconnectReadyCondition = condition;
+                        break;
+                    case "NotReady":
+                        kconnectNotReadyCondition = condition;
+                        break;
+                    default:
+                        break;
+                }
+                connectorStatus.getStatusSpecConditions().add(cloneCondition(condition, "KafkaConnect:"));
+            }
+
+            boolean kafkaConnectReady = kconnectReadyCondition != null && "True".equals(kconnectReadyCondition.getStatus())
+                && (kconnectNotReadyCondition == null || !"True".equals(kconnectNotReadyCondition.getStatus()));
+
+            if (connectorStatus.isConnectorReady() && !kafkaConnectReady) {
+                if (null != kconnectReadyCondition && !"True".equals(kconnectReadyCondition.getStatus())
+                    && (null == kconnectNotReadyCondition || !"True".equals(kconnectNotReadyCondition.getStatus()))) {
+                    connectorStatus.setReadyCondition(cloneCondition(kconnectReadyCondition));
+                } else if (null != kconnectNotReadyCondition && "True".equals(kconnectNotReadyCondition.getStatus())) {
+                    connectorStatus.setReadyCondition(cloneAsReadyFalseCondition(kconnectNotReadyCondition));
+                    if ("TimeoutException".equals(kconnectNotReadyCondition.getReason())) {
+                        io.fabric8.kubernetes.api.model.Condition readyCondition = connectorStatus.readyCondition();
+                        readyCondition.setReason("KafkaClusterUnreachable");
+                        readyCondition.setMessage("The configured Kafka Cluster is unreachable or ACLs deny access.");
+                    }
+                }
+                connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_FAILED);
+            } else {
+                if (null == connectorStatus.readyCondition()) {
+                    io.fabric8.kubernetes.api.model.Condition readyCondition = new io.fabric8.kubernetes.api.model.Condition();
+                    readyCondition.setType("Ready");
+                    readyCondition.setStatus("False");
+                    readyCondition.setReason("Transitioning");
+                    readyCondition.setMessage("The connector is transitioning into another state.");
+                    readyCondition.setLastTransitionTime(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                    connectorStatus.setReadyCondition(readyCondition);
+                    connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_PROVISIONING);
+                }
+            }
+        }
+    }
+
+    public static void computeStatus(ConnectorStatusSpec statusSpec, KafkaConnect kafkaConnect, KafkaConnector connector) {
+        var managedConnectorStatus = new ConnectorStatus(statusSpec);
+        computeConnectorStatus(connector, managedConnectorStatus);
+        if (null == managedConnectorStatus.isConnectorReady()) {
+            return;
+        }
+        computeKafkaConnectStatus(kafkaConnect, managedConnectorStatus);
+        managedConnectorStatus.getStatusSpecConditions().add(managedConnectorStatus.readyCondition());
+        statusSpec.setConditions(managedConnectorStatus.getStatusSpecConditions());
     }
 }

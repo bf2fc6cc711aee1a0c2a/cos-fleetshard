@@ -1,8 +1,14 @@
 package org.bf2.cos.fleetshard.operator.it.debezium.glues;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import io.strimzi.api.kafka.model.status.Condition;
+import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.status.KafkaConnectStatus;
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandController;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
@@ -25,12 +31,41 @@ import static org.bf2.cos.fleetshard.it.cucumber.assertions.CucumberAssertions.a
 public class KafkaConnectSteps extends StepsSupport {
     @Then("the kc exists")
     public void exists() {
-        awaiter.until(() -> kc() != null);
+        awaiter.until(() -> kafkaConnect() != null);
+    }
+
+    @When("the kc has conditions:")
+    public void kc_add_conditions(DataTable table) {
+        kubernetesClient.resources(KafkaConnect.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName())
+            .editStatus(resource -> {
+                List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+                List<Condition> conditions = new ArrayList<>(rows.size());
+
+                for (Map<String, String> columns : rows) {
+                    conditions.add(new ConditionBuilder()
+                        .withMessage(columns.get("message"))
+                        .withReason(columns.get("reason"))
+                        .withStatus(columns.get("status"))
+                        .withType(columns.get("type"))
+                        .withLastTransitionTime(columns.get("lastTransitionTime"))
+                        .build());
+                }
+
+                if (resource.getStatus() == null) {
+                    resource.setStatus(new KafkaConnectStatus());
+                }
+
+                resource.getStatus().setConditions(conditions);
+
+                return resource;
+            });
     }
 
     @Then("the kc does not exists")
     public void does_not_exists() {
-        awaiter.until(() -> kc() == null);
+        awaiter.until(() -> kafkaConnect() == null);
     }
 
     @When("the kc path {string} is set to json:")
@@ -48,7 +83,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an entry at path {string} with value {string}")
     public void kc_has_a_path_matching_value(String path, String value) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -60,7 +95,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an entry at path {string} with value {int}")
     public void kc_has_a_path_matching_value(String path, int value) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -72,7 +107,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an entry at path {string} with value {bool}")
     public void kc_has_a_path_matching_value(String path, Boolean value) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -84,7 +119,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an object at path {string} containing:")
     public void kc_has_a_path_matching_object(String path, String content) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
         content = ctx.resolvePlaceholders(content);
 
         assertThat(res)
@@ -97,7 +132,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an array at path {string} containing:")
     public void kc_has_a_path_containing_object(String path, DataTable elements) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -113,7 +148,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has annotations containing:")
     public void kc_annotation_contains(DataTable table) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -123,7 +158,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has labels containing:")
     public void kc_label_contains(DataTable table) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -133,7 +168,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has config containing:")
     public void kc_config_contains(DataTable table) {
-        KafkaConnect res = kc();
+        KafkaConnect res = kafkaConnect();
 
         assertThat(res)
             .isNotNull();
@@ -153,7 +188,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has the correct metrics config map")
     public void kc_metrics_config_map() {
-        KafkaConnect kc = kc();
+        KafkaConnect kc = kafkaConnect();
         assertThat(kc).isNotNull();
         assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
         final String kafkaConnectMetricsConfigMapName = ctx.connector().getMetadata().getName()
@@ -165,21 +200,21 @@ public class KafkaConnectSteps extends StepsSupport {
                 assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getName())
                     .isEqualTo(kafkaConnectMetricsConfigMapName);
             });
-        ConfigMap kcMetricsConfigMap = cm(kafkaConnectMetricsConfigMapName);
+        ConfigMap kcMetricsConfigMap = configMap(kafkaConnectMetricsConfigMapName);
         assertThat(kcMetricsConfigMap).isNotNull();
         assertThat(kcMetricsConfigMap.getData()).containsKey(DebeziumOperandController.METRICS_CONFIG_FILENAME);
         assertThat(kcMetricsConfigMap.getData().get(DebeziumOperandController.METRICS_CONFIG_FILENAME))
             .isEqualTo(DebeziumOperandController.METRICS_CONFIG);
     }
 
-    private ConfigMap cm(String name) {
+    private ConfigMap configMap(String name) {
         return kubernetesClient.resources(ConfigMap.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(name)
             .get();
     }
 
-    private KafkaConnect kc() {
+    private KafkaConnect kafkaConnect() {
         return kubernetesClient.resources(KafkaConnect.class)
             .inNamespace(ctx.connector().getMetadata().getNamespace())
             .withName(ctx.connector().getMetadata().getName())
@@ -188,7 +223,7 @@ public class KafkaConnectSteps extends StepsSupport {
 
     private void untilKc(Consumer<KafkaConnect> predicate) {
         awaiter.untilAsserted(() -> {
-            KafkaConnect res = kc();
+            KafkaConnect res = kafkaConnect();
 
             assertThat(res).isNotNull();
             assertThat(res).satisfies(predicate);

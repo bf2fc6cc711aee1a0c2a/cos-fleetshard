@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -104,10 +105,7 @@ public class ConnectorSteps {
         scenario.log("============================================");
 
         if (ctx.connector() != null) {
-            ManagedConnector connector = kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .get();
+            ManagedConnector connector = connector();
 
             if (connector != null) {
                 scenario.log("Connector:\n" + JacksonUtil.asPrettyPrintedYaml(connector));
@@ -134,10 +132,7 @@ public class ConnectorSteps {
                 ctx.connector().getMetadata().getName(),
                 ctx.connector().getMetadata().getNamespace());
 
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .delete();
+            connectorResource().delete();
         }
 
         if (ctx.secret() != null) {
@@ -277,14 +272,7 @@ public class ConnectorSteps {
 
     @Then("the connector exists")
     public void connector_is_created() {
-        until(() -> {
-            var res = kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .get();
-
-            return res != null;
-        });
+        until(() -> connector() != null);
     }
 
     @Then("the connector secret exists")
@@ -314,77 +302,55 @@ public class ConnectorSteps {
     @When("the connector desired status is set to {string}")
     public void connector_desired_state_set_to(String status) {
         ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .accept(c -> c.getSpec().getDeployment().setDesiredState(status)));
+            connectorResource().accept(c -> c.getSpec().getDeployment().setDesiredState(status)));
     }
 
     @Then("the connector is in phase {string}")
     public void connector_is_in_phase(String phase) {
-        untilConnector(c -> {
-            return Objects.equals(
-                ManagedConnectorStatus.PhaseType.valueOf(phase),
-                c.getStatus().getPhase());
-        });
+        untilConnector(c -> Objects.equals(
+            ManagedConnectorStatus.PhaseType.valueOf(phase),
+            c.getStatus().getPhase()));
     }
 
     @And("the connector operand status is in phase {string}")
     public void connector_operand_status_is_in_phase(String phase) {
-        untilConnector(c -> {
-            return Objects.equals(
-                phase,
-                c.getStatus().getConnectorStatus().getPhase());
-        });
+        untilConnector(c -> Objects.equals(phase, c.getStatus().getConnectorStatus().getPhase()));
     }
 
     @Then("the deployment is in phase {string}")
     public void deployment_is_in_phase(String phase) {
-        untilConnector(c -> {
-            return Objects.equals(
-                phase,
-                c.getStatus().getConnectorStatus().getPhase());
-        });
+        untilConnector(c -> Objects.equals(phase, c.getStatus().getConnectorStatus().getPhase()));
     }
 
     @When("the connector path {string} is set to json:")
     public void connector_pointer(String path, String payload) {
         ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .edit(res -> {
-                    JsonNode replacement = Serialization.unmarshal(payload, JsonNode.class);
-                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, replacement).json();
+            connectorResource().edit(res -> {
+                JsonNode replacement = Serialization.unmarshal(payload, JsonNode.class);
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, replacement).json();
 
-                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-                }));
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            }));
     }
 
     @When("the connector path {string} is set to {string}")
     public void connector_pointer_set_to_string(String path, String value) {
         ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .edit(res -> {
-                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+            connectorResource().edit(res -> {
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
 
-                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-                }));
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            }));
     }
 
     @When("the connector path {string} is set to {int}")
     public void connector_pointer_set_to_int(String path, int value) {
         ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .edit(res -> {
-                    JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
+            connectorResource().edit(res -> {
+                JsonNode replaced = PARSER.parse(Serialization.asJson(res)).set(path, value).json();
 
-                    return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
-                }));
+                return JacksonUtil.treeToValue(replaced, ManagedConnector.class);
+            }));
     }
 
     @When("the connector secret has labels:")
@@ -422,12 +388,7 @@ public class ConnectorSteps {
 
     @Then("the connector's availableOperator exists with:")
     public void connector_availableOperator_exists_with(Map<String, String> expected) {
-        var res = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .get();
-
-        Operator op = res.getStatus().getConnectorStatus().getAvailableOperator();
+        Operator op = connector().getStatus().getConnectorStatus().getAvailableOperator();
         assertThat(op).isNotNull();
         assertThat(op.getId()).isEqualTo(expected.get("operator.id"));
         assertThat(op.getType()).isEqualTo(expected.get("operator.type"));
@@ -436,11 +397,7 @@ public class ConnectorSteps {
 
     @Then("the connector's availableOperator does not exist")
     public void connector_availableOperator_not_exists() {
-        var res = kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .get();
-        Operator op = res.getStatus().getConnectorStatus().getAvailableOperator();
+        Operator op = connector().getStatus().getConnectorStatus().getAvailableOperator();
         assertThat(op).isNotNull();
         assertThat(op.getId()).isEqualTo(null);
         assertThat(op.getType()).isEqualTo(null);
@@ -449,9 +406,7 @@ public class ConnectorSteps {
 
     @Then("the connector operatorSelector id is {string}")
     public void connector_operator_selector_id(String selectorId) {
-        untilConnector(c -> {
-            return selectorId.equals(c.getSpec().getOperatorSelector().getId());
-        });
+        untilConnector(c -> selectorId.equals(c.getSpec().getOperatorSelector().getId()));
     }
 
     @Then("the connector has conditions:")
@@ -466,65 +421,51 @@ public class ConnectorSteps {
     public void connector_has_conditions_in_history(DataTable table) {
         final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
 
-        awaiter.until(() -> {
-            return ctx.history().stream().anyMatch(
-                connector -> rows.stream().allMatch(row -> hasCondition(connector, row)));
-        });
+        awaiter.until(() -> ctx.history().stream().anyMatch(
+            connector -> rows.stream().allMatch(row -> hasCondition(connector, row))));
     }
 
     @Then("wait till the connector has entry in history with phase {string} and conditions:")
     public void connector_has_conditions_in_history(String phase, DataTable table) {
         final List<Map<String, String>> rows = table.asMaps(String.class, String.class);
 
-        awaiter.until(() -> {
-            return ctx.history().stream()
-                .filter(c -> {
-                    return Objects.equals(
-                        c.getMetadata().getName(),
-                        ctx.connector().getMetadata().getName());
-                })
-                .filter(c -> {
-                    return Objects.equals(
-                        ManagedConnectorStatus.PhaseType.valueOf(phase),
-                        c.getStatus().getPhase());
-                })
-                .filter(c -> {
-                    return Objects.equals(
-                        c.getMetadata().getLabels().get(Resources.LABEL_UOW),
-                        ctx.connector().getMetadata().getLabels().get(Resources.LABEL_UOW));
-                })
-                .anyMatch(c -> {
-                    return rows.stream().allMatch(row -> hasCondition(c, row));
-                });
-        });
+        awaiter.until(() -> ctx.history().stream()
+            .filter(c -> Objects.equals(
+                c.getMetadata().getName(),
+                ctx.connector().getMetadata().getName()))
+            .filter(c -> Objects.equals(
+                ManagedConnectorStatus.PhaseType.valueOf(phase),
+                c.getStatus().getPhase()))
+            .filter(c -> Objects.equals(
+                c.getMetadata().getLabels().get(Resources.LABEL_UOW),
+                ctx.connector().getMetadata().getLabels().get(Resources.LABEL_UOW)))
+            .anyMatch(c -> rows.stream().allMatch(row -> hasCondition(c, row))));
     }
 
     private boolean hasCondition(ManagedConnector connector, Map<String, String> row) {
-        return connector.getStatus().getConditions().stream().anyMatch(c -> {
-            return Objects.equals(c.getType(), row.get("type"))
-                && Objects.equals(c.getStatus(), row.get("status"))
-                && Objects.equals(c.getReason(), row.get("reason"))
-                && (row.get("message") == null || Objects.equals(c.getMessage(), row.get("message")));
-        });
+        return connector.getStatus().getConditions().stream().anyMatch(c -> Objects.equals(c.getType(), row.get("type"))
+            && Objects.equals(c.getStatus(), row.get("status"))
+            && Objects.equals(c.getReason(), row.get("reason"))
+            && (row.get("message") == null || Objects.equals(c.getMessage(), row.get("message"))));
     }
 
     private void until(Callable<Boolean> conditionEvaluator) {
         awaiter.until(conditionEvaluator);
     }
 
-    private ManagedConnector connector() {
+    private Resource<ManagedConnector> connectorResource() {
         return kubernetesClient.resources(ManagedConnector.class)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .get();
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ctx.connector().getMetadata().getName());
+    }
+
+    private ManagedConnector connector() {
+        return connectorResource().get();
     }
 
     private void untilConnector(Predicate<ManagedConnector> predicate) {
         awaiter.until(() -> {
-            var res = kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName())
-                .get();
+            var res = connector();
 
             if (res == null) {
                 return false;
