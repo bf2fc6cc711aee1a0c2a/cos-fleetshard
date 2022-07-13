@@ -67,6 +67,24 @@ rules:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "Role"
 metadata:
+  name: "cos-fleetshard-sync-observability"
+rules:
+- apiGroups:
+  - "observability.redhat.com"
+  resources:
+  - "observabilities"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
   name: "cos-fleetshard-sync-operators"
 rules:
 - apiGroups:
@@ -114,6 +132,18 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "Role"
   name: "cos-fleetshard-sync-configmaps"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-observability"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "cos-fleetshard-sync-observability"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
@@ -178,6 +208,19 @@ rules:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
 metadata:
+  name: "cos-fleetshard-sync-crds"
+rules:
+- apiGroups:
+  - "apiextensions.k8s.io"
+  resources:
+  - "customresourcedefinitions"
+  verbs:
+  - "get"
+  - "list"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
   name: "cos-fleetshard-sync-events"
 rules:
 - apiGroups:
@@ -233,6 +276,19 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "ClusterRole"
   name: "cos-fleetshard-sync-connectors"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-crds"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-crds"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
@@ -315,10 +371,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
-        - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config"
         - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
           value: "/mnt/app-secret"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config"
         image: "quay.io/rhoas/cos-fleetshard-sync:latest"
         imagePullPolicy: "Always"
         livenessProbe:
