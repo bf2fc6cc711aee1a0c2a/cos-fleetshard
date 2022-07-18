@@ -21,20 +21,17 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
     private final ManagedConnectorOperator operator;
     private final ResourceDefinitionContext context;
     private final String contextApiVersion;
-    private final String name;
 
     public OperandResourceWatcher(
-        String name,
         KubernetesClient client,
         ManagedConnectorOperator operator,
         String apiVersion,
         String kind,
         MetricsRecorder recorder) {
-        this(name, client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), recorder);
+        this(client, operator, Resources.asResourceDefinitionContext(apiVersion, kind), recorder);
     }
 
     public OperandResourceWatcher(
-        String name,
         KubernetesClient client,
         ManagedConnectorOperator operator,
         ResourceDefinitionContext context,
@@ -42,18 +39,12 @@ public class OperandResourceWatcher extends InstrumentedWatcherEventSource<Gener
 
         super(client, recorder);
 
-        this.name = name;
         this.operator = operator;
         this.context = context;
         this.contextApiVersion = context.getGroup() != null
             ? context.getGroup() + "/" + context.getVersion()
             : context.getVersion();
 
-    }
-
-    @Override
-    public String name() {
-        return name;
     }
 
     @Override
