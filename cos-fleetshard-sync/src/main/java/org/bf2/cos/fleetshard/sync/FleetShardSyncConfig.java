@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.sync;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -292,6 +293,62 @@ public interface FleetShardSyncConfig {
     interface Observability {
         @WithDefault("false")
         boolean enabled();
+
+        @WithDefault("redhat-openshift-connectors-observability")
+        String namespace();
+
+        @WithDefault("rhoc-observability-stack")
+        String resourceName();
+
+        @WithDefault("observability-cleanup")
+        String finalizer();
+
+        @WithDefault("60m")
+        String resyncPeriod();
+
+        @WithDefault("30d")
+        String retention();
+
+        @WithDefault("100Gi")
+        String storageRequest();
+
+        @WithDefault("observability-operator")
+        String configuresMatchLabel();
+
+        @WithDefault("redhat-managed-connectors-deadmanssnitch"
+            + ",observatorium-configuration-red-hat-sso"
+            + ",redhat-managed-connectors-pagerduty"
+            + ",cos-fleetshard-observability-upstream")
+        Optional<List<String>> secretsToCopy();
+
+        @WithDefault("observability-operator-no-init")
+        Optional<List<String>> configMapsToCopy();
+
+        Subscription subscription();
+
+        interface Subscription {
+
+            @WithDefault("true")
+            boolean enabled();
+
+            @WithDefault("observability-operator")
+            String name();
+
+            @WithDefault("alpha")
+            String channel();
+
+            @WithDefault("Automatic")
+            String installPlanApproval();
+
+            @WithDefault("addon-connectors-operator-catalog")
+            String source();
+
+            @WithDefault("openshift-marketplace")
+            String sourceNamespace();
+
+            @WithDefault("observability-operator.v3.0.9")
+            String startingCsv();
+        }
     }
 
 }

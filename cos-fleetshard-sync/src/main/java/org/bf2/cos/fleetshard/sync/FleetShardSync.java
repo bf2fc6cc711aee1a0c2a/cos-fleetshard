@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.client.FleetShardObservabilityClient;
 import org.bf2.cos.fleetshard.sync.housekeeping.Housekeeper;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorClusterStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusSync;
@@ -15,6 +16,8 @@ import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
 public class FleetShardSync implements Service {
     @Inject
     FleetShardClient fleetShardClient;
+    @Inject
+    FleetShardObservabilityClient fleetShardObservabilityClient;
     @Inject
     ResourcePoll resourceSync;
     @Inject
@@ -27,7 +30,7 @@ public class FleetShardSync implements Service {
     @Override
     public void start() throws Exception {
         fleetShardClient.getOrCreateManagedConnectorCluster();
-        fleetShardClient.setupObservability();
+        fleetShardObservabilityClient.setupObservability();
         fleetShardClient.start();
 
         startResourcesSync();

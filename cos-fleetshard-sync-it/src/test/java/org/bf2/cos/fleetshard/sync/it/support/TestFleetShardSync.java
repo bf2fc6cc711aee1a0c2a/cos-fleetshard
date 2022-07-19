@@ -1,6 +1,8 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -11,10 +13,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.test.Mock;
 
@@ -43,6 +42,12 @@ public class TestFleetShardSync extends FleetShardSync {
     @ConfigProperty(name = "cos.cluster.id")
     String clusterId;
 
+    @ConfigProperty(name = "cos.observability.secrets-to-copy")
+    Optional<List<String>> secretsToCopy;
+
+    @ConfigProperty(name = "cos.observability.config-maps-to-copy")
+    Optional<List<String>> configMapsToCopy;
+
     @Override
     public void start() throws Exception {
         LOGGER.info("Creating namespace {}", namespace);
@@ -69,6 +74,16 @@ public class TestFleetShardSync extends FleetShardSync {
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
 
         client.secrets().inNamespace(namespace).create(addonPullSecret);
+
+        secretsToCopy.ifPresent(
+            secretsNames -> secretsNames.forEach(
+                secretName -> client.secrets().inNamespace(namespace).create(
+                    new SecretBuilder().withMetadata(new ObjectMetaBuilder().withName(secretName).build()).build())));
+
+        configMapsToCopy.ifPresent(
+            configMapNames -> configMapNames.forEach(
+                configMapName -> client.configMaps().inNamespace(namespace).create(
+                    new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName(configMapName).build()).build())));
 
         super.start();
     }

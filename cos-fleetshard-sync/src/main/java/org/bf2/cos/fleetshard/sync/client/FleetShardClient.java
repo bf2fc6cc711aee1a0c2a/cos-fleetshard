@@ -5,7 +5,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -29,18 +28,7 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.redhat.observability.v1.Observability;
-import com.redhat.observability.v1.ObservabilitySpec;
-import com.redhat.observability.v1.observabilityspec.ConfigurationSelector;
-import com.redhat.observability.v1.observabilityspec.SelfContained;
-import com.redhat.observability.v1.observabilityspec.Storage;
-import com.redhat.observability.v1.observabilityspec.selfcontained.*;
-import com.redhat.observability.v1.observabilityspec.storage.Prometheus;
-import com.redhat.observability.v1.observabilityspec.storage.prometheus.VolumeClaimTemplate;
-import com.redhat.observability.v1.observabilityspec.storage.prometheus.volumeclaimtemplate.Spec;
-
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
@@ -372,108 +360,6 @@ public class FleetShardClient implements Service {
         } catch (Exception e) {
             LOGGER.warn("Error while broadcasting events", e);
         }
-    }
-
-    public Optional<Observability> getObservability() {
-        return Optional.ofNullable(
-            kubernetesClient.resources(Observability.class)
-                .inNamespace(this.config.namespace())
-                .withName("rhoc-observability-stack")
-                .get());
-    }
-
-    public void setupObservability() {
-        final var observability = getObservability();
-        if (observability.isPresent()) {
-            ObjectMeta metadata = observability.get().getMetadata();
-            LOGGER.warn("Observability resource was already created: {}/{}", metadata.getNamespace(), metadata.getName());
-            return;
-        }
-
-        if (!config.observability().enabled()) {
-            LOGGER.warn("Observability is not enabled.");
-            return;
-        }
-
-        var observabilityCRD = kubernetesClient.resources(CustomResourceDefinition.class)
-            .withName("observabilities.observability.redhat.com")
-            .get();
-        if (observabilityCRD == null) {
-            LOGGER
-                .error("Observability will not be enabled because the Observability CustomResourceDefinition is not present.");
-            return;
-        }
-
-        createObservabilityResource();
-    }
-
-    private void createObservabilityResource() {
-        LOGGER.info("Creating Observability resource");
-        final var observability = new Observability();
-
-        final var meta = new ObjectMetaBuilder()
-            .withName("rhoc-observability-stack")
-            .withNamespace(this.config.namespace())
-            .withFinalizers("observability-cleanup")
-            .build();
-        observability.setMetadata(meta);
-
-        final var spec = new ObservabilitySpec();
-        spec.setClusterId(getClusterId());
-
-        final var configurationSelector = new ConfigurationSelector();
-        configurationSelector.setMatchLabels(Map.of("configures", "observability-operator"));
-        spec.setConfigurationSelector(configurationSelector);
-
-        spec.setResyncPeriod("60m");
-        spec.setRetention("30d");
-
-        final var selfContained = new SelfContained();
-        selfContained.setDisablePagerDuty(false);
-
-        Map<String, String> rhocAppLabel = Map.of("app", "rhoc");
-
-        final var grafanaDashboardLS = new GrafanaDashboardLabelSelector();
-        grafanaDashboardLS.setMatchLabels(rhocAppLabel);
-        selfContained.setGrafanaDashboardLabelSelector(grafanaDashboardLS);
-
-        final var podMonitorLS = new PodMonitorLabelSelector();
-        podMonitorLS.setMatchLabels(rhocAppLabel);
-        selfContained.setPodMonitorLabelSelector(podMonitorLS);
-
-        final var ruleLS = new RuleLabelSelector();
-        ruleLS.setMatchLabels(rhocAppLabel);
-        selfContained.setRuleLabelSelector(ruleLS);
-
-        final var serviceMonitorLS = new ServiceMonitorLabelSelector();
-        serviceMonitorLS.setMatchLabels(rhocAppLabel);
-        selfContained.setServiceMonitorLabelSelector(serviceMonitorLS);
-
-        final var probeSelector = new ProbeSelector();
-        probeSelector.setMatchLabels(rhocAppLabel);
-        selfContained.setProbeSelector(probeSelector);
-
-        spec.setSelfContained(selfContained);
-
-        final var storage = new Storage();
-        final var prometheus = new Prometheus();
-        final var volumeClaimTemplate = new VolumeClaimTemplate();
-        final var volumeClaimTemplateSpec = new Spec();
-        final var resources = new com.redhat.observability.v1.observabilityspec.storage.prometheus.volumeclaimtemplate.spec.Resources();
-        resources.setRequests(Map.of("storage", new IntOrString("100Gi")));
-        volumeClaimTemplateSpec.setResources(resources);
-        volumeClaimTemplate.setSpec(volumeClaimTemplateSpec);
-        prometheus.setVolumeClaimTemplate(volumeClaimTemplate);
-        storage.setPrometheus(prometheus);
-
-        spec.setStorage(storage);
-
-        observability.setSpec(spec);
-
-        kubernetesClient.resources(Observability.class)
-            .inNamespace(this.config.namespace())
-            .withName(observability.getMetadata().getName())
-            .createOrReplace(observability);
     }
 
 }

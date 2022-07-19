@@ -42,4 +42,5 @@ public class CosFeatureContext {
     public String getOperatorsNamespace() {
         return operatorsNamespace;
     }
+
 }
