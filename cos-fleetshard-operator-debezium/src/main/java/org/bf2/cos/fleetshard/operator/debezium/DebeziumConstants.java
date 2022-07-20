@@ -23,6 +23,9 @@ public final class DebeziumConstants {
 
     public static final String DEFAULT_IMAGE_PULL_SECRET_NAME = "addon-pullsecret";
 
+    public static final String DEFAULT_APICURIO_AUTH_SERVICE_URL = "https://identity.api.openshift.com/auth";
+    public static final String DEFAULT_APICURIO_AUTH_REALM = "rhoas";
+
     public static final Map<String, Object> DEFAULT_CONFIG_OPTIONS = CollectionUtils.mapOf(
         "request.timeout.ms", 20_000,
         "retry.backoff.ms", 500,

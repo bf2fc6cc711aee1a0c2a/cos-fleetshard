@@ -7,16 +7,16 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants;
+import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandConfiguration;
 
 public abstract class AbstractApicurioConverter implements KafkaConnectConverter {
 
-    public static final String APICURIO_AUTH_SERVICE_URL = "https://identity.api.openshift.com/auth";
-
     @Override
-    public Map<String, String> getAdditionalConfig(ManagedConnector config, ServiceAccountSpec serviceAccountSpec) {
+    public Map<String, String> getAdditionalConfig(ManagedConnector config, ServiceAccountSpec serviceAccountSpec,
+        DebeziumOperandConfiguration configuration) {
         Map<String, String> additionalConfig = new HashMap<>();
-        additionalConfig.put("apicurio.auth.service.url", APICURIO_AUTH_SERVICE_URL);
-        additionalConfig.put("apicurio.auth.realm", "rhoas");
+        additionalConfig.put("apicurio.auth.service.url", configuration.apicurioAuthServiceUrl());
+        additionalConfig.put("apicurio.auth.realm", configuration.apicurioAuthRealm());
 
         SchemaRegistrySpec schemaRegistrySpec = config.getSpec().getDeployment().getSchemaRegistry();
         if (null == schemaRegistrySpec || null == schemaRegistrySpec.getUrl() || schemaRegistrySpec.getUrl().isBlank()) {
