@@ -1,0 +1,5 @@
+resources:
+- ./base
+- ./cos-fleetshard-sync-it
+- ./cos-fleetshard-operator-camel-it
+- ./cos-fleetshard-operator-debezium-it
