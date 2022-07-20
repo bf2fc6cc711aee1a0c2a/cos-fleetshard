@@ -60,10 +60,7 @@ jobs:
           node_image: kindest/node:${{ matrix.kubernetes }}
       - name: "SetUp Kubernetes Cluster"
         run: |
-          ./etc/scripts/deploy_fleetshard_crds.sh
-          ./etc/scripts/deploy_camel-k_crds.sh
-          ./etc/scripts/deploy_strimzi_crds.sh
-          ./etc/scripts/deploy_observability_crds.sh
+          kubectl apply -k ./ etc/kubernetes/manifests/overlays/it
       - name: "Build and push container images"
         id: "images"
         run: |

@@ -45,10 +45,7 @@ jobs:
           node_image: kindest/node:${{ inputs.kubeVersion }}
       - name: 'SetUp Kubernetes Cluster'
         run: |
-          ./etc/scripts/deploy_fleetshard_crds.sh
-          ./etc/scripts/deploy_camel-k_crds.sh
-          ./etc/scripts/deploy_strimzi_crds.sh
-          ./etc/scripts/deploy_observability_crds.sh
+          kubectl apply -k ./etc/kubernetes/manifests/overlays/it
       - name: "Build ${{ inputs.module }}"
         run: |
           ./mvnw ${MAVEN_ARGS} clean install -pl :${{ inputs.module }}

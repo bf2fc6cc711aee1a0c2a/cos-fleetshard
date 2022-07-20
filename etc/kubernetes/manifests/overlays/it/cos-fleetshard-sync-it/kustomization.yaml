@@ -1,0 +1,3 @@
+resources:
+  - ./customresourcedefinition-subscriptions.operators.coreos.com.yaml
+  - ./observabilities.observability.redhat.com-v1.yml

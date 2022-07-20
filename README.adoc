@@ -198,11 +198,8 @@ Although this section expects you to use a completely new kubernetes cluster, yo
 +
 [source,shell]
 ----
-# install custom resources
-./etc/scripts/deploy_fleetshard_crds.sh
-./etc/scripts/deploy_camel-k_crds.sh
-./etc/scripts/deploy_strimzi_crds.sh
-./etc/scripts/deploy_observability_crds.sh
+# setup test resources
+kubectl apply -k ./etc/kubernetes/manifests/overlays/it
 ----
 
 * *run tests*
