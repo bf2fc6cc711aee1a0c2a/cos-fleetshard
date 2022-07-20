@@ -142,7 +142,8 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToConfig("group.id", connector.getMetadata().getName())
             // converters
             .addToConfig(
-                KeyAndValueConverters.getConfig(connectorConfiguration.getDataShapeSpec(), connector, serviceAccountSpec))
+                KeyAndValueConverters.getConfig(connectorConfiguration.getDataShapeSpec(), connector, serviceAccountSpec,
+                    configuration))
             // topics
             .addToConfig("offset.storage.topic", connector.getMetadata().getName() + "-offset")
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")

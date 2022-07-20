@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
+import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +22,7 @@ public class KeyAndValueConverters {
     }
 
     public static Map<String, Object> getConfig(DebeziumDataShape dataShape, ManagedConnector config,
-        ServiceAccountSpec serviceAccountSpec) {
+        ServiceAccountSpec serviceAccountSpec, DebeziumOperandConfiguration configuration) {
         if (null == dataShape) {
             LOGGER.error("Missing `data_shape` config in Debezium ManagedConnector \"" + config.getMetadata().getName()
                 + "\"! Falling back to default.");
@@ -34,9 +35,9 @@ public class KeyAndValueConverters {
             PROPERTY_VALUE_CONVERTER, dataShape.getValueConverter().getConverterClass()));
 
         converterConfig.putAll(prefixMapKeys(PROPERTY_KEY_CONVERTER + ".",
-            dataShape.getKeyConverter().getAdditionalConfig(config, serviceAccountSpec)));
+            dataShape.getKeyConverter().getAdditionalConfig(config, serviceAccountSpec, configuration)));
         converterConfig.putAll(prefixMapKeys(PROPERTY_VALUE_CONVERTER + ".",
-            dataShape.getValueConverter().getAdditionalConfig(config, serviceAccountSpec)));
+            dataShape.getValueConverter().getAdditionalConfig(config, serviceAccountSpec, configuration)));
 
         return new HashMap<>(converterConfig);
     }

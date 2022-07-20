@@ -22,7 +22,7 @@ public final class DebeziumConstants {
     public static final String STRIMZI_IO_USE_CONNECTOR_RESOURCES = STRIMZI_DOMAIN + "use-connector-resources";
 
     public static final String DEFAULT_IMAGE_PULL_SECRET_NAME = "addon-pullsecret";
-    
+
     public static final String DEFAULT_APICURIO_AUTH_SERVICE_URL = "https://identity.api.openshift.com/auth";
     public static final String DEFAULT_APICURIO_AUTH_REALM = "rhoas";
 

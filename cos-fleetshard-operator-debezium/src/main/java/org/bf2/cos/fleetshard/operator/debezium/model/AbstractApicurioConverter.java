@@ -9,18 +9,14 @@ import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandConfiguration;
 
-import javax.inject.Inject;
-
 public abstract class AbstractApicurioConverter implements KafkaConnectConverter {
 
-    @Inject
-    DebeziumOperandConfiguration debeziumOperandConfiguration;
-
     @Override
-    public Map<String, String> getAdditionalConfig(ManagedConnector config, ServiceAccountSpec serviceAccountSpec) {
+    public Map<String, String> getAdditionalConfig(ManagedConnector config, ServiceAccountSpec serviceAccountSpec,
+        DebeziumOperandConfiguration configuration) {
         Map<String, String> additionalConfig = new HashMap<>();
-        additionalConfig.put("apicurio.auth.service.url", debeziumOperandConfiguration.apicurioAuthServiceUrl());
-        additionalConfig.put("apicurio.auth.realm", debeziumOperandConfiguration.apicurioAuthRealm());
+        additionalConfig.put("apicurio.auth.service.url", configuration.apicurioAuthServiceUrl());
+        additionalConfig.put("apicurio.auth.realm", configuration.apicurioAuthRealm());
 
         SchemaRegistrySpec schemaRegistrySpec = config.getSpec().getDeployment().getSchemaRegistry();
         if (null == schemaRegistrySpec || null == schemaRegistrySpec.getUrl() || schemaRegistrySpec.getUrl().isBlank()) {

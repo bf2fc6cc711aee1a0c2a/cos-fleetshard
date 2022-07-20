@@ -15,7 +15,6 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
-import org.bf2.cos.fleetshard.operator.debezium.model.AbstractApicurioConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.ApicurioAvroConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectJsonConverter;
