@@ -291,11 +291,24 @@ public interface FleetShardSyncConfig {
     }
 
     interface Observability {
+
+        /**
+         * Sets whether the creation of observability resources is enabled.
+         */
         @WithDefault("false")
         boolean enabled();
 
+        /**
+         * Whenever creation of observability resources is enabled, this is the namespace where resources are created.
+         */
         @WithDefault("redhat-openshift-connectors-observability")
         String namespace();
+
+        /**
+         * Whenever removal of observability resources is enabled, this is the namespace from where resources are removed.
+         */
+        @WithDefault("redhat-openshift-connectors-observability")
+        String removalNamespace();
 
         @WithDefault("rhoc-observability-stack")
         String resourceName();
@@ -315,12 +328,20 @@ public interface FleetShardSyncConfig {
         @WithDefault("observability-operator")
         String configuresMatchLabel();
 
+        /**
+         * Sets the resources of type Secret that will be copied from {@link FleetShardSyncConfig#namespace()} to
+         * the #{@link Observability#namespace()}.
+         */
         @WithDefault("redhat-managed-connectors-deadmanssnitch"
             + ",observatorium-configuration-red-hat-sso"
             + ",redhat-managed-connectors-pagerduty"
             + ",cos-fleetshard-observability-upstream")
         Optional<List<String>> secretsToCopy();
 
+        /**
+         * Sets the resources of type ConfigMap that will be copied from {@link FleetShardSyncConfig#namespace()} to
+         * the #{@link Observability#namespace()}.
+         */
         @WithDefault("observability-operator-no-init")
         Optional<List<String>> configMapsToCopy();
 
@@ -328,8 +349,20 @@ public interface FleetShardSyncConfig {
 
         interface Subscription {
 
+            /**
+             * If <code>true</code>, will create a Subscription resource in the
+             * observability namespace to install the observability operator.
+             */
             @WithDefault("true")
             boolean enabled();
+
+            /**
+             * If <code>true</code>, will remove the Subscription resource and the CSV from the
+             * {@link Observability#removalNamespace()}
+             * before creating or copying new resources to the #{@link Observability#namespace()}.
+             */
+            @WithDefault("false")
+            boolean removePrevious();
 
             @WithDefault("observability-operator")
             String name();
@@ -348,6 +381,7 @@ public interface FleetShardSyncConfig {
 
             @WithDefault("observability-operator.v3.0.9")
             String startingCsv();
+
         }
     }
 
