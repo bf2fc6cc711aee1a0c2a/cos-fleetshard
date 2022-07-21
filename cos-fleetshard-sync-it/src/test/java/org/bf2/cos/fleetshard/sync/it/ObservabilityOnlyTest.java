@@ -57,7 +57,7 @@ public class ObservabilityOnlyTest extends SyncTestSupport {
             configMap.put("cos.resources.update-interval", "disabled");
             configMap.put("cos.resources.poll-interval", "disabled");
             configMap.put("cos.resources.resync-interval", "disabled");
-            configMap.put("cos.resources.housekeeper-interval", "disabled");
+            configMap.put("cos.resources.housekeeper-interval", "5s");
             configMap.put("cos.manager.sso-provider-refresh-timeout", "disabled");
             return configMap;
         }
