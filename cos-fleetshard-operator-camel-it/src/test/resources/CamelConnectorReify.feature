@@ -58,7 +58,8 @@ Feature: Camel Connector Reify
           | app.kubernetes.io/name                | ${cos.connector.id}           |
           | app.kubernetes.io/instance            | ${cos.deployment.id}          |
      And the klb has an array at path "$.spec.integration.configuration" containing:
-          | { "type":"secret" , "value": "${json-unit.ignore}" }            |
+          | { "type":"secret" , "value": "${json-unit.ignore}" }                         |
+          | { "type":"env" , "value": "CONNECTOR_DEPLOYMENT_UOW=${cos.deployment.uow}" } |
 
     And the klb has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
