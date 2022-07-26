@@ -63,6 +63,7 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSt
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.hasSchemaRegistry;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_UOW;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode, ObjectNode> {
@@ -206,7 +207,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                 "CONNECTOR_SECRET_NAME", secret.getMetadata().getName(),
                 "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
                 "CONNECTOR_ID", connector.getSpec().getConnectorId(),
-                "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId()));
+                "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId(),
+                "CONNECTOR_DEPLOYMENT_UOW", Resources.getLabel(connector, LABEL_UOW, () -> Resources.uid("generated-"))));
 
         final KameletBinding binding = new KameletBinding();
         binding.setMetadata(new ObjectMeta());

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
@@ -79,6 +80,10 @@ public final class Resources {
         return ObjectId.get().toString();
     }
 
+    public static String uid(String prefix) {
+        return prefix + uid();
+    }
+
     public static boolean hasLabel(HasMetadata metadata, String name, String value) {
         Map<String, String> elements = metadata.getMetadata().getLabels();
         return elements != null && Objects.equals(value, elements.get(name));
@@ -106,6 +111,11 @@ public final class Resources {
         }
 
         return null;
+    }
+
+    public static String getLabel(HasMetadata metadata, String name, Supplier<String> defaultValueSupplier) {
+        String answer = getLabel(metadata, name);
+        return answer != null ? answer : defaultValueSupplier.get();
     }
 
     public static void copyLabel(String name, HasMetadata source, HasMetadata target) {

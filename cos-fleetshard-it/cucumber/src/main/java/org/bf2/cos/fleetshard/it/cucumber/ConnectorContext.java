@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.datatable.DataTable;
 import io.fabric8.kubernetes.api.model.Secret;
 
+import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_UOW;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
@@ -28,6 +29,7 @@ public class ConnectorContext {
     public static final String COS_OPERATOR_ID = "cos.operator.id";
     public static final String COS_OPERATOR_VERSION = "cos.operator.version";
     public static final String COS_DEPLOYMENT_ID = "cos.deployment.id";
+    public static final String COS_DEPLOYMENT_UOW = "cos.deployment.uow";
     public static final String COS_DEPLOYMENT_RESOURCE_VERSION = "cos.deployment.resource-version";
     public static final String COS_CONNECTOR_ID = "cos.connector.id";
     public static final String COS_CONNECTOR_RESOURCE_VERSION = "cos.connector.resource-version";
@@ -122,6 +124,12 @@ public class ConnectorContext {
             }
             if (null != connector().getMetadata()) {
                 placeholders.put(COS_MANAGED_CONNECTOR_NAME, connector().getMetadata().getName());
+
+                if (connector().getMetadata().getLabels().containsKey(LABEL_UOW)) {
+                    placeholders.put(
+                        COS_DEPLOYMENT_UOW,
+                        connector().getMetadata().getLabels().get(LABEL_UOW));
+                }
             }
         }
         if (null != secret() && null != secret().getMetadata()) {
