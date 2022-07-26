@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cucumber.datatable.DataTable;
 import io.fabric8.kubernetes.api.model.Secret;
 
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_UOW;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
 @ApplicationScoped
@@ -29,7 +28,6 @@ public class ConnectorContext {
     public static final String COS_OPERATOR_ID = "cos.operator.id";
     public static final String COS_OPERATOR_VERSION = "cos.operator.version";
     public static final String COS_DEPLOYMENT_ID = "cos.deployment.id";
-    public static final String COS_DEPLOYMENT_UOW = "cos.deployment.uow";
     public static final String COS_DEPLOYMENT_RESOURCE_VERSION = "cos.deployment.resource-version";
     public static final String COS_CONNECTOR_ID = "cos.connector.id";
     public static final String COS_CONNECTOR_RESOURCE_VERSION = "cos.connector.resource-version";
@@ -104,13 +102,34 @@ public class ConnectorContext {
         return cosCtx.getOperatorsNamespace();
     }
 
-    private Map<String, Object> getPlaceholders() {
+    public String getPlaceholderValue(String in) {
+        return placeholderResolver().get(in);
+    }
+
+    public String resolvePlaceholders(String in) {
+        return placeholderResolver().resolve(in);
+    }
+
+    public Map<String, String> resolvePlaceholders(DataTable in) {
+        return placeholderResolver().resolve(in);
+    }
+
+    public Map<String, String> resolvePlaceholders(Map<String, String> in) {
+        return placeholderResolver().resolve(in);
+    }
+
+    public PlaceholderResolver placeholderResolver() {
+        return placeholderResolver(Collections.emptyMap());
+    }
+
+    public PlaceholderResolver placeholderResolver(Map<String, Object> additional) {
         Map<String, Object> placeholders = new HashMap<>();
         placeholders.put(COS_NAMESPACE, cosCtx.getOperatorsNamespace());
         placeholders.put(COS_CLUSTER_ID, clusterId());
         placeholders.put(COS_OPERATOR_ID, operatorId());
         placeholders.put(COS_OPERATOR_VERSION, operatorVersion());
         placeholders.put(COS_KAFKA_CLIENT_ID, DEFAULT_KAFKA_CLIENT_ID);
+
         if (null != connector()) {
             if (null != connector().getSpec()) {
                 placeholders.put(COS_DEPLOYMENT_ID, connector().getSpec().getDeploymentId());
@@ -124,12 +143,6 @@ public class ConnectorContext {
             }
             if (null != connector().getMetadata()) {
                 placeholders.put(COS_MANAGED_CONNECTOR_NAME, connector().getMetadata().getName());
-
-                if (connector().getMetadata().getLabels().containsKey(LABEL_UOW)) {
-                    placeholders.put(
-                        COS_DEPLOYMENT_UOW,
-                        connector().getMetadata().getLabels().get(LABEL_UOW));
-                }
             }
         }
         if (null != secret() && null != secret().getMetadata()) {
@@ -145,35 +158,46 @@ public class ConnectorContext {
             }
             placeholders.put(COS_MANAGED_CONNECTOR_SECRET_NAME, secret().getMetadata().getName());
         }
-        return placeholders;
+
+        placeholders.putAll(additional);
+
+        return new PlaceholderResolver(placeholders);
     }
 
-    public String getPlaceholderValue(String in) {
-        Object value = getPlaceholders().get(in);
-        return value != null ? value.toString() : null;
-    }
+    public class PlaceholderResolver {
+        private final Map<String, Object> placeholders;
 
-    public String resolvePlaceholders(String in) {
-        return new StringSubstitutor(getPlaceholders()).replace(in);
-    }
+        PlaceholderResolver(Map<String, Object> placeholders) {
+            this.placeholders = new HashMap<>(placeholders);
+        }
 
-    public Map<String, String> resolvePlaceholders(DataTable in) {
-        return resolvePlaceholders(in.asMap(String.class, String.class));
-    }
+        public String get(String in) {
+            Object value = placeholders.get(in);
+            return value != null ? value.toString() : null;
+        }
 
-    public Map<String, String> resolvePlaceholders(Map<String, String> in) {
-        Map<String, String> answer = new HashMap<>();
-        in.forEach((k, v) -> {
-            if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_IGNORE.equals(v)) {
-                v = resolvePlaceholders(v);
-            }
-            if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_UID.equals(v)) {
-                v = uid();
-            }
+        public String resolve(String in) {
+            return new StringSubstitutor(placeholders).replace(in);
+        }
 
-            answer.put(k, resolvePlaceholders(v));
-        });
+        public Map<String, String> resolve(DataTable in) {
+            return resolvePlaceholders(in.asMap(String.class, String.class));
+        }
 
-        return Collections.unmodifiableMap(answer);
+        public Map<String, String> resolve(Map<String, String> in) {
+            Map<String, String> answer = new HashMap<>();
+            in.forEach((k, v) -> {
+                if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_IGNORE.equals(v)) {
+                    v = resolve(v);
+                }
+                if (!Strings.isNullOrEmpty(v) && PLACEHOLDER_UID.equals(v)) {
+                    v = uid();
+                }
+
+                answer.put(k, resolve(v));
+            });
+
+            return Collections.unmodifiableMap(answer);
+        }
     }
 }

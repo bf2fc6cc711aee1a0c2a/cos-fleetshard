@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.bf2.cos.fleetshard.it.cucumber.ConnectorContext;
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.operator.camel.CamelConstants;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
+import org.bf2.cos.fleetshard.support.resources.Resources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -140,7 +142,7 @@ public class KameletBindingSteps extends StepsSupport {
         assertThatJson(JacksonUtil.asJsonNode(res))
             .inPath(path)
             .isString()
-            .isEqualTo(ctx.resolvePlaceholders(value));
+            .isEqualTo(placeholderResolver().resolve(value));
     }
 
     @And("the klb has an entry at path {string} with value {int}")
@@ -202,7 +204,7 @@ public class KameletBindingSteps extends StepsSupport {
             .isArray()
             .containsAll(
                 elements.asList().stream()
-                    .map(e -> ctx.resolvePlaceholders(e))
+                    .map(e -> placeholderResolver().resolve(e))
                     .map(e -> Serialization.unmarshal(e, JsonNode.class))
                     .collect(Collectors.toList()));
     }
@@ -302,5 +304,16 @@ public class KameletBindingSteps extends StepsSupport {
             assertThat(res).isNotNull();
             assertThat(res).satisfies(predicate);
         });
+    }
+
+    private ConnectorContext.PlaceholderResolver placeholderResolver() {
+        Map<String, Object> additional = new HashMap<>();
+        KameletBinding binding = klb();
+
+        if (binding != null) {
+            additional.put("cos.traits.checksum", Resources.computeTraitsChecksum(binding));
+        }
+
+        return ctx.placeholderResolver(additional);
     }
 }
