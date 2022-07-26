@@ -1,10 +1,13 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
@@ -227,5 +230,26 @@ public final class Resources {
                 LOGGER.debug("Exception closing: {}", closeable, e);
             }
         }
+    }
+
+    public static String computeTraitsChecksum(HasMetadata resource) {
+        Checksum crc32 = new CRC32();
+
+        var annotations = resource.getMetadata().getAnnotations();
+        if (annotations != null) {
+            annotations.entrySet()
+                .stream()
+                .filter(e -> e.getKey().startsWith("trait.camel.apache.org/"))
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(e -> {
+                    byte[] k = e.getKey().getBytes(StandardCharsets.UTF_8);
+                    byte[] v = e.getValue().getBytes(StandardCharsets.UTF_8);
+
+                    crc32.update(k, 0, k.length);
+                    crc32.update(v, 0, v.length);
+                });
+        }
+
+        return Long.toHexString(crc32.getValue());
     }
 }

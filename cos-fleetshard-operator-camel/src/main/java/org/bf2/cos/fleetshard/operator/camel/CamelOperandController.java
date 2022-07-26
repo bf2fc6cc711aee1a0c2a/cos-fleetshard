@@ -63,7 +63,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createSt
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.hasSchemaRegistry;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
-import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_UOW;
 
 @Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode, ObjectNode> {
@@ -200,16 +199,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         secret.getMetadata().setName(connector.getMetadata().getName() + Resources.CONNECTOR_SECRET_SUFFIX);
         secret.setData(Map.of(APPLICATION_PROPERTIES, asBytesBase64(properties)));
 
-        final ObjectNode integration = createIntegrationSpec(
-            secret.getMetadata().getName(),
-            configuration,
-            Map.of(
-                "CONNECTOR_SECRET_NAME", secret.getMetadata().getName(),
-                "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
-                "CONNECTOR_ID", connector.getSpec().getConnectorId(),
-                "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId(),
-                "CONNECTOR_DEPLOYMENT_UOW", Resources.getLabel(connector, LABEL_UOW, () -> Resources.uid("generated-"))));
-
         final KameletBinding binding = new KameletBinding();
         binding.setMetadata(new ObjectMeta());
         binding.getMetadata().setName(connector.getMetadata().getName());
@@ -219,7 +208,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         binding.getSpec().setSink(sink);
         binding.getSpec().setErrorHandler(errorHandler);
         binding.getSpec().setSteps(stepDefinitions);
-        binding.getSpec().setIntegration(integration);
 
         Map<String, String> annotations = binding.getMetadata().getAnnotations();
         if (shardMetadata.getAnnotations() != null) {
@@ -289,6 +277,18 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                 }
             }
         }
+
+        final ObjectNode integration = createIntegrationSpec(
+            secret.getMetadata().getName(),
+            configuration,
+            Map.of(
+                "CONNECTOR_SECRET_NAME", secret.getMetadata().getName(),
+                "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
+                "CONNECTOR_ID", connector.getSpec().getConnectorId(),
+                "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId(),
+                "CONNECTOR_TRAITS_CHECKSUM", Resources.computeTraitsChecksum(binding)));
+
+        binding.getSpec().setIntegration(integration);
 
         return List.of(secret, binding);
     }
