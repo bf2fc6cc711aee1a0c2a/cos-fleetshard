@@ -19,7 +19,7 @@
         <maven.version>3.8.4</maven.version>
         <jackson-databind-nullable.version>0.2.2</jackson-databind-nullable.version>
         <jakarta-annotation-api.version>1.3.5</jakarta-annotation-api.version>
-        <josdk.version>2.1.4</josdk.version>
+        <josdk.version>3.1.0</josdk.version>
         <jsr305.version>3.0.2</jsr305.version>
         <kubernetes-client.version>5.12.2</kubernetes-client.version>
         <lombok.version>1.18.24</lombok.version>
@@ -40,7 +40,7 @@
         <commons-text.version>1.9</commons-text.version>
         <pmd.asm.version>9.3</pmd.asm.version>
         <findsecbugs.version>1.12.0</findsecbugs.version>
-        <spotbugs.version>4.7.0</spotbugs.version>
+        <spotbugs.version>4.7.1</spotbugs.version>
 
         <formatter-maven-plugin.version>2.19.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.7.0</impsort-maven-plugin.version>
