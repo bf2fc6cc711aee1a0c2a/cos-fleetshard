@@ -17,7 +17,7 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <maven.version>3.8.4</maven.version>
-        <jackson-databind-nullable.version>0.2.2</jackson-databind-nullable.version>
+        <jackson-databind-nullable.version>0.2.3</jackson-databind-nullable.version>
         <jakarta-annotation-api.version>1.3.5</jakarta-annotation-api.version>
         <josdk.version>2.1.4</josdk.version>
         <jsr305.version>3.0.2</jsr305.version>
@@ -34,7 +34,7 @@
         <json-unit.version>2.35.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <strimzi.version>0.28.0</strimzi.version>
-        <bson.version>4.6.1</bson.version>
+        <bson.version>4.7.0</bson.version>
         <cucumber.version>7.1.0</cucumber.version>
         <json-path.version>2.7.0</json-path.version>
         <commons-text.version>1.9</commons-text.version>
@@ -42,7 +42,7 @@
         <findsecbugs.version>1.12.0</findsecbugs.version>
         <spotbugs.version>4.7.1</spotbugs.version>
 
-        <formatter-maven-plugin.version>2.19.0</formatter-maven-plugin.version>
+        <formatter-maven-plugin.version>2.20.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.7.0</impsort-maven-plugin.version>
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
