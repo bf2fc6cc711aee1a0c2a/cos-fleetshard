@@ -30,13 +30,13 @@ public class ProbeSelector implements io.fabric8.kubernetes.api.model.Kubernetes
     @com.fasterxml.jackson.annotation.JsonProperty("matchLabels")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed.")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, String> matchLabels;
+    private java.util.Map<java.lang.String, String> matchLabels;
 
-    public java.util.Map<String, String> getMatchLabels() {
+    public java.util.Map<java.lang.String, String> getMatchLabels() {
         return matchLabels;
     }
 
-    public void setMatchLabels(java.util.Map<String, String> matchLabels) {
+    public void setMatchLabels(java.util.Map<java.lang.String, String> matchLabels) {
         this.matchLabels = matchLabels;
     }
 }

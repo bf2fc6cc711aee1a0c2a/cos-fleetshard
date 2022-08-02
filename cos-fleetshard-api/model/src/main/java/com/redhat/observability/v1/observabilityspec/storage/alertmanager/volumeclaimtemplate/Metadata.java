@@ -13,13 +13,13 @@ public class Metadata implements io.fabric8.kubernetes.api.model.KubernetesResou
     @com.fasterxml.jackson.annotation.JsonProperty("annotations")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queryable and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, String> annotations;
+    private java.util.Map<java.lang.String, String> annotations;
 
-    public java.util.Map<String, String> getAnnotations() {
+    public java.util.Map<java.lang.String, String> getAnnotations() {
         return annotations;
     }
 
-    public void setAnnotations(java.util.Map<String, String> annotations) {
+    public void setAnnotations(java.util.Map<java.lang.String, String> annotations) {
         this.annotations = annotations;
     }
 
@@ -30,13 +30,13 @@ public class Metadata implements io.fabric8.kubernetes.api.model.KubernetesResou
     @com.fasterxml.jackson.annotation.JsonProperty("labels")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, String> labels;
+    private java.util.Map<java.lang.String, String> labels;
 
-    public java.util.Map<String, String> getLabels() {
+    public java.util.Map<java.lang.String, String> getLabels() {
         return labels;
     }
 
-    public void setLabels(java.util.Map<String, String> labels) {
+    public void setLabels(java.util.Map<java.lang.String, String> labels) {
         this.labels = labels;
     }
 

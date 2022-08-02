@@ -12,13 +12,13 @@ public class Resources implements io.fabric8.kubernetes.api.model.KubernetesReso
     @com.fasterxml.jackson.annotation.JsonProperty("limits")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> limits;
+    private java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> limits;
 
-    public java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> getLimits() {
+    public java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> getLimits() {
         return limits;
     }
 
-    public void setLimits(java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> limits) {
+    public void setLimits(java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> limits) {
         this.limits = limits;
     }
 
@@ -30,13 +30,13 @@ public class Resources implements io.fabric8.kubernetes.api.model.KubernetesReso
     @com.fasterxml.jackson.annotation.JsonProperty("requests")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> requests;
+    private java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> requests;
 
-    public java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> getRequests() {
+    public java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> getRequests() {
         return requests;
     }
 
-    public void setRequests(java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> requests) {
+    public void setRequests(java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> requests) {
         this.requests = requests;
     }
 }
