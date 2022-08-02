@@ -20,8 +20,8 @@ import io.quarkus.test.junit.TestProfile;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @QuarkusTest
-@TestProfile(ObservabilityOnlyTest.Profile.class)
-public class ObservabilityOnlyTest extends SyncTestSupport {
+@TestProfile(ObservabilityTest.Profile.class)
+public class ObservabilityTest extends SyncTestSupport {
 
     @Test
     void observabilityIsProvisioned() {
@@ -49,11 +49,8 @@ public class ObservabilityOnlyTest extends SyncTestSupport {
             configMap.put("cos.namespace", Namespaces.generateNamespaceId(getId()));
             configMap.put("cos.observability.namespace", Namespaces.generateNamespaceId(getId()));
             configMap.put("cos.observability.enabled", "true");
-            configMap.put("cos.observability.subscription.enabled", "false");
             configMap.put("cos.observability.resource-name", "observability-resource");
             configMap.put("cos.observability.storage-request", "50Gi");
-            configMap.put("cos.observability.secrets-to-copy", "");
-            configMap.put("cos.observability.config-maps-to-copy", "");
             configMap.put("cos.resources.update-interval", "disabled");
             configMap.put("cos.resources.poll-interval", "disabled");
             configMap.put("cos.resources.resync-interval", "disabled");
@@ -65,7 +62,7 @@ public class ObservabilityOnlyTest extends SyncTestSupport {
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                new TestResourceEntry(ObservabilityOnlyTest.FleetManagerTestResource.class));
+                new TestResourceEntry(ObservabilityTest.FleetManagerTestResource.class));
         }
     }
 

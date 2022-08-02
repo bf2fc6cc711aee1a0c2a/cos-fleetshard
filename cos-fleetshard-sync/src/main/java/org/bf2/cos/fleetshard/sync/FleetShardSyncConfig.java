@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.sync;
 
 import java.net.URI;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -314,41 +313,6 @@ public interface FleetShardSyncConfig {
 
         @WithDefault("observability-operator")
         String configuresMatchLabel();
-
-        @WithDefault("redhat-managed-connectors-deadmanssnitch"
-            + ",observatorium-configuration-red-hat-sso"
-            + ",redhat-managed-connectors-pagerduty"
-            + ",cos-fleetshard-observability-upstream")
-        Optional<List<String>> secretsToCopy();
-
-        @WithDefault("observability-operator-no-init")
-        Optional<List<String>> configMapsToCopy();
-
-        Subscription subscription();
-
-        interface Subscription {
-
-            @WithDefault("true")
-            boolean enabled();
-
-            @WithDefault("observability-operator")
-            String name();
-
-            @WithDefault("alpha")
-            String channel();
-
-            @WithDefault("Automatic")
-            String installPlanApproval();
-
-            @WithDefault("addon-connectors-operator-catalog")
-            String source();
-
-            @WithDefault("openshift-marketplace")
-            String sourceNamespace();
-
-            @WithDefault("observability-operator.v3.0.9")
-            String startingCsv();
-        }
     }
 
 }
