@@ -2,7 +2,6 @@ package org.bf2.cos.fleetshard.sync.client;
 
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.redhat.observability.v1.Observability;
 import com.redhat.observability.v1.ObservabilitySpec;
 import com.redhat.observability.v1.observabilityspec.ConfigurationSelector;
+import com.redhat.observability.v1.observabilityspec.DescopedMode;
 import com.redhat.observability.v1.observabilityspec.SelfContained;
 import com.redhat.observability.v1.observabilityspec.Storage;
 import com.redhat.observability.v1.observabilityspec.selfcontained.*;
@@ -23,9 +23,6 @@ import com.redhat.observability.v1.observabilityspec.storage.prometheus.volumecl
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.openshift.api.model.operatorhub.v1alpha1.Subscription;
-import io.fabric8.openshift.api.model.operatorhub.v1alpha1.SubscriptionBuilder;
-import io.fabric8.openshift.api.model.operatorhub.v1alpha1.SubscriptionSpecBuilder;
 
 @ApplicationScoped
 public class FleetShardObservabilityClient {
@@ -35,13 +32,6 @@ public class FleetShardObservabilityClient {
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardSyncConfig config;
-
-    private String observabilityNamespace = "";
-
-    @PostConstruct
-    public void init() {
-        observabilityNamespace = config.observability().namespace();
-    }
 
     public void setupObservability() {
         if (!config.observability().enabled()) {
@@ -57,90 +47,7 @@ public class FleetShardObservabilityClient {
             return;
         }
 
-        if (observabilityNamespace.isBlank()) {
-            LOGGER.error("Observability namespace is not set!");
-            return;
-        }
-
-        if (config.observability().subscription().enabled()) {
-            createSubscriptionResource();
-        }
-        copyResourcesToObservabilityNamespace();
         createObservabilityResource();
-    }
-
-    private void createSubscriptionResource() {
-        LOGGER.info("Creating Subscription resource");
-        FleetShardSyncConfig.Observability.Subscription subscriptionConfig = config.observability().subscription();
-
-        Subscription subscription = new SubscriptionBuilder()
-            .withMetadata(
-                new ObjectMetaBuilder()
-                    .withName(subscriptionConfig.name())
-                    .withNamespace(observabilityNamespace)
-                    .build())
-            .withSpec(
-                new SubscriptionSpecBuilder()
-                    .withName(subscriptionConfig.name())
-                    .withChannel(subscriptionConfig.channel())
-                    .withInstallPlanApproval(subscriptionConfig.installPlanApproval())
-                    .withSource(subscriptionConfig.source())
-                    .withSourceNamespace(subscriptionConfig.sourceNamespace())
-                    .withStartingCSV(subscriptionConfig.startingCsv())
-                    .build())
-            .build();
-
-        kubernetesClient.resources(Subscription.class)
-            .inNamespace(subscription.getMetadata().getNamespace())
-            .withName(subscription.getMetadata().getName())
-            .createOrReplace(subscription);
-        LOGGER.info("Subscription resource created");
-    }
-
-    private void copyResourcesToObservabilityNamespace() {
-        LOGGER.info("Copying resources to observability namespace");
-
-        config.observability().configMapsToCopy().ifPresent(resources -> resources.forEach(this::copyConfigMap));
-        config.observability().secretsToCopy().ifPresent(resources -> resources.forEach(this::copySecret));
-
-        LOGGER.info("Observability resources copied to the target namespace: {}", observabilityNamespace);
-    }
-
-    private void copyConfigMap(String resourceName) {
-        ConfigMap resource = kubernetesClient.resources(ConfigMap.class)
-            .inNamespace(config.namespace())
-            .withName(resourceName)
-            .get();
-
-        if (resource == null) {
-            String msg = String.format("Observability ConfigMap not found to be copied: %s/%s", config.namespace(),
-                resourceName);
-            throw new IllegalArgumentException(msg);
-        }
-
-        resource.getMetadata().setNamespace(observabilityNamespace);
-        kubernetesClient.resources(ConfigMap.class)
-            .inNamespace(resource.getMetadata().getNamespace())
-            .withName(resourceName)
-            .createOrReplace(resource);
-    }
-
-    private void copySecret(String resourceName) {
-        Secret resource = kubernetesClient.resources(Secret.class)
-            .inNamespace(config.namespace())
-            .withName(resourceName)
-            .get();
-
-        if (resource == null) {
-            String msg = String.format("Observability Secret not found to be copied: %s/%s", config.namespace(), resourceName);
-            throw new IllegalArgumentException(msg);
-        }
-
-        resource.getMetadata().setNamespace(observabilityNamespace);
-        kubernetesClient.resources(Secret.class)
-            .inNamespace(resource.getMetadata().getNamespace())
-            .withName(resourceName)
-            .createOrReplace(resource);
     }
 
     private void createObservabilityResource() {
@@ -149,12 +56,18 @@ public class FleetShardObservabilityClient {
 
         final var meta = new ObjectMetaBuilder()
             .withName(config.observability().resourceName())
-            .withNamespace(observabilityNamespace)
+            .withNamespace(config.namespace())
             .withFinalizers(config.observability().finalizer())
             .build();
         observability.setMetadata(meta);
 
         final var spec = new ObservabilitySpec();
+
+        final var descopedMode = new DescopedMode();
+        descopedMode.setEnabled(true);
+        descopedMode.setPrometheusOperatorNamespace(config.observability().namespace());
+        spec.setDescopedMode(descopedMode);
+
         spec.setClusterId(config.cluster().id());
 
         final var configurationSelector = new ConfigurationSelector();
@@ -166,12 +79,9 @@ public class FleetShardObservabilityClient {
 
         final var selfContained = new SelfContained();
         selfContained.setDisablePagerDuty(false);
+        selfContained.setDisableSmtp(true);
 
         Map<String, String> rhocAppLabel = Map.of("app", "rhoc");
-
-        final var grafanaDashboardLS = new GrafanaDashboardLabelSelector();
-        grafanaDashboardLS.setMatchLabels(rhocAppLabel);
-        selfContained.setGrafanaDashboardLabelSelector(grafanaDashboardLS);
 
         final var podMonitorLS = new PodMonitorLabelSelector();
         podMonitorLS.setMatchLabels(rhocAppLabel);
