@@ -28,13 +28,13 @@ public class Status implements io.fabric8.kubernetes.api.model.KubernetesResourc
     @com.fasterxml.jackson.annotation.JsonProperty("capacity")
     @com.fasterxml.jackson.annotation.JsonPropertyDescription("Represents the actual resources of the underlying volume.")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
-    private java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> capacity;
+    private java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> capacity;
 
-    public java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> getCapacity() {
+    public java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> getCapacity() {
         return capacity;
     }
 
-    public void setCapacity(java.util.Map<String, io.fabric8.kubernetes.api.model.IntOrString> capacity) {
+    public void setCapacity(java.util.Map<java.lang.String, io.fabric8.kubernetes.api.model.IntOrString> capacity) {
         this.capacity = capacity;
     }
 

@@ -4,8 +4,8 @@ package com.redhat.observability.v1.observabilityspec;
 @com.fasterxml.jackson.annotation.JsonPropertyOrder({ "alertManagerConfigSecret", "alertManagerResourceRequirement",
     "alertManagerVersion", "blackboxBearerTokenSecret", "disableBlackboxExporter", "disableDeadmansSnitch",
     "disableObservatorium", "disablePagerDuty", "disableRepoSync", "disableSmtp", "federatedMetrics",
-    "grafanaDashboardLabelSelector", "grafanaOperatorResourceRequirement", "grafanaResourceRequirement", "overrideSelectors",
-    "podMonitorLabelSelector", "podMonitorNamespaceSelector", "probeNamespaceSelector", "probeSelector",
+    "grafanaDashboardLabelSelector", "grafanaOperatorResourceRequirement", "grafanaResourceRequirement", "grafanaVersion",
+    "overrideSelectors", "podMonitorLabelSelector", "podMonitorNamespaceSelector", "probeNamespaceSelector", "probeSelector",
     "prometheusOperatorResourceRequirement", "prometheusResourceRequirement", "prometheusVersion", "ruleLabelSelector",
     "ruleNamespaceSelector", "selfSignedCerts", "serviceMonitorLabelSelector", "serviceMonitorNamespaceSelector" })
 @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class)
@@ -198,6 +198,18 @@ public class SelfContained implements io.fabric8.kubernetes.api.model.Kubernetes
     public void setGrafanaResourceRequirement(
         com.redhat.observability.v1.observabilityspec.selfcontained.GrafanaResourceRequirement grafanaResourceRequirement) {
         this.grafanaResourceRequirement = grafanaResourceRequirement;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("grafanaVersion")
+    @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
+    private String grafanaVersion;
+
+    public String getGrafanaVersion() {
+        return grafanaVersion;
+    }
+
+    public void setGrafanaVersion(String grafanaVersion) {
+        this.grafanaVersion = grafanaVersion;
     }
 
     @com.fasterxml.jackson.annotation.JsonProperty("overrideSelectors")
