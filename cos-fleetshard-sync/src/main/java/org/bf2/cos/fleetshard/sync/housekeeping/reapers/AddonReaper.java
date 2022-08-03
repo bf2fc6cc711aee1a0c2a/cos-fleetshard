@@ -11,6 +11,7 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 import org.bf2.cos.fleetshard.sync.FleetShardSync;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.sync.client.FleetShardObservabilityClient;
 import org.bf2.cos.fleetshard.sync.housekeeping.Housekeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,15 +32,18 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private final KubernetesClient kubernetesClient;
     private final FleetShardSyncConfig config;
     private final FleetShardSync fleetShardSync;
+    private final FleetShardObservabilityClient observabilityClient;
     private final ConfigMapWatcher watcher;
     private final AtomicLong retries;
     private final AtomicBoolean running;
     private final AtomicBoolean taskRunning;
 
-    public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync) {
+    public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync,
+        FleetShardObservabilityClient observabilityClient) {
         this.kubernetesClient = kubernetesClient;
         this.config = config;
         this.fleetShardSync = fleetShardSync;
+        this.observabilityClient = observabilityClient;
         this.watcher = new ConfigMapWatcher();
         this.retries = new AtomicLong(0);
         this.running = new AtomicBoolean();
@@ -96,7 +100,10 @@ public class AddonReaper implements Housekeeper.Task, Service {
         LOGGER.info("Deleting all namespaces that belong to cluster {}. Try #{}", config.cluster().id(), retries);
         getNamespaceFilter().delete();
 
-        if (getNamespaceFilter().list().getItems().isEmpty()) {
+        LOGGER.info("Asking for Observability clean up");
+        observabilityClient.cleanUp();
+
+        if (getNamespaceFilter().list().getItems().isEmpty() && observabilityClient.isCleanedUp()) {
             LOGGER.info(
                 "All namespaces have been deleted. Deleting {} in namespace {} to signal that addon " +
                     "and operators removals should proceed.",

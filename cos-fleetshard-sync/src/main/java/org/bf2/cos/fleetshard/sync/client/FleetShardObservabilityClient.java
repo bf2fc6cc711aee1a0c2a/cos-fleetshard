@@ -23,6 +23,7 @@ import com.redhat.observability.v1.observabilityspec.storage.prometheus.volumecl
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Resource;
 
 @ApplicationScoped
 public class FleetShardObservabilityClient {
@@ -48,6 +49,16 @@ public class FleetShardObservabilityClient {
         }
 
         createObservabilityResource();
+    }
+
+    public void cleanUp() {
+        LOGGER.info("Cleaning up Observability resources.");
+        getObservabilityFilter().delete();
+        getObservabilityNamespaceFilter().delete();
+    }
+
+    public boolean isCleanedUp() {
+        return getObservabilityFilter().get() == null && getObservabilityNamespaceFilter().get() == null;
     }
 
     private void createObservabilityResource() {
@@ -116,11 +127,19 @@ public class FleetShardObservabilityClient {
 
         observability.setSpec(spec);
 
-        kubernetesClient.resources(Observability.class)
-            .inNamespace(observability.getMetadata().getNamespace())
-            .withName(observability.getMetadata().getName())
-            .createOrReplace(observability);
+        getObservabilityFilter().createOrReplace(observability);
         LOGGER.info("Observability resource created");
+    }
+
+    private Resource<Observability> getObservabilityFilter() {
+        return kubernetesClient.resources(Observability.class)
+            .inNamespace(config.namespace())
+            .withName(config.observability().resourceName());
+    }
+
+    private Resource<Namespace> getObservabilityNamespaceFilter() {
+        return kubernetesClient.namespaces()
+            .withName(config.observability().namespace());
     }
 
 }
