@@ -146,10 +146,9 @@ public class FleetManagerClient {
 
     public void updateClusterStatus(ConnectorClusterStatus status) {
         RestClientHelper.run(() -> {
-            LOGGER.info("Update cluster status: cluster_id={}, operators={}, namespaces={}",
+            LOGGER.info("Update cluster status: cluster_id={}, status={}",
                 config.cluster().id(),
-                status.getOperators() != null ? status.getOperators().size() : 0,
-                status.getNamespaces() != null ? status.getNamespaces().size() : 0);
+                Serialization.asJson(status));
 
             controlPlane.updateConnectorClusterStatus(
                 config.cluster().id(),

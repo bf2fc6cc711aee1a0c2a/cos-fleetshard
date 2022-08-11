@@ -5,6 +5,7 @@ import java.util.Objects;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.model.ConnectorClusterPlatform;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterState;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperatorsInner;
@@ -40,6 +41,8 @@ public class ConnectorClusterStatusSync implements Service {
     FleetShardSyncConfig config;
     @Inject
     MeterRegistry registry;
+    @Inject
+    ConnectorClusterPlatform platform;
 
     private volatile MetricsRecorder recorder;
 
@@ -67,6 +70,7 @@ public class ConnectorClusterStatusSync implements Service {
     private void update() {
         ConnectorClusterStatus status = new ConnectorClusterStatus();
         status.setPhase(ConnectorClusterState.READY);
+        status.setPlatform(platform);
 
         fleetShardClient.getOperators().stream().map(
             o -> new ConnectorClusterStatusOperatorsInner()
