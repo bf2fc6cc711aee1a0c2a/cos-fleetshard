@@ -5,7 +5,6 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.api.Conditions;
@@ -106,10 +105,10 @@ public class NamespaceProvisionerBadIdTestBase extends SyncTestSupport {
                 RequestMethod.GET,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
                 resp -> {
-                    ConnectorNamespace ns1 = namespace(deploymentId1, deploymentName1);
+                    var ns1 = namespace(deploymentId1, deploymentName1);
                     ns1.resourceVersion(1L);
 
-                    ConnectorNamespace ns2 = namespace(deploymentId2, deploymentName2);
+                    var ns2 = namespace(deploymentId2, deploymentName2);
                     ns2.resourceVersion(2L);
 
                     JsonNode body = namespaceList(ns1, ns2);

@@ -267,7 +267,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespaceList'
+                $ref: '#/components/schemas/ConnectorNamespaceDeploymentList'
           description: All connector namespaces in cluster
         '401':
           content:
@@ -321,7 +321,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespace'
+                $ref: '#/components/schemas/ConnectorNamespaceDeployment'
           description: A connector namespace
         '401':
           content:
@@ -374,7 +374,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConnectorNamespaceStatus'
+              $ref: '#/components/schemas/ConnectorNamespaceDeploymentStatus'
         required: true
       responses:
         '200':
@@ -431,8 +431,8 @@ components:
         type:
           type: string
         error:
-          nullable: true
           $ref: "connector_mgmt.yaml#/components/schemas/Error"
+          nullable: true
         object:
           type: object
           nullable: true
@@ -549,29 +549,6 @@ components:
           description: the version of the operator
           type: string
 
-    ConnectorNamespaceStatus:
-      description: "Schema for the request to update a data plane namespaces' status"
-      type: object
-      required:
-        - id
-        - phase
-        - version
-        - connectors_deployed
-      properties:
-        id:
-          type: string
-        phase:
-          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespaceState'
-        version:
-          type: string
-        connectors_deployed:
-          type: integer
-          format: int32
-        conditions:
-          type: array
-          items:
-            $ref: '#/components/schemas/MetaV1Condition'
-
     ConnectorClusterStatus:
       description: "Schema for the request to update a data plane cluster's status"
       type: object
@@ -601,7 +578,71 @@ components:
         namespaces:
           type: array
           items:
-            $ref: '#/components/schemas/ConnectorNamespaceStatus'
+            $ref: '#/components/schemas/ConnectorNamespaceDeploymentStatus'
+
+    #
+    # Namespace
+    #
+
+    ConnectorNamespaceDeploymentList:
+      allOf:
+        - $ref: "#/components/schemas/List"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConnectorNamespaceDeployment"
+
+    ConnectorNamespaceDeployment:
+      description: A connector namespace deployment
+      allOf:
+        - $ref: "connector_mgmt.yaml#/components/schemas/ObjectReference"
+        - $ref: "connector_mgmt.yaml#/components/schemas/ConnectorNamespaceMeta"
+        - type: object
+          properties:
+            name:
+              type: string
+            cluster_id:
+              type: string
+            expiration:
+              description: Namespace expiration timestamp in RFC 3339 format
+              #format: date-time
+              type: string
+            tenant:
+              $ref: "connector_mgmt.yaml#/components/schemas/ConnectorNamespaceTenant"
+            status:
+              $ref: "connector_mgmt.yaml#/components/schemas/ConnectorNamespaceStatus"
+          required:
+            - id
+            - name
+            - resource_version
+            - cluster_id
+            - tenant
+            - status
+
+    ConnectorNamespaceDeploymentStatus:
+      description: "Schema for the request to update a data plane namespaces' status"
+      type: object
+      required:
+        - id
+        - phase
+        - version
+        - connectors_deployed
+      properties:
+        id:
+          type: string
+        phase:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ConnectorNamespaceState'
+        version:
+          type: string
+        connectors_deployed:
+          type: integer
+          format: int32
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
 
   securitySchemes:
     Bearer:

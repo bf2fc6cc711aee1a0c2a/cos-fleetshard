@@ -15,9 +15,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -47,15 +47,15 @@ public class FleetManagerClient {
             .build(FleetManagerClientApi.class);
     }
 
-    public void getNamespaces(long gv, Consumer<Collection<ConnectorNamespace>> consumer) {
+    public void getNamespaces(long gv, Consumer<Collection<ConnectorNamespaceDeployment>> consumer) {
         RestClientHelper.run(() -> {
             LOGGER.debug("polling namespaces with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
-            final List<ConnectorNamespace> items = new ArrayList<>();
+            final List<ConnectorNamespaceDeployment> items = new ArrayList<>();
 
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
-                ConnectorNamespaceList list = controlPlane.getConnectorNamespaces(
+                ConnectorNamespaceDeploymentList list = controlPlane.getConnectorNamespaces(
                     config.cluster().id(),
                     Integer.toString(i),
                     null,
@@ -130,7 +130,7 @@ public class FleetManagerClient {
         });
     }
 
-    public void updateNamespaceStatus(String clusterId, String namespaceId, ConnectorNamespaceStatus status) {
+    public void updateNamespaceStatus(String clusterId, String namespaceId, ConnectorNamespaceDeploymentStatus status) {
         RestClientHelper.run(() -> {
             LOGGER.info("Update namespace status: cluster_id={}, namespace_id={}, status={}",
                 clusterId,

@@ -4,9 +4,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -35,7 +35,7 @@ public class NamespaceProvisionerTest {
         //
         // Given that no resources associated to the provided deployment exist
         //
-        final ConnectorNamespace namespace = new ConnectorNamespace();
+        final ConnectorNamespaceDeployment namespace = new ConnectorNamespaceDeployment();
 
         namespace.id(uid());
         namespace.name("--eval");
@@ -44,7 +44,7 @@ public class NamespaceProvisionerTest {
             .id(uid())
             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-        namespace.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
+        namespace.setStatus(new ConnectorNamespaceStatus().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
         namespace.setTenant(tenant);
         namespace.setExpiration(new Date().toString());
 

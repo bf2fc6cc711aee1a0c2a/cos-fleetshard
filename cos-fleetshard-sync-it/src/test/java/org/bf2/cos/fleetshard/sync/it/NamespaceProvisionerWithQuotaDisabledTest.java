@@ -3,10 +3,9 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceQuota;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -62,8 +61,8 @@ public class NamespaceProvisionerWithQuotaDisabledTest extends NamespaceProvisio
                 RequestMethod.GET,
                 "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
                 resp -> {
-                    ConnectorNamespace ns = namespace(nsId1, nsId1, n -> {
-                        n.status(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
+                    var ns = namespace(nsId1, nsId1, n -> {
+                        n.status(new ConnectorNamespaceStatus().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                         n.tenant(new ConnectorNamespaceTenant().id(uid()).kind(ConnectorNamespaceTenantKind.ORGANISATION));
                         n.quota(new ConnectorNamespaceQuota().cpuLimits(cfg.getValue("test.ns.id.1.limits.cpu", String.class)));
                     });

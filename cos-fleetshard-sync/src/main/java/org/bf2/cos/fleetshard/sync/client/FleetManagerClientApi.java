@@ -27,9 +27,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 
 public interface FleetManagerClientApi {
 
@@ -63,7 +63,7 @@ public interface FleetManagerClientApi {
     @GET
     @Path("/kafka_connector_clusters/{connector_cluster_id}/namespaces/{namespace_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    ConnectorNamespace getConnectorNamespaceById(
+    ConnectorNamespaceDeployment getConnectorNamespaceById(
         @PathParam("connector_cluster_id") String connectorClusterId,
         @PathParam("namespace_id") String namespaceId)
         throws ApiException, ProcessingException;
@@ -74,7 +74,7 @@ public interface FleetManagerClientApi {
     @GET
     @Path("/kafka_connector_clusters/{connector_cluster_id}/namespaces")
     @Produces(MediaType.APPLICATION_JSON)
-    ConnectorNamespaceList getConnectorNamespaces(
+    ConnectorNamespaceDeploymentList getConnectorNamespaces(
         @PathParam("connector_cluster_id") String connectorClusterId,
         @QueryParam("page") String page,
         @QueryParam("size") String size,
@@ -105,7 +105,7 @@ public interface FleetManagerClientApi {
     void updateConnectorNamespaceStatus(
         @PathParam("connector_cluster_id") String connectorClusterId,
         @PathParam("namespace_id") String namespaceId,
-        ConnectorNamespaceStatus connectorNamespaceStatus)
+        ConnectorNamespaceDeploymentStatus connectorNamespaceStatus)
         throws ApiException, ProcessingException;
 
     /**
