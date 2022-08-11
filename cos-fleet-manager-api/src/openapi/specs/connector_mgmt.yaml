@@ -158,6 +158,44 @@ paths:
                   $ref: "#/components/examples/500Example"
           description: Unexpected error occurred
 
+  "/api/connector_mgmt/v1/kafka_connector_types/labels":
+    get:
+      tags:
+        - Connector Types
+      security:
+        - Bearer: [ ]
+      operationId: getConnectorTypeLabels
+      summary: Returns a list of connector type labels
+      description: Returns a list of connector type labels
+      parameters:
+        - $ref: "#/components/parameters/orderBy"
+        - $ref: "#/components/parameters/search"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectorTypeLabelCountList"
+          description: A list of connector type labels
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                401Example:
+                  $ref: "#/components/examples/401Example"
+          description: Auth token is invalid
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                500Example:
+                  $ref: "#/components/examples/500Example"
+          description: Unexpected error occurred
+
   #
   # Connector
   #
@@ -1315,6 +1353,10 @@ components:
               type: array
               items:
                 type: string
+            featured_rank:
+              description: Ranking for featured connectors
+              type: integer
+              format: int32
             capabilities:
               description: The capabilities supported by the conenctor
               type: array
@@ -1335,6 +1377,29 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/ConnectorType"
+
+    ConnectorTypeLabelCount:
+      description: Represents a connector type label and the number of types with that label
+      required:
+        - label
+        - count
+      type: object
+      properties:
+        label:
+          description: Name of the connector type label.
+          type: string
+        count:
+          description: Number of connector types with this label.
+          type: integer
+          format: int32
+
+    ConnectorTypeLabelCountList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConnectorTypeLabelCount"
 
     #
     # Connector Namespaces
@@ -1560,7 +1625,7 @@ components:
 
         * Cluster: id, created_at, updated_at, owner, organisation_id, name, state, client_id
         * Namespace: id, created_at, updated_at, name, cluster_id, owner, expiration, tenant_user_id, tenant_organisation_id, state
-        * Connector Types: id, created_at, updated_at, version, name, description, label, channel
+        * Connector Types: id, created_at, updated_at, version, name, description, label, channel, featured_rank
         * Connectors: id, created_at, updated_at, name, owner, organisation_id, connector_type_id, desired_state, state, channel, namespace_id, kafka_id, kafka_bootstrap_server, service_account_client_id, schema_registry_id, schema_registry_url
 
         Allowed operators are `<>`, `=`, `LIKE`, or `ILIKE`.

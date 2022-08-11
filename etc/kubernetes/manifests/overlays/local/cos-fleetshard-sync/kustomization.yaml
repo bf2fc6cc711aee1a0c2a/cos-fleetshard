@@ -25,6 +25,9 @@ patchesJson6902:
     version: v1
 
 patches:
+#
+# Removing cos-fleetshard-sync-addon role & binding as OpenShift specific
+#
 - target:
     group: rbac.authorization.k8s.io
     version: v1
@@ -47,3 +50,28 @@ patches:
     kind: RoleBinding
     metadata:
       name: cos-fleetshard-sync-addon
+#
+# Removing cos-fleetshard-sync-clusterversion role & binding as OpenShift specific
+#
+- target:
+    group: rbac.authorization.k8s.io
+    version: v1
+    kind: ClusterRole
+    name: cos-fleetshard-sync-clusterversion
+  patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: cos-fleetshard-sync-clusterversion
+- target:
+    group: rbac.authorization.k8s.io
+    version: v1
+    kind: ClusterRoleBinding
+    name: cos-fleetshard-sync-clusterversion
+  patch: |-
+    $patch: delete
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: cos-fleetshard-sync-clusterversion

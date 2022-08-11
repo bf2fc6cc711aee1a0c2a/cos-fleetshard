@@ -30,6 +30,7 @@ rules:
 - apiGroups:
     - ""
   resources:
+    - configmaps
     - secrets
     - namespaces
   verbs:
@@ -89,6 +90,18 @@ rules:
       - update
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cos-fleetshard-sync-clusterversion
+rules:
+  - apiGroups:
+      - config.openshift.io
+    resources:
+      - clusterversion
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cos-fleetshard-sync-crds
@@ -122,6 +135,19 @@ roleRef:
   kind: ClusterRole
   apiGroup: rbac.authorization.k8s.io
   name: cos-fleetshard-sync-quota
+subjects:
+  - kind: ServiceAccount
+    name: cos-fleetshard-sync
+    namespace: placeholder
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cos-fleetshard-sync-clusterversion
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-sync-clusterversion
 subjects:
   - kind: ServiceAccount
     name: cos-fleetshard-sync
@@ -193,18 +219,6 @@ rules:
       - operators.coreos.com
     resources:
       - subscriptions
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
     verbs:
       - create
       - delete
