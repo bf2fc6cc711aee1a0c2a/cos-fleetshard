@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
@@ -32,7 +32,7 @@ public abstract class NamespaceReaperSyncTestBase extends SyncTestSupport {
                     .id(uid())
                     .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-                ns.setStatus(new ConnectorNamespaceStatus1()
+                ns.setStatus(new ConnectorNamespaceStatus()
                     .state(ConnectorNamespaceState.READY)
                     .connectorsDeployed(1));
 
@@ -46,7 +46,7 @@ public abstract class NamespaceReaperSyncTestBase extends SyncTestSupport {
                     .id(uid())
                     .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-                ns.setStatus(new ConnectorNamespaceStatus1()
+                ns.setStatus(new ConnectorNamespaceStatus()
                     .state(ConnectorNamespaceState.READY)
                     .connectorsDeployed(1));
 

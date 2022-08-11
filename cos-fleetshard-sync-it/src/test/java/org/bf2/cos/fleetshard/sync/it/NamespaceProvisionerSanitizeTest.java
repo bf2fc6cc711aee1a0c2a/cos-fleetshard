@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.support.CollectionUtils;
@@ -131,7 +131,7 @@ public class NamespaceProvisionerSanitizeTest extends SyncTestSupport {
                                 .kind(ConnectorNamespaceTenantKind.USER);
 
                             n.setStatus(
-                                new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
+                                new ConnectorNamespaceStatus().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                             n.setTenant(tenant);
                             n.setExpiration(new Date().toString());
                         }),
@@ -141,7 +141,7 @@ public class NamespaceProvisionerSanitizeTest extends SyncTestSupport {
                                 .kind(ConnectorNamespaceTenantKind.USER);
 
                             n.setStatus(
-                                new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
+                                new ConnectorNamespaceStatus().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
                             n.setTenant(tenant);
                             n.setExpiration(new Date().toString());
                         }));

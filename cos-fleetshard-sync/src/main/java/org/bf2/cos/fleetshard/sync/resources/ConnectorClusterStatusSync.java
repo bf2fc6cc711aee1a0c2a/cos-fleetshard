@@ -8,8 +8,8 @@ import javax.inject.Inject;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterState;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatusOperatorsInner;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
@@ -90,7 +90,7 @@ public class ConnectorClusterStatusSync implements Service {
                     }
                 }
 
-                return new ConnectorNamespaceStatus()
+                return new ConnectorNamespaceDeploymentStatus()
                     .id(n.getMetadata().getLabels().get(Resources.LABEL_NAMESPACE_ID))
                     .version(Resources.getLabel(n, Resources.LABEL_KUBERNETES_VERSION))
                     .connectorsDeployed(fleetShardClient.getConnectors(n).size())

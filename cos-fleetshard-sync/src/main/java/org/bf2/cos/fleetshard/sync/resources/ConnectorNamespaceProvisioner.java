@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.Conditions;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
@@ -81,8 +81,8 @@ public class ConnectorNamespaceProvisioner {
             items -> provisionNamespaces(items, revision == 0));
     }
 
-    private void provisionNamespaces(Collection<ConnectorNamespace> namespaces, boolean sync) {
-        for (ConnectorNamespace namespace : namespaces) {
+    private void provisionNamespaces(Collection<ConnectorNamespaceDeployment> namespaces, boolean sync) {
+        for (ConnectorNamespaceDeployment namespace : namespaces) {
             this.recorder.record(
                 () -> provision(namespace),
                 Tags.of(TAG_NAMESPACE_ID, namespace.getId()),
@@ -99,7 +99,7 @@ public class ConnectorNamespaceProvisioner {
                         condition.setReason(Conditions.FAILED_TO_CREATE_OR_UPDATE_RESOURCE_REASON);
                         condition.setMessage(e.getMessage());
 
-                        ConnectorNamespaceStatus status = new ConnectorNamespaceStatus()
+                        ConnectorNamespaceDeploymentStatus status = new ConnectorNamespaceDeploymentStatus()
                             .id(namespace.getId())
                             .version("" + namespace.getResourceVersion())
                             .phase(ConnectorNamespaceState.DISCONNECTED)
@@ -127,7 +127,7 @@ public class ConnectorNamespaceProvisioner {
         }
 
         if (sync) {
-            Set<String> knownIds = namespaces.stream().map(ConnectorNamespace::getId).collect(Collectors.toSet());
+            Set<String> knownIds = namespaces.stream().map(ConnectorNamespaceDeployment::getId).collect(Collectors.toSet());
 
             for (Namespace namespace : fleetShard.getNamespaces()) {
                 String nsId = Resources.getLabel(namespace, Resources.LABEL_NAMESPACE_ID);
@@ -173,7 +173,7 @@ public class ConnectorNamespaceProvisioner {
             });
     }
 
-    private void createResourceQuota(String uow, ConnectorNamespace connectorNamespace) {
+    private void createResourceQuota(String uow, ConnectorNamespaceDeployment connectorNamespace) {
         if (connectorNamespace.getQuota() == null) {
             return;
         }
@@ -210,7 +210,7 @@ public class ConnectorNamespaceProvisioner {
             .createOrReplace(quota);
     }
 
-    private void createResourceLimit(String uow, ConnectorNamespace connectorNamespace) {
+    private void createResourceLimit(String uow, ConnectorNamespaceDeployment connectorNamespace) {
         if (connectorNamespace.getQuota() == null) {
             return;
         }
@@ -280,7 +280,7 @@ public class ConnectorNamespaceProvisioner {
             .createOrReplace(limits);
     }
 
-    public void provision(ConnectorNamespace connectorNamespace) {
+    public void provision(ConnectorNamespaceDeployment connectorNamespace) {
         LOGGER.info("Got cluster_id: {}, namespace_d: {}, state: {}, connectors_deployed: {}",
             fleetShard.getClusterId(),
             connectorNamespace.getId(),
@@ -350,7 +350,7 @@ public class ConnectorNamespaceProvisioner {
         copyAddonPullSecret(uow, ns);
     }
 
-    private boolean hasQuota(ConnectorNamespace connectorNamespace) {
+    private boolean hasQuota(ConnectorNamespaceDeployment connectorNamespace) {
         if (config.quota() != null && !config.quota().enabled()) {
             return false;
         }

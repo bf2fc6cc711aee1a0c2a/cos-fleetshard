@@ -18,10 +18,10 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentSpec;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespace;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceList;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
-import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus1;
+import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -60,26 +60,30 @@ public class SyncTestSupport {
         return Serialization.jsonMapper().convertValue(items, ObjectNode.class);
     }
 
-    public static ObjectNode namespaceList(ConnectorNamespace... namespaces) {
-        var items = new ConnectorNamespaceList();
+    public static ObjectNode namespaceList(ConnectorNamespaceDeployment... namespaces) {
+        var items = new ConnectorNamespaceDeploymentList();
         items.page(1);
         items.size(namespaces.length);
         items.total(namespaces.length);
 
-        for (ConnectorNamespace namespace : namespaces) {
+        for (ConnectorNamespaceDeployment namespace : namespaces) {
             items.addItemsItem(namespace);
         }
 
         return Serialization.jsonMapper().convertValue(items, ObjectNode.class);
     }
 
-    public static ConnectorNamespace namespace(String id, String name, Consumer<ConnectorNamespace> consumer) {
-        ConnectorNamespace answer = new ConnectorNamespace().id(id).name(name);
+    public static ConnectorNamespaceDeployment namespace(
+        String id,
+        String name,
+        Consumer<ConnectorNamespaceDeployment> consumer) {
+
+        ConnectorNamespaceDeployment answer = new ConnectorNamespaceDeployment().id(id).name(name);
 
         consumer.accept(answer);
 
         if (answer.getStatus() == null) {
-            answer.setStatus(new ConnectorNamespaceStatus1());
+            answer.setStatus(new ConnectorNamespaceStatus());
         }
         if (answer.getStatus().getConnectorsDeployed() == null) {
             answer.getStatus().setConnectorsDeployed(0);
@@ -88,14 +92,14 @@ public class SyncTestSupport {
         return answer;
     }
 
-    public static ConnectorNamespace namespace(String id, String name) {
-        ConnectorNamespace answer = new ConnectorNamespace().id(id).name(name);
+    public static ConnectorNamespaceDeployment namespace(String id, String name) {
+        ConnectorNamespaceDeployment answer = new ConnectorNamespaceDeployment().id(id).name(name);
 
         ConnectorNamespaceTenant tenant = new ConnectorNamespaceTenant()
             .id(uid())
             .kind(ConnectorNamespaceTenantKind.ORGANISATION);
 
-        answer.setStatus(new ConnectorNamespaceStatus1().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
+        answer.setStatus(new ConnectorNamespaceStatus().state(ConnectorNamespaceState.READY).connectorsDeployed(0));
         answer.setTenant(tenant);
         answer.setExpiration(new Date().toString());
 
