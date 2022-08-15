@@ -181,7 +181,7 @@ jobs:
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
-          GH_TOKEN: ${{ secrets.PR_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo ""
           echo "tag     : $DEPLOY_TAG"
