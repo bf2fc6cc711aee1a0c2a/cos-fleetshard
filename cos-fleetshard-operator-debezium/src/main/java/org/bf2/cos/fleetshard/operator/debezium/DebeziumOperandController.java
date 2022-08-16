@@ -149,6 +149,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToConfig("config.storage.topic", connector.getMetadata().getName() + "-config")
             .addToConfig("status.storage.topic", connector.getMetadata().getName() + "-status")
             .addToConfig("topic.creation.enable", "true")
+            .addToConfig("producer.compression.type", "lz4")
             // added to trigger a re-deployment if the secret changes
             .addToConfig("connector.secret.name", secret.getMetadata().getName())
             .addToConfig("connector.secret.checksum", Secrets.computeChecksum(secret))
@@ -255,7 +256,6 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .addToConfig("topic.creation.default.replication.factor", -1)
                 .addToConfig("topic.creation.default.partitions", -1)
                 .addToConfig("topic.creation.default.cleanup.policy", "compact")
-                .addToConfig("topic.creation.default.compression.type", "lz4")
                 .addToConfig("topic.creation.default.delete.retention.ms", 2_678_400_000L)
                 .build())
             .build();
