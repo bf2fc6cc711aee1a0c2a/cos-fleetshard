@@ -6,9 +6,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import io.strimzi.api.kafka.model.status.Condition;
-import io.strimzi.api.kafka.model.status.ConditionBuilder;
-import io.strimzi.api.kafka.model.status.KafkaConnectStatus;
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandController;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
@@ -23,6 +20,9 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.strimzi.api.kafka.model.JmxPrometheusExporterMetrics;
 import io.strimzi.api.kafka.model.KafkaConnect;
+import io.strimzi.api.kafka.model.status.Condition;
+import io.strimzi.api.kafka.model.status.ConditionBuilder;
+import io.strimzi.api.kafka.model.status.KafkaConnectStatus;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;

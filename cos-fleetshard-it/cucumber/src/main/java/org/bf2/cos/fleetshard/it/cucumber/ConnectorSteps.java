@@ -12,7 +12,6 @@ import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
-import io.fabric8.kubernetes.client.dsl.Resource;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -44,6 +43,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
@@ -455,8 +455,8 @@ public class ConnectorSteps {
 
     private Resource<ManagedConnector> connectorResource() {
         return kubernetesClient.resources(ManagedConnector.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ctx.connector().getMetadata().getName());
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ctx.connector().getMetadata().getName());
     }
 
     private ManagedConnector connector() {
