@@ -176,6 +176,7 @@ public class KafkaConnectorSteps extends StepsSupport {
                 return resource;
             });
     }
+
     @When("the kctr status is RUNNING with a failed task")
     public void kctr_with_failed_task() {
         kubernetesClient.resources(KafkaConnector.class)
@@ -195,7 +196,8 @@ public class KafkaConnectorSteps extends StepsSupport {
 
                 resource.getStatus().getConnectorStatus().put(
                     "tasks",
-                    List.of(Map.of("id", "0", "state", org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus.STATE_FAILED, "trace",
+                    List.of(Map.of("id", "0", "state",
+                        org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus.STATE_FAILED, "trace",
                         "io.debezium.DebeziumException: The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin-changelog.009801, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed.")));
 
                 //System.err.println(JacksonUtil.asPrettyPrintedYaml(resource));

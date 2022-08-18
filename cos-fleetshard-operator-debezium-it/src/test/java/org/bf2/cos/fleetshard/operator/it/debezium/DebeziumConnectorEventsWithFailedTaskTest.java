@@ -1,11 +1,11 @@
 package org.bf2.cos.fleetshard.operator.it.debezium;
 
+import java.util.Map;
+
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
-
-import java.util.Map;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
