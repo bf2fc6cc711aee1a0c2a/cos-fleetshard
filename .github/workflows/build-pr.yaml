@@ -35,7 +35,7 @@ jobs:
           server-id: github
       - name: "Build"
         run: |
-          ./mvnw ${MAVEN_ARGS} clean install -Pskip-it
+          ./mvnw ${MAVEN_ARGS} clean install -Pskip-it -Psourcecheck
       - name: "Tar Maven Repo"
         shell: bash
         run: |
