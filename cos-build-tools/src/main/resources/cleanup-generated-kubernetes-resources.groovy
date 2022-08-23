@@ -19,11 +19,17 @@ def parser = factory.createParser(inputFile as File)
 var docs = mapper.readValues(parser, GenericKubernetesResource.class).readAll()
 
 docs.each {
-    it?.metadata?.annotations?.remove('app.quarkus.io/commit-id')
-    it?.metadata?.annotations?.remove('app.quarkus.io/build-timestamp')
+    it.metadata.annotations?.remove('app.quarkus.io/commit-id')
+    it.metadata.annotations?.remove('app.quarkus.io/build-timestamp')
 
-    it?.additionalProperties?.spec?.template?.metadata?.annotations?.remove('app.quarkus.io/commit-id')
-    it?.additionalProperties?.spec?.template?.metadata?.annotations?.remove('app.quarkus.io/build-timestamp')
+    it.additionalProperties?.spec?.template?.metadata?.annotations?.remove('app.quarkus.io/commit-id')
+    it.additionalProperties?.spec?.template?.metadata?.annotations?.remove('app.quarkus.io/build-timestamp')
+
+    if (it.apiVersion == 'apps/v1' && it.kind == 'Deployment') {
+        it.additionalProperties?.spec?.template?.spec?.containers?.env?.sort {
+            env -> env.name
+        }
+    }
 }
 
 (outputFile as File).withWriter {
