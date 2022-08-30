@@ -13,6 +13,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.MetaV1Condition;
 import org.bf2.cos.fleetshard.api.Conditions;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -61,18 +62,21 @@ public class ConnectorNamespaceProvisioner {
     private final FleetShardSyncConfig config;
     private final MetricsRecorder recorder;
     private final NamespacedName pullSecretName;
+    private final EventClient eventClient;
 
     public ConnectorNamespaceProvisioner(
         FleetShardSyncConfig config,
         FleetShardClient connectorClient,
         FleetManagerClient fleetManager,
-        MeterRegistry registry) {
+        MeterRegistry registry,
+        EventClient eventClient) {
 
         this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
         this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
         this.pullSecretName = new NamespacedName(config.namespace(), config.imagePullSecretsName());
+        this.eventClient = eventClient;
     }
 
     public void poll(long revision) {
@@ -114,8 +118,7 @@ public class ConnectorNamespaceProvisioner {
                     }
 
                     fleetShard.getConnectorCluster().ifPresent(cc -> {
-                        fleetShard.broadcast(
-                            "Warning",
+                        eventClient.broadcastWarning(
                             "FailedToCreateOrUpdateResource",
                             String.format("Unable to create or update namespace %s, revision: %s, reason: %s",
                                 namespace.getId(),

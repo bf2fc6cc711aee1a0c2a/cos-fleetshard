@@ -7,6 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.apache.http.annotation.Obsolete;
 import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 import org.bf2.cos.fleetshard.sync.FleetShardSync;
@@ -28,6 +29,8 @@ import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 public class AddonReaper implements Housekeeper.Task, Service {
     private static final Logger LOGGER = LoggerFactory.getLogger(AddonReaper.class);
     public static final String ID = "addon.cleanup";
+    public static final String CLEANUP_EVENT_REASON = "CleaningUpResources";
+    public static final String FAILED_CLEANUP_EVENT_REASON = "FailedToCleanUpResources";
 
     private final KubernetesClient kubernetesClient;
     private final FleetShardSyncConfig config;
@@ -37,13 +40,15 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private final AtomicLong retries;
     private final AtomicBoolean running;
     private final AtomicBoolean taskRunning;
+    private final EventClient eventClient;
 
     public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync,
-        FleetShardObservabilityClient observabilityClient) {
+        FleetShardObservabilityClient observabilityClient, EventClient eventClient) {
         this.kubernetesClient = kubernetesClient;
         this.config = config;
         this.fleetShardSync = fleetShardSync;
         this.observabilityClient = observabilityClient;
+        this.eventClient = eventClient;
         this.watcher = new ConfigMapWatcher();
         this.retries = new AtomicLong(0);
         this.running = new AtomicBoolean();
@@ -88,8 +93,8 @@ public class AddonReaper implements Housekeeper.Task, Service {
 
     private void doRun() {
         if (retries.incrementAndGet() > config.addon().cleanupRetryLimit()) {
-            LOGGER.warn(
-                "Retry limit ({}) for deletion of namespaces has been reached. The application will signal " +
+            eventClient.broadcastWarning(FAILED_CLEANUP_EVENT_REASON,
+                "Retry limit (%s) for deletion of namespaces has been reached. The application will signal " +
                     "the addon to continue with the uninstall of the operators. This might leave unwanted namespaces " +
                     "in the cluster.",
                 retries);
@@ -97,23 +102,27 @@ public class AddonReaper implements Housekeeper.Task, Service {
             deleteAddonResource();
         }
 
-        LOGGER.info("Deleting all namespaces that belong to cluster {}. Try #{}", config.cluster().id(), retries);
+        eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
+            "Deleting all namespaces that belong to cluster {}. Try #{}",
+            config.cluster().id(), retries);
         getNamespaceFilter().delete();
 
-        LOGGER.info("Asking for Observability clean up");
+        eventClient.broadcastNormal(CLEANUP_EVENT_REASON, "Asking for Observability clean up");
         observabilityClient.cleanUp();
 
         if (getNamespaceFilter().list().getItems().isEmpty() && observabilityClient.isCleanedUp()) {
-            LOGGER.info(
-                "All namespaces have been deleted. Deleting {} in namespace {} to signal that addon " +
+            eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
+                "All namespaces have been deleted. Deleting %s in namespace %s to signal that addon " +
                     "and operators removals should proceed.",
                 config.addon().olmOperatorsKind(),
                 config.namespace());
 
             deleteAddonResource();
-            LOGGER.info("Cluster cleanup should be completed. Addon and Operators removals should proceed normally.");
+            eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
+                "Cluster cleanup should be completed. Addon and Operators removals should proceed normally.");
         } else {
-            LOGGER.info("Namespaces still not deleted, will wait for their deletion and try again.");
+            eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
+                "Namespaces still not deleted, will wait for their deletion and try again.");
         }
     }
 
@@ -171,8 +180,11 @@ public class AddonReaper implements Housekeeper.Task, Service {
             final String deleteLabel = Resources.getLabel(configMap, labelName);
 
             if ("true".equals(deleteLabel)) {
-                LOGGER.info("ConfigMap for deletion of the Addon was found, starting cleanup of cluster: {} - {}",
-                    config.cluster().id(), configMap);
+                eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
+                    "ConfigMap for deletion of the Addon was found, starting cleanup of cluster: %s - %s",
+                    configMap,
+                    config.cluster().id(),
+                    configMap);
                 try {
                     fleetShardSync.stopResourcesSync();
                 } catch (Exception e) {
