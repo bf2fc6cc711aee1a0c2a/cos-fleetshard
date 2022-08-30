@@ -17,6 +17,7 @@ import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -56,6 +57,7 @@ public class ConnectorDeploymentProvisioner {
     private final FleetShardClient fleetShard;
     private final FleetManagerClient fleetManager;
     private final FleetShardSyncConfig config;
+    private final EventClient eventClient;
 
     private final MetricsRecorder recorder;
 
@@ -63,12 +65,14 @@ public class ConnectorDeploymentProvisioner {
         FleetShardSyncConfig config,
         FleetShardClient connectorClient,
         FleetManagerClient fleetManager,
-        MeterRegistry registry) {
+        MeterRegistry registry,
+        EventClient eventClient) {
 
         this.config = config;
         this.fleetShard = connectorClient;
         this.fleetManager = fleetManager;
         this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
+        this.eventClient = eventClient;
     }
 
     public void poll(long revision) {
@@ -108,8 +112,7 @@ public class ConnectorDeploymentProvisioner {
                     }
 
                     fleetShard.getConnectorCluster().ifPresent(cc -> {
-                        fleetShard.broadcast(
-                            "Warning",
+                        eventClient.broadcastWarning(
                             "FailedToCreateOrUpdateResource",
                             String.format("Unable to create or update deployment %s, revision: %s, reason: %s",
                                 deployment.getId(),

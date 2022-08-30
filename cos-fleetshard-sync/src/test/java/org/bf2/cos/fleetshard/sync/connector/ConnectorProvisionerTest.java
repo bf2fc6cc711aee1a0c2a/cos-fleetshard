@@ -7,6 +7,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -51,6 +52,7 @@ public class ConnectorProvisionerTest {
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
+        final EventClient eventClient = Mockito.mock(EventClient.class);
 
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
@@ -59,7 +61,8 @@ public class ConnectorProvisionerTest {
             config,
             fleetShard,
             fleetManager,
-            registry);
+            registry,
+            eventClient);
 
         //
         // When deployment is applied
@@ -162,8 +165,9 @@ public class ConnectorProvisionerTest {
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
+        final EventClient eventClient = Mockito.mock(EventClient.class);
         final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
-            registry);
+            registry, eventClient);
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -279,8 +283,9 @@ public class ConnectorProvisionerTest {
         final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
         final FleetShardSyncConfig config = ConnectorTestSupport.config();
         final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
+        final EventClient eventClient = Mockito.mock(EventClient.class);
         final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
-            registry);
+            registry, eventClient);
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
