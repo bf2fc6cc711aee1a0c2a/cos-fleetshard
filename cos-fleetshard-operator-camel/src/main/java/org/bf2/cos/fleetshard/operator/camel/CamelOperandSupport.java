@@ -480,6 +480,9 @@ public final class CamelOperandSupport {
             .put("bootstrapServers", connector.getSpec().getDeployment().getKafka().getUrl())
             .set("topic", spec.requiredAt("/dead_letter_queue/topic"));
 
+        dlq.putObject("parameters")
+            .put("useOriginalMessage", "true");
+
         return errorHandler;
     }
 
