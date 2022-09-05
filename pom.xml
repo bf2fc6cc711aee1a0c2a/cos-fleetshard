@@ -41,7 +41,7 @@
         <pmd.asm.version>9.3</pmd.asm.version>
         <findsecbugs.version>1.12.0</findsecbugs.version>
         <assertj.version>3.23.1</assertj.version>
-        <spotbugs.version>4.7.1</spotbugs.version>
+        <spotbugs.version>4.7.2</spotbugs.version>
 
         <formatter-maven-plugin.version>2.20.0</formatter-maven-plugin.version>
         <impsort-maven-plugin.version>1.7.0</impsort-maven-plugin.version>
