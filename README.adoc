@@ -25,7 +25,7 @@ I use https://direnv.net[direnv] with the following set-up
 ----
 export OCM_CONFIG=$PWD/.ocm.json
 export KUBECONFIG=$PWD/.kube/config
-export COS_BASE_PATH=https://cos-fleet-manager-cos.rh-fuse-153f1de160110098c1928a6c05e19444-0000.eu-de.containers.appdomain.cloud
+export COS_BASE_PATH=https://cos-fleet-manager-managed-connectors-dev.rhoc-dev-153f1de160110098c1928a6c05e19444-0000.eu-de.containers.appdomain.cloud
 export KAS_BASE_PATH=https://api.openshift.com
 ----
 ====
