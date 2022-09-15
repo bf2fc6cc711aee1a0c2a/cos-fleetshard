@@ -3,21 +3,37 @@ package org.bf2.cos.fleetshard.sync.resources;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 @ApplicationScoped
 public class ConnectorStatusUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusUpdater.class);
+
+    public static final String CONNECTOR_STATE = "connector.state";
+    private List<Tag> tags;
+
 
     @Inject
     FleetManagerClient fleetManagerClient;
     @Inject
     FleetShardClient connectorClient;
+    @Inject
+    MeterRegistry registry;
+    @Inject
+    FleetShardSyncConfig config;
 
     public void update(ManagedConnector connector) {
         LOGGER.debug("Update connector status (name: {}, phase: {})",
@@ -25,9 +41,31 @@ public class ConnectorStatusUpdater {
             connector.getStatus().getPhase());
 
         try {
-            fleetManagerClient.updateConnectorStatus(
-                connector,
-                ConnectorStatusExtractor.extract(connector));
+            ConnectorDeploymentStatus connectorDeploymentStatus = ConnectorStatusExtractor.extract(connector);
+
+            fleetManagerClient.updateConnectorStatus(connector, connectorDeploymentStatus);
+
+            LOGGER.debug("Updating change status metrics (Connector_id : {}, state: {})",
+                connector.getSpec().getConnectorId(),
+                ConnectorStatusExtractor.extract(connector).getPhase());
+
+            switch (connectorDeploymentStatus.getPhase()) {
+                case READY:
+                    measure(connector, 1);
+                    break;
+                case FAILED:
+                    measure(connector, 2);
+                    break;
+                case DELETED:
+                    measure(connector, 3);
+                    break;
+                case STOPPED:
+                    measure(connector, 4);
+                    break;
+                default:
+                    measure(connector, 5);
+                    break;
+            }
 
         } catch (FleetManagerClientException e) {
             if (e.getStatusCode() == 410) {
@@ -43,4 +81,23 @@ public class ConnectorStatusUpdater {
         }
     }
 
+    /* Expose a metric "cos_fleetshard_sync_connector_state" which reveals the current connector state.
+    Metric value of 1 implies that the connector is in Ready state. Similarly, 2 -> Failed, 3 -> Deleted,
+    4 -> Stopped, 5 -> In Process */
+    private void measure(ManagedConnector connector, Integer connectorState) {
+
+        tags = List.of(
+                Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
+                Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
+
+        Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
+        if (gauge != null) {
+            registry.remove(gauge);
+        }
+
+        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, new AtomicInteger(connectorState), AtomicInteger::get)
+            .tags(tags)
+            .register(registry);
+
+    }
 }
