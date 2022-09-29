@@ -23,8 +23,12 @@ public class ConnectorStatusUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusUpdater.class);
 
     public static final String CONNECTOR_STATE = "connector.state";
-    private List<Tag> tags;
 
+    static final Integer CONNECTOR_STATE_READY = 1;
+    static final Integer CONNECTOR_STATE_FAILED = 2;
+    static final Integer CONNECTOR_STATE_DELETED = 3;
+    static final Integer CONNECTOR_STATE_STOPPED = 4;
+    static final Integer CONNECTOR_STATE_IN_PROCESS = 5;
 
     @Inject
     FleetManagerClient fleetManagerClient;
@@ -45,25 +49,25 @@ public class ConnectorStatusUpdater {
 
             fleetManagerClient.updateConnectorStatus(connector, connectorDeploymentStatus);
 
-            LOGGER.debug("Updating change status metrics (Connector_id : {}, state: {})",
+            LOGGER.debug("Updating Connector status metrics (Connector_id : {}, state: {})",
                 connector.getSpec().getConnectorId(),
                 ConnectorStatusExtractor.extract(connector).getPhase());
 
             switch (connectorDeploymentStatus.getPhase()) {
                 case READY:
-                    measure(connector, 1);
+                    measure(connector, CONNECTOR_STATE_READY);
                     break;
                 case FAILED:
-                    measure(connector, 2);
+                    measure(connector, CONNECTOR_STATE_FAILED);
                     break;
                 case DELETED:
-                    measure(connector, 3);
+                    measure(connector, CONNECTOR_STATE_DELETED);
                     break;
                 case STOPPED:
-                    measure(connector, 4);
+                    measure(connector, CONNECTOR_STATE_STOPPED);
                     break;
                 default:
-                    measure(connector, 5);
+                    measure(connector, CONNECTOR_STATE_IN_PROCESS);
                     break;
             }
 
@@ -86,16 +90,17 @@ public class ConnectorStatusUpdater {
     4 -> Stopped, 5 -> In Process */
     private void measure(ManagedConnector connector, Integer connectorState) {
 
-        tags = List.of(
+        List<Tag> tags = List.of(
                 Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
                 Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
 
         Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
+
         if (gauge != null) {
             registry.remove(gauge);
         }
 
-        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, new AtomicInteger(connectorState), AtomicInteger::get)
+        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
             .tags(tags)
             .register(registry);
 
