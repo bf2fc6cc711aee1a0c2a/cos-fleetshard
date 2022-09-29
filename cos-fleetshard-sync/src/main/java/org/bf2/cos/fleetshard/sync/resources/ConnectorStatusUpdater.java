@@ -85,14 +85,16 @@ public class ConnectorStatusUpdater {
         }
     }
 
-    /* Expose a metric "cos_fleetshard_sync_connector_state" which reveals the current connector state.
-    Metric value of 1 implies that the connector is in Ready state. Similarly, 2 -> Failed, 3 -> Deleted,
-    4 -> Stopped, 5 -> In Process */
+    /*
+     * Expose a metric "cos_fleetshard_sync_connector_state" which reveals the current connector state.
+     * Metric value of 1 implies that the connector is in Ready state. Similarly, 2 -> Failed, 3 -> Deleted,
+     * 4 -> Stopped, 5 -> In Process
+     */
     private void measure(ManagedConnector connector, Integer connectorState) {
 
         List<Tag> tags = List.of(
-                Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
-                Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
+            Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
+            Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
 
         Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
 
