@@ -1,11 +1,11 @@
 package org.bf2.cos.fleetshard.sync.resources;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
@@ -15,8 +15,9 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 
 @ApplicationScoped
 public class ConnectorStatusUpdater {
