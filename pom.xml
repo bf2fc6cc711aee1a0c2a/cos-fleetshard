@@ -29,7 +29,7 @@
         <swagger-annotations.version>1.6.7</swagger-annotations.version>
         <sundrio.version>0.50.2</sundrio.version>
         <wiremock.version>2.33.2</wiremock.version>
-        <spock.version>2.2-groovy-4.0</spock.version>
+        <spock.version>2.3-groovy-4.0</spock.version>
         <groovy.version>4.0.5</groovy.version>
         <json-unit.version>2.35.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
