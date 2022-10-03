@@ -586,7 +586,7 @@ components:
 
     ConnectorNamespaceDeploymentList:
       allOf:
-        - $ref: "#/components/schemas/List"
+        - $ref: "connector_mgmt.yaml#/components/schemas/List"
         - type: object
           properties:
             items:
