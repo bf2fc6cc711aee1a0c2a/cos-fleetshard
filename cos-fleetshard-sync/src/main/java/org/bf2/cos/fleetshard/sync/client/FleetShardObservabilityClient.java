@@ -92,6 +92,8 @@ public class FleetShardObservabilityClient {
         selfContained.setDisablePagerDuty(false);
         selfContained.setDisableSmtp(true);
 
+        selfContained.setPrometheusVersion("v2.35.0");
+
         Map<String, String> rhocAppLabel = Map.of("app", "rhoc");
 
         final var podMonitorLS = new PodMonitorLabelSelector();
