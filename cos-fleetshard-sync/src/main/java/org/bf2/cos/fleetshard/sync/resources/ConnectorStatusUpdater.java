@@ -95,6 +95,7 @@ public class ConnectorStatusUpdater {
 
         List<Tag> tags = List.of(
             Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
+            Tag.of("cos.connector.type.id", connector.getSpec().getDeployment().getConnectorTypeId()),
             Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
 
         Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
