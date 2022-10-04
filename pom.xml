@@ -34,7 +34,7 @@
         <json-unit.version>2.35.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <strimzi.version>0.30.0</strimzi.version>
-        <bson.version>4.7.1</bson.version>
+        <bson.version>4.7.2</bson.version>
         <cucumber.version>7.1.0</cucumber.version>
         <json-path.version>2.7.0</json-path.version>
         <commons-text.version>1.10.0</commons-text.version>
