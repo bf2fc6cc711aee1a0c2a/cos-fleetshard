@@ -232,24 +232,3 @@ spec:
           name: "cos-fleetshard-operator-debezium-config"
           optional: false
         name: "app-config-map"
----
-apiVersion: "monitoring.coreos.com/v1"
-kind: "ServiceMonitor"
-metadata:
-  annotations: {}
-  labels:
-    app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  name: "cos-fleetshard-operator-debezium"
-spec:
-  endpoints:
-  - interval: "30s"
-    path: "/q/metrics"
-    port: "http"
-    scheme: "http"
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: "cos-fleetshard-operator-debezium"
-      app.kubernetes.io/part-of: "cos"
-      app.kubernetes.io/version: "latest"

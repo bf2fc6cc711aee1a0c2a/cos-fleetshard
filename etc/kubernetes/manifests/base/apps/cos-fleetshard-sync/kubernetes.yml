@@ -395,10 +395,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
-        - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config"
         - name: "SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS"
           value: "/mnt/app-secret"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config"
         image: "quay.io/rhoas/cos-fleetshard-sync:latest"
         imagePullPolicy: "Always"
         livenessProbe:
@@ -452,24 +452,3 @@ spec:
           name: "cos-fleetshard-sync-config"
           optional: false
         name: "app-config"
----
-apiVersion: "monitoring.coreos.com/v1"
-kind: "ServiceMonitor"
-metadata:
-  annotations: {}
-  labels:
-    app.kubernetes.io/name: "cos-fleetshard-sync"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  name: "cos-fleetshard-sync"
-spec:
-  endpoints:
-  - interval: "30s"
-    path: "/q/metrics"
-    port: "http"
-    scheme: "http"
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: "cos-fleetshard-sync"
-      app.kubernetes.io/part-of: "cos"
-      app.kubernetes.io/version: "latest"

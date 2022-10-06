@@ -25,7 +25,10 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
@@ -44,9 +47,11 @@ public class FleetShardClient implements Service {
     private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
     private volatile SharedIndexInformer<Namespace> namespaceInformers;
 
+    @SuppressWarnings("PMD.DoNotTerminateVM")
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting FleetShardClient");
+
         operatorsInformer = kubernetesClient.resources(ManagedConnectorOperator.class)
             .inNamespace(config.namespace())
             .inform();
@@ -57,6 +62,25 @@ public class FleetShardClient implements Service {
             .inAnyNamespace()
             .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
             .inform();
+
+        operatorsInformer.stopped().whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+                LOGGER.warn("Operators informer has stopped working, exiting", throwable);
+                System.exit(-1);
+            }
+        });
+        namespaceInformers.stopped().whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+                LOGGER.warn("Namespaces informer has stopped working, exiting", throwable);
+                System.exit(-1);
+            }
+        });
+        connectorsInformer.stopped().whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+                LOGGER.warn("Connectors informer has stopped working, exiting", throwable);
+                System.exit(-1);
+            }
+        });
     }
 
     @Override
