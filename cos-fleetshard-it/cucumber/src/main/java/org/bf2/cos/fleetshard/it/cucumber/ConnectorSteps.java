@@ -116,7 +116,7 @@ public class ConnectorSteps {
 
         if (ctx.secret() != null) {
             Secret secret = kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.secret().getMetadata().getNamespace())
+                .inNamespace(ctx.connectorsNamespace())
                 .withName(ctx.secret().getMetadata().getName())
                 .get();
 
@@ -203,6 +203,7 @@ public class ConnectorSteps {
                 .withName(connector.getMetadata().getName()
                     + "-"
                     + connector.getSpec().getDeployment().getDeploymentResourceVersion())
+                .withNamespace(ctx.connectorsNamespace())
                 .build())
             .withData(new HashMap<>())
             .addToData(
@@ -303,7 +304,7 @@ public class ConnectorSteps {
     public void secret_is_created() {
         until(() -> {
             var res = kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.secret().getMetadata().getNamespace())
+                .inNamespace(ctx.connectorsNamespace())
                 .withName(ctx.secret().getMetadata().getName())
                 .get();
 
@@ -360,7 +361,7 @@ public class ConnectorSteps {
     public void secret_does_not_exists() {
         until(() -> {
             var res = kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.secret().getMetadata().getNamespace())
+                .inNamespace(ctx.connectorsNamespace())
                 .withName(ctx.secret().getMetadata().getName())
                 .get();
 

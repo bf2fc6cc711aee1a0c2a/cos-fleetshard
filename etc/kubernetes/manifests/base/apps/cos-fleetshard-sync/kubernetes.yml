@@ -2,7 +2,6 @@
 apiVersion: "v1"
 kind: "ServiceAccount"
 metadata:
-  annotations: {}
   labels:
     app.kubernetes.io/name: "cos-fleetshard-sync"
     app.kubernetes.io/part-of: "cos"
@@ -10,192 +9,6 @@ metadata:
   name: "cos-fleetshard-sync"
 imagePullSecrets:
 - name: "addon-pullsecret"
----
-apiVersion: "v1"
-kind: "Service"
-metadata:
-  annotations:
-    prometheus.io/path: "/q/metrics"
-    prometheus.io/port: "8080"
-    prometheus.io/scheme: "http"
-    prometheus.io/scrape: "true"
-  labels:
-    app.kubernetes.io/name: "cos-fleetshard-sync"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  name: "cos-fleetshard-sync"
-spec:
-  ports:
-  - name: "http"
-    port: 80
-    targetPort: 8080
-  selector:
-    app.kubernetes.io/name: "cos-fleetshard-sync"
-    app.kubernetes.io/part-of: "cos"
-    app.kubernetes.io/version: "latest"
-  type: "ClusterIP"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
-metadata:
-  name: "cos-fleetshard-sync-addon"
-rules:
-- apiGroups:
-  - "operators.coreos.com"
-  resources:
-  - "clusterserviceversions"
-  verbs:
-  - "delete"
-  - "get"
-  - "list"
-  - "watch"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
-metadata:
-  name: "cos-fleetshard-sync-configmaps"
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - "configmaps"
-  verbs:
-  - "get"
-  - "list"
-  - "watch"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
-metadata:
-  name: "cos-fleetshard-sync-observability"
-rules:
-- apiGroups:
-  - "observability.redhat.com"
-  resources:
-  - "observabilities"
-  verbs:
-  - "create"
-  - "delete"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
-- apiGroups:
-  - "operators.coreos.com"
-  resources:
-  - "subscriptions"
-  verbs:
-  - "create"
-  - "delete"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
-metadata:
-  name: "cos-fleetshard-sync-operators"
-rules:
-- apiGroups:
-  - "cos.bf2.org"
-  resources:
-  - "managedconnectorclusters"
-  - "managedconnectorclusters/status"
-  - "managedconnectorclusters/finalizers"
-  verbs:
-  - "create"
-  - "delete"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
-- apiGroups:
-  - "cos.bf2.org"
-  resources:
-  - "managedconnectoroperators"
-  - "managedconnectoroperators/status"
-  - "managedconnectoroperators/finalizers"
-  verbs:
-  - "get"
-  - "list"
-  - "watch"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-addon"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-sync-addon"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-configmaps"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-sync-configmaps"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-observability"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-sync-observability"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-operators"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-sync-operators"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-view"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "view"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRole"
-metadata:
-  name: "cos-fleetshard-sync-clusterversion"
-rules:
-- apiGroups:
-  - "config.openshift.io"
-  resources:
-  - "clusterversions"
-  verbs:
-  - "get"
-  - "list"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
@@ -234,6 +47,23 @@ rules:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
 metadata:
+  name: "cos-fleetshard-sync-quota"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "resourcequotas"
+  verbs:
+  - "create"
+  - "patch"
+  - "get"
+  - "list"
+  - "watch"
+  - "update"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
   name: "cos-fleetshard-sync-crds"
 rules:
 - apiGroups:
@@ -243,22 +73,6 @@ rules:
   verbs:
   - "get"
   - "list"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRole"
-metadata:
-  name: "cos-fleetshard-sync-events"
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - "events"
-  verbs:
-  - "create"
-  - "patch"
-  - "get"
-  - "list"
-  - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
@@ -280,58 +94,207 @@ rules:
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
 metadata:
+  name: "cos-fleetshard-sync-clusterversion"
+rules:
+- apiGroups:
+  - "config.openshift.io"
+  resources:
+  - "clusterversions"
+  verbs:
+  - "get"
+  - "list"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-crds"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-crds"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-connectors"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-connectors"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
   name: "cos-fleetshard-sync-quota"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-quota"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-clusterversion"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-clusterversion"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-limits"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "cos-fleetshard-sync-limits"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+  namespace: "placeholder"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
+  name: "cos-fleetshard-sync-operators"
+rules:
+- apiGroups:
+  - "cos.bf2.org"
+  resources:
+  - "managedconnectorclusters"
+  - "managedconnectorclusters/status"
+  - "managedconnectorclusters/finalizers"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+- apiGroups:
+  - "cos.bf2.org"
+  resources:
+  - "managedconnectoroperators"
+  - "managedconnectoroperators/status"
+  - "managedconnectoroperators/finalizers"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
+  name: "cos-fleetshard-sync-observability"
+rules:
+- apiGroups:
+  - "observability.redhat.com"
+  resources:
+  - "observabilities"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - "subscriptions"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+metadata:
+  name: "cos-fleetshard-sync-events"
 rules:
 - apiGroups:
   - ""
   resources:
-  - "resourcequotas"
+  - "events"
   verbs:
   - "create"
   - "patch"
   - "get"
   - "list"
   - "watch"
-  - "update"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
+kind: "Role"
 metadata:
-  name: "cos-fleetshard-sync-clusterversion"
+  name: "cos-fleetshard-sync-addon"
+rules:
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - "clusterserviceversions"
+  verbs:
+  - "delete"
+  - "get"
+  - "list"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-addon"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "cos-fleetshard-sync-clusterversion"
+  kind: "Role"
+  name: "cos-fleetshard-sync-addon"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
-  namespace: "placeholder"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
+kind: "RoleBinding"
 metadata:
-  name: "cos-fleetshard-sync-connectors"
+  name: "cos-fleetshard-sync-operators"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "cos-fleetshard-sync-connectors"
+  kind: "Role"
+  name: "cos-fleetshard-sync-operators"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
-  namespace: "placeholder"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
+kind: "RoleBinding"
 metadata:
-  name: "cos-fleetshard-sync-crds"
+  name: "cos-fleetshard-sync-observability"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "cos-fleetshard-sync-crds"
+  kind: "Role"
+  name: "cos-fleetshard-sync-observability"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
-  namespace: "placeholder"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRoleBinding"
@@ -347,30 +310,30 @@ subjects:
   namespace: "placeholder"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
+kind: "Role"
 metadata:
-  name: "cos-fleetshard-sync-limits"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "cos-fleetshard-sync-limits"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
-  namespace: "placeholder"
+  name: "cos-fleetshard-sync-configmaps"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - "configmaps"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "ClusterRoleBinding"
+kind: "RoleBinding"
 metadata:
-  name: "cos-fleetshard-sync-quota"
+  name: "cos-fleetshard-sync-configmaps"
 roleRef:
   apiGroup: "rbac.authorization.k8s.io"
-  kind: "ClusterRole"
-  name: "cos-fleetshard-sync-quota"
+  kind: "Role"
+  name: "cos-fleetshard-sync-configmaps"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"
-  namespace: "placeholder"
 ---
 apiVersion: "apps/v1"
 kind: "Deployment"
@@ -477,3 +440,40 @@ spec:
           name: "cos-fleetshard-sync-config-override"
           optional: true
         name: "app-config-override"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-sync-view"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "view"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-sync"
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations:
+    prometheus.io/path: "/q/metrics"
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: "http"
+    prometheus.io/scrape: "true"
+  labels:
+    app.kubernetes.io/name: "cos-fleetshard-sync"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  name: "cos-fleetshard-sync"
+spec:
+  ports:
+  - name: "http"
+    port: 80
+    protocol: "TCP"
+    targetPort: 8080
+  selector:
+    app.kubernetes.io/name: "cos-fleetshard-sync"
+    app.kubernetes.io/part-of: "cos"
+    app.kubernetes.io/version: "latest"
+  type: "ClusterIP"

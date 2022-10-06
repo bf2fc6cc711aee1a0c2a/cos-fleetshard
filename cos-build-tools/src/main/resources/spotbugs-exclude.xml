@@ -1,6 +1,9 @@
 <FindBugsFilter>
     <Match>
-        <Source name="~.*FluentImpl.*"/>
+        <Source name="~.*FluentImpl\.java"/>
+    </Match>
+    <Match>
+        <Source name="~.*Builder\.java"/>
     </Match>
     <Match>
         <Bug pattern="EI_EXPOSE_REP"/>

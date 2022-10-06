@@ -7,6 +7,7 @@ import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -74,12 +75,14 @@ public class ConnectorDeletedTest extends SyncTestSupport {
                 .withDeploymentId(DEPLOYMENT_ID)
                 .withOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build())
                 .build())
+            .withStatus(new ManagedConnectorStatusBuilder().build())
             .build();
 
         kubernetesClient
             .resources(ManagedConnector.class)
             .inNamespace(ns)
-            .create(connector);
+            .resource(connector)
+            .create();
 
         connector.getStatus().setConnectorStatus(new ConnectorStatusSpecBuilder()
             .withPhase(DESIRED_STATE_READY)
@@ -90,8 +93,8 @@ public class ConnectorDeletedTest extends SyncTestSupport {
         kubernetesClient
             .resources(ManagedConnector.class)
             .inNamespace(ns)
-            .withName(connector.getMetadata().getName())
-            .replaceStatus(connector);
+            .resource(connector)
+            .replaceStatus();
 
         untilAsserted(() -> {
             server.verify(putRequestedFor(urlEqualTo(statusUrl))

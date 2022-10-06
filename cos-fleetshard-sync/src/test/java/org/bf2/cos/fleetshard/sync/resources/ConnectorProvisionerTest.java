@@ -7,6 +7,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorSpec;
 import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -141,6 +142,7 @@ public class ConnectorProvisionerTest {
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
                     .build())
+                .withSpec(new ManagedConnectorSpec())
                 .build());
         final List<Secret> secrets = List.of(
             new SecretBuilder()
@@ -155,7 +157,6 @@ public class ConnectorProvisionerTest {
 
         final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner();
         provisioner.config = ConnectorTestSupport.config();
-        ;
         provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
         provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
         provisioner.eventClient = Mockito.mock(EventClient.class);
@@ -260,6 +261,7 @@ public class ConnectorProvisionerTest {
                     .addToLabels(LABEL_CONNECTOR_ID, oldDeployment.getSpec().getConnectorId())
                     .addToLabels(LABEL_DEPLOYMENT_ID, oldDeployment.getId())
                     .build())
+                .withSpec(new ManagedConnectorSpec())
                 .build());
         final List<Secret> secrets = List.of(
             new SecretBuilder()
@@ -274,7 +276,6 @@ public class ConnectorProvisionerTest {
 
         final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner();
         provisioner.config = ConnectorTestSupport.config();
-        ;
         provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
         provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
         provisioner.eventClient = Mockito.mock(EventClient.class);
@@ -286,7 +287,7 @@ public class ConnectorProvisionerTest {
         //
         // When a change to the deployment happen that ends up with a new resource version
         //
-        final ConnectorDeployment newDeployment = createDeployment(1, d -> {
+        final ConnectorDeployment newDeployment = createDeployment(0, d -> {
             d.getMetadata().setResourceVersion(1L);
             d.getSpec().getKafka().setUrl("my-kafka.acme.com:218");
             ((ObjectNode) d.getSpec().getConnectorSpec()).with("connector").put("foo", "connector-baz");

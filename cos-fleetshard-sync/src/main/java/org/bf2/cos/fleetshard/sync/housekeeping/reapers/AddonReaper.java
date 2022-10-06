@@ -23,6 +23,7 @@ import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 @ApplicationScoped
@@ -139,7 +140,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
             .delete();
     }
 
-    private FilterWatchListDeletable<Namespace, NamespaceList> getNamespaceFilter() {
+    private FilterWatchListDeletable<Namespace, NamespaceList, Resource<Namespace>> getNamespaceFilter() {
         return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, config.cluster().id());
     }
 

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import io.fabric8.kubernetes.api.Pluralize;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.api.model.StatusDetails;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
@@ -193,12 +194,12 @@ public final class Resources {
         String namespace,
         String name) {
 
-        Boolean result = client.resources(type)
+        List<StatusDetails> result = client.resources(type)
             .inNamespace(namespace)
             .withName(name)
             .delete();
 
-        if (result == null || result) {
+        if (result == null || result.isEmpty()) {
             return true;
         }
 
