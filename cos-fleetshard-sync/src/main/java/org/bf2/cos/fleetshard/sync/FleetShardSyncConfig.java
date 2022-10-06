@@ -317,5 +317,4 @@ public interface FleetShardSyncConfig {
         @WithDefault("observatorium-configuration-red-hat-sso")
         String observatoriumSecretName();
     }
-
 }

@@ -37,6 +37,7 @@
         <quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>
         <quarkus.kubernetes.config-map-volumes.app-config-override.optional>true</quarkus.kubernetes.config-map-volumes.app-config-override.optional>
         <quarkus.kubernetes.mounts.app-config-override.path>/mnt/app-config/override</quarkus.kubernetes.mounts.app-config-override.path>
+
         <!-- enable config overlay -->
         <quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>/mnt/app-config/override/override.properties</quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>
 
@@ -50,6 +51,8 @@
         <!-- kubernetes -->
         <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
         <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
+
+        <quarkus.kubernetes.env.fields.POD_NAME>metadata.name</quarkus.kubernetes.env.fields.POD_NAME>
 
         <!-- kubernetes resources-->
         <quarkus.kubernetes.resources.requests.cpu>100m</quarkus.kubernetes.resources.requests.cpu>
@@ -81,6 +84,10 @@
         <dependency>
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-support-app</artifactId>
         </dependency>
 
         <dependency>
@@ -260,14 +267,15 @@
                             <systemProperties>
                                 <quarkus.test.continuous-testing>disabled</quarkus.test.continuous-testing>
                                 <quarkus.http.port>0</quarkus.http.port>
-                                <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
-                                <cos.namespace>redhat-openshift-connectors</cos.namespace>
+                                <quarkus.log.console.format>%-6i | %d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
                                 <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
                                 <quarkus.kubernetes-config.secrets>${app-secret.name}</quarkus.kubernetes-config.secrets>
                                 <quarkus.kubernetes-config.config-maps>${app-config.name}</quarkus.kubernetes-config.config-maps>
-                                <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
+                                <quarkus.kubernetes-config.fail-on-missing-config>true</quarkus.kubernetes-config.fail-on-missing-config>
                                 <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+                                <cos.namespace>redhat-openshift-connectors</cos.namespace>
+                                <cos.lease.enabled>false</cos.lease.enabled>
                             </systemProperties>
                         </configuration>
                     </plugin>

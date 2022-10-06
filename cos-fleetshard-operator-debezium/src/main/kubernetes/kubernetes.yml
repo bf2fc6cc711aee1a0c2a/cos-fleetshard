@@ -58,6 +58,24 @@ rules:
   - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cos-fleetshard-operator-debezium-lease
+rules:
+  - apiGroups:
+      - "coordination.k8s.io"
+    resources:
+      -  "leases"
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cos-fleetshard-operator-debezium-events
@@ -98,3 +116,15 @@ subjects:
   - kind: ServiceAccount
     name: cos-fleetshard-operator-debezium
     namespace: placeholder
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cos-fleetshard-operator-debezium-lease
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: cos-fleetshard-operator-debezium-lease
+subjects:
+  - kind: ServiceAccount
+    name: cos-fleetshard-operator-debezium

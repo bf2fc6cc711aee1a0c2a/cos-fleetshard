@@ -5,6 +5,7 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfigMapWatcher;
+import org.bf2.cos.fleetshard.support.Application;
 import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.javaoperatorsdk.operator.Operator;
 
 @ApplicationScoped
-public class FleetShardOperator {
+public class FleetShardOperator implements Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetShardOperator.class);
 
     @Inject

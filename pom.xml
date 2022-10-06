@@ -47,6 +47,7 @@
         <impsort-maven-plugin.version>1.8.0</impsort-maven-plugin.version>
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M7</maven-failsafe-plugin.version>
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <gmavenplus-plugin.version>2.1.0</gmavenplus-plugin.version>
@@ -73,6 +74,7 @@
         <module>cos-fleetshard-poms</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
+        <module>cos-fleetshard-support-app</module>
         <module>cos-fleetshard-it</module>
         <module>cos-fleetshard-sync</module>
         <module>cos-fleetshard-sync-it</module>
@@ -82,6 +84,7 @@
         <module>cos-fleetshard-operator-camel-it</module>
         <module>cos-fleetshard-operator-debezium</module>
         <module>cos-fleetshard-operator-debezium-it</module>
+        <module>cos-fleetshard-operator-e2e</module>
     </modules>
 
     <dependencyManagement>
@@ -253,6 +256,11 @@
             </dependency>
             <dependency>
                 <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-support-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-it</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -288,6 +296,11 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-operator-it</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-e2e</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -395,6 +408,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven-failsafe-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -25,6 +25,10 @@
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-support-app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-it-assertj</artifactId>
             <scope>test</scope>
         </dependency>

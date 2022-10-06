@@ -36,6 +36,36 @@ spec:
   type: "ClusterIP"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
+  name: "cos-fleetshard-operator-camel-lease"
+rules:
+- apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - "leases"
+  verbs:
+  - "create"
+  - "delete"
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+  - "watch"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  name: "cos-fleetshard-operator-camel-lease"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "cos-fleetshard-operator-camel-lease"
+subjects:
+- kind: "ServiceAccount"
+  name: "cos-fleetshard-operator-camel"
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "RoleBinding"
 metadata:
   name: "cos-fleetshard-operator-camel-view"
@@ -185,10 +215,14 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
-        - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config/configuration"
         - name: "OVERRIDE_PROPERTIES_LOCATION"
           value: "/mnt/app-config/override/override.properties"
+        - name: "POD_NAME"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.name"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config/configuration"
         image: "quay.io/rhoas/cos-fleetshard-operator-camel:latest"
         imagePullPolicy: "Always"
         livenessProbe:

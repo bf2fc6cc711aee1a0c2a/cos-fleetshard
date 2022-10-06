@@ -3,7 +3,7 @@ package org.bf2.cos.fleetshard.sync;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.Application;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardObservabilityClient;
@@ -13,7 +13,7 @@ import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
 
 @ApplicationScoped
-public class FleetShardSync implements Service {
+public class FleetShardSync implements Application {
     @Inject
     FleetShardClient fleetShardClient;
     @Inject

@@ -38,6 +38,7 @@
         <quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>
         <quarkus.kubernetes.config-map-volumes.app-config-override.optional>true</quarkus.kubernetes.config-map-volumes.app-config-override.optional>
         <quarkus.kubernetes.mounts.app-config-override.path>/mnt/app-config/override</quarkus.kubernetes.mounts.app-config-override.path>
+
         <!-- enable config overlay -->
         <quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>/mnt/app-config/override/override.properties</quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>
 
@@ -47,6 +48,8 @@
         <!-- kubernetes -->
         <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
         <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
+
+        <quarkus.kubernetes.env.fields.POD_NAME>metadata.name</quarkus.kubernetes.env.fields.POD_NAME>
 
         <!-- kubernetes resources-->
         <quarkus.kubernetes.resources.requests.cpu>500m</quarkus.kubernetes.resources.requests.cpu>
@@ -77,6 +80,10 @@
         <dependency>
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-support-app</artifactId>
         </dependency>
         <dependency>
             <groupId>org.bf2</groupId>
@@ -222,6 +229,8 @@
 
                                 -->
                                 <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+
+                                <cos.lease.enabled>false</cos.lease.enabled>
                             </systemProperties>
                         </configuration>
                     </plugin>
