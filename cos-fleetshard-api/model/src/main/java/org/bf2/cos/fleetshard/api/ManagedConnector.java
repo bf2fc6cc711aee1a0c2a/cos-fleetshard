@@ -12,7 +12,7 @@ import io.sundr.builder.annotations.BuildableReference;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-@ToString
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder", refs = @BuildableReference(CustomResource.class),
     editableEnabled = false)
@@ -39,9 +39,6 @@ public class ManagedConnector
     public static final String STATE_STOPPED = "stopped";
     public static final String STATE_FAILED = "failed";
     public static final String STATE_READY = "ready";
-
-    public ManagedConnector() {
-    }
 
     @Override
     protected ManagedConnectorSpec initSpec() {

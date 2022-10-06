@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
+import org.bf2.cos.fleetshard.api.ManagedConnectorStatusBuilder;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -86,12 +87,14 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                     .withConnectorTypeId("http_sync_v0.1")
                     .build())
                 .build())
+            .withStatus(new ManagedConnectorStatusBuilder().build())
             .build();
 
         kubernetesClient
             .resources(ManagedConnector.class)
             .inNamespace(ns)
-            .create(connector);
+            .resource(connector)
+            .create();
 
         connector.getStatus().setConnectorStatus(new ConnectorStatusSpecBuilder()
             .withPhase(DESIRED_STATE_READY)

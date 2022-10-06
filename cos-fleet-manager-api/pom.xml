@@ -47,6 +47,7 @@
                 <plugin>
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${openapi-generator-maven-plugin.version}</version>
                     <configuration>
                         <inputSpec>${project.basedir}/src/openapi/specs/connector_mgmt-private.yaml</inputSpec>
                         <ignoreFileOverride>${project.basedir}/.openapi-generator-ignore</ignoreFileOverride>
@@ -93,6 +94,7 @@
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>generate-fleet-manager-model</id>

@@ -151,8 +151,8 @@ public class FleetShardClient implements Service {
             : prefix + namespaceId;
     }
 
-    public Boolean deleteNamespace(Namespace namespace) {
-        return kubernetesClient.namespaces().delete(namespace);
+    public void deleteNamespace(Namespace namespace) {
+        kubernetesClient.resource(namespace).delete();
     }
 
     public void watchNamespaces(Consumer<Namespace> handler) {
@@ -218,11 +218,11 @@ public class FleetShardClient implements Service {
     // *************************************
 
     public Boolean deleteConnector(ManagedConnector managedConnector) {
-        return kubernetesClient.resources(ManagedConnector.class)
+        return !kubernetesClient.resources(ManagedConnector.class)
             .inNamespace(managedConnector.getMetadata().getNamespace())
             .withName(managedConnector.getMetadata().getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
-            .delete();
+            .delete().isEmpty();
     }
 
     public Optional<ManagedConnector> getConnector(NamespacedName id) {

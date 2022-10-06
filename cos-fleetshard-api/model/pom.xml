@@ -27,8 +27,15 @@
         <dependency>
             <groupId>io.fabric8</groupId>
             <artifactId>crd-generator-apt</artifactId>
+            <version>${kubernetes-client.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>crd-generator-api</artifactId>
+            <version>${kubernetes-client.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
