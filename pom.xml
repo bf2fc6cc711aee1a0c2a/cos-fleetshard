@@ -38,7 +38,7 @@
         <cucumber.version>7.1.0</cucumber.version>
         <json-path.version>2.7.0</json-path.version>
         <commons-text.version>1.10.0</commons-text.version>
-        <pmd.asm.version>9.3</pmd.asm.version>
+        <pmd.asm.version>9.4</pmd.asm.version>
         <findsecbugs.version>1.12.0</findsecbugs.version>
         <assertj.version>3.23.1</assertj.version>
         <spotbugs.version>4.7.2</spotbugs.version>
