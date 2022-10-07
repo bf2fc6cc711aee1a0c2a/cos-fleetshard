@@ -9,5 +9,4 @@ configMapGenerator:
 
 resources:
   - ./kubernetes.yml
-  - ./observability
   - ./crds
