@@ -317,12 +317,9 @@ public final class CamelOperandSupport {
 
         // always enable camel health checks so we can monitor the connector
         props.put("camel.main.load-health-checks", "true");
-        props.put("camel.health.contextEnabled", "true");
         props.put("camel.health.routesEnabled", "true");
         props.put("camel.health.consumersEnabled", "true");
         props.put("camel.health.registryEnabled", "true");
-        props.put("camel.health.config[*].parent", "routes");
-        props.put("camel.health.config[*].enabled", "true");
 
         if (cfg.routeController() != null) {
             props.put("camel.main.route-controller-backoff-delay", cfg.routeController().backoffDelay());
