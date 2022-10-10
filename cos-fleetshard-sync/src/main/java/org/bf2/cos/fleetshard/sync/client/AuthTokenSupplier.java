@@ -51,9 +51,13 @@ public class AuthTokenSupplier implements Supplier<String> {
     @PostConstruct
     public void setUp() {
         this.tokensHelper = new TokensHelper();
-        this.supplier = config.manager().ssoUri().isPresent()
-            ? new OidcStaticClientSupplier()
-            : new OidcDiscoveryClientSupplier();
+        if (config.manager().ssoUri().isPresent()) {
+            this.supplier = new OidcStaticClientSupplier();
+            LOGGER.info("Using static Oidc client.");
+        } else {
+            this.supplier = new OidcDiscoveryClientSupplier();
+            LOGGER.info("Using discovery Oidc client.");
+        }
     }
 
     @Override
@@ -155,6 +159,9 @@ public class AuthTokenSupplier implements Supplier<String> {
             cfg.setDiscoveryEnabled(false);
             cfg.setClientId(clientId);
             cfg.getCredentials().setSecret(clientSecret);
+
+            LOGGER.debug("Creating OidcClient for cluster with id {}. AuthServer ({}), TokenPath ({}).",
+                config.cluster().id(), cfg.getAuthServerUrl(), cfg.getTokenPath());
 
             return clients.newClient(cfg).await().atMost(config.manager().ssoTimeout());
         }
