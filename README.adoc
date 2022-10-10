@@ -64,14 +64,14 @@ eval $(minikube --profile cos docker-env)
 +
 [source,shell]
 ----
-kubectl apply -k etc/kubernetes/manifests/overlays/local
+kubectl apply -k etc/kubernetes/manifests/overlays/local --server-side --force-conflicts
 ----
 +
 If the previous command ends with an error like `error: unable to recognize "etc/kubernetes/manifests/overlays/local": no matches for kind "IntegrationPlatform" in version "camel.apache.org/v1"`, then run the following:
 +
 [source,shell]
 ----
-kubectl apply -f etc/kubernetes/manifests/overlays/local/camel-k/integration-platform.yaml
+kubectl apply -f etc/kubernetes/manifests/overlays/local/camel-k/integration-platform.yaml --server-side  --force-conflicts
 ----
 +
 At this point, operators and sync are deployed in the *redhat-openshift-connectors*, but they are not running as replica is set to 0 by default because some resources have to be configured.
