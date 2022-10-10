@@ -8,13 +8,12 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.support.Service;
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.eclipse.microprofile.faulttolerance.Retry;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
 public class ResourcePoll implements Service {
@@ -33,17 +32,18 @@ public class ResourcePoll implements Service {
     ConnectorDeploymentProvisioner connectorsProvisioner;
     @Inject
     ConnectorNamespaceProvisioner namespaceProvisioner;
-    @Inject
-    MeterRegistry registry;
 
-    private volatile MetricsRecorder syncRecorder;
-    private volatile MetricsRecorder pollRecorder;
+    @Inject
+    @MetricsID(METRICS_SYNC)
+    StaticMetricsRecorder syncRecorder;
+    @Inject
+    @MetricsID(METRICS_POLL)
+    StaticMetricsRecorder pollRecorder;
+
     private volatile Instant lastResync;
 
     @Override
     public void start() throws Exception {
-        syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
-        pollRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_POLL);
 
         scheduler.schedule(
             JOB_ID,

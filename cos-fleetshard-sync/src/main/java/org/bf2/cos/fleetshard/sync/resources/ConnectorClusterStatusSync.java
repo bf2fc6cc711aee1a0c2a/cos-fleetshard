@@ -13,7 +13,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.support.Service;
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Operators;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -21,10 +21,9 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
 public class ConnectorClusterStatusSync implements Service {
@@ -40,17 +39,15 @@ public class ConnectorClusterStatusSync implements Service {
     @Inject
     FleetShardSyncConfig config;
     @Inject
-    MeterRegistry registry;
-    @Inject
     ConnectorClusterPlatform platform;
 
-    private volatile MetricsRecorder recorder;
+    @Inject
+    @MetricsID(JOB_ID)
+    StaticMetricsRecorder recorder;
 
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting connector status sync");
-
-        recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + JOB_ID);
 
         scheduler.schedule(
             JOB_ID,

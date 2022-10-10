@@ -12,17 +12,17 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.Service;
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
 public class ConnectorStatusSync implements Service {
@@ -40,11 +40,21 @@ public class ConnectorStatusSync implements Service {
     FleetShardSyncConfig config;
     @Inject
     FleetShardSyncScheduler scheduler;
-    @Inject
-    MeterRegistry registry;
 
-    private volatile MetricsRecorder syncRecorder;
-    private volatile MetricsRecorder updateRecorder;
+    @Inject
+    @MetricsID(METRICS_SYNC)
+    StaticMetricsRecorder syncRecorder;
+    @Inject
+    @MetricsID(METRICS_SYNC + ".total")
+    Counter syncTotalRecorder;
+
+    @Inject
+    @MetricsID(METRICS_UPDATE)
+    StaticMetricsRecorder updateRecorder;
+    @Inject
+    @MetricsID(METRICS_UPDATE + ".total")
+    Counter updateTotalRecorder;
+
     private volatile Instant lastResync;
     private volatile Instant lastUpdate;
 
@@ -53,9 +63,6 @@ public class ConnectorStatusSync implements Service {
     @Override
     public void start() throws Exception {
         LOGGER.info("Starting connector status sync");
-
-        syncRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_SYNC);
-        updateRecorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_UPDATE);
 
         connectorClient.watchConnectors(new ResourceEventHandler<>() {
             @Override
@@ -111,9 +118,7 @@ public class ConnectorStatusSync implements Service {
             }
         } finally {
             if (count > 0) {
-                Counter.builder(config.metrics().baseName() + "." + METRICS_SYNC + ".total")
-                    .register(registry)
-                    .increment(count);
+                syncTotalRecorder.increment(count);
             }
         }
     }
@@ -131,9 +136,7 @@ public class ConnectorStatusSync implements Service {
             }
         } finally {
             if (count > 0) {
-                Counter.builder(config.metrics().baseName() + "." + METRICS_UPDATE + ".total")
-                    .register(registry)
-                    .increment(count);
+                updateTotalRecorder.increment(count);
             }
         }
     }
