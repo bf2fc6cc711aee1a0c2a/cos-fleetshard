@@ -8,6 +8,7 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerMockServer;
 import org.bf2.cos.fleetshard.sync.it.support.FleetManagerTestInstance;
+import org.bf2.cos.fleetshard.sync.it.support.MetricsSupport;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.junit.jupiter.api.Test;
@@ -34,8 +35,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(1));
         });
@@ -50,8 +50,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(2));
         });
@@ -66,8 +65,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(
-                registry.find(config.metrics().baseName() + ConnectorNamespaceProvisioner.METRICS_SUFFIX + ".count").counter())
+            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(3));
         });

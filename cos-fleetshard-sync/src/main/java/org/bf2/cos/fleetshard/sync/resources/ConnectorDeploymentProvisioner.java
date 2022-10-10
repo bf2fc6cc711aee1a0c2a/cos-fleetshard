@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
@@ -25,6 +26,7 @@ import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +35,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
@@ -50,30 +51,22 @@ public class ConnectorDeploymentProvisioner {
 
     public static final String TAG_DEPLOYMENT_ID = "id";
     public static final String TAG_DEPLOYMENT_REVISION = "revision";
-    public static final String METRICS_SUFFIX = ".deployment.provision";
+    public static final String METRICS_SUFFIX = "deployment.provision";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorDeploymentProvisioner.class);
 
-    private final FleetShardClient fleetShard;
-    private final FleetManagerClient fleetManager;
-    private final FleetShardSyncConfig config;
-    private final EventClient eventClient;
+    @Inject
+    FleetShardClient fleetShard;
+    @Inject
+    FleetManagerClient fleetManager;
+    @Inject
+    FleetShardSyncConfig config;
+    @Inject
+    EventClient eventClient;
 
-    private final MetricsRecorder recorder;
-
-    public ConnectorDeploymentProvisioner(
-        FleetShardSyncConfig config,
-        FleetShardClient connectorClient,
-        FleetManagerClient fleetManager,
-        MeterRegistry registry,
-        EventClient eventClient) {
-
-        this.config = config;
-        this.fleetShard = connectorClient;
-        this.fleetManager = fleetManager;
-        this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
-        this.eventClient = eventClient;
-    }
+    @Inject
+    @MetricsID(METRICS_SUFFIX)
+    MetricsRecorder recorder;
 
     public void poll(long revision) {
         fleetManager.getDeployments(

@@ -9,10 +9,10 @@ import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.arc.All;
 
 @ApplicationScoped
@@ -26,13 +26,14 @@ public class Housekeeper implements Service {
     FleetShardSyncConfig config;
     @Inject
     FleetShardSyncScheduler scheduler;
-    @Inject
-    MeterRegistry registry;
+
     @Inject
     @All
     List<Task> tasks;
 
-    private volatile MetricsRecorder recorder;
+    @Inject
+    @MetricsID(METRICS_ID)
+    MetricsRecorder recorder;
 
     @Override
     public void start() throws Exception {
@@ -46,8 +47,6 @@ public class Housekeeper implements Service {
                 ((Service) task).start();
             }
         }
-
-        recorder = MetricsRecorder.of(registry, config.metrics().baseName() + "." + METRICS_ID);
 
         scheduler.schedule(
             JOB_ID,

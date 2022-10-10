@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.connector;
+package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Date;
 import java.util.List;
@@ -11,17 +11,14 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.client.EventClient;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
-import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
-import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_KUBERNETES_NAME;
@@ -52,13 +49,14 @@ public class NamespaceProvisionerTest {
         final List<ManagedConnector> connectors = List.of();
         final List<Secret> secrets = List.of();
 
-        final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
-        final FleetShardSyncConfig config = ConnectorTestSupport.config();
-        final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final EventClient eventClient = Mockito.mock(EventClient.class);
-        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner(config, fleetShard, fleetManager,
-            registry, eventClient);
+        final ConnectorNamespaceProvisioner provisioner = new ConnectorNamespaceProvisioner();
+        provisioner.config = ConnectorTestSupport.config();
+        ;
+        provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
+        provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
+        provisioner.eventClient = Mockito.mock(EventClient.class);
+        provisioner.recorder = Mockito.mock(MetricsRecorder.class);
+
         final ArgumentCaptor<Namespace> nc = ArgumentCaptor.forClass(Namespace.class);
 
         //
@@ -66,7 +64,7 @@ public class NamespaceProvisionerTest {
         //
         provisioner.provision(namespace);
 
-        verify(fleetShard).createNamespace(nc.capture());
+        verify(provisioner.fleetShard).createNamespace(nc.capture());
 
         //
         // Then resources must be created according to the deployment

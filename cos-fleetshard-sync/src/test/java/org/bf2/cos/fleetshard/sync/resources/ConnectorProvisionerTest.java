@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.connector;
+package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.List;
 import java.util.UUID;
@@ -8,12 +8,10 @@ import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.support.client.EventClient;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
-import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
-import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.resources.ConnectorDeploymentProvisioner;
+import org.bf2.cos.fleetshard.sync.connector.ConnectorTestSupport;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -23,7 +21,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,29 +45,24 @@ public class ConnectorProvisionerTest {
         final List<ManagedConnector> connectors = List.of();
         final List<Secret> secrets = List.of();
 
-        final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
-        final FleetShardSyncConfig config = ConnectorTestSupport.config();
-        final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final EventClient eventClient = Mockito.mock(EventClient.class);
-
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(
-            config,
-            fleetShard,
-            fleetManager,
-            registry,
-            eventClient);
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner();
+        provisioner.config = ConnectorTestSupport.config();
+        ;
+        provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
+        provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
+        provisioner.eventClient = Mockito.mock(EventClient.class);
+        provisioner.recorder = Mockito.mock(MetricsRecorder.class);
 
         //
         // When deployment is applied
         //
         provisioner.provision(deployment);
 
-        verify(fleetShard).createSecret(sc.capture());
-        verify(fleetShard).createConnector(mcc.capture());
+        verify(provisioner.fleetShard).createSecret(sc.capture());
+        verify(provisioner.fleetShard).createConnector(mcc.capture());
 
         //
         // Then resources must be created according to the deployment
@@ -161,13 +153,14 @@ public class ConnectorProvisionerTest {
                     .build())
                 .build());
 
-        final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
-        final FleetShardSyncConfig config = ConnectorTestSupport.config();
-        final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final EventClient eventClient = Mockito.mock(EventClient.class);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
-            registry, eventClient);
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner();
+        provisioner.config = ConnectorTestSupport.config();
+        ;
+        provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
+        provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
+        provisioner.eventClient = Mockito.mock(EventClient.class);
+        provisioner.recorder = Mockito.mock(MetricsRecorder.class);
+
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -182,8 +175,8 @@ public class ConnectorProvisionerTest {
 
         provisioner.provision(newDeployment);
 
-        verify(fleetShard).createSecret(sc.capture());
-        verify(fleetShard).createConnector(mcc.capture());
+        verify(provisioner.fleetShard).createSecret(sc.capture());
+        verify(provisioner.fleetShard).createConnector(mcc.capture());
 
         //
         // Then the existing resources must be updated to reflect the changes made to the
@@ -279,13 +272,14 @@ public class ConnectorProvisionerTest {
                     .build())
                 .build());
 
-        final FleetShardClient fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
-        final FleetManagerClient fleetManager = ConnectorTestSupport.fleetManagerClient();
-        final FleetShardSyncConfig config = ConnectorTestSupport.config();
-        final MeterRegistry registry = Mockito.mock(MeterRegistry.class);
-        final EventClient eventClient = Mockito.mock(EventClient.class);
-        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner(config, fleetShard, fleetManager,
-            registry, eventClient);
+        final ConnectorDeploymentProvisioner provisioner = new ConnectorDeploymentProvisioner();
+        provisioner.config = ConnectorTestSupport.config();
+        ;
+        provisioner.fleetShard = ConnectorTestSupport.fleetShard(CLUSTER_ID, connectors, secrets);
+        provisioner.fleetManager = ConnectorTestSupport.fleetManagerClient();
+        provisioner.eventClient = Mockito.mock(EventClient.class);
+        provisioner.recorder = Mockito.mock(MetricsRecorder.class);
+
         final ArgumentCaptor<Secret> sc = ArgumentCaptor.forClass(Secret.class);
         final ArgumentCaptor<ManagedConnector> mcc = ArgumentCaptor.forClass(ManagedConnector.class);
 
@@ -301,8 +295,8 @@ public class ConnectorProvisionerTest {
 
         provisioner.provision(newDeployment);
 
-        verify(fleetShard).createSecret(sc.capture());
-        verify(fleetShard).createConnector(mcc.capture());
+        verify(provisioner.fleetShard).createSecret(sc.capture());
+        verify(provisioner.fleetShard).createConnector(mcc.capture());
 
         //
         // Then the managed connector resource is expected to be updated to reflect the

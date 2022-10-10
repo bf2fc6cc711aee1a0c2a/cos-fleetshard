@@ -7,6 +7,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
@@ -21,6 +22,7 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
+import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +36,6 @@ import io.fabric8.kubernetes.api.model.ResourceQuota;
 import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
-import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
@@ -44,7 +45,7 @@ public class ConnectorNamespaceProvisioner {
     public static final String DEFAULT_ADDON_PULLSECRET_NAME = "addon-pullsecret";
     public static final String TAG_NAMESPACE_ID = "id";
     public static final String TAG_NAMESPACE_REVISION = "revision";
-    public static final String METRICS_SUFFIX = ".namespace.provision";
+    public static final String METRICS_SUFFIX = "namespace.provision";
 
     public static final String LIMITS_TYPE_CONTAINER = "Container";
     public static final String LIMITS_CPU = "cpu";
@@ -57,27 +58,18 @@ public class ConnectorNamespaceProvisioner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorNamespaceProvisioner.class);
 
-    private final FleetShardClient fleetShard;
-    private final FleetManagerClient fleetManager;
-    private final FleetShardSyncConfig config;
-    private final MetricsRecorder recorder;
-    private final NamespacedName pullSecretName;
-    private final EventClient eventClient;
+    @Inject
+    FleetShardClient fleetShard;
+    @Inject
+    FleetManagerClient fleetManager;
+    @Inject
+    FleetShardSyncConfig config;
+    @Inject
+    EventClient eventClient;
 
-    public ConnectorNamespaceProvisioner(
-        FleetShardSyncConfig config,
-        FleetShardClient connectorClient,
-        FleetManagerClient fleetManager,
-        MeterRegistry registry,
-        EventClient eventClient) {
-
-        this.config = config;
-        this.fleetShard = connectorClient;
-        this.fleetManager = fleetManager;
-        this.recorder = MetricsRecorder.of(registry, config.metrics().baseName() + METRICS_SUFFIX);
-        this.pullSecretName = new NamespacedName(config.namespace(), config.imagePullSecretsName());
-        this.eventClient = eventClient;
-    }
+    @Inject
+    @MetricsID(METRICS_SUFFIX)
+    MetricsRecorder recorder;
 
     public void poll(long revision) {
         fleetManager.getNamespaces(
@@ -154,6 +146,8 @@ public class ConnectorNamespaceProvisioner {
     }
 
     private void copyAddonPullSecret(String uow, Namespace namespace) {
+        NamespacedName pullSecretName = new NamespacedName(config.namespace(), config.imagePullSecretsName());
+
         fleetShard.getSecret(pullSecretName).ifPresentOrElse(
             addonPullSecret -> {
                 ObjectMeta addonPullSecretMetadata = new ObjectMeta();
