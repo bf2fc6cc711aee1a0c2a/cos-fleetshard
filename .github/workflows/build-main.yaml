@@ -10,7 +10,6 @@ on:
       - "**.md"
       - "**.adoc"
       - "*.txt"
-      - "etc/kubernetes/manifests/**"
   workflow_dispatch:
 
 concurrency:
@@ -111,7 +110,7 @@ jobs:
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
 
-      - name: "Update Kustomize overlay ${{ matrix.overlay }}"  
+      - name: "Update Kustomize overlay ${{ matrix.overlay }}"
         env:
           XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
         run: |
@@ -164,7 +163,7 @@ jobs:
           else
               yq -i '.images[] |= select(.name == strenv(IMAGE_NAME)).digest = strenv(SHA256)' ${OVERLAY_PATH}/kustomization.yaml
           fi
-    
+
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
