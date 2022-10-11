@@ -85,12 +85,9 @@ Feature: Camel Connector Reify
           | sa_client_id                                        | ${kafka.client.id}         |
           | sa_client_secret                                    | ${kafka.client.secret}     |
           | camel.main.load-health-checks                       | true                       |
-          | camel.health.contextEnabled                         | true                       |
           | camel.health.consumersEnabled                       | true                       |
           | camel.health.routesEnabled                          | true                       |
           | camel.health.registryEnabled                        | true                       |
-          | camel.health.config[*].parent                       | routes                     |
-          | camel.health.config[*].enabled                      | true                       |
           | camel.main.route-controller-supervise-enabled       | true                       |
           | camel.main.route-controller-backoff-delay           | 2s                         |
           | camel.main.route-controller-initial-delay           | 1s                         |
