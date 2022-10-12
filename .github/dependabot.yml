@@ -13,3 +13,9 @@ updates:
       - dependency-name: io.sundr:builder-annotations
       - dependency-name: io.cucumber:cucumber-java
       - dependency-name: io.cucumber:cucumber-java8
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: daily
+      time: "19:30"
+      timezone: Europe/Paris
