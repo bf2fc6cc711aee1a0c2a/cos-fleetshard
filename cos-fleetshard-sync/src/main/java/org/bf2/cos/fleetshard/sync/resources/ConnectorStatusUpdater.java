@@ -27,11 +27,11 @@ public class ConnectorStatusUpdater {
     public static final String CONNECTOR_STATE = "connector.state";
     public static final String CONNECTOR_STATE_COUNT = "connector.state.count";
 
-    static final Integer CONNECTOR_STATE_READY = 1;
-    static final Integer CONNECTOR_STATE_FAILED = 2;
-    static final Integer CONNECTOR_STATE_DELETED = 3;
-    static final Integer CONNECTOR_STATE_STOPPED = 4;
-    static final Integer CONNECTOR_STATE_IN_PROCESS = 5;
+    static final int CONNECTOR_STATE_READY = 1;
+    static final int CONNECTOR_STATE_FAILED = 2;
+    static final int CONNECTOR_STATE_DELETED = 3;
+    static final int CONNECTOR_STATE_STOPPED = 4;
+    static final int CONNECTOR_STATE_IN_PROCESS = 5;
 
     @Inject
     FleetManagerClient fleetManagerClient;
@@ -95,7 +95,7 @@ public class ConnectorStatusUpdater {
      * Also exposing a Counter metrics "cos_fleetshard_sync_connector_state_count_total" which reveals each
      * state count for the connector
      */
-    private void measure(ManagedConnector connector, Integer connectorState) {
+    private void measure(ManagedConnector connector, int connectorState) {
 
         List<Tag> tags = List.of(
             Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
@@ -118,7 +118,7 @@ public class ConnectorStatusUpdater {
             .register(registry)
             .increment();
 
-        if (CONNECTOR_STATE_FAILED.compareTo(connectorState) == 0) {
+        if (CONNECTOR_STATE_FAILED == connectorState) {
             Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
                 .tags(tags).tag("cos.connector.state", "ready").counter();
 
