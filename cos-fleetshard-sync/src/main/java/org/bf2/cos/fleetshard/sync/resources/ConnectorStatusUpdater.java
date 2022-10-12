@@ -15,6 +15,7 @@ import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -24,6 +25,7 @@ public class ConnectorStatusUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectorStatusUpdater.class);
 
     public static final String CONNECTOR_STATE = "connector.state";
+    public static final String CONNECTOR_STATE_COUNT = "connector.state.count";
 
     static final Integer CONNECTOR_STATE_READY = 1;
     static final Integer CONNECTOR_STATE_FAILED = 2;
@@ -50,7 +52,7 @@ public class ConnectorStatusUpdater {
 
             fleetManagerClient.updateConnectorStatus(connector, connectorDeploymentStatus);
 
-            LOGGER.debug("Updating Connector status metrics (Connector_id : {}, state: {})",
+            LOGGER.debug("Updating Connector status metrics (Connector_id: {}, state: {})",
                 connector.getSpec().getConnectorId(),
                 ConnectorStatusExtractor.extract(connector).getPhase());
 
@@ -87,9 +89,11 @@ public class ConnectorStatusUpdater {
     }
 
     /*
-     * Expose a metric "cos_fleetshard_sync_connector_state" which reveals the current connector state.
+     * Expose a Gauge metric "cos_fleetshard_sync_connector_state" which reveals the current connector state.
      * Metric value of 1 implies that the connector is in Ready state. Similarly, 2 -> Failed, 3 -> Deleted,
      * 4 -> Stopped, 5 -> In Process
+     * Also exposing a Counter metrics "cos_fleetshard_sync_connector_state_count_total" which reveals each
+     * state count for the connector
      */
     private void measure(ManagedConnector connector, Integer connectorState) {
 
@@ -107,6 +111,27 @@ public class ConnectorStatusUpdater {
         Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
             .tags(tags)
             .register(registry);
+
+        Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+            .tags(tags)
+            .tag("cos.connector.state", ConnectorStatusExtractor.extract(connector).getPhase().getValue())
+            .register(registry)
+            .increment();
+
+        if (CONNECTOR_STATE_FAILED.compareTo(connectorState) == 0) {
+            Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+                .tags(tags).tag("cos.connector.state", "ready").counter();
+
+            if (counter != null && counter.count() != 0) {
+
+                // Exposing a new state "failed_but_ready" when a connector has already started but now failing
+                Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+                    .tags(tags)
+                    .tag("cos.connector.state", "failed_but_ready")
+                    .register(registry)
+                    .increment();
+            }
+        }
 
     }
 }
