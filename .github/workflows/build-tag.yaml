@@ -47,7 +47,7 @@ jobs:
           distribution: "temurin"
           server-id: github
       - name: "Login to quay.io"
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: quay.io
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
@@ -92,7 +92,7 @@ jobs:
           token: ${{ secrets.PR_TOKEN }}
           ref: main
       - name: "Login to quay.io"
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: quay.io
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
