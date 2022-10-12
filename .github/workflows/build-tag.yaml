@@ -5,12 +5,12 @@ on:
     tags:
       - "v*"
     paths-ignore:
-      - 'LICENSE'
-      - '**/.gitignore'
-      - '**.md'
-      - '**.adoc'
-      - '*.txt'
-      - 'etc/kubernetes/manifests/**'
+      - "LICENSE"
+      - "**/.gitignore"
+      - "**.md"
+      - "**.adoc"
+      - "*.txt"
+      - "etc/kubernetes/manifests/**"
   workflow_dispatch:
 
 concurrency:
@@ -32,28 +32,28 @@ jobs:
     strategy:
       matrix:
         kubernetes:
-          - 'v1.22.1'
+          - "v1.22.1"
     outputs:
       camel-k-image: ${{ steps.output-camel-k-image.outputs.camel-k-image }}
       camel-k-newtag: ${{ steps.output-camel-k-image.outputs.camel-k-newtag }}
       strimzi-image: ${{ steps.output-strimzi-image.outputs.strimzi-image }}
     steps:
-      - name: 'Checkout Project'
+      - name: "Checkout Project"
         uses: actions/checkout@v2
-      - name: 'Set up JDK 11'
+      - name: "Set up JDK 11"
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
-          distribution: 'temurin'
+          java-version: "11"
+          distribution: "temurin"
           server-id: github
-      - name: 'Login to quay.io'
+      - name: "Login to quay.io"
         uses: docker/login-action@v1
         with:
           registry: quay.io
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
-      - name: 'Build and push container images'
-        run: |          
+      - name: "Build and push container images"
+        run: |
           ./etc/scripts/build.sh
           ./etc/scripts/build_image.sh cos-fleetshard-sync
           ./etc/scripts/build_image.sh cos-fleetshard-operator-camel
@@ -90,8 +90,8 @@ jobs:
         with:
           repository: bf2fc6cc711aee1a0c2a/cos-manifests
           token: ${{ secrets.PR_TOKEN }}
-          ref: main          
-      - name: 'Login to quay.io'
+          ref: main
+      - name: "Login to quay.io"
         uses: docker/login-action@v1
         with:
           registry: quay.io
@@ -103,6 +103,8 @@ jobs:
           OVERLAY_REF_REPO: ${{ github.server_url }}/${{ github.repository}}
           XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
         run: |
+          mkdir -p ${XDG_RUNTIME_DIR}
+
           for APP in cos-fleetshard-sync cos-fleetshard-operator-camel cos-fleetshard-operator-debezium; do
             export REF=${OVERLAY_REF_REPO}//etc/kubernetes/manifests/overlays/staging/${APP}/?ref=${{ github.ref_name }}
             export IMAGE=quay.io/rhoas/${APP}
@@ -125,6 +127,8 @@ jobs:
           OVERLAY_REF_REPO: ${{ github.server_url }}/${{ github.repository}}
           XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
         run: |
+          mkdir -p ${XDG_RUNTIME_DIR}
+
           export REF=${OVERLAY_REF_REPO}//etc/kubernetes/manifests/overlays/staging/camel-k/?ref=${{ github.ref_name }}
           export IMAGE=${{ needs.build.outputs.camel-k-image }}
           export NEWTAG=${{ needs.build.outputs.camel-k-newtag }}
@@ -148,13 +152,14 @@ jobs:
           sed -i "/camel-k.version=/d" staging.properties
           echo "camel-k.version=$VERSION" >> staging.properties
 
-
       - name: "Update Strimzi Kustomize overlay ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH_STRIMZI: kustomize/overlays/${{ matrix.overlay }}/data-plane/strimzi
           OVERLAY_REF_REPO: ${{ github.server_url }}/${{ github.repository}}
           XDG_RUNTIME_DIR: ${{ runner.temp }}/containers
         run: |
+          mkdir -p ${XDG_RUNTIME_DIR}
+
           export REF=${OVERLAY_REF_REPO}//etc/kubernetes/manifests/overlays/staging/strimzi/?ref=${{ github.ref_name }}
           export IMAGE=${{ needs.build.outputs.strimzi-image }}
           export IMAGE_NAME=$(printf '%s' "$IMAGE" | cut -f 1 -d ':')
