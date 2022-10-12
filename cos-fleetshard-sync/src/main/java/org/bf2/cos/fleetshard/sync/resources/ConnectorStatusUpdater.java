@@ -112,20 +112,20 @@ public class ConnectorStatusUpdater {
             .tags(tags)
             .register(registry);
 
-        Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+        Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
             .tags(tags)
             .tag("cos.connector.state", ConnectorStatusExtractor.extract(connector).getPhase().getValue())
             .register(registry)
             .increment();
 
         if (CONNECTOR_STATE_FAILED.compareTo(connectorState) == 0) {
-            Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+            Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
                 .tags(tags).tag("cos.connector.state", "ready").counter();
 
             if (counter != null && counter.count() != 0) {
 
                 // Exposing a new state "failed_but_ready" when a connector has already started but now failing
-                Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT + ".total")
+                Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
                     .tags(tags)
                     .tag("cos.connector.state", "failed_but_ready")
                     .register(registry)
