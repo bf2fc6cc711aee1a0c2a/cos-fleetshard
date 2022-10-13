@@ -53,24 +53,23 @@ public class ConnectorStatusUpdater {
             fleetManagerClient.updateConnectorStatus(connector, connectorDeploymentStatus);
 
             LOGGER.debug("Updating Connector status metrics (Connector_id: {}, state: {})",
-                connector.getSpec().getConnectorId(),
-                ConnectorStatusExtractor.extract(connector).getPhase());
+                connector.getSpec().getConnectorId(), connectorDeploymentStatus.getPhase());
 
             switch (connectorDeploymentStatus.getPhase()) {
                 case READY:
-                    measure(connector, CONNECTOR_STATE_READY);
+                    measure(connector, connectorDeploymentStatus, CONNECTOR_STATE_READY);
                     break;
                 case FAILED:
-                    measure(connector, CONNECTOR_STATE_FAILED);
+                    measure(connector, connectorDeploymentStatus, CONNECTOR_STATE_FAILED);
                     break;
                 case DELETED:
-                    measure(connector, CONNECTOR_STATE_DELETED);
+                    measure(connector, connectorDeploymentStatus, CONNECTOR_STATE_DELETED);
                     break;
                 case STOPPED:
-                    measure(connector, CONNECTOR_STATE_STOPPED);
+                    measure(connector, connectorDeploymentStatus, CONNECTOR_STATE_STOPPED);
                     break;
                 default:
-                    measure(connector, CONNECTOR_STATE_IN_PROCESS);
+                    measure(connector, connectorDeploymentStatus, CONNECTOR_STATE_IN_PROCESS);
                     break;
             }
 
@@ -95,7 +94,7 @@ public class ConnectorStatusUpdater {
      * Also exposing a Counter metrics "cos_fleetshard_sync_connector_state_count_total" which reveals each
      * state count for the connector
      */
-    private void measure(ManagedConnector connector, int connectorState) {
+    private void measure(ManagedConnector connector, ConnectorDeploymentStatus connectorDeploymentStatus, int connectorState) {
 
         List<Tag> tags = List.of(
             Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
@@ -114,7 +113,7 @@ public class ConnectorStatusUpdater {
 
         Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
             .tags(tags)
-            .tag("cos.connector.state", ConnectorStatusExtractor.extract(connector).getPhase().getValue())
+            .tag("cos.connector.state", connectorDeploymentStatus.getPhase().getValue())
             .register(registry)
             .increment();
 
