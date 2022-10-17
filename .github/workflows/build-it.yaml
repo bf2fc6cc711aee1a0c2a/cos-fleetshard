@@ -39,7 +39,7 @@ jobs:
           tar -xzf ../maven-repo.tgz -C ~
           df -h /
       - name: 'SetUp KinD'
-        uses: container-tools/kind-action@v1
+        uses: container-tools/kind-action@v2
         with:
           registry: false
           node_image: kindest/node:${{ inputs.kubeVersion }}
