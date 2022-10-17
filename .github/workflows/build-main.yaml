@@ -53,7 +53,7 @@ jobs:
           username: ${{ secrets.IMAGE_REPO_USERNAME }}
           password: ${{ secrets.IMAGE_REPO_PASSWORD }}
       - name: "SetUp KinD"
-        uses: container-tools/kind-action@v1
+        uses: container-tools/kind-action@v2
         with:
           registry: false
           node_image: kindest/node:${{ matrix.kubernetes }}
