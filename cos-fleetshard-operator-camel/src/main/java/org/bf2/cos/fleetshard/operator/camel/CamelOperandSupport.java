@@ -411,6 +411,13 @@ public final class CamelOperandSupport {
 
             statusSpec.setConditions(kameletBindingStatus.conditions);
         }
+
+        statusSpec.getConditions().stream()
+            .filter(
+                cond -> "Ready".equals(cond.getType()) &&
+                    "False".equals(cond.getStatus()))
+            .findFirst()
+            .ifPresent(ConditionMessageImprover::improve);
     }
 
     public static ObjectNode createErrorHandler(
