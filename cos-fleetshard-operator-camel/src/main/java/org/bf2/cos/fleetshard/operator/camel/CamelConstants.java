@@ -39,6 +39,8 @@ public final class CamelConstants {
     public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT = "trait.camel.apache.org/health.readiness-timeout";
     public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD = "trait.camel.apache.org/health.readiness-success-threshold";
     public static final String TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD = "trait.camel.apache.org/health.readiness-failure-threshold";
+    public static final String TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_ENABLED = "trait.camel.apache.org/deployment.enabled";
+    public static final String TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_STRATEGY = "trait.camel.apache.org/deployment.strategy";
 
     public static final String ERROR_HANDLER_LOG_TYPE = "log";
     public static final String ERROR_HANDLER_SINK_CHANNEL_TYPE = "sink";
