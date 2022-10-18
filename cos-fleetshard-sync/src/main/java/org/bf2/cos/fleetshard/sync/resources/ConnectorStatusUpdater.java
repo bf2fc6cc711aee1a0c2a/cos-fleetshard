@@ -101,6 +101,8 @@ public class ConnectorStatusUpdater {
             Tag.of("cos.connector.type.id", connector.getSpec().getDeployment().getConnectorTypeId()),
             Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
 
+        String connectorResourceVersion = String.valueOf(connector.getSpec().getDeployment().getConnectorResourceVersion());
+
         Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
 
         if (gauge != null) {
@@ -114,12 +116,14 @@ public class ConnectorStatusUpdater {
         Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
             .tags(tags)
             .tag("cos.connector.state", connectorDeploymentStatus.getPhase().getValue())
+            .tag("cos.connector.resourceversion", connectorResourceVersion)
             .register(registry)
             .increment();
 
         if (CONNECTOR_STATE_FAILED == connectorState) {
             Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
-                .tags(tags).tag("cos.connector.state", "ready").counter();
+                .tags(tags).tag("cos.connector.state", "ready")
+                .tagKeys("cos.connector.resourceversion").counter();
 
             if (counter != null && counter.count() != 0) {
 
@@ -127,6 +131,7 @@ public class ConnectorStatusUpdater {
                 Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
                     .tags(tags)
                     .tag("cos.connector.state", "failed_but_ready")
+                    .tag("cos.connector.resourceversion", connectorResourceVersion)
                     .register(registry)
                     .increment();
             }
