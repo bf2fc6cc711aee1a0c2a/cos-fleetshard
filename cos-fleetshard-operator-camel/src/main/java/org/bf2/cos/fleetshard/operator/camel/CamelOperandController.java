@@ -29,31 +29,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.KAMEL_OPERATOR_ID;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_ID_PLACEHOLDER;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_SECRET_PLACEHOLDER;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_FAILURE_THRESHOLD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PERIOD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_SUCCESS_THRESHOLD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PERIOD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED;
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.*;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.configureKameletProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
@@ -261,6 +237,10 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                 TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT,
                 health.livenessTimeoutSeconds());
         }
+
+        // deployment annotations
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_ENABLED, "true");
+        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_STRATEGY, "Recreate");
 
         if (configuration.connectors() != null) {
             if (configuration.connectors().traits() != null) {

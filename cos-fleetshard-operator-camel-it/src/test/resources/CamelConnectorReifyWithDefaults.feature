@@ -40,6 +40,8 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/health.liveness-timeout            | 1                                          |
           | trait.camel.apache.org/prometheus.enabled                 | true                                       |
           | trait.camel.apache.org/prometheus.pod-monitor             | false                                      |
+          | trait.camel.apache.org/deployment.enabled                 | true                                       |
+          | trait.camel.apache.org/deployment.strategy                | Recreate                                   |
 
      And the klb has target-labels containing "cos.bf2.org/deployment.id"
      And the klb has target-labels containing "cos.bf2.org/connector.id"
