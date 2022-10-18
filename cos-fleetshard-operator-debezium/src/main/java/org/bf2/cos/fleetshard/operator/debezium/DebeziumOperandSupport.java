@@ -200,7 +200,7 @@ public class DebeziumOperandSupport {
                     default:
                         break;
                 }
-                connectorStatus.getStatusSpecConditions().add(cloneCondition(condition, "KafkaConnector:"));
+                connectorStatus.addCondition(cloneCondition(condition, "KafkaConnector:"));
             }
 
             ConnectorStatusSpec statusSpec = connectorStatus.getStatusSpec();
@@ -294,7 +294,7 @@ public class DebeziumOperandSupport {
                     default:
                         break;
                 }
-                connectorStatus.getStatusSpecConditions().add(cloneCondition(condition, "KafkaConnect:"));
+                connectorStatus.addCondition(cloneCondition(condition, "KafkaConnect:"));
             }
 
             boolean kafkaConnectReady = kconnectReadyCondition != null && "True".equals(kconnectReadyCondition.getStatus())
@@ -335,7 +335,7 @@ public class DebeziumOperandSupport {
             return;
         }
         computeKafkaConnectStatus(kafkaConnect, managedConnectorStatus);
-        managedConnectorStatus.getStatusSpecConditions().add(managedConnectorStatus.readyCondition());
+        managedConnectorStatus.addCondition(managedConnectorStatus.readyCondition());
         statusSpec.setConditions(managedConnectorStatus.getStatusSpecConditions());
     }
 }
