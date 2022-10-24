@@ -61,10 +61,16 @@ jobs:
       - name: "Output camel-k image"
         id: output-camel-k-image
         run: |
-          export IMAGE=$(yq '.images[].newName' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
-          if [[ -z "${IMAGE}" ]]; then
-              export IMAGE=$(yq '.images[].name' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+          export IMAGE=$(yq '.images[0].newName' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+          
+          # if there's no match, then YQ would return null, literaly
+          if [[ "${IMAGE}" = "null" ]]; then
+              export IMAGE=$(yq '.images[0].name' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
           fi
+          if [[ -z "${IMAGE}" ]]; then
+              export IMAGE=$(yq '.images[0].name' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
+          fi
+          
           export NEWTAG=$(yq '.images[0].newTag' ./etc/kubernetes/manifests/base/apps/camel-k/kustomization.yaml)
 
           echo "::set-output name=camel-k-image::${IMAGE}"
@@ -139,6 +145,8 @@ jobs:
           echo "NEWTAG: ${NEWTAG}"
           echo "SHA256: ${SHA256}"
 
+          yq -i '.resources[0] = strenv(REF)' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml
+
           if [[ -z $(yq '.images[] | select(.name == strenv(IMAGE))' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml) ]]; then
               yq -i '.images += {"name": strenv(IMAGE), "digest": strenv(SHA256)}' ${OVERLAY_PATH_CAMEL_K}/kustomization.yaml
           else
@@ -170,6 +178,8 @@ jobs:
           echo "IMAGE: ${IMAGE}"
           echo "IMAGE_NAME: ${IMAGE_NAME}"
           echo "SHA256: ${SHA256}"
+
+          yq -i '.resources[0] = strenv(REF)' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml
 
           if [[ -z $(yq '.images[] | select(.name == strenv(IMAGE_NAME))' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml) ]]; then
               yq -i '.images += {"name": strenv(IMAGE_NAME), "digest": strenv(SHA256)}' ${OVERLAY_PATH_STRIMZI}/kustomization.yaml
