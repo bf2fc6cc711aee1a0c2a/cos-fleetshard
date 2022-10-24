@@ -48,3 +48,10 @@ patches:
                 valueFrom:
                   $patch: delete  
                 value: "*"
+              resources:
+                limits:
+                  cpu: "1000m"
+                  memory: "384Mi"
+                requests:
+                  cpu: "100m"
+                  memory: "384Mi"

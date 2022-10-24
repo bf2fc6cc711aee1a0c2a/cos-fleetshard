@@ -215,11 +215,11 @@ spec:
           timeoutSeconds: 10
         resources:
           limits:
-            cpu: "1500m"
-            memory: "1Gi"
+            cpu: "1000m"
+            memory: "600Mi"
           requests:
             cpu: "500m"
-            memory: "512Mi"
+            memory: "600Mi"
         volumeMounts:
         - mountPath: "/mnt/app-config-map"
           name: "app-config-map"

@@ -44,10 +44,10 @@
         <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
 
         <!-- kubernetes resources-->
-        <quarkus.kubernetes.resources.requests.memory>256Mi</quarkus.kubernetes.resources.requests.memory>
-        <quarkus.kubernetes.resources.requests.cpu>500m</quarkus.kubernetes.resources.requests.cpu>
-        <quarkus.kubernetes.resources.limits.memory>512Mi</quarkus.kubernetes.resources.limits.memory>
-        <quarkus.kubernetes.resources.limits.cpu>1500m</quarkus.kubernetes.resources.limits.cpu>
+        <quarkus.kubernetes.resources.requests.cpu>100m</quarkus.kubernetes.resources.requests.cpu>
+        <quarkus.kubernetes.resources.limits.cpu>1000m</quarkus.kubernetes.resources.limits.cpu>
+        <quarkus.kubernetes.resources.requests.memory>400Mi</quarkus.kubernetes.resources.requests.memory>
+        <quarkus.kubernetes.resources.limits.memory>400Mi</quarkus.kubernetes.resources.limits.memory>
     </properties>
 
     <dependencies>
