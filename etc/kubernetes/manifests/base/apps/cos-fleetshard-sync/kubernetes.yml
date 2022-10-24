@@ -443,11 +443,11 @@ spec:
           timeoutSeconds: 10
         resources:
           limits:
-            cpu: "1500m"
-            memory: "512Mi"
+            cpu: "1000m"
+            memory: "400Mi"
           requests:
-            cpu: "500m"
-            memory: "256Mi"
+            cpu: "100m"
+            memory: "400Mi"
         volumeMounts:
         - mountPath: "/mnt/app-config"
           name: "app-config"
