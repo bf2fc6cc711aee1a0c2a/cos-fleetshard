@@ -5,6 +5,8 @@ import java.util.Map;
 import org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.cucumber.java.ParameterType;
 import io.cucumber.java.en.And;
 import io.fabric8.kubernetes.client.utils.Serialization;
@@ -53,6 +55,14 @@ public class CamelConnectorSteps extends StepsSupport {
             }
             errorNode.put(k, entries.get(k));
         }
+
+        Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, connector);
+    }
+
+    @And("^with processors:$")
+    public void with_processors_camel_connector(String json) throws Exception {
+        var connector = Secrets.extract(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR);
+        connector.set("processors", new ObjectMapper().readTree(json));
 
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, connector);
     }

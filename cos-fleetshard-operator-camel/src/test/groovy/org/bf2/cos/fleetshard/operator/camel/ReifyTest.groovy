@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import groovy.util.logging.Slf4j
 import org.bf2.cos.fleetshard.operator.camel.model.EndpointKamelet
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet
@@ -50,9 +51,9 @@ class ReifyTest extends BaseSpec {
                         value: barB64
                     ],
                     processors: [
-                        [ extract_field: [ field: 'field', 'foo-field': 'foo', bar_field: 'bar']],
-                        [ insert_field: [ field: 'a-field', value: 'a-value']],
-                        [ insert_field: [ field: 'b-field', value: 'b-value']]
+                        [transform: [ jq: '{"field": .field, "foo_field": .foo, "bar_field": .bar}']],
+                        [transform: [ jq: '{.a-field = "a-value"}']],
+                        [transform: [ jq: '{.b-field = "b-value"}']]
                     ],
                     data_shape: [
                         produces: [ format: 'application/json' ],
@@ -86,7 +87,13 @@ class ReifyTest extends BaseSpec {
                     labels['cos.bf2.org/pricing-tier'] == 'essential'
                 }
 
-                it.spec.integration.get("profile").textValue() == CamelConstants.CAMEL_K_PROFILE_OPENSHIFT
+                with(it.spec.integration) {
+                    it.get("profile").textValue() == CamelConstants.CAMEL_K_PROFILE_OPENSHIFT
+                    def processors = it.get("flows").get(0).get("from").get("steps") as ArrayNode
+                    processors.get(0).get("transform").get("jq").asText() == '{\"field\": .field, \"foo_field\": .foo, \"bar_field\": .bar}'
+                    processors.get(1).get("transform").get("jq").asText() == '{.a-field = \"a-value\"}'
+                    processors.get(2).get("transform").get("jq").asText() == '{.b-field = \"b-value\"}'
+                }
 
                 with(it.spec.source) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -113,27 +120,11 @@ class ReifyTest extends BaseSpec {
                     it[0].ref.kind ==  Kamelet.RESOURCE_KIND
                     it[0].ref.name == 'cos-decoder-json-action'
 
-                    it[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
-                    it[1].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[1].ref.name == 'extract-field-action'
-                    it[1].properties['field'] == 'field'
-                    it[1].properties['foo-field'] == 'foo'
+                    it[1].uri == 'direct:cos-transform'
 
                     it[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                     it[2].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[2].ref.name == 'insert-field-action'
-                    it[2].properties['field'] == 'a-field'
-                    it[2].properties['value'] == 'a-value'
-
-                    it[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
-                    it[3].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[3].ref.name == 'insert-field-action'
-                    it[3].properties['field'] == 'b-field'
-                    it[3].properties['value'] == 'b-value'
-
-                    it[4].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
-                    it[4].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[4].ref.name == 'cos-encoder-json-action'
+                    it[2].ref.name == 'cos-encoder-json-action'
                 }
             }
 

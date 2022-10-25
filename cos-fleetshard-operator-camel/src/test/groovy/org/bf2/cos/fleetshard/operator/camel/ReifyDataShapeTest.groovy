@@ -536,7 +536,10 @@ class ReifyDataShapeTest extends BaseSpec {
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
                 spec.steps[1].ref.name == 'cos-encoder-avro-action'
+
+                spec.integration.flows == null
             }
     }
+
 }
 

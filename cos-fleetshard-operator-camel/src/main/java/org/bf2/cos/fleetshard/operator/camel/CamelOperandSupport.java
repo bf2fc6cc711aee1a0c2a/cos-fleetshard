@@ -25,7 +25,7 @@ import org.bf2.cos.fleetshard.operator.camel.model.EndpointKamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
+import org.bf2.cos.fleetshard.operator.camel.model.StepEndpoint;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,11 +53,13 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_ID_
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_ID_PROPERTY;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_SECRET_PLACEHOLDER;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_SECRET_PROPERTY;
-import static org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint.kamelet;
+import static org.bf2.cos.fleetshard.operator.camel.model.StepEndpoint.kamelet;
 import static org.bf2.cos.fleetshard.support.json.JacksonUtil.iterator;
 
 public final class CamelOperandSupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandSupport.class);
+
+    private static final String COS_TRANSFORM_URI = "direct:cos-transform";
 
     private CamelOperandSupport() {
     }
@@ -132,49 +134,11 @@ public final class CamelOperandSupport {
         }
     }
 
-    public static KameletEndpoint configureStep(
-        String templateId,
-        ObjectNode node) {
-
-        var step = kamelet(templateId);
-
-        for (Iterator<Map.Entry<String, JsonNode>> cit = iterator(node); cit.hasNext();) {
-            final var property = cit.next();
-
-            if (templateId == null) {
-                throw new IllegalArgumentException("Unknown processor: " + property.getKey());
-            }
-
-            String propertyName = asPropertyKey(property.getKey());
-
-            switch (property.getValue().getNodeType()) {
-                case BOOLEAN:
-                    step.getProperties().put(
-                        propertyName,
-                        property.getValue().booleanValue());
-                    break;
-                case NUMBER:
-                    step.getProperties().put(
-                        propertyName,
-                        property.getValue().numberValue());
-                    break;
-                default:
-                    step.getProperties().put(
-                        propertyName,
-                        property.getValue().asText());
-                    break;
-
-            }
-        }
-
-        return step;
-    }
-
-    public static List<KameletEndpoint> createSteps(
+    public static List<StepEndpoint> createSteps(
         ManagedConnector connector,
         ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         CamelShardMetadata shardMetadata,
-        KameletEndpoint kafkaEndpoint) {
+        StepEndpoint kafkaEndpoint) {
 
         String consumes = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
             .map(spec -> spec.at("/consumes/format"))
@@ -187,8 +151,7 @@ public final class CamelOperandSupport {
             .map(JsonNode::asText)
             .orElse(shardMetadata.getProduces());
 
-        final ArrayNode steps = connectorConfiguration.getProcessorsSpec();
-        final List<KameletEndpoint> stepDefinitions = new ArrayList<>(steps.size() + 2);
+        final List<StepEndpoint> stepDefinitions = new ArrayList<>(3);
 
         if (consumes != null) {
             switch (consumes) {
@@ -221,16 +184,8 @@ public final class CamelOperandSupport {
             }
         }
 
-        for (JsonNode step : steps) {
-            var element = step.fields().next();
-
-            String templateId = shardMetadata.getKamelets().getProcessors().get(element.getKey());
-            if (templateId == null) {
-                throw new IllegalArgumentException("Unknown processor: " + element.getKey());
-            }
-
-            stepDefinitions.add(
-                configureStep(templateId, (ObjectNode) element.getValue()));
+        if (!connectorConfiguration.getProcessorsSpec().isEmpty()) {
+            stepDefinitions.add(StepEndpoint.uri(COS_TRANSFORM_URI));
         }
 
         if (produces != null) {
@@ -418,7 +373,8 @@ public final class CamelOperandSupport {
     public static ObjectNode createIntegrationSpec(
         String secretName,
         CamelOperandConfiguration cfg,
-        Map<String, String> envVars) {
+        Map<String, String> envVars,
+        ArrayNode processorSpec) {
 
         ObjectNode integration = Serialization.jsonMapper().createObjectNode();
         integration.put("profile", CamelConstants.CAMEL_K_PROFILE_OPENSHIFT);
@@ -433,6 +389,13 @@ public final class CamelOperandSupport {
                 .put("type", "env")
                 .put("value", k + "=" + v);
         });
+
+        if (!processorSpec.isEmpty()) {
+            ArrayNode flows = integration.withArray("flows");
+            ObjectNode from = flows.addObject().putObject("from");
+            from.put("uri", COS_TRANSFORM_URI);
+            from.set("steps", processorSpec);
+        }
 
         return integration;
     }

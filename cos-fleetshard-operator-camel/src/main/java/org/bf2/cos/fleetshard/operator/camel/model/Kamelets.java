@@ -1,10 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.sundr.builder.annotations.Buildable;
@@ -17,10 +13,6 @@ public class Kamelets {
     private EndpointKamelet adapter;
     @JsonProperty("kafka")
     private EndpointKamelet kafka;
-
-    @JsonProperty("processors")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private Map<String, String> processors = new HashMap<>();
 
     public EndpointKamelet getAdapter() {
         return adapter;
@@ -38,11 +30,4 @@ public class Kamelets {
         this.kafka = kafka;
     }
 
-    public Map<String, String> getProcessors() {
-        return processors;
-    }
-
-    public void setProcessors(Map<String, String> processors) {
-        this.processors = processors;
-    }
 }

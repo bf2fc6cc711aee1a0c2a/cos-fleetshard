@@ -21,12 +21,12 @@ public class KameletBindingSpec {
     @JsonProperty("integration")
     private ObjectNode integration;
     @JsonProperty("sink")
-    private KameletEndpoint sink;
+    private StepEndpoint sink;
     @JsonProperty("source")
-    private KameletEndpoint source;
+    private StepEndpoint source;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("steps")
-    private List<KameletEndpoint> steps = new ArrayList<>();
+    private List<StepEndpoint> steps = new ArrayList<>();
     @JsonProperty("errorHandler")
     private ObjectNode errorHandler;
 
@@ -38,27 +38,27 @@ public class KameletBindingSpec {
         this.integration = integration;
     }
 
-    public KameletEndpoint getSink() {
+    public StepEndpoint getSink() {
         return sink;
     }
 
-    public void setSink(KameletEndpoint sink) {
+    public void setSink(StepEndpoint sink) {
         this.sink = sink;
     }
 
-    public KameletEndpoint getSource() {
+    public StepEndpoint getSource() {
         return source;
     }
 
-    public void setSource(KameletEndpoint source) {
+    public void setSource(StepEndpoint source) {
         this.source = source;
     }
 
-    public List<KameletEndpoint> getSteps() {
+    public List<StepEndpoint> getSteps() {
         return steps;
     }
 
-    public void setSteps(List<KameletEndpoint> steps) {
+    public void setSteps(List<StepEndpoint> steps) {
         this.steps = steps;
     }
 
