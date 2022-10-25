@@ -19,34 +19,52 @@ import lombok.ToString;
 @EqualsAndHashCode
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({ "ref", "properties" })
+@JsonPropertyOrder({ "ref", "properties", "uri" })
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
-public class KameletEndpoint {
+public class StepEndpoint {
     @JsonProperty("ref")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private ResourceRef ref;
     @JsonProperty("properties")
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> properties = new TreeMap<>();
 
-    public KameletEndpoint() {
+    @JsonProperty("uri")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String uri;
+
+    public StepEndpoint() {
     }
 
-    public KameletEndpoint(ResourceRef ref) {
+    public StepEndpoint(ResourceRef ref) {
         this.ref = ref;
     }
 
-    public KameletEndpoint(ResourceRef ref, Map<String, Object> properties) {
+    public StepEndpoint(ResourceRef ref, Map<String, Object> properties) {
         this.ref = ref;
         this.properties.putAll(properties);
     }
 
-    public KameletEndpoint(String apiVersion, String kind, String name) {
+    public StepEndpoint(String apiVersion, String kind, String name) {
         this.ref = new ResourceRef(apiVersion, kind, name);
     }
 
-    public KameletEndpoint(String apiVersion, String kind, String name, Map<String, Object> properties) {
+    public StepEndpoint(String apiVersion, String kind, String name, Map<String, Object> properties) {
         this.ref = new ResourceRef(apiVersion, kind, name);
         this.properties.putAll(properties);
+    }
+
+    /**
+     * Create a URI step endpoint. Note that this class used to be just a KameletEndpoint,
+     * and other constructors are meant to be for creating kamelet step endpoint. When it's
+     * used for a URI endpoint, use only this constructor and/or {@link #getUri()},
+     * {@link #setUri(String)} and {@link #uri(String)} and never set other properties.
+     * The other way is also true, do not set URI for a kamelet endpoint.
+     *
+     * @param uri The target URI to route
+     */
+    public StepEndpoint(String uri) {
+        this.uri = uri;
     }
 
     public Map<String, Object> getProperties() {
@@ -69,24 +87,36 @@ public class KameletEndpoint {
         setRef(new ResourceRef(apiVersion, kind, name));
     }
 
-    public static KameletEndpoint kamelet(String name, Map<String, Object> properties) {
-        return new KameletEndpoint(
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public static StepEndpoint kamelet(String name, Map<String, Object> properties) {
+        return new StepEndpoint(
             Kamelet.RESOURCE_API_VERSION,
             Kamelet.RESOURCE_KIND,
             name,
             properties);
     }
 
-    public static KameletEndpoint kamelet(String name) {
-        return new KameletEndpoint(
+    public static StepEndpoint kamelet(String name) {
+        return new StepEndpoint(
             Kamelet.RESOURCE_API_VERSION,
             Kamelet.RESOURCE_KIND,
             name);
     }
 
-    public static KameletEndpoint kamelet(String name, Consumer<Map<String, Object>> consumer) {
-        KameletEndpoint answer = kamelet(name);
+    public static StepEndpoint kamelet(String name, Consumer<Map<String, Object>> consumer) {
+        StepEndpoint answer = kamelet(name);
         consumer.accept(answer.getProperties());
         return answer;
+    }
+
+    public static StepEndpoint uri(String uri) {
+        return new StepEndpoint(uri);
     }
 }

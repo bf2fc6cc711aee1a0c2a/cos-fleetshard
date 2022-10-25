@@ -160,8 +160,6 @@ class BaseSpec extends Specification {
         sm.connectorType = 'source'
         sm.kamelets.adapter = new EndpointKamelet('test-adapter', 'aws')
         sm.kamelets.kafka = new EndpointKamelet('test-kafka', 'kafka')
-        sm.kamelets.processors['insert_field'] = 'insert-field-action'
-        sm.kamelets.processors['extract_field'] = 'extract-field-action'
 
         return sm
     }

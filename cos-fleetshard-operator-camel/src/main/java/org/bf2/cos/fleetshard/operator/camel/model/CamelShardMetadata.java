@@ -175,4 +175,5 @@ public class CamelShardMetadata {
             ", errorHandlerStrategy=" + errorHandlerStrategy +
             '}';
     }
+
 }

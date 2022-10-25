@@ -15,7 +15,7 @@ import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpec;
-import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
+import org.bf2.cos.fleetshard.operator.camel.model.StepEndpoint;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
@@ -111,9 +111,9 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             connector,
             connectorConfiguration.getErrorHandlerSpec());
 
-        final List<KameletEndpoint> stepDefinitions;
-        final KameletEndpoint source;
-        final KameletEndpoint sink;
+        final List<StepEndpoint> stepDefinitions;
+        final StepEndpoint source;
+        final StepEndpoint sink;
 
         //
         // - source:
@@ -138,7 +138,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         //
         switch (shardMetadata.getConnectorType()) {
             case CONNECTOR_TYPE_SOURCE:
-                source = KameletEndpoint.kamelet(shardMetadata.getKamelets().getAdapter().getName());
+                source = StepEndpoint.kamelet(shardMetadata.getKamelets().getAdapter().getName());
                 source.getProperties().put("id", connector.getSpec().getDeploymentId() + "-source");
 
                 configureKameletProperties(
@@ -146,7 +146,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                     connectorConfiguration.getConnectorSpec(),
                     shardMetadata.getKamelets().getAdapter());
 
-                sink = KameletEndpoint.kamelet(shardMetadata.getKamelets().getKafka().getName());
+                sink = StepEndpoint.kamelet(shardMetadata.getKamelets().getKafka().getName());
                 sink.getProperties().put("id", connector.getSpec().getDeploymentId() + "-sink");
                 sink.getProperties().put("bootstrapServers", connector.getSpec().getDeployment().getKafka().getUrl());
                 sink.getProperties().put("user", SA_CLIENT_ID_PLACEHOLDER);
@@ -170,7 +170,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                     sink);
                 break;
             case CONNECTOR_TYPE_SINK:
-                source = KameletEndpoint.kamelet(shardMetadata.getKamelets().getKafka().getName());
+                source = StepEndpoint.kamelet(shardMetadata.getKamelets().getKafka().getName());
                 source.getProperties().put("id", connector.getSpec().getDeploymentId() + "-source");
                 source.getProperties().put("consumerGroup", connector.getSpec().getDeploymentId());
                 source.getProperties().put("bootstrapServers", connector.getSpec().getDeployment().getKafka().getUrl());
@@ -188,7 +188,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                         connector.getSpec().getDeployment().getSchemaRegistry().getUrl());
                 }
 
-                sink = KameletEndpoint.kamelet(shardMetadata.getKamelets().getAdapter().getName());
+                sink = StepEndpoint.kamelet(shardMetadata.getKamelets().getAdapter().getName());
                 sink.getProperties().put("id", connector.getSpec().getDeploymentId() + "-sink");
 
                 configureKameletProperties(
@@ -327,7 +327,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                 "CONNECTOR_SECRET_CHECKSUM", Secrets.computeChecksum(secret),
                 "CONNECTOR_ID", connector.getSpec().getConnectorId(),
                 "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId(),
-                "CONNECTOR_TRAITS_CHECKSUM", Resources.computeTraitsChecksum(binding)));
+                "CONNECTOR_TRAITS_CHECKSUM", Resources.computeTraitsChecksum(binding)),
+            connectorConfiguration.getProcessorsSpec());
 
         binding.getSpec().setIntegration(integration);
 
