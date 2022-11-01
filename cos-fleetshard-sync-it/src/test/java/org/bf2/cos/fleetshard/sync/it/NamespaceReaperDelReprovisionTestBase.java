@@ -35,7 +35,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
+            assertThat(MetricsSupport.counter(registry, metricsConfig, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(1));
         });
@@ -50,7 +50,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
+            assertThat(MetricsSupport.counter(registry, metricsConfig, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(2));
         });
@@ -65,7 +65,7 @@ public class NamespaceReaperDelReprovisionTestBase extends NamespaceReaperTestSu
             .post("/test/provisioner/namespaces");
 
         untilAsserted(() -> {
-            assertThat(MetricsSupport.counter(registry, config, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
+            assertThat(MetricsSupport.counter(registry, metricsConfig, ConnectorNamespaceProvisioner.METRICS_SUFFIX, ".count"))
                 .isNotNull()
                 .satisfies(counter -> assertThat(counter.count()).isEqualTo(3));
         });

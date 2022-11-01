@@ -23,6 +23,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -220,11 +221,6 @@ public final class ConnectorTestSupport {
         when(answer.namespace()).thenAnswer(invocation -> {
             return "bar";
         });
-        when(answer.metrics()).thenAnswer(invocation -> {
-            var metrics = Mockito.mock(FleetShardSyncConfig.Metrics.class);
-            when(metrics.baseName()).thenReturn("base");
-            return metrics;
-        });
         when(answer.quota()).thenAnswer(invocation -> {
             return Mockito.mock(FleetShardSyncConfig.Quota.class);
         });
@@ -236,6 +232,12 @@ public final class ConnectorTestSupport {
         });
 
         return answer;
+    }
+
+    public static MetricsConfig metricsConfig() {
+        var metrics = Mockito.mock(MetricsConfig.class);
+        when(metrics.baseName()).thenReturn("base");
+        return metrics;
     }
 
     public static class CamelConnectorMeta {

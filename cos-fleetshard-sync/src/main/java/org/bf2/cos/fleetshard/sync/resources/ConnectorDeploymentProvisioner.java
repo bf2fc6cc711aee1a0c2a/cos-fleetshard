@@ -19,6 +19,7 @@ import org.bf2.cos.fleetshard.api.OperatorSelector;
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec;
 import org.bf2.cos.fleetshard.support.OperatorSelectorUtil;
 import org.bf2.cos.fleetshard.support.client.EventClient;
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -26,7 +27,6 @@ import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

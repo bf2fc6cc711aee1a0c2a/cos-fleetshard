@@ -8,11 +8,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.eclipse.microprofile.faulttolerance.Retry;
 
 @ApplicationScoped

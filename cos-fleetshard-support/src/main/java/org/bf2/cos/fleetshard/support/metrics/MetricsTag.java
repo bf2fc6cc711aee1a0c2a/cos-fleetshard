@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.metrics;
+package org.bf2.cos.fleetshard.support.metrics;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Repeatable;

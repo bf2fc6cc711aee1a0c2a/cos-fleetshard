@@ -47,7 +47,8 @@ public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport
     @Test
     void namespaceIsProvisioned() {
         final String deploymentId = ConfigProvider.getConfig().getValue("test.deployment.id", String.class);
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
         final String namespaceName = fleetShardClient.generateNamespaceId(deploymentId);
 
         given()
@@ -71,12 +72,12 @@ public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport
             .withMetadata(new ObjectMetaBuilder()
                 .withName(Connectors.generateConnectorId(deploymentId))
                 .withNamespace(namespaceName)
-                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+                .addToLabels(LABEL_CLUSTER_ID, clientConfig.cluster().id())
                 .addToLabels(LABEL_CONNECTOR_ID, deploymentId)
                 .addToLabels(LABEL_DEPLOYMENT_ID, deploymentId)
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
-                .withClusterId(config.cluster().id())
+                .withClusterId(clientConfig.cluster().id())
                 .withConnectorId(deploymentId)
                 .withDeploymentId(deploymentId)
                 .withOperatorSelector(new OperatorSelectorBuilder().withId(deploymentId).build())

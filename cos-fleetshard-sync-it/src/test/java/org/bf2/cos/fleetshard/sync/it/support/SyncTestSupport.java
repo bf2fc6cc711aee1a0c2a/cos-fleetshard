@@ -14,6 +14,7 @@ import org.assertj.core.api.ThrowingConsumer;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ThrowingRunnable;
+import org.bf2.cos.fleet.manager.client.ClientConfig;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentAllOfMetadata;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
@@ -24,6 +25,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 
@@ -44,6 +46,10 @@ public class SyncTestSupport {
     protected KubernetesClient kubernetesClient;
     @Inject
     protected FleetShardSyncConfig config;
+    @Inject
+    protected ClientConfig clientConfig;
+    @Inject
+    protected MetricsConfig metricsConfig;
     @Inject
     protected FleetShardClient fleetShardClient;
 

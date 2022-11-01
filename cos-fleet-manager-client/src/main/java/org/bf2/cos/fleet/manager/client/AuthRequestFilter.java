@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.client;
+package org.bf2.cos.fleet.manager.client;
 
 import java.io.IOException;
 
@@ -9,8 +9,8 @@ import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
-import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -5,6 +5,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.client.ClientConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ public class FleetShardObservabilityClient {
     KubernetesClient kubernetesClient;
     @Inject
     FleetShardSyncConfig config;
+    @Inject
+    ClientConfig clientConfig;
 
     public void setupObservability() {
         if (!config.observability().enabled()) {
@@ -79,7 +82,7 @@ public class FleetShardObservabilityClient {
         descopedMode.setPrometheusOperatorNamespace(config.observability().namespace());
         spec.setDescopedMode(descopedMode);
 
-        spec.setClusterId(config.cluster().id());
+        spec.setClusterId(clientConfig.cluster().id());
 
         final var configurationSelector = new ConfigurationSelector();
         configurationSelector.setMatchLabels(Map.of("configures", config.observability().configuresMatchLabel()));

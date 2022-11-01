@@ -1,6 +1,10 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.assertj.core.api.Assertions;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -22,7 +26,6 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 @QuarkusTest
 @TestProfile(ObservabilityTest.Profile.class)
 public class ObservabilityTest extends SyncTestSupport {
-
     @Test
     void observabilityIsProvisioned() {
         Observability observabilityResource = until(
@@ -34,7 +37,7 @@ public class ObservabilityTest extends SyncTestSupport {
 
         Assertions.assertThat(observabilityResource)
             .matches(obs -> obs.getMetadata().getName().equals("observability-resource"))
-            .matches(obs -> obs.getSpec().getClusterId().equals(config.cluster().id()))
+            .matches(obs -> obs.getSpec().getClusterId().equals(clientConfig.cluster().id()))
             .matches(obs -> obs.getSpec().getStorage().getPrometheus().getVolumeClaimTemplate().getSpec().getResources()
                 .getRequests()
                 .equals(Map.of("storage", new IntOrString("50Gi"))));

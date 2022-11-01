@@ -1,6 +1,6 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -10,8 +10,8 @@ public final class MetricsSupport {
     private MetricsSupport() {
     }
 
-    public static Search find(MeterRegistry registry, FleetShardSyncConfig config, String... subs) {
-        return find(registry, config.metrics().baseName(), subs);
+    public static Search find(MeterRegistry registry, MetricsConfig config, String... subs) {
+        return find(registry, config.baseName(), subs);
     }
 
     public static Search find(MeterRegistry registry, String base, String... subs) {
@@ -25,7 +25,7 @@ public final class MetricsSupport {
         return registry.find(id);
     }
 
-    public static Counter counter(MeterRegistry registry, FleetShardSyncConfig config, String... subs) {
+    public static Counter counter(MeterRegistry registry, MetricsConfig config, String... subs) {
         return find(registry, config, subs).counter();
     }
 

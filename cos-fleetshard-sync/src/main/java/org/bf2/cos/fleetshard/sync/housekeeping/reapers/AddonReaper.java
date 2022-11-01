@@ -4,8 +4,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.apache.http.annotation.Obsolete;
+import org.bf2.cos.fleet.manager.client.ClientConfig;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -32,23 +34,25 @@ public class AddonReaper implements Housekeeper.Task, Service {
     public static final String CLEANUP_EVENT_REASON = "CleaningUpResources";
     public static final String FAILED_CLEANUP_EVENT_REASON = "FailedToCleanUpResources";
 
-    private final KubernetesClient kubernetesClient;
-    private final FleetShardSyncConfig config;
-    private final FleetShardSync fleetShardSync;
-    private final FleetShardObservabilityClient observabilityClient;
+    @Inject
+    KubernetesClient kubernetesClient;
+    @Inject
+    ClientConfig clientConfig;
+    @Inject
+    FleetShardSyncConfig config;
+    @Inject
+    FleetShardSync fleetShardSync;
+    @Inject
+    FleetShardObservabilityClient observabilityClient;
+    @Inject
+    EventClient eventClient;
+
     private final ConfigMapWatcher watcher;
     private final AtomicLong retries;
     private final AtomicBoolean running;
     private final AtomicBoolean taskRunning;
-    private final EventClient eventClient;
 
-    public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync,
-        FleetShardObservabilityClient observabilityClient, EventClient eventClient) {
-        this.kubernetesClient = kubernetesClient;
-        this.config = config;
-        this.fleetShardSync = fleetShardSync;
-        this.observabilityClient = observabilityClient;
-        this.eventClient = eventClient;
+    public AddonReaper() {
         this.watcher = new ConfigMapWatcher();
         this.retries = new AtomicLong(0);
         this.running = new AtomicBoolean();
@@ -104,7 +108,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
 
         eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
             "Deleting all namespaces that belong to cluster {}. Try #{}",
-            config.cluster().id(), retries);
+            clientConfig.cluster().id(), retries);
         getNamespaceFilter().delete();
 
         eventClient.broadcastNormal(CLEANUP_EVENT_REASON, "Asking for Observability clean up");
@@ -140,7 +144,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
     }
 
     private FilterWatchListDeletable<Namespace, NamespaceList> getNamespaceFilter() {
-        return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, config.cluster().id());
+        return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, clientConfig.cluster().id());
     }
 
     private class ConfigMapWatcher extends AbstractWatcher<ConfigMap> {
@@ -183,7 +187,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
                 eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
                     "ConfigMap for deletion of the Addon was found, starting cleanup of cluster: %s - %s",
                     configMap,
-                    config.cluster().id(),
+                    clientConfig.cluster().id(),
                     configMap);
                 try {
                     fleetShardSync.stopResourcesSync();

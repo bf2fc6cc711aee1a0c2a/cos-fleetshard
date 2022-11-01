@@ -42,7 +42,8 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
         final String clusterId = ConfigProvider.getConfig().getValue("test.openshift.cluster.id", String.class);
         final String clusterVersion = ConfigProvider.getConfig().getValue("test.openshift.cluster.version", String.class);
 

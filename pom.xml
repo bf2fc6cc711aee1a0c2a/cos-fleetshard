@@ -70,12 +70,14 @@
     <modules>
         <module>cos-build-tools</module>
         <module>cos-fleet-manager-api</module>
+        <module>cos-fleet-manager-client</module>
         <module>cos-fleetshard-poms</module>
         <module>cos-fleetshard-api</module>
         <module>cos-fleetshard-support</module>
         <module>cos-fleetshard-it</module>
         <module>cos-fleetshard-sync</module>
         <module>cos-fleetshard-sync-it</module>
+        <module>cos-fleetshard-operator-service</module>
         <module>cos-fleetshard-operator</module>
         <module>cos-fleetshard-operator-it</module>
         <module>cos-fleetshard-operator-camel</module>
@@ -244,6 +246,11 @@
                 <artifactId>cos-fleet-manager-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleet-manager-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- support -->
             <dependency>
@@ -264,6 +271,13 @@
             <dependency>
                 <groupId>org.bf2</groupId>
                 <artifactId>cos-fleetshard-it-cucumber</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- service -->
+            <dependency>
+                <groupId>org.bf2</groupId>
+                <artifactId>cos-fleetshard-operator-service</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

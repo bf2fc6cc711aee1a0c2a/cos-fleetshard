@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.metrics;
+package org.bf2.cos.fleetshard.support.metrics;
 
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -9,10 +9,6 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
-import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -20,7 +16,7 @@ import io.micrometer.core.instrument.Tag;
 @Singleton
 public class MetricsProducers {
     @Inject
-    FleetShardSyncConfig config;
+    MetricsConfig metricsConfig;
     @Inject
     MeterRegistry registry;
 
@@ -40,8 +36,8 @@ public class MetricsProducers {
         }
 
         String id = named.value();
-        if (!id.startsWith(config.metrics().baseName() + ".")) {
-            id = config.metrics().baseName() + "." + id;
+        if (!id.startsWith(metricsConfig.baseName() + ".")) {
+            id = metricsConfig.baseName() + "." + id;
         }
 
         return MetricsRecorder.of(
@@ -68,8 +64,8 @@ public class MetricsProducers {
         }
 
         String id = named.value();
-        if (!id.startsWith(config.metrics().baseName() + ".")) {
-            id = config.metrics().baseName() + "." + id;
+        if (!id.startsWith(metricsConfig.baseName() + ".")) {
+            id = metricsConfig.baseName() + "." + id;
         }
 
         return StaticMetricsRecorder.of(
@@ -96,8 +92,8 @@ public class MetricsProducers {
         }
 
         String id = named.value();
-        if (!id.startsWith(config.metrics().baseName() + ".")) {
-            id = config.metrics().baseName() + "." + id;
+        if (!id.startsWith(metricsConfig.baseName() + ".")) {
+            id = metricsConfig.baseName() + "." + id;
         }
 
         Counter.Builder builder = Counter.builder(id);

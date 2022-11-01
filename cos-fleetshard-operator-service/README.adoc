@@ -1,0 +1,13 @@
+= cos-fleetshard-operator-service
+
+
+== local profile
+
+Start Quarkus in dev mode and read the application configuration from the current namespace.
+
+[source,shell]
+----
+export KUBERNETES_NAMESPACE=$(oc project -q)
+
+./mvnw -Plocal
+----

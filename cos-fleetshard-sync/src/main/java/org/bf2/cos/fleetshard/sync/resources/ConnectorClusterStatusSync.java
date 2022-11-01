@@ -13,6 +13,7 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorOperator;
 import org.bf2.cos.fleetshard.support.Service;
+import org.bf2.cos.fleetshard.support.metrics.MetricsID;
 import org.bf2.cos.fleetshard.support.metrics.StaticMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Operators;
@@ -21,7 +22,6 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncScheduler;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
-import org.bf2.cos.fleetshard.sync.metrics.MetricsID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

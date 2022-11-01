@@ -11,6 +11,9 @@ import java.util.function.Consumer;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.core.UriBuilder;
 
+import org.bf2.cos.fleet.manager.client.AuthRequestFilter;
+import org.bf2.cos.fleet.manager.client.ClientConfig;
+import org.bf2.cos.fleet.manager.client.RestClientHelper;
 import org.bf2.cos.fleet.manager.model.ConnectorClusterStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentList;
@@ -19,7 +22,6 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +32,10 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 public class FleetManagerClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(FleetManagerClient.class);
 
-    final FleetShardSyncConfig config;
+    final ClientConfig config;
     final FleetManagerClientApi controlPlane;
 
-    public FleetManagerClient(FleetShardSyncConfig config, AuthRequestFilter filter) {
+    public FleetManagerClient(ClientConfig config, AuthRequestFilter filter) {
         this.config = config;
 
         UriBuilder builder = UriBuilder.fromUri(config.manager().uri())

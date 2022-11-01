@@ -10,7 +10,7 @@
  * Do not edit the class manually.
  */
 
-package org.bf2.cos.fleetshard.sync.client;
+package org.bf2.cos.fleet.manager.client;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

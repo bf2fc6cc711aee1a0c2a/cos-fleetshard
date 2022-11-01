@@ -1,4 +1,4 @@
-package org.bf2.cos.fleetshard.sync.client;
+package org.bf2.cos.fleet.manager.client;
 
 import java.io.IOException;
 
@@ -10,8 +10,8 @@ import javax.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
 
 @Provider
-public class FleetManagerResponseLoggingFilter implements ClientResponseFilter {
-    private static final Logger LOG = Logger.getLogger(FleetManagerResponseLoggingFilter.class);
+public class RestClientResponseLoggingFilter implements ClientResponseFilter {
+    private static final Logger LOG = Logger.getLogger(RestClientResponseLoggingFilter.class);
 
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {

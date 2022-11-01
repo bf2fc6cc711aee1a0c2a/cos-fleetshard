@@ -6,11 +6,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.bf2.cos.fleet.manager.client.RestClientException;
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.metrics.MetricsConfig;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
-import org.bf2.cos.fleetshard.sync.client.FleetManagerClientException;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ public class ConnectorStatusUpdater {
     MeterRegistry registry;
     @Inject
     FleetShardSyncConfig config;
+    @Inject
+    MetricsConfig metricsConfig;
 
     public void update(ManagedConnector connector) {
         LOGGER.debug("Update connector status (name: {}, phase: {})",
@@ -73,7 +76,7 @@ public class ConnectorStatusUpdater {
                     break;
             }
 
-        } catch (FleetManagerClientException e) {
+        } catch (RestClientException e) {
             if (e.getStatusCode() == 410) {
                 LOGGER.info("Connector " + connector.getMetadata().getName() + " does not exists anymore, deleting it");
                 if (connectorClient.deleteConnector(connector)) {
@@ -103,17 +106,17 @@ public class ConnectorStatusUpdater {
 
         String connectorResourceVersion = String.valueOf(connector.getSpec().getDeployment().getConnectorResourceVersion());
 
-        Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
+        Gauge gauge = registry.find(metricsConfig.baseName() + "." + CONNECTOR_STATE).tags(tags).gauge();
 
         if (gauge != null) {
             registry.remove(gauge);
         }
 
-        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
+        Gauge.builder(metricsConfig.baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
             .tags(tags)
             .register(registry);
 
-        Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
+        Counter.builder(metricsConfig.baseName() + "." + CONNECTOR_STATE_COUNT)
             .tags(tags)
             .tag("cos.connector.state", connectorDeploymentStatus.getPhase().getValue())
             .tag("cos.connector.resourceversion", connectorResourceVersion)
@@ -121,14 +124,14 @@ public class ConnectorStatusUpdater {
             .increment();
 
         if (CONNECTOR_STATE_FAILED == connectorState) {
-            Counter counter = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
+            Counter counter = registry.find(metricsConfig.baseName() + "." + CONNECTOR_STATE_COUNT)
                 .tags(tags).tag("cos.connector.state", "ready")
                 .tagKeys("cos.connector.resourceversion").counter();
 
             if (counter != null && counter.count() != 0) {
 
                 // Exposing a new state "failed_but_ready" when a connector has already started but now failing
-                Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
+                Counter.builder(metricsConfig.baseName() + "." + CONNECTOR_STATE_COUNT)
                     .tags(tags)
                     .tag("cos.connector.state", "failed_but_ready")
                     .tag("cos.connector.resourceversion", connectorResourceVersion)

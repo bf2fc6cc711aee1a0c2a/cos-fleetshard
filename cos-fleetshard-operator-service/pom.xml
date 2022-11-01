@@ -1,0 +1,275 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <parent>
+        <groupId>org.bf2</groupId>
+        <artifactId>cos-fleetshard-app</artifactId>
+        <version>999-SNAPSHOT</version>
+        <relativePath>../cos-fleetshard-poms/app</relativePath>
+    </parent>
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cos-fleetshard-operator-service</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <app-secret.name>addon-connectors-operator-parameters</app-secret.name>
+        <app-config.name>${project.artifactId}-config</app-config.name>
+
+        <!-- CRD -->
+        <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
+
+        <!-- secret -->
+        <quarkus.kubernetes.secret-volumes.app-secret.secret-name>${app-secret.name}</quarkus.kubernetes.secret-volumes.app-secret.secret-name>
+        <quarkus.kubernetes.secret-volumes.app-secret.default-mode>0644</quarkus.kubernetes.secret-volumes.app-secret.default-mode>
+        <quarkus.kubernetes.mounts.app-secret.path>/mnt/app-secret</quarkus.kubernetes.mounts.app-secret.path>
+
+        <!-- config map -->
+        <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>${app-config.name}</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
+        <quarkus.kubernetes.config-map-volumes.app-config.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config.default-mode>
+        <quarkus.kubernetes.mounts.app-config.path>/mnt/app-config</quarkus.kubernetes.mounts.app-config.path>
+
+        <!-- smallrye -->
+        <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>/mnt/app-config</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>
+        <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>/mnt/app-secret</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_SOURCE_FILE_LOCATIONS>
+
+        <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
+        <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
+
+        <!-- kubernetes -->
+        <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
+        <quarkus.kubernetes-config.secrets.enabled>false</quarkus.kubernetes-config.secrets.enabled>
+
+        <!-- kubernetes resources-->
+        <quarkus.kubernetes.resources.requests.memory>256Mi</quarkus.kubernetes.resources.requests.memory>
+        <quarkus.kubernetes.resources.requests.cpu>500m</quarkus.kubernetes.resources.requests.cpu>
+        <quarkus.kubernetes.resources.limits.memory>512Mi</quarkus.kubernetes.resources.limits.memory>
+        <quarkus.kubernetes.resources.limits.cpu>1500m</quarkus.kubernetes.resources.limits.cpu>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>builder-annotations</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleet-manager-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleet-manager-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bf2</groupId>
+            <artifactId>cos-fleetshard-support</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkiverse.operatorsdk</groupId>
+            <artifactId>quarkus-operator-sdk</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-client-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-oidc-client-filter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-jib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-kubernetes</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-ext-jdk15on</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.smallrye.config</groupId>
+            <artifactId>smallrye-config-source-file-system</artifactId>
+        </dependency>
+
+        <!-- test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-assertj</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>${gmavenplus-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>execute</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>inputFile</name>
+                            <value>${project.build.directory}/kubernetes/kubernetes.yml</value>
+                        </property>
+                        <property>
+                            <name>outputFile</name>
+                            <value>${project.basedir}/../etc/kubernetes/manifests/base/apps/${project.artifactId}/kubernetes.yml</value>
+                        </property>
+                    </properties>
+                    <scripts>
+                        <script>${project.basedir}/../cos-build-tools/src/main/resources/cleanup-generated-kubernetes-resources.groovy</script>
+                    </scripts>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy</artifactId>
+                        <version>${groovy.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.groovy</groupId>
+                        <artifactId>groovy-ant</artifactId>
+                        <version>${groovy.version}</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <activation>
+                <property>
+                    <name>local</name>
+                </property>
+            </activation>
+            <build>
+                <defaultGoal>quarkus:dev</defaultGoal>
+                <plugins>
+                    <plugin>
+                        <groupId>io.quarkus</groupId>
+                        <artifactId>quarkus-maven-plugin</artifactId>
+                        <version>${quarkus.version}</version>
+                        <executions>
+                            <execution>
+                                <id>dev</id>
+                                <goals>
+                                    <goal>dev</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <systemProperties>
+                                <quarkus.test.continuous-testing>disabled</quarkus.test.continuous-testing>
+                                <quarkus.http.port>0</quarkus.http.port>
+                                <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
+                                <cos.namespace>redhat-openshift-connectors</cos.namespace>
+                                <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
+                                <quarkus.kubernetes-config.secrets.enabled>true</quarkus.kubernetes-config.secrets.enabled>
+                                <quarkus.kubernetes-config.secrets>${app-secret.name}</quarkus.kubernetes-config.secrets>
+                                <quarkus.kubernetes-config.config-maps>${app-config.name}</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
+                                <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+                            </systemProperties>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

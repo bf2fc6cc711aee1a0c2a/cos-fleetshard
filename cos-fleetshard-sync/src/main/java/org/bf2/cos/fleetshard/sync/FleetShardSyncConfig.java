@@ -1,12 +1,10 @@
 package org.bf2.cos.fleetshard.sync;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
-import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.support.DurationConverter;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 
@@ -26,13 +24,6 @@ public interface FleetShardSyncConfig {
 
     @WithDefault(ConnectorNamespaceProvisioner.DEFAULT_ADDON_PULLSECRET_NAME)
     String imagePullSecretsName();
-
-    /**
-     * Configuration options for the {@link ManagedConnectorCluster}
-     *
-     * @return {@link Cluster}
-     */
-    Cluster cluster();
 
     /**
      * Configuration options for connectors.
@@ -56,20 +47,6 @@ public interface FleetShardSyncConfig {
     Addon addon();
 
     /**
-     * Metrics configuration options.
-     *
-     * @return {@link Connectors}
-     */
-    Metrics metrics();
-
-    /**
-     * Configuration options for the fleet manager.
-     *
-     * @return {@link Connectors}
-     */
-    Manager manager();
-
-    /**
      * Configuration options for the tenancy.
      *
      * @return {@link Tenancy}
@@ -79,18 +56,6 @@ public interface FleetShardSyncConfig {
     Quota quota();
 
     Observability observability();
-
-    interface Cluster {
-        /**
-         * The ID assigned to the operator.
-         * </p>
-         * This value is used by the operator to create a {@link ManagedConnectorCluster} CR upon startup and it is added to any
-         * {@link ManagedConnector} that is created by this synchronizer instance.
-         *
-         * @return the cluster id.
-         */
-        String id();
-    }
 
     interface Tenancy {
         @WithDefault("redhat-openshift-connectors")
@@ -220,75 +185,6 @@ public interface FleetShardSyncConfig {
         Map<String, String> annotations();
     }
 
-    interface Metrics {
-        /**
-         * The base name for metrics created by the operator.
-         *
-         * @return the base name.
-         */
-        @WithDefault("cos.fleetshard.sync")
-        String baseName();
-    }
-
-    interface Manager {
-        /**
-         * The {@link URI} of the Control Plane.
-         *
-         * @return the control plane {@link URI}.
-         */
-        URI uri();
-
-        /**
-         * The {@link URI} of the SSO.
-         *
-         * @return the sso {@link URI}.
-         */
-        Optional<URI> ssoUri();
-
-        /**
-         * The {@link URI} of the endpoint to discover the SSO URI.
-         *
-         * @return the sso {@link URI}.
-         */
-        URI ssoProviderUri();
-
-        /**
-         * The timeout for sso provider refresh;
-         *
-         * @return the timeout.
-         */
-        @WithDefault("1h")
-        @WithConverter(DurationConverter.class)
-        Duration ssoProviderRefreshTimeout();
-
-        /**
-         * The timeout for sso operations;
-         *
-         * @return the timeout.
-         */
-        @WithDefault("10s")
-        @WithConverter(DurationConverter.class)
-        Duration ssoTimeout();
-
-        /**
-         * The connect timeout;
-         *
-         * @return the timeout.
-         */
-        @WithDefault("5s")
-        @WithConverter(DurationConverter.class)
-        Duration connectTimeout();
-
-        /**
-         * The read timeout;
-         *
-         * @return the timeout.
-         */
-        @WithDefault("10s")
-        @WithConverter(DurationConverter.class)
-        Duration readTimeout();
-    }
-
     interface Observability {
         @WithDefault("false")
         boolean enabled();
@@ -314,5 +210,4 @@ public interface FleetShardSyncConfig {
         @WithDefault("observability-operator")
         String configuresMatchLabel();
     }
-
 }

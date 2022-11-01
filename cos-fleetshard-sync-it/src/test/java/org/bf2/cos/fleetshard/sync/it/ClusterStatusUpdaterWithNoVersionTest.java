@@ -31,7 +31,8 @@ public class ClusterStatusUpdaterWithNoVersionTest extends SyncTestSupport {
 
     @Test
     void statusIsUpdated() {
-        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
+        final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + clientConfig.cluster().id()
+            + "/status";
 
         untilAsserted(() -> {
             server.verify(putRequestedFor(urlEqualTo(statusUrl))
