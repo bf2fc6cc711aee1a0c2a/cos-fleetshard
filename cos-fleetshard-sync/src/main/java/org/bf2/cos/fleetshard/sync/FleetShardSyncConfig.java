@@ -293,6 +293,9 @@ public interface FleetShardSyncConfig {
         @WithDefault("false")
         boolean enabled();
 
+        @WithDefault("production")
+        String environment();
+
         @WithDefault("redhat-openshift-connectors-observability")
         String namespace();
 
@@ -310,6 +313,9 @@ public interface FleetShardSyncConfig {
 
         @WithDefault("observability-operator")
         String configuresMatchLabel();
+
+        @WithDefault("observatorium-configuration-red-hat-sso")
+        String observatoriumSecretName();
     }
 
 }
