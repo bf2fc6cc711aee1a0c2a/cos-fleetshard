@@ -85,7 +85,12 @@ public class TestFleetShardSync extends FleetShardSync {
                 configMapName -> client.configMaps().inNamespace(namespace).create(
                     new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName(configMapName).build()).build())));
 
+        beforeStart();
+
         super.start();
+    }
+
+    public void beforeStart() {
     }
 
     @Override

@@ -48,6 +48,7 @@ public class FleetShardObservabilityClient {
             return;
         }
 
+        createObservatoriumSecret();
         createObservabilityResource();
     }
 
@@ -59,6 +60,32 @@ public class FleetShardObservabilityClient {
 
     public boolean isCleanedUp() {
         return getObservabilityFilter().get() == null && getObservabilityNamespaceFilter().get() == null;
+    }
+
+    private void createObservatoriumSecret() {
+        LOGGER.info("Configuring Observatorium SSO secret");
+        final var fromSecret = kubernetesClient.secrets()
+            .inNamespace(config.namespace())
+            .withName(config.observability().observatoriumSecretName() + "-" + config.observability().environment())
+            .get();
+
+        if (fromSecret != null) {
+            final var obsSecret = new Secret();
+
+            final var meta = new ObjectMetaBuilder()
+                .withName(config.observability().observatoriumSecretName())
+                .withNamespace(config.namespace())
+                .build();
+            obsSecret.setMetadata(meta);
+
+            obsSecret.setData(fromSecret.getData());
+            kubernetesClient.secrets()
+                .inNamespace(obsSecret.getMetadata().getNamespace())
+                .withName(obsSecret.getMetadata().getNamespace())
+                .createOrReplace(obsSecret);
+        } else {
+            LOGGER.warn("Observatorium secret for environment {} not found.", config.observability().environment());
+        }
     }
 
     private void createObservabilityResource() {
