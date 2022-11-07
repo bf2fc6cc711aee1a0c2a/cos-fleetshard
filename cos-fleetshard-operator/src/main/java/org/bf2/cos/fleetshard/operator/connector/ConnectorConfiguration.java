@@ -5,6 +5,8 @@ import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
+
 public class ConnectorConfiguration<S, D> {
     private static final String PROPERTY_DATA_SHAPE = "data_shape";
     private static final String PROPERTY_PROCESSORS = "processors";
@@ -14,11 +16,15 @@ public class ConnectorConfiguration<S, D> {
     private final D dataShapeSpec;
     private final ObjectNode errorHandlerSpec;
     private final ArrayNode processorsSpec;
+    private final ConfigMap configMap;
 
-    public ConnectorConfiguration(ObjectNode connectorSpec, Class<S> connectorSpecType, Class<D> dataShapeType) {
+    public ConnectorConfiguration(ObjectNode connectorSpec, Class<S> connectorSpecType, Class<D> dataShapeType,
+        ConfigMap configMap) {
         if (null == connectorSpec || connectorSpec.isEmpty()) {
             throw new RuntimeException("Connector spec can't be empty!");
         }
+
+        this.configMap = configMap;
 
         var dataShape = connectorSpec.remove(PROPERTY_DATA_SHAPE);
         if (dataShape != null) {
@@ -58,6 +64,10 @@ public class ConnectorConfiguration<S, D> {
 
     public ObjectNode getErrorHandlerSpec() {
         return this.errorHandlerSpec;
+    }
+
+    public ConfigMap getConfigMap() {
+        return this.configMap;
     }
 
 }

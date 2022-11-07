@@ -5,6 +5,7 @@ import java.util.List;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
@@ -20,8 +21,9 @@ public interface OperandController {
      *
      * @param connector the connector descriptor.
      * @param secret    the secret holding the connector specific data.
+     * @param configMap the config map used for connector ad hoc configurations.
      */
-    List<HasMetadata> reify(ManagedConnector connector, Secret secret);
+    List<HasMetadata> reify(ManagedConnector connector, Secret secret, ConfigMap configMap);
 
     /**
      * Extract the status of a connector.

@@ -100,7 +100,7 @@ class BaseSpec extends Specification {
 
         CONTROLLER.doReify(
                 connector, meta,
-                new ConnectorConfiguration<ObjectNode, ObjectNode>(conf, ObjectNode.class, ObjectNode.class),
+                new ConnectorConfiguration<ObjectNode, ObjectNode>(conf, ObjectNode.class, ObjectNode.class, null),
                 serviceAccount)
     }
 

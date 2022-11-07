@@ -17,9 +17,11 @@ Feature: Connector Multiple Operators
 
     When deploy
     Then the connector exists
-    Then the connector secret exists
-    Then the connector operatorSelector id is "cos-fleetshard-operator-it"
-    Then the connector's assignedOperator exists with:
+    And the connector secret exists
+    And the connector configmap exists with labels:
+      | cos.bf2.org/operator.type | connector-operator-it |
+    And the connector operatorSelector id is "cos-fleetshard-operator-it"
+    And the connector's assignedOperator exists with:
       | operator.id      | cos-fleetshard-operator-it |
       | operator.type    | connector-operator-it      |
       | operator.version | 1.5.0                      |
@@ -41,8 +43,8 @@ Feature: Connector Multiple Operators
 
     When deploy
     Then the connector exists
-    Then the connector secret exists
-    Then the connector operatorSelector id is "cos-fleetshard-operator-it-old"
+    And the connector secret exists
+    And the connector operatorSelector id is "cos-fleetshard-operator-it-old"
     And the connector's availableOperator does not exist
     And the connector's assignedOperator does not exist
 
@@ -51,4 +53,6 @@ Feature: Connector Multiple Operators
       | operator.id      | cos-fleetshard-operator-it |
       | operator.type    | connector-operator-it      |
       | operator.version | 1.5.0                      |
-    Then the connector is in phase "Monitor"
+    And the connector configmap exists with labels:
+      | cos.bf2.org/operator.type | connector-operator-it |
+    And the connector is in phase "Monitor"

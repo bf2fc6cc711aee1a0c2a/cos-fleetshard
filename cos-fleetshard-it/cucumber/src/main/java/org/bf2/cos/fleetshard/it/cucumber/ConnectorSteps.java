@@ -21,6 +21,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorStatus;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
 import org.bf2.cos.fleetshard.support.json.JacksonUtil;
+import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
@@ -37,6 +38,7 @@ import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -284,6 +286,40 @@ public class ConnectorSteps {
                 .get();
 
             return res != null;
+        });
+    }
+
+    @Then("the connector configmap exists with labels:")
+    public void configmap_is_created(Map<String, String> labels) {
+
+        until(() -> {
+            var res = kubernetesClient.resources(ConfigMap.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ConfigMaps.generateConnectorConfigMapId(ctx.connector().getSpec().getDeploymentId()))
+                .get();
+
+            if (res == null) {
+                return false;
+            } else {
+                if (labels == null) {
+                    return true;
+                }
+
+                return labels.entrySet().stream().allMatch(
+                    e -> e.getValue().equals(res.getMetadata().getLabels().get(e.getKey())));
+            }
+        });
+    }
+
+    @Then("the connector configmap does not exists")
+    public void configmap_does_not_exists() {
+        until(() -> {
+            var res = kubernetesClient.resources(ConfigMap.class)
+                .inNamespace(ctx.connector().getMetadata().getNamespace())
+                .withName(ConfigMaps.generateConnectorConfigMapId(ctx.connector().getSpec().getDeploymentId()))
+                .get();
+
+            return res == null;
         });
     }
 

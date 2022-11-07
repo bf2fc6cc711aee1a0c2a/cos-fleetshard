@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -42,7 +43,7 @@ public abstract class AbstractOperandController<M, S, D> implements OperandContr
     }
 
     @Override
-    public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
+    public List<HasMetadata> reify(ManagedConnector connector, Secret secret, ConfigMap configMap) {
         LOGGER.debug("Reifying connector: {} and secret.metadata: {}", connector, secret.getMetadata());
         final ServiceAccount serviceAccountSettings = extract(
             secret,
@@ -63,7 +64,8 @@ public abstract class AbstractOperandController<M, S, D> implements OperandContr
             connectorConfig = new ConnectorConfiguration<>(
                 extract(secret, SECRET_ENTRY_CONNECTOR, ObjectNode.class),
                 connectorSpecType,
-                dataShapeType);
+                dataShapeType,
+                configMap);
         } catch (IncompleteConnectorSpecException e) {
             throw new RuntimeException("Incomplete connectorSpec for connector \""
                 + connector.getSpec().getConnectorId() + "@" + connector.getSpec().getDeploymentId()

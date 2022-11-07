@@ -176,7 +176,7 @@ public class DebeziumOperandControllerTest {
                 .withConnectorClass(connectorClass)
                 .build(),
             new ConnectorConfiguration<>(connectorConfig, ObjectNode.class,
-                DebeziumDataShape.class),
+                DebeziumDataShape.class, null),
             new ServiceAccountSpecBuilder()
                 .withClientId(CLIENT_ID)
                 .withClientSecret(CLIENT_SECRET)

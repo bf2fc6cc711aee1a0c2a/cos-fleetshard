@@ -20,5 +20,6 @@ Feature: Connector Secret UoW Mismatch
      And the connector path ".spec.deployment.connectorResourceVersion" is set to 100
     Then the connector exists
      And the connector secret exists
+     And the connector configmap does not exists
      And the connector is in phase "Augmentation"
      And the meters does not have any counter with name "cos.fleetshard.controller.connectors.reconcile.monitor.count"

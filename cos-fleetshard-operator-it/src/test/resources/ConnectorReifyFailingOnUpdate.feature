@@ -25,6 +25,8 @@ Feature: Connector Reify Failing On Update
       | reify.fail | failure |
     Then the connector exists
      And the connector secret exists
+     And the connector configmap exists with labels:
+       | cos.bf2.org/operator.type | connector-operator-it |
      And the connector is in phase "Error"
      And the deployment is in phase "failed"
      And the connector has conditions:
