@@ -16,6 +16,7 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -53,7 +54,7 @@ public class TestProducers {
             }
 
             @Override
-            public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
+            public List<HasMetadata> reify(ManagedConnector connector, Secret secret, ConfigMap configMap) {
                 if (secret.getData() != null && secret.getData().containsKey("reify.fail")) {
                     throw new IllegalArgumentException(Secrets.extract(secret, "reify.fail", String.class));
                 }

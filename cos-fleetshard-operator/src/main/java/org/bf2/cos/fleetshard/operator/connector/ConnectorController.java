@@ -28,13 +28,16 @@ import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -133,6 +136,13 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 kubernetesClient,
                 managedConnectorOperator,
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
+
+        eventSources.put(
+            "_configmaps",
+            new ConnectorConfigmapEventSource(
+                kubernetesClient,
+                managedConnectorOperator,
+                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.configmaps", tags)));
 
         eventSources.put(
             "_operators",
@@ -456,10 +466,45 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             }
         }
 
+        ConfigMap configMap = kubernetesClient.configMaps()
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(ConfigMaps.generateConnectorConfigMapId(connector.getSpec().getDeploymentId()))
+            .get();
+
+        if (configMap == null) {
+            LOGGER.info(
+                "Configmap not found (cluster_id: {}, namespace_id: {}, connector_id: {}, deployment_id: {}), creating a new one",
+                connector.getSpec().getClusterId(),
+                connector.getMetadata().getNamespace(),
+                connector.getSpec().getConnectorId(),
+                connector.getSpec().getDeploymentId());
+
+            configMap = new ConfigMap();
+            configMap.setMetadata(new ObjectMeta());
+            configMap.getMetadata().setNamespace(connector.getMetadata().getNamespace());
+            configMap.getMetadata().setName(ConfigMaps.generateConnectorConfigMapId(connector.getSpec().getDeploymentId()));
+
+            Resources.setLabels(
+                configMap,
+                LABEL_CLUSTER_ID, connector.getSpec().getClusterId(),
+                LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId(),
+                LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId(),
+                LABEL_OPERATOR_TYPE, connector.getMetadata().getLabels().get(LABEL_OPERATOR_TYPE));
+
+            Resources.setOwnerReferences(
+                configMap,
+                connector);
+
+            this.kubernetesClient.configMaps()
+                .inNamespace(configMap.getMetadata().getNamespace())
+                .withName(configMap.getMetadata().getName())
+                .create(configMap);
+        }
+
         List<HasMetadata> resources;
 
         try {
-            resources = operandController.reify(connector, secret);
+            resources = operandController.reify(connector, secret, configMap);
         } catch (Exception e) {
             LOGGER.warn("Error reifying deployment {}", connector.getSpec().getDeploymentId(), e);
 

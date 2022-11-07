@@ -18,6 +18,8 @@ Feature: Deleted Stopped And Resynced
     When deploy
     Then the connector exists
      And the connector secret exists
+     And the connector configmap exists with labels:
+       | cos.bf2.org/operator.type | connector-operator-it |
      And the connector is in phase "Monitor"
      And the deployment is in phase "ready"
 

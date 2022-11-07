@@ -5,6 +5,7 @@ import java.util.List;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
@@ -25,9 +26,9 @@ public class OperandControllerMetricsWrapper implements OperandController {
     }
 
     @Override
-    public List<HasMetadata> reify(ManagedConnector connector, Secret secret) {
+    public List<HasMetadata> reify(ManagedConnector connector, Secret secret, ConfigMap configMap) {
         return metricsRecorder.recordCallable(
-            () -> wrappedOperandController.reify(connector, secret), ".reify");
+            () -> wrappedOperandController.reify(connector, secret, configMap), ".reify");
     }
 
     @Override
