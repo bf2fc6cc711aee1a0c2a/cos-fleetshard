@@ -68,7 +68,6 @@ public class FleetShardObservabilityClient {
         final var meta = new ObjectMetaBuilder()
             .withName(config.observability().resourceName())
             .withNamespace(config.namespace())
-            .withFinalizers(config.observability().finalizer())
             .build();
         observability.setMetadata(meta);
 

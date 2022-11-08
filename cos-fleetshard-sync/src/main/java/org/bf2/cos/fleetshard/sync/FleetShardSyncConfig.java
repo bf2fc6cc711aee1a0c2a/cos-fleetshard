@@ -299,9 +299,6 @@ public interface FleetShardSyncConfig {
         @WithDefault("rhoc-observability-stack")
         String resourceName();
 
-        @WithDefault("observability-cleanup")
-        String finalizer();
-
         @WithDefault("60m")
         String resyncPeriod();
 
