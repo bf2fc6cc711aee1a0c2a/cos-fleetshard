@@ -99,7 +99,8 @@ public class ConnectorStatusUpdater {
         List<Tag> tags = List.of(
             Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
             Tag.of("cos.connector.type.id", connector.getSpec().getDeployment().getConnectorTypeId()),
-            Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
+            Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()),
+            Tag.of("cos.namespace", connector.getMetadata().getNamespace()));
 
         String connectorResourceVersion = String.valueOf(connector.getSpec().getDeployment().getConnectorResourceVersion());
 
