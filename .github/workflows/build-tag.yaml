@@ -23,6 +23,7 @@ env:
   IMAGE_REPO_PASSWORD: ${{secrets.IMAGE_REPO_PASSWORD}}
   IMAGE_TAG: ${{ github.ref_name}}-${{ github.sha }}
   DEPLOY_TAG: ${{ github.ref_name}}-${{ github.sha }}
+  ADDON_TAG: ${{ github.ref_name}}
   OC_PROJECT: ${{ secrets.K8S_CLUSTER_DEV_NAMESPACE }}
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -DskipTests=true -e
 
@@ -194,15 +195,38 @@ jobs:
           sed -i "/strimzi.version=/d" staging.properties
           echo "strimzi.version=$VERSION" >> staging.properties
 
+      - name: Install OpenShift CLI tools
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          source: "github"
+          skip_cache: "true"
+          kustomize: "latest"
+          operator-sdk: "1.17.0"
+          yq: "latest"
+
+      - name: "Build bundles for ${{ matrix.overlay }}"
+        env:
+          ADDON_OVERLAY: ${{ matrix.overlay }}
+        run: |
+          export ADDON_VERSION="${ADDON_TAG#v}"
+          rm -rf addons
+          make bundles
+
       - name: "Create PR for ${{ matrix.overlay }}"
         env:
           OVERLAY_PATH: kustomize/overlays/${{ matrix.overlay }}/data-plane
           BRANCH_NAME: "overlay.${{ matrix.overlay }}.${{ env.DEPLOY_TAG }}"
           GH_TOKEN: ${{ secrets.PR_TOKEN }}
+          ADDON_OVERLAY: ${{ matrix.overlay }}
         run: |
+          export ADDON_VERSION="${ADDON_TAG#v}"
+          
           echo ""
-          echo "tag     : $DEPLOY_TAG"
-          echo "branch  : $BRANCH_NAME"
+          echo "tag           : $DEPLOY_TAG"
+          echo "branch        : $BRANCH_NAME"
+          echo "addon version : $ADDON_VERSION"
+          echo "addon overlay : $ADDON_OVERLAY"
+          echo "addon tag     : $ADDON_TAG"
           echo ""
           cat ${OVERLAY_PATH}/kustomization.yaml
           echo ""
@@ -213,9 +237,14 @@ jobs:
           git config user.name "mas-connectors"
 
           git checkout -b ${BRANCH_NAME}
+          
           git add ${OVERLAY_PATH}
           git add staging.properties
           git commit -m "Update cos-fleetshard kustomization images for overlay ${{ matrix.overlay }}"
+          
+          git add ./addons
+          git commit -m "Generate bundle ${{ env.ADDON_VERSION }}" ./addons
+          
           git reset --hard
           git push -u origin ${BRANCH_NAME}
 
@@ -227,5 +256,5 @@ jobs:
           gh pr create \
             --fill \
             --base main \
-            --title "chore(kustomize): update cos-fleetshard kustomization images overlay ${{ matrix.overlay }}" \
-            --body "sha: ${{ github.sha }}, overlay: ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}"
+            --title "chore(kustomize): update cos-fleetshard kustomization images overlay ${{ matrix.overlay }} and bundle $ADDON_VERSION" \
+            --body "sha: ${{ github.sha }}, overlay: ${{ matrix.overlay }}, tag: ${DEPLOY_TAG}, bundle : ${ADDON_TAG}"
