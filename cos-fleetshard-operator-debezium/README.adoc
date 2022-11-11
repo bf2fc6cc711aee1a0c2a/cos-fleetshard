@@ -16,6 +16,29 @@ kubectl create configmap cos-fleetshard-operator-debezium-config \
 the provided `application.properties` is only a template, copy it somewhere and adapt the command above
 ====
 
+* override some properties
++
+There is a way to override application properties in environments where `cos-fleetshard-sync-config` configmap can not be modified (i.e. It can be useful to troubleshoot issues in an addon installations).
++
+To do so the application mounts a configmap named `cos-fleetshard-sync-config-override` as optional. If present, this can be used to override application properties. In order to enable it the env var `OVERRIDE_PROPERTIES_LOCATION` must point where the config map is mounted.
++
+An example of the configmap:
++
+[source,yaml]
+----
+apiVersion: v1
+data:
+  override.properties: |-
+    #
+    # quarkus :: log
+    #
+    quarkus.log.category."org.bf2.cos.fleetshard.sync".level = INFO
+    quarkus.log.category."org.bf2.cos.fleetshard.client".level = INFO
+    quarkus.log.category."io.fabric8.kubernetes.client.internal.VersionUsageUtils".level = ERROR
+
+    # cos.image_pull_secrets_name =
+----
+
 == local profile
 
 Start Quarkus in dev mode and read the application configuration from the current namespace.

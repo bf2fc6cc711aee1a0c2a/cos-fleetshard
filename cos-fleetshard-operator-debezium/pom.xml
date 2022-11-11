@@ -15,9 +15,11 @@
     <artifactId>cos-fleetshard-operator-debezium</artifactId>
 
     <properties>
+        <app-config.name>${project.artifactId}-config</app-config.name>
+        <override-app-config.name>${app-config.name}-override</override-app-config.name>
+
         <!-- CRD -->
         <quarkus.kubernetes.part-of>cos</quarkus.kubernetes.part-of>
-        <quarkus.kubernetes.app-config-map>${project.artifactId}-config</quarkus.kubernetes.app-config-map>
         <quarkus.kubernetes.add-build-timestamp>false</quarkus.kubernetes.add-build-timestamp>
         <quarkus.openshift.add-build-timestamp>false</quarkus.openshift.add-build-timestamp>
 
@@ -26,6 +28,21 @@
         <quarkus.operator-sdk.crd.validate>false</quarkus.operator-sdk.crd.validate>
         <quarkus.operator-sdk.crd.apply>false</quarkus.operator-sdk.crd.apply>
         <quarkus.operator-sdk.disable-rbac-generation>true</quarkus.operator-sdk.disable-rbac-generation>
+
+        <!-- config map -->
+        <quarkus.kubernetes.config-map-volumes.app-config.config-map-name>${app-config.name}</quarkus.kubernetes.config-map-volumes.app-config.config-map-name>
+        <quarkus.kubernetes.config-map-volumes.app-config.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config.default-mode>
+        <quarkus.kubernetes.mounts.app-config.path>/mnt/app-config/configuration</quarkus.kubernetes.mounts.app-config.path>
+
+        <quarkus.kubernetes.config-map-volumes.app-config-override.config-map-name>${override-app-config.name}</quarkus.kubernetes.config-map-volumes.app-config-override.config-map-name>
+        <quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>0644</quarkus.kubernetes.config-map-volumes.app-config-override.default-mode>
+        <quarkus.kubernetes.config-map-volumes.app-config-override.optional>true</quarkus.kubernetes.config-map-volumes.app-config-override.optional>
+        <quarkus.kubernetes.mounts.app-config-override.path>/mnt/app-config/override</quarkus.kubernetes.mounts.app-config-override.path>
+        <!-- enable config overlay -->
+        <quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>/mnt/app-config/override/override.properties</quarkus.kubernetes.env.vars.OVERRIDE_PROPERTIES_LOCATION>
+
+        <!-- smallrye -->
+        <quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>/mnt/app-config/configuration</quarkus.kubernetes.env.vars.SMALLRYE_CONFIG_LOCATIONS>
 
         <!-- kubernetes -->
         <quarkus.kubernetes-config.enabled>false</quarkus.kubernetes-config.enabled>
@@ -192,7 +209,7 @@
                                 <quarkus.log.console.format>%d{HH:mm:ss.SSS} %-5p [%c] (%t) %s%e%n</quarkus.log.console.format>
 
                                 <quarkus.kubernetes-config.enabled>true</quarkus.kubernetes-config.enabled>
-                                <quarkus.kubernetes-config.config-maps>${quarkus.kubernetes.app-config-map}</quarkus.kubernetes-config.config-maps>
+                                <quarkus.kubernetes-config.config-maps>${app-config.name}</quarkus.kubernetes-config.config-maps>
                                 <quarkus.kubernetes-config.fail-on-missing-config>false</quarkus.kubernetes-config.fail-on-missing-config>
 
                                 <!--

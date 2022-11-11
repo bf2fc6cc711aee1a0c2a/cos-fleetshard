@@ -187,7 +187,9 @@ spec:
             fieldRef:
               fieldPath: "metadata.namespace"
         - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config-map"
+          value: "/mnt/app-config/configuration"
+        - name: "OVERRIDE_PROPERTIES_LOCATION"
+          value: "/mnt/app-config/override/override.properties"
         image: "quay.io/rhoas/cos-fleetshard-operator-debezium:latest"
         imagePullPolicy: "Always"
         livenessProbe:
@@ -223,12 +225,21 @@ spec:
             cpu: "500m"
             memory: "512Mi"
         volumeMounts:
-        - mountPath: "/mnt/app-config-map"
-          name: "app-config-map"
+        - mountPath: "/mnt/app-config/configuration"
+          name: "app-config"
+          readOnly: false
+        - mountPath: "/mnt/app-config/override"
+          name: "app-config-override"
           readOnly: false
       serviceAccountName: "cos-fleetshard-operator-debezium"
       volumes:
       - configMap:
+          defaultMode: 420
           name: "cos-fleetshard-operator-debezium-config"
           optional: false
-        name: "app-config-map"
+        name: "app-config"
+      - configMap:
+          defaultMode: 420
+          name: "cos-fleetshard-operator-debezium-config-override"
+          optional: true
+        name: "app-config-override"
