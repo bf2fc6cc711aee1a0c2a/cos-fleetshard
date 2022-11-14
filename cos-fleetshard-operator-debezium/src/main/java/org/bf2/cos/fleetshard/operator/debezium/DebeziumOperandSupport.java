@@ -300,7 +300,7 @@ public class DebeziumOperandSupport {
             boolean kafkaConnectReady = kconnectReadyCondition != null && "True".equals(kconnectReadyCondition.getStatus())
                 && (kconnectNotReadyCondition == null || !"True".equals(kconnectNotReadyCondition.getStatus()));
 
-            if (connectorStatus.isConnectorReady() && !kafkaConnectReady) {
+            if (!kafkaConnectReady) {
                 if (null != kconnectReadyCondition && !"True".equals(kconnectReadyCondition.getStatus())
                     && (null == kconnectNotReadyCondition || !"True".equals(kconnectNotReadyCondition.getStatus()))) {
                     connectorStatus.setReadyCondition(cloneCondition(kconnectReadyCondition));
@@ -313,17 +313,15 @@ public class DebeziumOperandSupport {
                     }
                 }
                 connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_FAILED);
-            } else {
-                if (null == connectorStatus.readyCondition()) {
-                    io.fabric8.kubernetes.api.model.Condition readyCondition = new io.fabric8.kubernetes.api.model.Condition();
-                    readyCondition.setType("Ready");
-                    readyCondition.setStatus("False");
-                    readyCondition.setReason("Transitioning");
-                    readyCondition.setMessage("The connector is transitioning into another state.");
-                    readyCondition.setLastTransitionTime(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    connectorStatus.setReadyCondition(readyCondition);
-                    connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_PROVISIONING);
-                }
+            } else if (null == connectorStatus.readyCondition()) {
+                io.fabric8.kubernetes.api.model.Condition readyCondition = new io.fabric8.kubernetes.api.model.Condition();
+                readyCondition.setType("Ready");
+                readyCondition.setStatus("False");
+                readyCondition.setReason("Transitioning");
+                readyCondition.setMessage("The connector is transitioning into another state.");
+                readyCondition.setLastTransitionTime(ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+                connectorStatus.setReadyCondition(readyCondition);
+                connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_PROVISIONING);
             }
         }
     }

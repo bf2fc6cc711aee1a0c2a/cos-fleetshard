@@ -376,6 +376,10 @@ public class DebeziumOperandControllerTest {
         return new ConditionBuilder().withType(type).withStatus(status).withReason(reason).build();
     }
 
+    private static List<Condition> createNotReadyConditions(String notReadyConditionReason) {
+        return List.of(createCondition("NotReady", "True", notReadyConditionReason));
+    }
+
     private static List<Condition> createConditions(
         String readyConditionStatus, String readyConditionReason,
         String notReadyConditionReason) {
@@ -406,6 +410,18 @@ public class DebeziumOperandControllerTest {
                 KafkaConnectorStatus.STATE_RUNNING,
                 createConditions("True", null),
                 createConditions("False", "reason", "TimeoutException"),
+                ManagedConnector.STATE_FAILED,
+                "KafkaClusterUnreachable", false),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                createConditions("True", null),
+                createConditions("True", "Running", "TimeoutException"),
+                ManagedConnector.STATE_FAILED,
+                "KafkaClusterUnreachable", false),
+            arguments(
+                KafkaConnectorStatus.STATE_RUNNING,
+                List.of(),
+                createNotReadyConditions("TimeoutException"),
                 ManagedConnector.STATE_FAILED,
                 "KafkaClusterUnreachable", false),
             arguments(
