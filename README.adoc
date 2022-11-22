@@ -139,6 +139,27 @@ kubectl scale deployment -l "app.kubernetes.io/part-of=cos" --replicas=1
 kubectl delete -k etc/kubernetes/manifests/overlays/local
 ----
 
+== Enable Debug Logs
+By default, all the operator are configured to print INFO logs which might not be enough to track an issue. Follow the instructions below to enable the DEBUG logs on the different operators:
+
+* *Camel K Operator*
++
+Create a config map named "camel-k-override-config" with a property "log.level=debug" on the same namespace as of the operator.
+Restart the camel k operator pod to load the creates config map.
++
+----
+Remove the created config map from the namesapce to restore the default behavior.
+----
+
+* *Strimzi Operator*
++
+Create a config map named "strimzi-override-config" with a property "log.level=debug" on the same namespace as of the operator.
+Restart the strimzi operator pod to load the creates config map.
++
+----
+Remove the created config map from the namesapce to restore the default behavior.
+----
+
 == local development
 
 You may want to use `quarkus:dev` for local development, or if you want to run connected to a local fleet-manager. In this case, do the following:

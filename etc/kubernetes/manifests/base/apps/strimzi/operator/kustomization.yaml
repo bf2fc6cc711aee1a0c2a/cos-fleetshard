@@ -48,6 +48,12 @@ patches:
                 valueFrom:
                   $patch: delete  
                 value: "*"
+              - name: STRIMZI_LOG_LEVEL
+                valueFrom:
+                  configMapKeyRef:
+                    name: strimzi-override-config
+                    key: log.level
+                    optional: true
               resources:
                 limits:
                   cpu: "1000m"
