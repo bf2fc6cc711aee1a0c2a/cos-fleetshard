@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,42 +54,44 @@ public final class ConditionMessageImprover {
     }
 
     public static void improve(Condition condition) {
+        final StringBuilder finalMessage = new StringBuilder();
         final String originalMessage = condition.getMessage();
 
-        final StringBuilder finalMessage = new StringBuilder();
-        for (Map.Entry<String, Function<String, String>> processorEntry : PROCESSORS) {
-            if (originalMessage.contains(processorEntry.getKey())) {
-                final String betterMessage = processorEntry.getValue().apply(originalMessage);
-                finalMessage.append(betterMessage);
-                finalMessage.append("\n");
-            }
-        }
-
-        if (originalMessage.contains("error.message")) {
-            final Matcher matcher = CAMEL_ERROR_MESSAGE_PATTERN.matcher(originalMessage);
-            if (matcher.find()) {
-                final String camelErrorMessage = matcher.group(2).strip();
-                if (finalMessage.length() > 0) {
-                    finalMessage.append("(Message: ");
+        if (StringUtils.isNotBlank(originalMessage)) {
+            for (Map.Entry<String, Function<String, String>> processorEntry : PROCESSORS) {
+                if (originalMessage.contains(processorEntry.getKey())) {
+                    final String betterMessage = processorEntry.getValue().apply(originalMessage);
+                    finalMessage.append(betterMessage);
+                    finalMessage.append("\n");
                 }
-                finalMessage.append(camelErrorMessage);
-                finalMessage.append(") \n");
-            } else {
-                LOGGER.warn("Error message contains 'error.message' field but regex wasn't able to extract the value.");
             }
-        }
 
-        if (originalMessage.contains("Caused by")) {
-            final Matcher matcher = CAMEL_EXCEPTION_PATTERN.matcher(originalMessage);
-            if (matcher.find()) {
-                final String rootCauseMessage = matcher.group(4).strip();
-                if (finalMessage.length() > 0) {
-                    finalMessage.append("(Exception: ");
+            if (originalMessage.contains("error.message")) {
+                final Matcher matcher = CAMEL_ERROR_MESSAGE_PATTERN.matcher(originalMessage);
+                if (matcher.find()) {
+                    final String camelErrorMessage = matcher.group(2).strip();
+                    if (finalMessage.length() > 0) {
+                        finalMessage.append("(Message: ");
+                    }
+                    finalMessage.append(camelErrorMessage);
+                    finalMessage.append(") \n");
+                } else {
+                    LOGGER.warn("Error message contains 'error.message' field but regex wasn't able to extract the value.");
                 }
-                finalMessage.append(rootCauseMessage);
-                finalMessage.append(")");
-            } else {
-                LOGGER.warn("Error message contains 'Caused by' field but regex wasn't able to extract the value.");
+            }
+
+            if (originalMessage.contains("Caused by")) {
+                final Matcher matcher = CAMEL_EXCEPTION_PATTERN.matcher(originalMessage);
+                if (matcher.find()) {
+                    final String rootCauseMessage = matcher.group(4).strip();
+                    if (finalMessage.length() > 0) {
+                        finalMessage.append("(Exception: ");
+                    }
+                    finalMessage.append(rootCauseMessage);
+                    finalMessage.append(")");
+                } else {
+                    LOGGER.warn("Error message contains 'Caused by' field but regex wasn't able to extract the value.");
+                }
             }
         }
 
