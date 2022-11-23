@@ -1,14 +1,7 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
@@ -30,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.Condition;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
@@ -292,7 +286,7 @@ public final class CamelOperandSupport {
         ServiceAccountSpec serviceAccountSpec,
         CamelOperandConfiguration cfg) {
 
-        Map<String, String> props = new TreeMap<>();
+        final Map<String, String> props = new TreeMap<>();
 
         ObjectNode connectorConfigurationSpec = connectorConfiguration.getConnectorSpec();
         if (connectorConfigurationSpec != null) {
@@ -338,6 +332,19 @@ public final class CamelOperandSupport {
             props.put(
                 "camel.main.exchange-factory-statistics-enabled",
                 cfg.exchangePooling().exchangeFactoryStatisticsEnabled());
+        }
+
+        // configure the empty config map created for logging
+        final ConfigMap configMap = connectorConfiguration.getConfigMap();
+        if (configMap != null) {
+            final Map<String, String> data = configMap.getData();
+            if (data != null && !data.isEmpty()) {
+                LOGGER.info("ConfigMap for connector ({}/{}) contains data: {}",
+                    connector.getMetadata().getNamespace(),
+                    connector.getMetadata().getName(),
+                    configMap.getData());
+                props.putAll(data);
+            }
         }
 
         return props;

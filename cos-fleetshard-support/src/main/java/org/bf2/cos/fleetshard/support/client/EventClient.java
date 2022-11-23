@@ -106,10 +106,10 @@ public class EventClient {
         EventType eventType = EventType.fromText(event.getType()).orElse(EventType.NORMAL);
         switch (eventType) {
             case NORMAL:
-                LOGGER.info("Broadcasting: {}", event);
+                LOGGER.info("Broadcasting message ({}). Event: {}", event.getMessage(), event);
                 break;
             case WARNING:
-                LOGGER.warn("Broadcasting: {}", event);
+                LOGGER.warn("Broadcasting message ({}). Event: {}", event.getMessage(), event);
                 break;
         }
 

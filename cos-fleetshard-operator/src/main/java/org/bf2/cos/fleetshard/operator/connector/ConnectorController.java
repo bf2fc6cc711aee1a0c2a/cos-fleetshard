@@ -26,6 +26,7 @@ import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
@@ -101,6 +102,8 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
     FleetShardClient fleetShard;
     @Inject
     OperandController wrappedOperandController;
+    @Inject
+    EventClient eventClient;
 
     @Inject
     MeterRegistry registry;
@@ -142,7 +145,8 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             new ConnectorConfigmapEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.configmaps", tags)));
+                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.configmaps", tags),
+                eventClient));
 
         eventSources.put(
             "_operators",

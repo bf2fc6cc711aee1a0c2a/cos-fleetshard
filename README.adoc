@@ -226,7 +226,7 @@ Although this section expects you to use a completely new kubernetes cluster, yo
 [source,shell]
 ----
 # setup test resources
-kubectl apply -k ./etc/kubernetes/manifests/overlays/it
+kubectl apply -k ./etc/kubernetes/manifests/overlays/it --server-side --force-conflicts
 ----
 
 * *run tests*
