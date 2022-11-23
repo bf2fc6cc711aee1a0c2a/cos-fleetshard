@@ -32,13 +32,15 @@ public class KameletBindingSecretSteps extends StepsSupport {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @And("the klb secret contains:")
     public void klb_secret_contains(DataTable table) throws IOException {
-        Secret secret = secret();
-        assertThat(secret).isNotNull();
+        awaiter.untilAsserted(() -> {
+            Secret secret = secret();
+            assertThat(secret).isNotNull();
 
-        Properties props = Secrets.extract(secret, "application.properties", Properties.class);
+            Properties props = Secrets.extract(secret, "application.properties", Properties.class);
 
-        assertThatDataTable(table, ctx::resolvePlaceholders)
-            .matches((Map) props);
+            assertThatDataTable(table, ctx::resolvePlaceholders)
+                .matches((Map) props);
+        });
     }
 
     @And("the klb secret has annotations containing:")

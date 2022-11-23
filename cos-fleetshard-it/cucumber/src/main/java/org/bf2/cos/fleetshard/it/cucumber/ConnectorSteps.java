@@ -125,6 +125,11 @@ public class ConnectorSteps {
             }
         }
 
+        ConfigMap configMap = getConfigMapFilter().get();
+        if (configMap != null) {
+            scenario.log("ConfigMap:\n" + JacksonUtil.asPrettyPrintedYaml(configMap));
+        }
+
         scenario.log("============================================");
     }
 
@@ -272,6 +277,11 @@ public class ConnectorSteps {
         deploy_connector_with_uow(uid());
     }
 
+    @When("^set configmap to:")
+    public void change_configmap(Map<String, String> contents) {
+        getConfigMapFilter().accept(configMap -> configMap.setData(contents));
+    }
+
     @Then("the connector exists")
     public void connector_is_created() {
         until(() -> connector() != null);
@@ -293,10 +303,7 @@ public class ConnectorSteps {
     public void configmap_is_created(Map<String, String> labels) {
 
         until(() -> {
-            var res = kubernetesClient.resources(ConfigMap.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ConfigMaps.generateConnectorConfigMapId(ctx.connector().getSpec().getDeploymentId()))
-                .get();
+            var res = getConfigMapFilter().get();
 
             if (res == null) {
                 return false;
@@ -311,13 +318,27 @@ public class ConnectorSteps {
         });
     }
 
+    @Then("the connector configmap exists with:")
+    public void configmap_exists_with(Map<String, String> contents) {
+        until(() -> {
+            var res = getConfigMapFilter().get();
+
+            if (res == null) {
+                return false;
+            } else {
+                if (contents == null) {
+                    return true;
+                }
+
+                return contents.entrySet().stream().allMatch(e -> e.getValue().equals(res.getData().get(e.getKey())));
+            }
+        });
+    }
+
     @Then("the connector configmap does not exists")
     public void configmap_does_not_exists() {
         until(() -> {
-            var res = kubernetesClient.resources(ConfigMap.class)
-                .inNamespace(ctx.connector().getMetadata().getNamespace())
-                .withName(ConfigMaps.generateConnectorConfigMapId(ctx.connector().getSpec().getDeploymentId()))
-                .get();
+            var res = getConfigMapFilter().get();
 
             return res == null;
         });
@@ -569,6 +590,12 @@ public class ConnectorSteps {
             kubernetesClient.resources(ManagedConnector.class)
                 .inNamespace(ctx.connectorsNamespace())
                 .createOrReplace(ctx.connector()));
+    }
+
+    private Resource<ConfigMap> getConfigMapFilter() {
+        return kubernetesClient.resources(ConfigMap.class)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withName(ConfigMaps.generateConnectorConfigMapId(ctx.connector().getSpec().getDeploymentId()));
     }
 
 }

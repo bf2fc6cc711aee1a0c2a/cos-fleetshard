@@ -17,7 +17,8 @@ import io.sundr.builder.annotations.Buildable;
     "deploymentResourceVersion",
     "desiredState",
     "secret",
-    "secretChecksum"
+    "configMapChecksum",
+    "unitOfWork"
 })
 public class DeploymentSpec {
 
@@ -29,6 +30,7 @@ public class DeploymentSpec {
     private SchemaRegistrySpec schemaRegistry;
     private String desiredState;
     private String secret;
+    private String configMapChecksum;
     private String unitOfWork;
 
     @JsonProperty
@@ -102,6 +104,16 @@ public class DeploymentSpec {
     }
 
     @JsonProperty
+    public String getConfigMapChecksum() {
+        return configMapChecksum;
+    }
+
+    @JsonProperty
+    public void setConfigMapChecksum(String configMapChecksum) {
+        this.configMapChecksum = configMapChecksum;
+    }
+
+    @JsonProperty
     public String getUnitOfWork() {
         return unitOfWork;
     }
@@ -127,6 +139,7 @@ public class DeploymentSpec {
             && Objects.equals(schemaRegistry, that.schemaRegistry)
             && Objects.equals(desiredState, that.desiredState)
             && Objects.equals(secret, that.secret)
+            && Objects.equals(configMapChecksum, that.configMapChecksum)
             && Objects.equals(unitOfWork, that.unitOfWork);
     }
 
@@ -139,6 +152,7 @@ public class DeploymentSpec {
             schemaRegistry,
             desiredState,
             secret,
+            configMapChecksum,
             unitOfWork);
     }
 
@@ -152,6 +166,7 @@ public class DeploymentSpec {
             ", schemaRegistry=" + schemaRegistry +
             ", desiredState='" + desiredState + '\'' +
             ", secret='" + secret + '\'' +
+            ", configMapChecksum='" + configMapChecksum + '\'' +
             ", unitOfWork='" + unitOfWork + '\'' +
             '}';
     }

@@ -43,6 +43,8 @@ spec:
                 type: string
               deployment:
                 properties:
+                  configMapChecksum:
+                    type: string
                   connectorResourceVersion:
                     type: integer
                   connectorTypeId:
@@ -143,6 +145,8 @@ spec:
                 type: object
               deployment:
                 properties:
+                  configMapChecksum:
+                    type: string
                   connectorResourceVersion:
                     type: integer
                   connectorTypeId:
