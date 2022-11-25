@@ -18,7 +18,8 @@ Feature: Camel Connector Metrics
 
     When deploy
     Then the connector exists
-    Then the connector secret exists
+    And the connector secret exists
+    And the connector is in phase "Monitor"
 
     When the connector desired status is set to "stopped"
     Then the connector is in phase "Stopped"
