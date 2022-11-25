@@ -36,8 +36,15 @@ Files.list(sources).each {
         def crd = mapper.readValue(parser, CustomResourceDefinition.class)
 
         crd.spec.versions.each {
-            ver -> ver.additionalPrinterColumns.sort {
-                col -> col.name
+            ver -> {
+                ver.additionalPrinterColumns.sort {
+                    col -> col.name
+                }
+                ver.additionalPrinterColumns.each { col -> {
+                    if (col.jsonPath == '.status.deployment.connectorTypeId') {
+                        col.jsonPath == '.spec.deployment.connectorTypeId'
+                    }
+                }}
             }
         }
 
