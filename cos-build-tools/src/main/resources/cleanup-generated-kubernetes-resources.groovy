@@ -26,8 +26,10 @@ docs.each {
     it.additionalProperties?.spec?.template?.metadata?.annotations?.remove('app.quarkus.io/build-timestamp')
 
     if (it.apiVersion == 'apps/v1' && it.kind == 'Deployment') {
-        it.additionalProperties?.spec?.template?.spec?.containers?.env?.sort {
-            env -> env.name
+        it.additionalProperties?.spec?.template?.spec?.containers?.each {
+            it?.env?.sort {
+                env -> env.name
+            }
         }
     }
 }
