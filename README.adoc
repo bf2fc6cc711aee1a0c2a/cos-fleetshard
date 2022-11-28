@@ -151,7 +151,7 @@ To enable DEBUG log level for the Camel K Operator, follow these steps
 - Restart the camel k operator pod to load the created config map.
 +
 ----
-Remove the created config map from the namespace to restore the default behavior.
+Remove the created config map from the namespace and restart the camel k operator pod to restore the default behavior.
 ----
 
 * *Strimzi Operator*
@@ -163,7 +163,7 @@ To enable DEBUG log level for the Strimzi Operator, follow these steps
 - Restart the strimzi operator pod to load the created config map.
 +
 ----
-Remove the created config map from the namespace to restore the default behavior.
+Remove the created config map from the namespace and restart the strimzi operator pod to restore the default behavior.
 ----
 
 == local development
