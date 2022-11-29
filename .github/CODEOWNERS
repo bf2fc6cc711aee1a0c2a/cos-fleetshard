@@ -1,0 +1,26 @@
+# These owners will be the default owners for everything in the repo
+
+# common
+cos-build-tools/**/* @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-support/**/* @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-operator/**/* @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-operator-it/**/* @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-operator-e2e/**/* @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-it/**/* @rinaldodev @valdar @Naros @rk3rn3r
+
+# api
+cos-fleetshard-api/**/*" @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleet-manager-api/**/* @rinaldodev @valdar @Naros @rk3rn3r
+
+# sync
+cos-fleetshard-sync/**/*  @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-sync-it/**/*  @rinaldodev @valdar @Naros @rk3rn3r
+
+# camel
+cos-fleetshard-operator-camel/**/* @rinaldodev @valdar
+cos-fleetshard-operator-camel-it/**/* @rinaldodev @valdar
+
+# debezium
+cos-fleetshard-operator-debezium/**/* @Naros @rk3rn3r
+cos-fleetshard-operator-debezium-it/**/* @Naros @rk3rn3r
+
