@@ -2,7 +2,7 @@ Feature: Connector Reify Failing On Update
 
   Background:
     Given Await configuration
-      | atMost       | 30000   |
+      | atMost       | 60000   |
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
