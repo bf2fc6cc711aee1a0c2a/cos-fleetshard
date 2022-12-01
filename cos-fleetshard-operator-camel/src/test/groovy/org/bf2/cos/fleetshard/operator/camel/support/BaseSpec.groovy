@@ -17,12 +17,14 @@ import org.bf2.cos.fleetshard.api.KafkaSpec
 import org.bf2.cos.fleetshard.api.ManagedConnector
 import org.bf2.cos.fleetshard.api.SchemaRegistrySpec
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig
 import org.bf2.cos.fleetshard.operator.camel.CamelOperandConfiguration
 import org.bf2.cos.fleetshard.operator.camel.CamelOperandController
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata
 import org.bf2.cos.fleetshard.operator.camel.model.EndpointKamelet
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig
 import org.bf2.cos.fleetshard.support.resources.Connectors
 import org.bf2.cos.fleetshard.support.resources.Secrets
 import org.eclipse.microprofile.config.Config
@@ -51,10 +53,32 @@ class BaseSpec extends Specification {
 
     public static final KubernetesClient CLIENT = Mockito.mock(KubernetesClient.class)
     public static final CamelOperandConfiguration CONF =  mockConfiguration()
-    public static final CamelOperandController CONTROLLER =  new CamelOperandController(CLIENT, CONF)
+
+    public static CamelOperandController CONTROLLER
 
     void setupSpec() {
         activateLogging()
+
+        def config = Mockito.mock(FleetShardOperatorConfig.class)
+        def metrics = Mockito.mock(FleetShardOperatorConfig.Metrics.class)
+        def recorder = Mockito.mock(MetricsRecorderConfig.class)
+        def tags = Mockito.mock(MetricsRecorderConfig.Tags.class)
+
+        when(tags.common())
+            .thenAnswer(invocation -> [ 'foo': 'bar'])
+        when(tags.annotations())
+            .thenAnswer(invocation -> Optional.of([ 'my.cos.bf2.org/connector-group' ]))
+        when(tags.labels())
+            .thenAnswer(invocation ->  Optional.of([ 'cos.bf2.org/organization-id', 'cos.bf2.org/pricing-tier']))
+
+        when(recorder.tags())
+            .thenAnswer(invocation -> tags)
+        when(metrics.recorder())
+            .thenAnswer(invocation -> recorder)
+        when(config.metrics())
+            .thenAnswer(invocation -> metrics)
+
+        CONTROLLER = new CamelOperandController(config, CLIENT, CONF)
     }
 
     // ***********************************
@@ -108,6 +132,14 @@ class BaseSpec extends Specification {
         def connector = new ManagedConnector()
         connector.metadata = new ObjectMeta()
         connector.metadata.name = Connectors.generateConnectorId(DEFAULT_DEPLOYMENT_ID)
+        connector.metadata.annotations = [
+            'my.cos.bf2.org/connector-group': 'baz'
+        ]
+        connector.metadata.labels = [
+            'cos.bf2.org/organization-id': '20000000',
+            'cos.bf2.org/pricing-tier': 'essential'
+        ]
+
         connector.spec.connectorId = DEFAULT_MANAGED_CONNECTOR_ID
         connector.spec.deploymentId = DEFAULT_DEPLOYMENT_ID
         connector.spec.deployment = new DeploymentSpec()

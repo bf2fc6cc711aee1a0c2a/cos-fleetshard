@@ -1,5 +1,8 @@
 package org.bf2.cos.fleetshard.sync;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
@@ -20,6 +23,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.quarkus.arc.Unremovable;
 
 @ApplicationScoped
 public class FleetShardSyncProducers {
@@ -27,6 +33,8 @@ public class FleetShardSyncProducers {
 
     @Inject
     KubernetesClient client;
+    @Inject
+    FleetShardSyncConfig config;
 
     @Singleton
     @Produces
@@ -73,5 +81,18 @@ public class FleetShardSyncProducers {
         }
 
         return answer;
+    }
+
+    @Produces
+    @Singleton
+    @Unremovable
+    public MeterFilter configureAllRegistries() {
+        List<Tag> tags = new ArrayList<>();
+
+        config.metrics().recorder().tags().common().forEach((k, v) -> {
+            tags.add(Tag.of(k, v));
+        });
+
+        return MeterFilter.commonTags(tags);
     }
 }

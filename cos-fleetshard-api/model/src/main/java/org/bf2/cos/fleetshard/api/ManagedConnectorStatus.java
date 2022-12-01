@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -96,6 +97,16 @@ public class ManagedConnectorStatus implements DeploymentSpecAware {
         Stopped,
         Transferring,
         Transferred,
-        Error,
+        Error;
+
+        private final String id;
+
+        PhaseType() {
+            this.id = name().toLowerCase(Locale.US);
+        }
+
+        public String getId() {
+            return id;
+        }
     }
 }

@@ -263,7 +263,32 @@ public class KameletBindingSteps extends StepsSupport {
         assertThat(res.getMetadata().getAnnotations())
             .containsKey(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS);
 
-        String labels = res.getMetadata().getAnnotations().get(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS);
+        String labels = res.getMetadata()
+            .getAnnotations()
+            .get(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS);
+
+        assertThatJson(labels)
+            .isArray()
+            .contains(value);
+    }
+
+    @And("the klb has target-annotations containing {string}")
+    public void klb_target_annotations_contains(String value) {
+        KameletBinding res = klb();
+
+        assertThat(res)
+            .isNotNull();
+        assertThat(res.getMetadata().getAnnotations())
+            .isNotEmpty();
+
+        assertThat(res.getMetadata().getAnnotations())
+            .isNotEmpty();
+        assertThat(res.getMetadata().getAnnotations())
+            .containsKey(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS);
+
+        String labels = res.getMetadata()
+            .getAnnotations()
+            .get(CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS);
 
         assertThatJson(labels)
             .isArray()

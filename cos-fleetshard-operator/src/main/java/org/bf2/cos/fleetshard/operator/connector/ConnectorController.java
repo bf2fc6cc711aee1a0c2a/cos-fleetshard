@@ -3,7 +3,6 @@ package org.bf2.cos.fleetshard.operator.connector;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,7 +27,7 @@ import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.slf4j.Logger;
@@ -53,10 +52,8 @@ import io.javaoperatorsdk.operator.api.reconciler.EventSourceInitializer;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.source.EventSource;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Timer;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -112,6 +109,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
 
     private OperandController operandController;
     private List<Tag> tags;
+    private ResourceAwareMetricsRecorder phasesRecorder;
 
     @PostConstruct
     protected void setUp() {
@@ -120,10 +118,20 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()),
             Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
 
+        phasesRecorder = ResourceAwareMetricsRecorder.of(
+            config.metrics().recorder(),
+            registry,
+            config.metrics().baseName() + ".controller.connectors.reconcile.",
+            tags);
+
         if (config.metrics().connectorOperand().enabled()) {
             operandController = new OperandControllerMetricsWrapper(
                 wrappedOperandController,
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators.operand", tags));
+                ResourceAwareMetricsRecorder.of(
+                    config.metrics().recorder(),
+                    registry,
+                    config.metrics().baseName() + ".controller.event.operators.operand",
+                    tags));
         } else {
             operandController = wrappedOperandController;
         }
@@ -138,7 +146,11 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             new ConnectorSecretEventSource(
                 kubernetesClient,
                 managedConnectorOperator,
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
+                ResourceAwareMetricsRecorder.of(
+                    config.metrics().recorder(),
+                    registry,
+                    config.metrics().baseName() + ".controller.event.secrets",
+                    tags)));
 
         eventSources.put(
             "_operators",
@@ -146,7 +158,11 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 kubernetesClient,
                 managedConnectorOperator,
                 fleetShard.getNamespace(),
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.operators", tags)));
+                ResourceAwareMetricsRecorder.of(
+                    config.metrics().recorder(),
+                    registry,
+                    config.metrics().baseName() + ".controller.event.operators",
+                    tags)));
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
             final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
@@ -157,7 +173,11 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                     kubernetesClient,
                     managedConnectorOperator,
                     res,
-                    MetricsRecorder.of(registry, id, tags)));
+                    ResourceAwareMetricsRecorder.of(
+                        config.metrics().recorder(),
+                        registry,
+                        id,
+                        tags)));
         }
 
         return eventSources;
@@ -262,69 +282,52 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             resource.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
         }
 
-        return measure(
-            config.metrics().baseName()
-                + ".controller.connectors.reconcile."
-                + resource.getStatus().getPhase().name().toLowerCase(Locale.US),
+        List<Tag> additionalTags = List.of(
+            Tag.of("cos.connector.id", resource.getSpec().getConnectorId()),
+            Tag.of("cos.deployment.id", resource.getSpec().getDeploymentId()),
+            Tag.of("cos.deployment.resync", Boolean.toString(isResync(resource))));
+
+        return phasesRecorder.recordCallable(
             resource,
-            connector -> {
-                switch (connector.getStatus().getPhase()) {
+            () -> {
+                switch (resource.getStatus().getPhase()) {
                     case Initialization:
-                        return handleInitialization(connector);
+                        return handleInitialization(resource);
                     case Augmentation:
-                        return handleAugmentation(connector);
+                        return handleAugmentation(resource);
                     case Monitor:
-                        return validate(connector, this::handleMonitor);
+                        return validate(resource, this::handleMonitor);
                     case Deleting:
-                        return handleDeleting(connector);
+                        return handleDeleting(resource);
                     case Deleted:
-                        return validate(connector, this::handleDeleted);
+                        return validate(resource, this::handleDeleted);
                     case Stopping:
-                        return handleStopping(connector);
+                        return handleStopping(resource);
                     case Stopped:
-                        return validate(connector, this::handleStopped);
+                        return validate(resource, this::handleStopped);
                     case Transferring:
-                        return handleTransferring(connector);
+                        return handleTransferring(resource);
                     case Transferred:
-                        return handleTransferred(connector);
+                        return handleTransferred(resource);
                     case Error:
-                        return validate(connector, this::handleError);
+                        return validate(resource, this::handleError);
                     default:
                         throw new UnsupportedOperationException(
-                            "Unsupported phase: " + connector.getStatus().getPhase());
+                            "Unsupported phase: " + resource.getStatus().getPhase());
                 }
+            },
+            resource.getStatus().getPhase().getId(),
+            additionalTags,
+            e -> {
+                throw new WrappedRuntimeException(
+                    "Failure recording method execution (id: "
+                        + phasesRecorder.recorder().getId()
+                        + "."
+                        + resource.getStatus().getPhase().getId()
+                        + ")",
+                    e);
             });
     }
-
-    private UpdateControl<ManagedConnector> measure(
-        String id,
-        ManagedConnector connector,
-        Function<ManagedConnector, UpdateControl<ManagedConnector>> action) {
-
-        Counter.builder(id + ".count")
-            .tags(tags)
-            .tag("cos.connector.id", connector.getSpec().getConnectorId())
-            .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
-            .tag("cos.deployment.resync", Boolean.toString(isResync(connector)))
-            .register(registry)
-            .increment();
-
-        try {
-            return Timer.builder(id + ".time")
-                .tags(tags)
-                .tag("cos.connector.id", connector.getSpec().getConnectorId())
-                .tag("cos.deployment.id", connector.getSpec().getDeploymentId())
-                .tag("cos.deployment.resync", Boolean.toString(isResync(connector)))
-                .publishPercentiles(0.3, 0.5, 0.95)
-                .publishPercentileHistogram()
-                .register(registry)
-                .recordCallable(() -> action.apply(connector));
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(
-                "Failure recording method execution (id: " + id + ")",
-                e);
-        }
-    };
 
     // **************************************************
     //

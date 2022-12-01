@@ -1,14 +1,25 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import java.io.StringReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.CaseUtils;
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.EndpointKamelet;
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet;
@@ -27,6 +38,7 @@ import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
+import io.sundr.utils.Strings;
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
@@ -282,6 +294,7 @@ public final class CamelOperandSupport {
      * implementation running the connector.
      */
     public static Map<String, String> createSecretsData(
+        FleetShardOperatorConfig config,
         ManagedConnector connector,
         ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         ServiceAccountSpec serviceAccountSpec,
@@ -337,12 +350,34 @@ public final class CamelOperandSupport {
 
         addOverrideProperties(connector, connectorConfiguration, props);
 
+        Set<String> defaultTags = new TreeSet<>();
+
+        config.metrics().recorder().tags().common().forEach((k, v) -> {
+            defaultTags.add(k.replace("/", ".") + "=" + v);
+        });
+
+        if (!defaultTags.isEmpty()) {
+            //
+            // For camel based connector, metrics are exposed using the mp-metrics component/extension.
+            // According to the mp-metrics specs, tags can be supplied in two ways:
+            //
+            // 1. Programmatically
+            // 2. By using MicroProfile Config and setting a configuration property of the
+            //    name mp.metrics.tags. Tag values set through mp.metrics.tags MUST escape
+            //    equal symbols = and commas , with a backslash \
+            //
+            // For more info:
+            //   https://microprofile.io/project/eclipse/microprofile-metrics/spec/src/main/asciidoc/architecture.adoc
+            //
+            props.put("mp.metrics.tags", Strings.join(defaultTags, ","));
+        }
+
         return props;
     }
 
     private static void addOverrideProperties(ManagedConnector connector,
-        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
-        Map<String, String> props) {
+                                              ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
+                                              Map<String, String> props) {
         // configure the empty config map created for logging
         final ConfigMap configMap = connectorConfiguration.getConfigMap();
         if (configMap == null) {

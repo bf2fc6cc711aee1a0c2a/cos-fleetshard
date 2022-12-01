@@ -3,7 +3,10 @@ package org.bf2.cos.fleetshard.sync.it;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpecBuilder;
+import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
@@ -24,6 +27,8 @@ import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.fabric8.kubernetes.api.model.Condition;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 
@@ -32,6 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
@@ -46,6 +52,8 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
 
     @FleetManagerTestInstance
     FleetManagerMockServer server;
+    @Inject
+    MeterRegistry registry;
 
     @ConfigProperty(name = "test.namespace")
     String ns;
@@ -65,12 +73,18 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
                 .addToLabels(LABEL_CONNECTOR_ID, CONNECTOR_ID)
                 .addToLabels(LABEL_DEPLOYMENT_ID, DEPLOYMENT_ID)
+                .addToLabels("my.cos.bf2.org/connector-group", "baz")
+                .addToAnnotations("cos.bf2.org/organization-id", "20000000")
+                .addToAnnotations("cos.bf2.org/pricing-tier", "essential")
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
                 .withClusterId(config.cluster().id())
                 .withConnectorId(CONNECTOR_ID)
                 .withDeploymentId(DEPLOYMENT_ID)
                 .withOperatorSelector(new OperatorSelectorBuilder().withId(operator.getId()).build())
+                .withDeployment(new DeploymentSpecBuilder()
+                    .withConnectorTypeId("http_sync_v0.1")
+                    .build())
                 .build())
             .build();
 
@@ -99,6 +113,49 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 .withRequestBody(matchingJsonPath("$.operators.assigned[?(@.id == '" + operator.getId() + "')]"))
                 .withRequestBody(matchingJsonPath("$[?($.phase == 'ready')]")));
         });
+
+        assertTagsAreIncluded();
+    }
+
+    void assertTagsAreIncluded() {
+        Map<String, String> expectedTags = Map.of(
+            "foo", "bar",
+            "connector_group", "baz",
+            "organization_id", "20000000",
+            "pricing_tier", "essential");
+
+        List<Meter> meters = registry.getMeters();
+        assertThat(meters).isNotEmpty();
+
+        String regex = "cos.fleetshard.sync.connector.state\\..*";
+        int matches = 0;
+
+        for (Meter meter : meters) {
+            if (!meter.getId().getName().matches(regex)) {
+                continue;
+            }
+
+            matches++;
+
+            assertThat(meter).satisfies(m -> {
+                for (var expectedTag : expectedTags.entrySet()) {
+                    final String tagName = expectedTag.getKey();
+                    final String expected = expectedTag.getValue();
+                    final String current = m.getId().getTag(tagName);
+
+                    assertThat(current)
+                        .withFailMessage(() -> String.format("Meter with name '%s' does not have a tag '%s' with value '%s'",
+                            meter.getId().getName(),
+                            tagName,
+                            expected))
+                        .isEqualTo(expected);
+                }
+            });
+        }
+
+        assertThat(matches)
+            .withFailMessage(() -> String.format("No meters matching '%s'", regex))
+            .isGreaterThan(0);
     }
 
     public static class Profile extends SyncTestProfile {
@@ -110,7 +167,11 @@ public class ConnectorStatusUpdaterTest extends SyncTestSupport {
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.update-interval", "1s",
                 "cos.resources.poll-interval", "disabled",
-                "cos.resources.resync-interval", "disabled");
+                "cos.resources.resync-interval", "disabled",
+                "cos.metrics.recorder.tags.common.foo", "bar",
+                "cos.metrics.recorder.tags.labels[0]", "my.cos.bf2.org/connector-group",
+                "cos.metrics.recorder.tags.annotations[0]", "cos.bf2.org/organization-id",
+                "cos.metrics.recorder.tags.annotations[1]", "cos.bf2.org/pricing-tier");
         }
 
         @Override

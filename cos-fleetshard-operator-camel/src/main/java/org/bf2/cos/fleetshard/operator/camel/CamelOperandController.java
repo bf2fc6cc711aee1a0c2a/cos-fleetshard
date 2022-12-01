@@ -2,19 +2,23 @@ package org.bf2.cos.fleetshard.operator.camel;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.camel.model.CamelShardMetadata;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingSpec;
 import org.bf2.cos.fleetshard.operator.camel.model.KameletEndpoint;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.operand.AbstractOperandController;
+import org.bf2.cos.fleetshard.support.json.JacksonUtil;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.slf4j.Logger;
@@ -29,7 +33,34 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
-import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.*;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SOURCE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.KAMEL_OPERATOR_ID;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_ID_PLACEHOLDER;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.SA_CLIENT_SECRET_PLACEHOLDER;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_DEPLOYMENT_STRATEGY;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_FAILURE_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PERIOD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_SUCCESS_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_TIMEOUT;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_FAILURE_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PERIOD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_SUCCESS_THRESHOLD;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_TIMEOUT;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED;
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.computeStatus;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.configureKameletProperties;
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.createErrorHandler;
@@ -46,8 +77,12 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
 
     private final CamelOperandConfiguration configuration;
 
-    public CamelOperandController(KubernetesClient kubernetesClient, CamelOperandConfiguration configuration) {
-        super(kubernetesClient, CamelShardMetadata.class, ObjectNode.class, ObjectNode.class);
+    public CamelOperandController(
+        FleetShardOperatorConfig config,
+        KubernetesClient kubernetesClient,
+        CamelOperandConfiguration configuration) {
+
+        super(config, kubernetesClient, CamelShardMetadata.class, ObjectNode.class, ObjectNode.class);
 
         this.configuration = configuration;
     }
@@ -66,6 +101,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         ServiceAccountSpec serviceAccountSpec) {
 
         final Map<String, String> properties = createSecretsData(
+            getFleetShardOperatorConfig(),
             connector,
             connectorConfiguration,
             serviceAccountSpec,
@@ -179,6 +215,7 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         binding.setMetadata(new ObjectMeta());
         binding.getMetadata().setName(connector.getMetadata().getName());
         binding.getMetadata().setAnnotations(new TreeMap<>());
+        binding.getMetadata().setLabels(new TreeMap<>());
         binding.setSpec(new KameletBindingSpec());
         binding.getSpec().setSource(source);
         binding.getSpec().setSink(sink);
@@ -201,7 +238,6 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED, "false");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON, "false");
-        annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS, LABELS_TO_TRANSFER);
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_ENABLED, "true");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_PROMETHEUS_POD_MONITOR, "false");
 
@@ -209,6 +245,31 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED, "true");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED, "true");
         annotations.putIfAbsent(TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED, "true");
+
+        Set<String> labelsToTransfer = new TreeSet<>(LABELS_TO_TRANSFER);
+        Set<String> annotationsToTransfer = new TreeSet<>();
+
+        getFleetShardOperatorConfig().metrics().recorder().tags().labels().stream().flatMap(List::stream).forEach(k -> {
+            String v = Resources.getLabel(connector, k);
+            if (v != null) {
+                binding.getMetadata().getLabels().put(k, v);
+                labelsToTransfer.add(k);
+            }
+        });
+        getFleetShardOperatorConfig().metrics().recorder().tags().annotations().stream().flatMap(List::stream).forEach(k -> {
+            String v = Resources.getAnnotation(connector, k);
+            if (v != null) {
+                binding.getMetadata().getAnnotations().put(k, v);
+                annotationsToTransfer.add(k);
+            }
+        });
+
+        annotations.putIfAbsent(
+            TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS,
+            JacksonUtil.asArrayString(labelsToTransfer));
+        annotations.putIfAbsent(
+            TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS,
+            JacksonUtil.asArrayString(annotationsToTransfer));
 
         CamelOperandConfiguration.Health health = configuration.health();
         if (health != null) {

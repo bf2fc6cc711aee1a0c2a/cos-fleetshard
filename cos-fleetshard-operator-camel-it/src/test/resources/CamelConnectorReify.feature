@@ -16,7 +16,12 @@ Feature: Camel Connector Reify
       | operator.id                 | cos-fleetshard-operator-camel   |
       | operator.type               | camel-connector-operator        |
       | operator.version            | [1.0.0,2.0.0)                   |
-    And with sample camel connector
+
+     And with sample camel connector
+
+     And set connector label "cos.bf2.org/organisation-id" to "20000000"
+     And set connector label "cos.bf2.org/pricing-tier" to "essential"
+     And set connector annotation "my.cos.bf2.org/connector-group" to "baz"
 
     When deploy
     Then the connector exists
@@ -24,6 +29,11 @@ Feature: Camel Connector Reify
      And the connector is in phase "Monitor"
 
     Then the klb exists
+
+     And the klb has labels containing:
+          | cos.bf2.org/organisation-id | 20000000 |
+          | cos.bf2.org/pricing-tier    | essential |
+
      And the klb has annotations containing:
           | camel.apache.org/operator.id                              | ${cos.operator.id}                         |
           | trait.camel.apache.org/container.image                    | quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1 |
@@ -42,11 +52,16 @@ Feature: Camel Connector Reify
           | trait.camel.apache.org/prometheus.pod-monitor             | false                                      |
           | trait.camel.apache.org/deployment.enabled                 | true                                       |
           | trait.camel.apache.org/deployment.strategy                | Recreate                                   |
+          | my.cos.bf2.org/connector-group                            | baz                                        |
 
      And the klb has target-labels containing "cos.bf2.org/deployment.id"
      And the klb has target-labels containing "cos.bf2.org/connector.id"
      And the klb has target-labels containing "cos.bf2.org/connector.type.id"
      And the klb has target-labels containing "cos.bf2.org/operator.type"
+     And the klb has target-labels containing "cos.bf2.org/organisation-id"
+     And the klb has target-labels containing "cos.bf2.org/pricing-tier"
+
+    And the klb has target-annotations containing "my.cos.bf2.org/connector-group"
 
      And the klb has labels containing:
           | cos.bf2.org/cluster.id                |                               |
@@ -99,6 +114,7 @@ Feature: Camel Connector Reify
           | camel.main.exchange-factory                         | pooled                     |
           | camel.main.exchange-factory-capacity                | 31                         |
           | camel.main.exchange-factory-statistics-enabled      | true                       |
+
      And the klb secret has labels containing:
           | cos.bf2.org/cluster.id                | ${cos.cluster.id}             |
           | cos.bf2.org/connector.id              | ${cos.connector.id}           |
@@ -112,4 +128,16 @@ Feature: Camel Connector Reify
           | app.kubernetes.io/instance            | ${cos.deployment.id}          |
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].apiVersion" with value "cos.bf2.org/v1alpha1"
     And the klb secret has an entry at path "$.metadata.ownerReferences[0].kind" with value "ManagedConnector"
+
+    And the meters has entries with name matching "cos.fleetshard.controller.connectors.reconcile\..*" and tags:
+      | foo                       | bar       |
+      | connector_group           | baz       |
+      | organisation_id           | 20000000  |
+      | pricing_tier              | essential |
+
+    And the meters has entries with name matching "cos.fleetshard.controller.event.operators.operand\..*" and tags:
+      | foo                       | bar       |
+      | connector_group           | baz       |
+      | organisation_id           | 20000000  |
+      | pricing_tier              | essential |
 

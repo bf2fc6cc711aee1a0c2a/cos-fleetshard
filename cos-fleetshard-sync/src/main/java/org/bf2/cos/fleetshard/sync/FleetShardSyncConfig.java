@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.support.DurationConverter;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
 
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -228,6 +229,8 @@ public interface FleetShardSyncConfig {
          */
         @WithDefault("cos.fleetshard.sync")
         String baseName();
+
+        MetricsRecorderConfig recorder();
     }
 
     interface Manager {

@@ -1,13 +1,14 @@
 package org.bf2.cos.fleetshard.operator.support;
 
-import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
+import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
 
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-public abstract class InstrumentedWatcherEventSource<T> extends WatcherEventSource<T> {
-    private final MetricsRecorder recorder;
+public abstract class InstrumentedWatcherEventSource<T extends HasMetadata> extends WatcherEventSource<T> {
+    private final ResourceAwareMetricsRecorder recorder;
 
-    protected InstrumentedWatcherEventSource(KubernetesClient client, MetricsRecorder recorder) {
+    protected InstrumentedWatcherEventSource(KubernetesClient client, ResourceAwareMetricsRecorder recorder) {
         super(client);
         this.recorder = recorder;
     }
@@ -19,6 +20,6 @@ public abstract class InstrumentedWatcherEventSource<T> extends WatcherEventSour
             return;
         }
 
-        this.recorder.record(() -> onEventReceived(action, resource));
+        this.recorder.record(resource, () -> onEventReceived(action, resource));
     }
 }

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -14,12 +15,14 @@ import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.ApicurioAvroConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectJsonConverter;
 import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
 import org.bf2.cos.fleetshard.operator.debezium.model.KeyAndValueConverters;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -49,6 +52,7 @@ import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
 import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_CLIENT_SECRET_KEY;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.Mockito.when;
 
 public class DebeziumOperandControllerTest {
     private static final String DEFAULT_MANAGED_CONNECTOR_ID = "mid";
@@ -96,10 +100,35 @@ public class DebeziumOperandControllerTest {
         }
     };
 
+    private static FleetShardOperatorConfig fleetShardOperatorConfig() {
+        var config = Mockito.mock(FleetShardOperatorConfig.class);
+        var metrics = Mockito.mock(FleetShardOperatorConfig.Metrics.class);
+        var recorder = Mockito.mock(MetricsRecorderConfig.class);
+        var tags = Mockito.mock(MetricsRecorderConfig.Tags.class);
+
+        when(tags.common())
+            .thenAnswer(invocation -> Map.of());
+        when(tags.annotations())
+            .thenAnswer(invocation -> Optional.of(List.of("my.cos.bf2.org/connector-group")));
+        when(tags.labels())
+            .thenAnswer(invocation -> Optional.of(List.of("cos.bf2.org/organization-id", "cos.bf2.org/pricing-tier")));
+
+        when(recorder.tags())
+            .thenAnswer(invocation -> tags);
+        when(metrics.recorder())
+            .thenAnswer(invocation -> recorder);
+        when(config.metrics())
+            .thenAnswer(invocation -> metrics);
+
+        return config;
+
+    }
+
     @Test
     void declaresExpectedResourceTypes() {
+        FleetShardOperatorConfig config = fleetShardOperatorConfig();
         KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(kubernetesClient, CONFIGURATION);
+        DebeziumOperandController controller = new DebeziumOperandController(config, kubernetesClient, CONFIGURATION);
 
         assertThat(controller.getResourceTypes())
             .hasSize(2)
@@ -148,14 +177,18 @@ public class DebeziumOperandControllerTest {
     }
 
     void reify(String connectorClass, ObjectNode connectorConfig, Consumer<KafkaConnect> kafkaConnectChecks) {
+        FleetShardOperatorConfig config = fleetShardOperatorConfig();
         KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(kubernetesClient, CONFIGURATION);
+        DebeziumOperandController controller = new DebeziumOperandController(config, kubernetesClient, CONFIGURATION);
 
         var resources = controller.doReify(
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(DEFAULT_MANAGED_CONNECTOR_ID)
                     .withUid(MANAGED_CONNECTOR_UID)
+                    .addToAnnotations("my.cos.bf2.org/connector-group", "foo")
+                    .addToLabels("cos.bf2.org/organization-id", "20000000")
+                    .addToLabels("cos.bf2.org/pricing-tier", "essential")
                     .build())
                 .withSpec(new ManagedConnectorSpecBuilder()
                     .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
@@ -196,6 +229,14 @@ public class DebeziumOperandControllerTest {
                 assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
                 assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
                     .contains(CONFIGURATION.imagePullSecretsName());
+
+                assertThat(kc.getMetadata().getLabels())
+                    .containsEntry("cos.bf2.org/organization-id", "20000000")
+                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+
+                assertThat(kc.getMetadata().getAnnotations())
+                    .containsEntry("my.cos.bf2.org/connector-group", "foo");
+
                 assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
                 assertThat(kc.getSpec().getMetricsConfig()).isInstanceOfSatisfying(JmxPrometheusExporterMetrics.class,
                     jmxMetricsConfig -> {
@@ -232,6 +273,13 @@ public class DebeziumOperandControllerTest {
                             + "/"
                             + EXTERNAL_CONFIG_FILE
                             + ":database.password}");
+
+                assertThat(kctr.getMetadata().getLabels())
+                    .containsEntry("cos.bf2.org/organization-id", "20000000")
+                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+
+                assertThat(kctr.getMetadata().getAnnotations())
+                    .containsEntry("my.cos.bf2.org/connector-group", "foo");
 
                 if (PG_CLASS.equals(connectorClass)) {
                     // Specifically test the plugin name for PostgreSQL

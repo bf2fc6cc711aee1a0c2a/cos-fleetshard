@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.it.cucumber;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -12,8 +13,10 @@ import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.search.Search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -144,6 +147,62 @@ public class MicrometerSteps extends StepsSupport {
 
             return ((int) counter.count()) >= expected;
         });
+    }
+
+    @And("the meters has entry with name {string} and tags:")
+    public void meter_exists_with_tags(String name, Map<String, String> entry) {
+        Search s = registry.find(name);
+
+        assertThat(s).isNotNull();
+        assertThat(s.meters()).isNotEmpty();
+
+        assertThat(s.meters()).anySatisfy(m -> {
+            for (var expectedTag : entry.entrySet()) {
+                final String tagName = ctx.resolvePlaceholders(expectedTag.getKey());
+                final String expected = ctx.resolvePlaceholders(expectedTag.getValue());
+                final String current = m.getId().getTag(tagName);
+
+                assertThat(current)
+                    .withFailMessage(() -> String.format("Meter with id '%s' does not have a tag '%s' with value '%s'", name,
+                        tagName, expected))
+                    .isEqualTo(expected);
+            }
+        });
+    }
+
+    @And("the meters has entries with name matching {string} and tags:")
+    public void meters_exists_with_tags(String regex, Map<String, String> entry) {
+        List<Meter> meters = registry.getMeters();
+        assertThat(meters).isNotEmpty();
+
+        int matches = 0;
+
+        for (Meter meter : meters) {
+            if (!meter.getId().getName().matches(regex)) {
+                continue;
+            }
+
+            matches++;
+
+            assertThat(meter).satisfies(m -> {
+                for (var expectedTag : entry.entrySet()) {
+                    final String tagName = ctx.resolvePlaceholders(expectedTag.getKey());
+                    final String expected = ctx.resolvePlaceholders(expectedTag.getValue());
+                    final String current = m.getId().getTag(tagName);
+
+                    assertThat(current)
+                        .withFailMessage(() -> String.format("Meter with name '%s' does not have a tag '%s' with value '%s'",
+                            meter.getId().getName(),
+                            tagName,
+                            expected))
+                        .isEqualTo(expected);
+                }
+            });
+        }
+
+        assertThat(matches)
+            .withFailMessage(() -> String.format("No meters matching '%s'", regex))
+            .isGreaterThan(0);
     }
 
     // ***********************************

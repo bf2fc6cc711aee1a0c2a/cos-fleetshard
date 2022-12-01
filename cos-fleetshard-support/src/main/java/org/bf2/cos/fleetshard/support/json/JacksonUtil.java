@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.support.json;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -53,7 +54,24 @@ public final class JacksonUtil {
         return node;
     }
 
+    public static ArrayNode asArrayNode(Collection<String> elements) {
+        ArrayNode node = Serialization.jsonMapper().createArrayNode();
+        for (String element : elements) {
+            node.add(element);
+        }
+
+        return node;
+    }
+
     public static String asArrayString(String... elements) {
+        try {
+            return Serialization.jsonMapper().writeValueAsString(asArrayNode(elements));
+        } catch (JsonProcessingException e) {
+            throw KubernetesClientException.launderThrowable(e);
+        }
+    }
+
+    public static String asArrayString(Collection<String> elements) {
         try {
             return Serialization.jsonMapper().writeValueAsString(asArrayNode(elements));
         } catch (JsonProcessingException e) {
