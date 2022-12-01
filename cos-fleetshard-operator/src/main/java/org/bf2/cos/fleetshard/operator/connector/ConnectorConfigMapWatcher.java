@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.operator.connector;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.support.client.EventClient;
+import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
@@ -24,6 +25,7 @@ public class ConnectorConfigMapWatcher extends AbstractWatcher<ConfigMap> {
     public ConnectorConfigMapWatcher(
         KubernetesClient kubernetesClient,
         ManagedConnectorOperator operator,
+        ResourceAwareMetricsRecorder recorder,
         EventClient eventClient) {
 
         this.kubernetesClient = kubernetesClient;

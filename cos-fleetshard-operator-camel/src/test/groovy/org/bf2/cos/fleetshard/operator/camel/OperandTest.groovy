@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.operator.camel
 import io.fabric8.kubernetes.api.model.ConditionBuilder
 import io.fabric8.kubernetes.client.KubernetesClient
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBinding
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatus
 import org.bf2.cos.fleetshard.operator.camel.model.KameletBindingStatusBuilder
@@ -19,7 +20,8 @@ class OperandTest extends BaseSpec {
         given:
             def kubernetesClient = Mockito.mock(KubernetesClient.class)
             def configuration = Mockito.mock(CamelOperandConfiguration.class)
-            def controller = new CamelOperandController(kubernetesClient, configuration)
+            def config = Mockito.mock(FleetShardOperatorConfig.class)
+            def controller = new CamelOperandController(config, kubernetesClient, configuration)
 
         when:
             def resources = controller.getResourceTypes()

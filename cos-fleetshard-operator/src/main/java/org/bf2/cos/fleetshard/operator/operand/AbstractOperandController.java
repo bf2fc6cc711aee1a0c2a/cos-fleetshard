@@ -6,6 +6,7 @@ import org.bf2.cos.fleet.manager.model.ServiceAccount;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.connector.IncompleteConnectorSpecException;
 import org.slf4j.Logger;
@@ -25,13 +26,21 @@ import static org.bf2.cos.fleetshard.support.resources.Secrets.extract;
 
 public abstract class AbstractOperandController<M, S, D> implements OperandController {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractOperandController.class);
+
+    private final FleetShardOperatorConfig fleetShardOperatorConfig;
     private final KubernetesClient kubernetesClient;
     private final Class<M> metadataType;
     private final Class<S> connectorSpecType;
     private final Class<D> dataShapeType;
 
-    public AbstractOperandController(KubernetesClient kubernetesClient, Class<M> metadataType, Class<S> connectorSpecType,
+    public AbstractOperandController(
+        FleetShardOperatorConfig fleetShardOperatorConfig,
+        KubernetesClient kubernetesClient,
+        Class<M> metadataType,
+        Class<S> connectorSpecType,
         Class<D> dataShapeType) {
+
+        this.fleetShardOperatorConfig = fleetShardOperatorConfig;
         this.kubernetesClient = kubernetesClient;
         this.metadataType = metadataType;
         this.connectorSpecType = connectorSpecType;
@@ -40,6 +49,10 @@ public abstract class AbstractOperandController<M, S, D> implements OperandContr
 
     protected KubernetesClient getKubernetesClient() {
         return kubernetesClient;
+    }
+
+    protected FleetShardOperatorConfig getFleetShardOperatorConfig() {
+        return fleetShardOperatorConfig;
     }
 
     @Override

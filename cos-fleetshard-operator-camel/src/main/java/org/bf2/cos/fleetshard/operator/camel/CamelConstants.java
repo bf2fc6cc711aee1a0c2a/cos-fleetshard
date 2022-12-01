@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import org.bf2.cos.fleetshard.support.json.JacksonUtil;
+import java.util.Set;
+
 import org.bf2.cos.fleetshard.support.resources.Resources;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
@@ -57,7 +58,7 @@ public final class CamelConstants {
     public static final String ERROR_HANDLER_TYPE_STOP = "stop";
     public static final String ERROR_HANDLER_TYPE_DLQ = "dead_letter_queue";
 
-    public static final String LABELS_TO_TRANSFER = JacksonUtil.asArrayString(
+    public static final Set<String> LABELS_TO_TRANSFER = Set.of(
         Resources.LABEL_OPERATOR_TYPE,
         LABEL_DEPLOYMENT_ID,
         LABEL_CONNECTOR_ID,

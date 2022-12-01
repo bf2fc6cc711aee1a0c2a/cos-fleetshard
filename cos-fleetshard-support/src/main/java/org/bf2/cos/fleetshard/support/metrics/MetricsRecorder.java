@@ -24,6 +24,10 @@ public class MetricsRecorder {
         this.tags = tags;
     }
 
+    public String getId() {
+        return id;
+    }
+
     public void record(Runnable action) {
         record(action, "", Tags.empty());
     }

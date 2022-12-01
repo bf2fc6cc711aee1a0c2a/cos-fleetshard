@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.support.metrics.MetricsSupport;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClientException;
@@ -96,11 +97,11 @@ public class ConnectorStatusUpdater {
      */
     private void measure(ManagedConnector connector, ConnectorDeploymentStatus connectorDeploymentStatus, int connectorState) {
 
-        List<Tag> tags = List.of(
-            Tag.of("cos.connector.id", connector.getSpec().getConnectorId()),
-            Tag.of("cos.connector.type.id", connector.getSpec().getDeployment().getConnectorTypeId()),
-            Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()),
-            Tag.of("cos.namespace", connector.getMetadata().getNamespace()));
+        List<Tag> tags = MetricsSupport.tags(config.metrics().recorder(), connector);
+        tags.add(Tag.of("cos.connector.id", connector.getSpec().getConnectorId()));
+        tags.add(Tag.of("cos.connector.type.id", connector.getSpec().getDeployment().getConnectorTypeId()));
+        tags.add(Tag.of("cos.deployment.id", connector.getSpec().getDeploymentId()));
+        tags.add(Tag.of("cos.namespace", connector.getMetadata().getNamespace()));
 
         String connectorResourceVersion = String.valueOf(connector.getSpec().getDeployment().getConnectorResourceVersion());
 

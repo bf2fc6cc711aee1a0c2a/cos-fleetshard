@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -84,6 +85,8 @@ public interface FleetShardOperatorConfig {
         String baseName();
 
         ConnectorOperand connectorOperand();
+
+        MetricsRecorderConfig recorder();
 
         interface ConnectorOperand {
             /**

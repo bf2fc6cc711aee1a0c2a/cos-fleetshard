@@ -13,6 +13,7 @@ import javax.inject.Singleton;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
+import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
 import org.bf2.cos.fleetshard.operator.debezium.model.KeyAndValueConverters;
@@ -92,8 +93,12 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
 
     private final DebeziumOperandConfiguration configuration;
 
-    public DebeziumOperandController(KubernetesClient kubernetesClient, DebeziumOperandConfiguration configuration) {
-        super(kubernetesClient, DebeziumShardMetadata.class, ObjectNode.class, DebeziumDataShape.class);
+    public DebeziumOperandController(
+        FleetShardOperatorConfig config,
+        KubernetesClient kubernetesClient,
+        DebeziumOperandConfiguration configuration) {
+
+        super(config, kubernetesClient, DebeziumShardMetadata.class, ObjectNode.class, DebeziumDataShape.class);
 
         this.configuration = configuration;
     }
@@ -259,6 +264,21 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .addToConfig("topic.creation.default.delete.retention.ms", 2_678_400_000L)
                 .build())
             .build();
+
+        getFleetShardOperatorConfig().metrics().recorder().tags().labels().stream().flatMap(List::stream).forEach(k -> {
+            String v = Resources.getLabel(connector, k);
+            if (v != null) {
+                Resources.setLabel(kc, k, v);
+                Resources.setLabel(kctr, k, v);
+            }
+        });
+        getFleetShardOperatorConfig().metrics().recorder().tags().annotations().stream().flatMap(List::stream).forEach(k -> {
+            String v = Resources.getAnnotation(connector, k);
+            if (v != null) {
+                Resources.setAnnotation(kc, k, v);
+                Resources.setAnnotation(kctr, k, v);
+            }
+        });
 
         return List.of(secret, kafkaConnectMetricsConfigMap, kc, kctr);
     }

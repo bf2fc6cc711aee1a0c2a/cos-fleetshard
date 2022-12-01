@@ -4,6 +4,7 @@ import groovy.util.logging.Slf4j
 import org.bf2.cos.fleetshard.operator.camel.model.EndpointKamelet
 import org.bf2.cos.fleetshard.operator.camel.model.Kamelet
 import org.bf2.cos.fleetshard.operator.camel.support.BaseSpec
+import org.bf2.cos.fleetshard.support.json.JacksonUtil
 import org.bf2.cos.fleetshard.support.resources.Secrets
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.LABELS_TO_TRANSFER
@@ -14,6 +15,7 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_A
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON
+import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS
 
 @Slf4j
@@ -23,6 +25,7 @@ class ReifyTest extends BaseSpec {
         given:
             def sa = serviceAccount()
             def connector = connector()
+            connector.metadata.labels
 
             def sm= sharedMeta()
             sm.kamelets.adapter = new EndpointKamelet('aws-kinesis-source', 'aws')
@@ -61,14 +64,26 @@ class ReifyTest extends BaseSpec {
 
             with(klb(resources)) {
                 with(it.metadata) {
+                    Set<String> annotationsToAdd = new TreeSet<>()
+                    annotationsToAdd.add('my.cos.bf2.org/connector-group')
+
+                    Set<String> labelsToAdd = new TreeSet<>(LABELS_TO_TRANSFER)
+                    labelsToAdd.add('cos.bf2.org/organization-id')
+                    labelsToAdd.add('cos.bf2.org/pricing-tier')
+
                     annotations[TRAIT_CAMEL_APACHE_ORG_CONTAINER_IMAGE] == expectedContainerImage
                     annotations[TRAIT_CAMEL_APACHE_ORG_KAMELETS_ENABLED] == 'false'
                     annotations[TRAIT_CAMEL_APACHE_ORG_JVM_ENABLED] == 'false'
                     annotations[TRAIT_CAMEL_APACHE_ORG_LOGGING_JSON] == 'false'
-                    annotations[TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS] == LABELS_TO_TRANSFER
                     annotations[TRAIT_CAMEL_APACHE_ORG_HEALTH_ENABLED] == 'true'
                     annotations[TRAIT_CAMEL_APACHE_ORG_HEALTH_LIVENESS_PROBE_ENABLED] == 'true'
                     annotations[TRAIT_CAMEL_APACHE_ORG_HEALTH_READINESS_PROBE_ENABLED] == 'true'
+                    annotations[TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_LABELS] == JacksonUtil.asArrayString(labelsToAdd)
+                    annotations[TRAIT_CAMEL_APACHE_ORG_OWNER_TARGET_ANNOTATIONS] == JacksonUtil.asArrayString(annotationsToAdd)
+                    annotations['my.cos.bf2.org/connector-group'] == 'baz'
+
+                    labels['cos.bf2.org/organization-id'] == '20000000'
+                    labels['cos.bf2.org/pricing-tier'] == 'essential'
                 }
 
                 it.spec.integration.get("profile").textValue() == CamelConstants.CAMEL_K_PROFILE_OPENSHIFT
