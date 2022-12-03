@@ -9,7 +9,7 @@ cos-fleetshard-operator-e2e/**/* @rinaldodev @valdar @Naros @rk3rn3r
 cos-fleetshard-it/**/* @rinaldodev @valdar @Naros @rk3rn3r
 
 # api
-cos-fleetshard-api/**/*" @rinaldodev @valdar @Naros @rk3rn3r
+cos-fleetshard-api/**/* @rinaldodev @valdar @Naros @rk3rn3r
 cos-fleet-manager-api/**/* @rinaldodev @valdar @Naros @rk3rn3r
 
 # sync
