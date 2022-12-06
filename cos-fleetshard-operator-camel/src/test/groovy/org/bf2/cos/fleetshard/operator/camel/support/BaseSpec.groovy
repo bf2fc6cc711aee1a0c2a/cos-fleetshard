@@ -208,6 +208,14 @@ class BaseSpec extends Specification {
             return labelSelection;
         });
 
+        when(answer.connectors()).thenAnswer(invocation -> {
+            var processors = Mockito.mock((CamelOperandConfiguration.Processors.class));
+            when(processors.enabled()).thenReturn(true);
+            var connectors = Mockito.mock(CamelOperandConfiguration.Connectors.class);
+            when(connectors.processors()).thenReturn(processors);
+            return connectors;
+        });
+
         return answer
     }
 }

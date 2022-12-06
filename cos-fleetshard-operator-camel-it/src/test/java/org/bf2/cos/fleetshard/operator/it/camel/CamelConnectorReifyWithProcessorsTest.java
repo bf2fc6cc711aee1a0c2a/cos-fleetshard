@@ -24,7 +24,8 @@ public class CamelConnectorReifyWithProcessorsTest extends CucumberQuarkusTest {
         public Map<String, String> getConfigOverrides() {
             final String ns = "cos-camel-" + uid();
 
-            return Map.of("cos.namespace", ns);
+            return Map.of("cos.namespace", ns,
+                "cos.operator.camel.connectors.processors.enabled", "true");
         }
     }
 }

@@ -138,7 +138,8 @@ public final class CamelOperandSupport {
         ManagedConnector connector,
         ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
         CamelShardMetadata shardMetadata,
-        StepEndpoint kafkaEndpoint) {
+        StepEndpoint kafkaEndpoint,
+        boolean enableProcessors) {
 
         String consumes = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
             .map(spec -> spec.at("/consumes/format"))
@@ -184,7 +185,7 @@ public final class CamelOperandSupport {
             }
         }
 
-        if (!connectorConfiguration.getProcessorsSpec().isEmpty()) {
+        if (enableProcessors && !connectorConfiguration.getProcessorsSpec().isEmpty()) {
             stepDefinitions.add(StepEndpoint.uri(COS_TRANSFORM_URI));
         }
 
@@ -374,7 +375,8 @@ public final class CamelOperandSupport {
         String secretName,
         CamelOperandConfiguration cfg,
         Map<String, String> envVars,
-        ArrayNode processorSpec) {
+        ArrayNode processorSpec,
+        boolean enableProcessors) {
 
         ObjectNode integration = Serialization.jsonMapper().createObjectNode();
         integration.put("profile", CamelConstants.CAMEL_K_PROFILE_OPENSHIFT);
@@ -390,7 +392,7 @@ public final class CamelOperandSupport {
                 .put("value", k + "=" + v);
         });
 
-        if (!processorSpec.isEmpty()) {
+        if (enableProcessors && !processorSpec.isEmpty()) {
             ArrayNode flows = integration.withArray("flows");
             ObjectNode from = flows.addObject().putObject("from");
             from.put("uri", COS_TRANSFORM_URI);
