@@ -111,6 +111,10 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
             connector,
             connectorConfiguration.getErrorHandlerSpec());
 
+        final boolean enableProcessors = configuration.connectors() != null &&
+            configuration.connectors().processors() != null &&
+            configuration.connectors().processors().enabled();
+
         final List<StepEndpoint> stepDefinitions;
         final StepEndpoint source;
         final StepEndpoint sink;
@@ -167,7 +171,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                     connector,
                     connectorConfiguration,
                     shardMetadata,
-                    sink);
+                    sink,
+                    enableProcessors);
                 break;
             case CONNECTOR_TYPE_SINK:
                 source = StepEndpoint.kamelet(shardMetadata.getKamelets().getKafka().getName());
@@ -200,7 +205,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                     connector,
                     connectorConfiguration,
                     shardMetadata,
-                    source);
+                    source,
+                    enableProcessors);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown connector type: " + shardMetadata.getConnectorType());
@@ -328,7 +334,8 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
                 "CONNECTOR_ID", connector.getSpec().getConnectorId(),
                 "CONNECTOR_DEPLOYMENT_ID", connector.getSpec().getDeploymentId(),
                 "CONNECTOR_TRAITS_CHECKSUM", Resources.computeTraitsChecksum(binding)),
-            connectorConfiguration.getProcessorsSpec());
+            connectorConfiguration.getProcessorsSpec(),
+            enableProcessors);
 
         binding.getSpec().setIntegration(integration);
 

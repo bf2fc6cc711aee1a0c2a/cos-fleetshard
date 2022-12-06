@@ -85,5 +85,12 @@ public interface CamelOperandConfiguration {
 
     interface Connectors extends ConnectorConfiguration {
         Map<String, ConnectorConfiguration> types();
+
+        Processors processors();
+    }
+
+    interface Processors {
+        @WithDefault("false")
+        boolean enabled();
     }
 }
