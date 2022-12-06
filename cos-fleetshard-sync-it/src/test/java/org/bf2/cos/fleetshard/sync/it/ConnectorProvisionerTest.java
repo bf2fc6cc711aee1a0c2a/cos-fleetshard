@@ -117,11 +117,24 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
+
+                assertThat(s1.getMetadata().getLabels())
+                    .containsEntry("cos.bf2.org/organization-id", "20000000")
+                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+                assertThat(s1.getMetadata().getAnnotations())
+                    .containsEntry("my.cos.bf2.org/connector-group", "baz");
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getKafka().getUrl()).isEqualTo(KAFKA_URL);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
+
+            assertThat(mc.getMetadata().getLabels())
+                .containsEntry("cos.bf2.org/organization-id", "20000000")
+                .containsEntry("cos.bf2.org/pricing-tier", "essential");
+            assertThat(mc.getMetadata().getAnnotations())
+                .containsEntry("my.cos.bf2.org/connector-group", "baz");
+
         }
         {
             //
@@ -171,11 +184,23 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_META))
                     .isObject()
                     .containsEntry("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
+
+                assertThat(s1.getMetadata().getLabels())
+                    .containsEntry("cos.bf2.org/organization-id", "20000001")
+                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+                assertThat(s1.getMetadata().getAnnotations())
+                    .containsEntry("my.cos.bf2.org/connector-group", "baz");
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Resources.CONNECTOR_PREFIX);
             assertThat(mc.getSpec().getDeployment().getKafka().getUrl()).isEqualTo(KAFKA_URL);
             assertThat(mc.getSpec().getDeployment().getSecret()).isEqualTo(s1.getMetadata().getName());
+
+            assertThat(mc.getMetadata().getLabels())
+                .containsEntry("cos.bf2.org/organization-id", "20000001")
+                .containsEntry("cos.bf2.org/pricing-tier", "essential");
+            assertThat(mc.getMetadata().getAnnotations())
+                .containsEntry("my.cos.bf2.org/connector-group", "baz");
         }
     }
 
@@ -188,7 +213,10 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 "cos.namespace", Namespaces.generateNamespaceId(getId()),
                 "cos.resources.poll-interval", "disabled",
                 "cos.resources.resync-interval", "disabled",
-                "cos.resources.update-interval", "disabled");
+                "cos.resources.update-interval", "disabled",
+                "cos.metrics.recorder.tags.annotations[0]", "my.cos.bf2.org/connector-group",
+                "cos.metrics.recorder.tags.labels[0]", "cos.bf2.org/organization-id",
+                "cos.metrics.recorder.tags.labels[1]", "cos.bf2.org/pricing-tier");
         }
 
         @Override
@@ -225,31 +253,39 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 req -> req.withQueryParam("gt_version", equalTo("0")),
                 resp -> {
                     JsonNode body = deploymentList(
-                        deployment(DEPLOYMENT_ID, 1L, spec -> {
-                            spec.namespaceId(clusterId);
-                            spec.connectorId("connector-1");
-                            spec.connectorTypeId("connector-type-1");
-                            spec.connectorResourceVersion(1L);
-                            spec.kafka(
-                                new KafkaConnectionSettings()
-                                    .url(KAFKA_URL));
-                            spec.serviceAccount(
-                                new ServiceAccount()
-                                    .clientId(KAFKA_CLIENT_ID)
-                                    .clientSecret(KAFKA_CLIENT_SECRET));
-                            spec.connectorSpec(node(n -> {
-                                n.with("connector").put("foo", "connector-foo");
-                                n.with("kafka").put("topic", "kafka-foo");
+                        deployment(DEPLOYMENT_ID, 1L,
+                            depl -> {
+                                depl.getMetadata().annotations(Map.of(
+                                    "my.cos.bf2.org/connector-group", "baz",
+                                    "cos.bf2.org/organization-id", "20000000",
+                                    "cos.bf2.org/pricing-tier", "essential"));
+                            },
+                            spec -> {
+                                spec.namespaceId(clusterId);
+                                spec.connectorId("connector-1");
+                                spec.connectorTypeId("connector-type-1");
+                                spec.connectorResourceVersion(1L);
+                                spec.kafka(
+                                    new KafkaConnectionSettings()
+                                        .url(KAFKA_URL));
+                                spec.serviceAccount(
+                                    new ServiceAccount()
+                                        .clientId(KAFKA_CLIENT_ID)
+                                        .clientSecret(KAFKA_CLIENT_SECRET));
+                                spec.connectorSpec(node(n -> {
+                                    n.with("connector").put("foo", "connector-foo");
+                                    n.with("kafka").put("topic", "kafka-foo");
+                                }));
+                                spec.shardMetadata(node(n -> {
+                                    n.put("connector_type", "sink");
+                                    n.put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
+                                    n.withArray("operators").addObject()
+                                        .put("type", "camel-connector-operator")
+                                        .put("version", "[1.0.0,2.0.0)");
+                                }));
+
+                                spec.desiredState(ConnectorDesiredState.READY);
                             }));
-                            spec.shardMetadata(node(n -> {
-                                n.put("connector_type", "sink");
-                                n.put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.0.1");
-                                n.withArray("operators").addObject()
-                                    .put("type", "camel-connector-operator")
-                                    .put("version", "[1.0.0,2.0.0)");
-                            }));
-                            spec.desiredState(ConnectorDesiredState.READY);
-                        }));
 
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                         .withJsonBody(body);
@@ -261,31 +297,38 @@ public class ConnectorProvisionerTest extends SyncTestSupport {
                 req -> req.withQueryParam("gt_version", equalTo("1")),
                 resp -> {
                     JsonNode body = deploymentList(
-                        deployment(DEPLOYMENT_ID, 2L, spec -> {
-                            spec.namespaceId(clusterId);
-                            spec.connectorId("connector-1");
-                            spec.connectorTypeId("connector-type-1");
-                            spec.connectorResourceVersion(1L);
-                            spec.kafka(
-                                new KafkaConnectionSettings()
-                                    .url(KAFKA_URL));
-                            spec.serviceAccount(
-                                new ServiceAccount()
-                                    .clientId(KAFKA_CLIENT_ID)
-                                    .clientSecret(KAFKA_CLIENT_SECRET));
-                            spec.connectorSpec(node(n -> {
-                                n.with("connector").put("foo", "connector-bar");
-                                n.with("kafka").put("topic", "kafka-bar");
+                        deployment(DEPLOYMENT_ID, 2L,
+                            depl -> {
+                                depl.getMetadata().annotations(Map.of(
+                                    "my.cos.bf2.org/connector-group", "baz",
+                                    "cos.bf2.org/organization-id", "20000001",
+                                    "cos.bf2.org/pricing-tier", "essential"));
+                            },
+                            spec -> {
+                                spec.namespaceId(clusterId);
+                                spec.connectorId("connector-1");
+                                spec.connectorTypeId("connector-type-1");
+                                spec.connectorResourceVersion(1L);
+                                spec.kafka(
+                                    new KafkaConnectionSettings()
+                                        .url(KAFKA_URL));
+                                spec.serviceAccount(
+                                    new ServiceAccount()
+                                        .clientId(KAFKA_CLIENT_ID)
+                                        .clientSecret(KAFKA_CLIENT_SECRET));
+                                spec.connectorSpec(node(n -> {
+                                    n.with("connector").put("foo", "connector-bar");
+                                    n.with("kafka").put("topic", "kafka-bar");
+                                }));
+                                spec.shardMetadata(node(n -> {
+                                    n.put("connector_type", "sink");
+                                    n.put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
+                                    n.withArray("operators").addObject()
+                                        .put("type", "camel-connector-operator")
+                                        .put("version", "[1.0.0,2.0.0)");
+                                }));
+                                spec.desiredState(ConnectorDesiredState.READY);
                             }));
-                            spec.shardMetadata(node(n -> {
-                                n.put("connector_type", "sink");
-                                n.put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
-                                n.withArray("operators").addObject()
-                                    .put("type", "camel-connector-operator")
-                                    .put("version", "[1.0.0,2.0.0)");
-                            }));
-                            spec.desiredState(ConnectorDesiredState.READY);
-                        }));
 
                     resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
                         .withJsonBody(body);

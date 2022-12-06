@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.sync.resources;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -263,6 +264,8 @@ public class ConnectorDeploymentProvisioner {
         connector.getSpec().getDeployment().setUnitOfWork(uow);
         connector.getSpec().setOperatorSelector(operatorSelector);
 
+        copyMetadata(deployment, connector);
+
         LOGGER.info("Provisioning connector namespace: {}, name: {}, revision: {}",
             connector.getMetadata().getNamespace(),
             connector.getMetadata().getName(),
@@ -328,11 +331,37 @@ public class ConnectorDeploymentProvisioner {
         Secrets.set(secret, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, deployment.getSpec().getServiceAccount());
         Secrets.set(secret, Secrets.SECRET_ENTRY_META, deployment.getSpec().getShardMetadata());
 
+        copyMetadata(deployment, secret);
+
         try {
             return fleetShard.createSecret(secret);
         } catch (Exception e) {
             LOGGER.warn("", e);
             throw e;
+        }
+    }
+
+    private void copyMetadata(ConnectorDeployment deployment, HasMetadata target) {
+        if (deployment.getMetadata() != null && deployment.getMetadata().getAnnotations() != null) {
+            config.metrics().recorder().tags().labels()
+                .stream()
+                .flatMap(List::stream)
+                .forEach(key -> {
+                    String val = deployment.getMetadata().getAnnotations().get(key);
+                    if (val != null) {
+                        Resources.setLabel(target, key, val);
+                    }
+                });
+
+            config.metrics().recorder().tags().annotations()
+                .stream()
+                .flatMap(List::stream)
+                .forEach(key -> {
+                    String val = deployment.getMetadata().getAnnotations().get(key);
+                    if (val != null) {
+                        Resources.setAnnotation(target, key, val);
+                    }
+                });
         }
     }
 }
