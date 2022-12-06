@@ -118,6 +118,24 @@ public class SyncTestSupport {
         return answer;
     }
 
+    public static ConnectorDeployment deployment(
+        String name,
+        long revision,
+        Consumer<ConnectorDeployment> deploymentConsumer,
+        Consumer<ConnectorDeploymentSpec> deploymentSpecConsumer) {
+
+        ConnectorDeployment answer = new ConnectorDeployment()
+            .kind("ConnectorDeployment")
+            .id(name)
+            .metadata(new ConnectorDeploymentAllOfMetadata().resourceVersion(revision))
+            .spec(new ConnectorDeploymentSpec());
+
+        deploymentConsumer.accept(answer);
+        deploymentSpecConsumer.accept(answer.getSpec());
+
+        return answer;
+    }
+
     public static JsonNode node(Consumer<ObjectNode> consumer) {
         ObjectNode answer = Serialization.jsonMapper().createObjectNode();
         consumer.accept(answer);
