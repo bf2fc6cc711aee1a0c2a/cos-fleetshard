@@ -8,7 +8,7 @@ info:
   license:
     name: 'Apache 2.0'
     url: 'https://www.apache.org/licenses/LICENSE-2.0'
-  contact: 
+  contact:
     name: 'Red Hat OpenShift Streams for Apache Kafka Support'
     email: 'rhosak-support@redhat.com'
 servers:
@@ -1168,9 +1168,14 @@ components:
         - deleting
 
     ConnectorClusterRequestMeta:
+      type: object
       properties:
         name:
           type: string
+        annotations:
+          type: object
+          additionalProperties:
+            type: "string"
 
     ConnectorClusterRequest:
       description: "Schema for the request to update a data plane cluster's name"
@@ -1259,6 +1264,7 @@ components:
           type: object
 
     ConnectorRequestMeta:
+      type: object
       required:
         - name
         - connector_type_id
@@ -1275,6 +1281,11 @@ components:
           $ref: "#/components/schemas/Channel"
         desired_state:
           $ref: "#/components/schemas/ConnectorDesiredState"
+        annotations:
+          type: object
+          additionalProperties:
+            type: "string"
+
 
     ConnectorRequest:
       allOf:
@@ -1353,12 +1364,16 @@ components:
               type: array
               items:
                 type: string
+            annotations:
+              type: object
+              additionalProperties:
+                type: "string"
             featured_rank:
               description: Ranking for featured connectors
               type: integer
               format: int32
             capabilities:
-              description: The capabilities supported by the conenctor
+              description: The capabilities supported by the connector
               type: array
               items:
                 type: string
@@ -1625,7 +1640,7 @@ components:
 
         * Cluster: id, created_at, updated_at, owner, organisation_id, name, state, client_id
         * Namespace: id, created_at, updated_at, name, cluster_id, owner, expiration, tenant_user_id, tenant_organisation_id, state
-        * Connector Types: id, created_at, updated_at, version, name, description, label, channel, featured_rank
+        * Connector Types: id, created_at, updated_at, version, name, description, label, channel, featured_rank, pricing_tier
         * Connectors: id, created_at, updated_at, name, owner, organisation_id, connector_type_id, desired_state, state, channel, namespace_id, kafka_id, kafka_bootstrap_server, service_account_client_id, schema_registry_id, schema_registry_url
 
         Allowed operators are `<>`, `=`, `LIKE`, or `ILIKE`.
@@ -1689,6 +1704,8 @@ components:
         icon_href: "/api/connector_mgmt/v1/kafka_connector_types/log_sink.png"
         labels:
           - sink
+        annotations:
+          - "cos.bf2.org/name": value
         capabilities:
           - data_shape
           - processors
@@ -1814,12 +1831,12 @@ components:
         name: "MyNamespace"
         cluster_id: "9bsv0s7tne7g02gh5g4g"
         annotations:
-          "connector_mgmt.bf2.org/profile": "default-profile"
+          "cos.bf2.org/profile": "default-profile"
     ConnectorNamespaceEvalCreateExample:
       value:
         name: "MyEvalNamespace"
         annotations:
-          "connector_mgmt.bf2.org/profile": "evaluation-profile"
+          "cos.bf2.org/profile": "evaluation-profile"
     400CreationExample:
       value:
         id: "103"

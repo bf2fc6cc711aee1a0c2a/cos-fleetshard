@@ -462,6 +462,10 @@ components:
                   format: int64
                 resolved_secrets:
                   type: boolean
+                annotations:
+                  type: object
+                  additionalProperties:
+                    type: "string"
             spec:
               $ref: '#/components/schemas/ConnectorDeploymentSpec'
             status:
