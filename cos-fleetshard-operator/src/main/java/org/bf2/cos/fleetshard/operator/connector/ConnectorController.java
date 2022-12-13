@@ -141,14 +141,6 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.secrets", tags)));
 
         eventSources.put(
-            "_configmaps",
-            new ConnectorConfigmapEventSource(
-                kubernetesClient,
-                managedConnectorOperator,
-                MetricsRecorder.of(registry, config.metrics().baseName() + ".controller.event.configmaps", tags),
-                eventClient));
-
-        eventSources.put(
             "_operators",
             new ConnectorOperatorEventSource(
                 kubernetesClient,
@@ -190,11 +182,14 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
 
         if (!selected && !assigned) {
             // not selected, nor assigned: this connector is managed by another operator
-            LOGGER.debug("Connector {}/{} is not managed by this operator (assigned={}, operating={}).",
+            LOGGER.debug("Connector {}/{} is not managed by this operator (assigned={}, operating={}). "
+                + "This operator={}. Connector requires: {}.",
                 connector.getMetadata().getNamespace(),
                 connector.getMetadata().getName(),
                 connector.getSpec().getOperatorSelector().getId(),
-                connector.getStatus().getConnectorStatus().getAssignedOperator().getId());
+                connector.getStatus().getConnectorStatus().getAssignedOperator().getId(),
+                managedConnectorOperator.getMetadata().getName(),
+                connector.getSpec().getOperatorSelector().getId());
 
             answer = UpdateControl.noUpdate();
         } else if (!selected) {

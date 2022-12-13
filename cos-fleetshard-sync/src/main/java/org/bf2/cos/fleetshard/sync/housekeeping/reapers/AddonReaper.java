@@ -36,7 +36,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private final FleetShardSyncConfig config;
     private final FleetShardSync fleetShardSync;
     private final FleetShardObservabilityClient observabilityClient;
-    private final ConfigMapWatcher watcher;
+    private final AddonConfigMapWatcher watcher;
     private final AtomicLong retries;
     private final AtomicBoolean running;
     private final AtomicBoolean taskRunning;
@@ -49,7 +49,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
         this.fleetShardSync = fleetShardSync;
         this.observabilityClient = observabilityClient;
         this.eventClient = eventClient;
-        this.watcher = new ConfigMapWatcher();
+        this.watcher = new AddonConfigMapWatcher();
         this.retries = new AtomicLong(0);
         this.running = new AtomicBoolean();
         this.taskRunning = new AtomicBoolean();
@@ -143,7 +143,7 @@ public class AddonReaper implements Housekeeper.Task, Service {
         return kubernetesClient.namespaces().withLabel(Resources.LABEL_CLUSTER_ID, config.cluster().id());
     }
 
-    private class ConfigMapWatcher extends AbstractWatcher<ConfigMap> {
+    private class AddonConfigMapWatcher extends AbstractWatcher<ConfigMap> {
         private static final String LABEL_PREFIX = "api.openshift.com/";
         private static final String DELETE_LABEL_SUFFIX = "-delete";
 
