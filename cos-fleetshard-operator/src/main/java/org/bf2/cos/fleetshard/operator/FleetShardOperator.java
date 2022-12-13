@@ -4,6 +4,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.operator.connector.ConnectorConfigMapWatcher;
+import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,10 @@ public class FleetShardOperator {
     Operator operator;
     @Inject
     FleetShardOperatorConfig config;
+    @Inject
+    EventClient eventClient;
+
+    private ConnectorConfigMapWatcher configMapWatcher;
 
     public void start() {
         LOGGER.info("Starting operator (id: {}, type: {}, version: {})",
@@ -33,6 +39,9 @@ public class FleetShardOperator {
             .inNamespace(config.namespace())
             .createOrReplace(managedConnectorOperator);
 
+        this.configMapWatcher = new ConnectorConfigMapWatcher(client, managedConnectorOperator, eventClient);
+        configMapWatcher.start();
+
         operator.start();
     }
 
@@ -41,6 +50,10 @@ public class FleetShardOperator {
             managedConnectorOperator.getMetadata().getName(),
             managedConnectorOperator.getSpec().getType(),
             managedConnectorOperator.getSpec().getVersion());
+
+        if (configMapWatcher != null) {
+            configMapWatcher.close();
+        }
 
         operator.stop();
     }

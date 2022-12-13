@@ -184,7 +184,8 @@ public class ConnectorSteps {
                     .withDeploymentResourceVersion(drv)
                     .withNewSchemaRegistry(SCHEMA_REGISTRY_ID, SCHEMA_REGISTRY_URL)
                     .withKafka(
-                        new KafkaSpecBuilder().withUrl(entry.getOrDefault(COS_KAFKA_BOOTSTRAP, KAFKA_URL)).build())
+                        new KafkaSpecBuilder().withUrl(entry.getOrDefault(COS_KAFKA_BOOTSTRAP, KAFKA_URL))
+                            .build())
                     .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
                     .withSecret(Connectors.generateConnectorId(deploymentId) + "-" + drv)
                     .build())
@@ -279,7 +280,18 @@ public class ConnectorSteps {
 
     @When("^set configmap to:")
     public void change_configmap(Map<String, String> contents) {
-        getConfigMapFilter().accept(configMap -> configMap.setData(contents));
+        var sb = new StringBuilder();
+        contents.forEach((k, v) -> {
+            sb.append("\t");
+            sb.append(k);
+            sb.append("=");
+            sb.append(v);
+            sb.append("\n");
+        });
+
+        getConfigMapFilter().accept(configMap -> {
+            configMap.setData(Map.of("override.properties", sb.toString()));
+        });
     }
 
     @Then("the connector exists")

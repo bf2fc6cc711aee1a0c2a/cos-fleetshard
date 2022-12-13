@@ -88,12 +88,15 @@ To change the default values, use the following system properties:
 
 One can then use that ConfigMap to override, for example, log levels for the connector, by applying the following configuration to the ConfigMap:
 
-[source,properties]
+[source,yaml]
 ----
-quarkus.log.level=INFO
-quarkus.log.min-level=ALL
-quarkus.log.category."org.apache".level=ALL
-quarkus.log.category."org.apache".min-level=ALL
+apiVersion: v1
+data:
+  override.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.min-level=ALL
+    quarkus.log.category."org.apache".level=ALL
+    quarkus.log.category."org.apache".min-level=ALL
 ----
 
 Changes made to this ConfigMap triggers a redeployment of the connector with the additional supplied properties.
