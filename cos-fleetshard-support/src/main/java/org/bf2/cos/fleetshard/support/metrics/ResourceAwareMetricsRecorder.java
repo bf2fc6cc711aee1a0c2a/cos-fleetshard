@@ -97,13 +97,21 @@ public class ResourceAwareMetricsRecorder {
         return recorder.recordCallable(
             action,
             subId,
-            tags(resource, Tags.empty()));
+            tags(resource, additionalTags));
     }
 
     public <T> T recordCallable(HasMetadata resource, Callable<T> action, Consumer<Exception> exceptionHandler) {
         return recorder.recordCallable(
             action,
             "",
+            tags(resource, Tags.empty()),
+            exceptionHandler);
+    }
+
+    public <T> T recordCallable(HasMetadata resource, Callable<T> action, String subId, Consumer<Exception> exceptionHandler) {
+        return recorder.recordCallable(
+            action,
+            subId,
             tags(resource, Tags.empty()),
             exceptionHandler);
     }

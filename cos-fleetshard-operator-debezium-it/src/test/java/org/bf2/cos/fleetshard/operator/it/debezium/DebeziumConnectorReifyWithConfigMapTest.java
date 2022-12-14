@@ -27,7 +27,6 @@ public class DebeziumConnectorReifyWithConfigMapTest extends CucumberQuarkusTest
             final Map<String, String> configs = new HashMap<>();
 
             configs.put("cos.namespace", ns);
-            configs.put("cos.metrics.connector-operand.enabled", "false");
 
             return configs;
         }

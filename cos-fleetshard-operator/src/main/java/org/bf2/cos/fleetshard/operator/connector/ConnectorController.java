@@ -23,7 +23,6 @@ import org.bf2.cos.fleetshard.api.OperatorBuilder;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
-import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
@@ -52,7 +51,6 @@ import io.javaoperatorsdk.operator.api.reconciler.Reconciler;
 import io.javaoperatorsdk.operator.api.reconciler.UpdateControl;
 import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_DELETED;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
@@ -97,14 +95,13 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
     @Inject
     FleetShardClient fleetShard;
     @Inject
-    OperandController wrappedOperandController;
+    OperandController operandController;
 
     @Inject
     MeterRegistry registry;
     @Inject
     FleetShardOperatorConfig config;
 
-    private OperandController operandController;
     private ResourceAwareMetricsRecorder phasesRecorder;
 
     @PostConstruct
@@ -113,17 +110,6 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             config.metrics().recorder(),
             registry,
             config.metrics().baseName() + ".controller.connectors.reconcile.");
-
-        if (config.metrics().connectorOperand().enabled()) {
-            operandController = new OperandControllerMetricsWrapper(
-                wrappedOperandController,
-                ResourceAwareMetricsRecorder.of(
-                    config.metrics().recorder(),
-                    registry,
-                    config.metrics().baseName() + ".controller.event.operators.operand"));
-        } else {
-            operandController = wrappedOperandController;
-        }
     }
 
     @Override
@@ -268,11 +254,6 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
             resource.getStatus().getConnectorStatus().setConditions(Collections.emptyList());
         }
 
-        List<Tag> additionalTags = List.of(
-            Tag.of("cos.connector.id", resource.getSpec().getConnectorId()),
-            Tag.of("cos.deployment.id", resource.getSpec().getDeploymentId()),
-            Tag.of("cos.deployment.resync", Boolean.toString(isResync(resource))));
-
         return phasesRecorder.recordCallable(
             resource,
             () -> {
@@ -303,7 +284,6 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 }
             },
             resource.getStatus().getPhase().getId(),
-            additionalTags,
             e -> {
                 throw new WrappedRuntimeException(
                     "Failure recording method execution (id: "

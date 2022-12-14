@@ -44,7 +44,6 @@ public class CamelConnectorReifyTest extends CucumberQuarkusTest {
             configs.put("cos.operator.camel.exchange-pooling.exchange-factory-capacity", "31");
             configs.put("cos.operator.camel.exchange-pooling.exchange-factory-statistics-enabled", "true");
 
-            configs.put("cos.metrics.connector-operand.enabled", "true");
             configs.put("cos.metrics.recorder.tags.common.foo", "bar");
             configs.put("cos.metrics.recorder.tags.annotations[0]", "my.cos.bf2.org/connector-group");
             configs.put("cos.metrics.recorder.tags.labels[0]", "cos.bf2.org/organisation-id");

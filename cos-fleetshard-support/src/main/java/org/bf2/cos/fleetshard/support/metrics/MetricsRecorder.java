@@ -119,8 +119,6 @@ public class MetricsRecorder {
             var answer = Timer.builder(id + subId + ".time")
                 .tags(tags)
                 .tags(additionalTags)
-                .publishPercentiles(0.3, 0.5, 0.95)
-                .publishPercentileHistogram()
                 .register(registry)
                 .recordCallable(action);
 

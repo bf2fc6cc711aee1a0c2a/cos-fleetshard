@@ -26,13 +26,9 @@ Feature: Camel Connector Metrics
      And the meters has counter "cos.fleetshard.controller.connectors.reconcile.monitor.count" with value greater than or equal to 1
      And the meters has counter with name "cos.fleetshard.controller.connectors.reconcile.monitor.count" and tags:
        | cos.operator.id   | ${cos.operator.id}   |
-       | cos.connector.id  | ${cos.connector.id}  |
-       | cos.deployment.id | ${cos.deployment.id} |
 
      And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.initialization.time"
      And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.augmentation.time"
      And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.monitor.time" and tags:
        | cos.operator.id   | ${cos.operator.id}   |
-       | cos.connector.id  | ${cos.connector.id}  |
-       | cos.deployment.id | ${cos.deployment.id} |
 

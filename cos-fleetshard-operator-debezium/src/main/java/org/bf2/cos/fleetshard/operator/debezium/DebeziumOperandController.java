@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import javax.inject.Singleton;
-
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
@@ -38,7 +36,18 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import io.strimzi.api.kafka.model.*;
+import io.strimzi.api.kafka.model.ClientTlsBuilder;
+import io.strimzi.api.kafka.model.Constants;
+import io.strimzi.api.kafka.model.ExternalConfigurationReferenceBuilder;
+import io.strimzi.api.kafka.model.InlineLoggingBuilder;
+import io.strimzi.api.kafka.model.JmxPrometheusExporterMetricsBuilder;
+import io.strimzi.api.kafka.model.KafkaConnect;
+import io.strimzi.api.kafka.model.KafkaConnectBuilder;
+import io.strimzi.api.kafka.model.KafkaConnectSpecBuilder;
+import io.strimzi.api.kafka.model.KafkaConnector;
+import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
+import io.strimzi.api.kafka.model.KafkaConnectorSpecBuilder;
+import io.strimzi.api.kafka.model.PasswordSecretSourceBuilder;
 import io.strimzi.api.kafka.model.authentication.KafkaClientAuthenticationPlainBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuilder;
@@ -59,7 +68,6 @@ import static org.bf2.cos.fleetshard.operator.debezium.DebeziumOperandSupport.lo
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
 @SuppressFBWarnings("PATH_TRAVERSAL_IN")
-@Singleton
 public class DebeziumOperandController extends AbstractOperandController<DebeziumShardMetadata, ObjectNode, DebeziumDataShape> {
 
     public static final String METRICS_CONFIG_FILENAME = "kafka_connect_metrics.yml";
