@@ -26,14 +26,13 @@ Feature: Metrics With Custom Tags
      And the deployment is in phase "ready"
 
      And the meters has entries with name matching "cos.fleetshard.controller.connectors.reconcile\..*" and tags:
-       | foo                       | bar       |
-       | connector_group           | baz       |
-       | organisation_id           | 20000000  |
-       | pricing_tier              | essential |
+       | foo                       | bar                        |
+       | cos.operator.id           | ${cos.operator.id}         |
+       | cos.operator.type         | connector-operator-it      |
+       | cos.operator.version      | ${cos.operator.version}    |
 
      And the meters has entries with name matching "cos.fleetshard.controller.event.operators.operand\..*" and tags:
-       | foo                       | bar       |
-       | connector_group           | baz       |
-       | organisation_id           | 20000000  |
-       | pricing_tier              | essential |
-
+       | foo                       | bar                        |
+       | cos.operator.id           | ${cos.operator.id}         |
+       | cos.operator.type         | connector-operator-it      |
+       | cos.operator.version      | ${cos.operator.version}    |
