@@ -27,7 +27,6 @@ public class DebeziumConnectorReifyTest extends CucumberQuarkusTest {
             final Map<String, String> configs = new HashMap<>();
 
             configs.put("cos.namespace", ns);
-            configs.put("cos.metrics.connector-operand.enabled", "true");
             configs.put("cos.metrics.recorder.tags.common.foo", "bar");
             configs.put("cos.metrics.recorder.tags.annotations[0]", "my.cos.bf2.org/connector-group");
             configs.put("cos.metrics.recorder.tags.labels[0]", "cos.bf2.org/organisation-id");

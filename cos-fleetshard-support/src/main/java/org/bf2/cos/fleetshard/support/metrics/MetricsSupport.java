@@ -14,20 +14,24 @@ public final class MetricsSupport {
     public static List<Tag> tags(MetricsRecorderConfig config, HasMetadata resource) {
         List<Tag> tags = new ArrayList<>();
 
-        Map<String, String> labels = resource.getMetadata().getLabels();
-        if (labels != null && !labels.isEmpty()) {
-            config.tags().labels()
-                .stream()
-                .flatMap(List::stream)
-                .forEach(key -> metadata2tag(tags, key, labels));
+        if (config.tags().labels().isPresent()) {
+            Map<String, String> labels = resource.getMetadata().getLabels();
+            if (labels != null && !labels.isEmpty()) {
+                config.tags().labels()
+                    .stream()
+                    .flatMap(List::stream)
+                    .forEach(key -> metadata2tag(tags, key, labels));
+            }
         }
 
-        Map<String, String> annotations = resource.getMetadata().getAnnotations();
-        if (annotations != null && !annotations.isEmpty()) {
-            config.tags().annotations()
-                .stream()
-                .flatMap(List::stream)
-                .forEach(key -> metadata2tag(tags, key, annotations));
+        if (config.tags().annotations().isPresent()) {
+            Map<String, String> annotations = resource.getMetadata().getAnnotations();
+            if (annotations != null && !annotations.isEmpty()) {
+                config.tags().annotations()
+                    .stream()
+                    .flatMap(List::stream)
+                    .forEach(key -> metadata2tag(tags, key, annotations));
+            }
         }
 
         return tags;

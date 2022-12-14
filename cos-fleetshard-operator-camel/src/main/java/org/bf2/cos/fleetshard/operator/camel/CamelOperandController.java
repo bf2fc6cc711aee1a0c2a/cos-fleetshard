@@ -6,8 +6,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.inject.Singleton;
-
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.Operator;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpec;
@@ -71,7 +69,6 @@ import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.hasSchem
 import static org.bf2.cos.fleetshard.operator.camel.CamelOperandSupport.lookupBinding;
 import static org.bf2.cos.fleetshard.support.CollectionUtils.asBytesBase64;
 
-@Singleton
 public class CamelOperandController extends AbstractOperandController<CamelShardMetadata, ObjectNode, ObjectNode> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelOperandController.class);
 

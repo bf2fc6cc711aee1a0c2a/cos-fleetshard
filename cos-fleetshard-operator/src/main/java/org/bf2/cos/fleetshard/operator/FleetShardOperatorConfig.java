@@ -84,18 +84,6 @@ public interface FleetShardOperatorConfig {
         @WithDefault("cos.fleetshard")
         String baseName();
 
-        ConnectorOperand connectorOperand();
-
         MetricsRecorderConfig recorder();
-
-        interface ConnectorOperand {
-            /**
-             * Determine if the metrics for {@link ConnectorOperand} are enabled or not.
-             *
-             * @return true if the {@link ConnectorOperand} are enabled.
-             */
-            @WithDefault("false")
-            boolean enabled();
-        }
     }
 }
