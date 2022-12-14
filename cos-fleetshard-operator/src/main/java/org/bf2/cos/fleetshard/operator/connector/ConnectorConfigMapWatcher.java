@@ -21,6 +21,7 @@ public class ConnectorConfigMapWatcher extends AbstractWatcher<ConfigMap> {
     private final ManagedConnectorOperator operator;
     private final EventClient eventClient;
     private final KubernetesClient kubernetesClient;
+    private final ResourceAwareMetricsRecorder recorder;
 
     public ConnectorConfigMapWatcher(
         KubernetesClient kubernetesClient,
@@ -31,6 +32,7 @@ public class ConnectorConfigMapWatcher extends AbstractWatcher<ConfigMap> {
         this.kubernetesClient = kubernetesClient;
         this.operator = operator;
         this.eventClient = eventClient;
+        this.recorder = recorder;
     }
 
     @Override
@@ -52,12 +54,13 @@ public class ConnectorConfigMapWatcher extends AbstractWatcher<ConfigMap> {
             resource.getMetadata().getName());
 
         if (Action.MODIFIED.equals(action)) {
-            String checksum = resource.getData() == null ? null : ConfigMaps.computeChecksum(resource);
-            updateManagedConnectorResource(resource, checksum);
+            this.recorder.record(resource, () -> updateManagedConnectorResource(resource));
         }
     }
 
-    private void updateManagedConnectorResource(ConfigMap resource, String checksum) {
+    private void updateManagedConnectorResource(ConfigMap resource) {
+        String checksum = resource.getData() == null ? null : ConfigMaps.computeChecksum(resource);
+
         ResourceID.fromFirstOwnerReference(resource)
             .filter(rid -> rid.getName() != null && rid.getNamespace().isPresent())
             .ifPresent(resourceID -> {

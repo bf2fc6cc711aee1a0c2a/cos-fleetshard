@@ -25,7 +25,6 @@ import org.bf2.cos.fleetshard.operator.client.FleetShardClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.operator.operand.OperandResourceWatcher;
-import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.exceptions.WrappedRuntimeException;
 import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.ConfigMaps;
@@ -99,8 +98,6 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
     FleetShardClient fleetShard;
     @Inject
     OperandController wrappedOperandController;
-    @Inject
-    EventClient eventClient;
 
     @Inject
     MeterRegistry registry;
