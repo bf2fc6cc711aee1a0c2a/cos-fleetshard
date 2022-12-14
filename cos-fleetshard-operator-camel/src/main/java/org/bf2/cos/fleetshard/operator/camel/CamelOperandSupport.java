@@ -1,7 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
 import java.io.StringReader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -376,8 +376,8 @@ public final class CamelOperandSupport {
     }
 
     private static void addOverrideProperties(ManagedConnector connector,
-                                              ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
-                                              Map<String, String> props) {
+        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
+        Map<String, String> props) {
         // configure the empty config map created for logging
         final ConfigMap configMap = connectorConfiguration.getConfigMap();
         if (configMap == null) {

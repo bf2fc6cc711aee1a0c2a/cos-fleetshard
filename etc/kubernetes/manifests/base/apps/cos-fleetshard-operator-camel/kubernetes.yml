@@ -185,10 +185,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: "metadata.namespace"
-        - name: "SMALLRYE_CONFIG_LOCATIONS"
-          value: "/mnt/app-config/configuration"
         - name: "OVERRIDE_PROPERTIES_LOCATION"
           value: "/mnt/app-config/override/override.properties"
+        - name: "SMALLRYE_CONFIG_LOCATIONS"
+          value: "/mnt/app-config/configuration"
         image: "quay.io/rhoas/cos-fleetshard-operator-camel:latest"
         imagePullPolicy: "Always"
         livenessProbe:
