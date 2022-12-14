@@ -7,6 +7,7 @@ import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +39,14 @@ public class FleetShardProducers {
     @Produces
     @Singleton
     @Unremovable
-    public MeterFilter configureAllRegistries() {
+    public MeterFilter configureAllRegistries(
+        FleetShardOperatorConfig config,
+        ManagedConnectorOperator managedConnectorOperator) {
+
         List<Tag> tags = new ArrayList<>();
+        tags.add(Tag.of("cos.operator.id", managedConnectorOperator.getMetadata().getName()));
+        tags.add(Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()));
+        tags.add(Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
 
         config.metrics().recorder().tags().common().forEach((k, v) -> {
             tags.add(Tag.of(k, v));
@@ -47,4 +54,5 @@ public class FleetShardProducers {
 
         return MeterFilter.commonTags(tags);
     }
+
 }

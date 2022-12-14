@@ -105,21 +105,14 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
     FleetShardOperatorConfig config;
 
     private OperandController operandController;
-    private List<Tag> tags;
     private ResourceAwareMetricsRecorder phasesRecorder;
 
     @PostConstruct
     protected void setUp() {
-        this.tags = List.of(
-            Tag.of("cos.operator.id", managedConnectorOperator.getMetadata().getName()),
-            Tag.of("cos.operator.type", managedConnectorOperator.getSpec().getType()),
-            Tag.of("cos.operator.version", managedConnectorOperator.getSpec().getVersion()));
-
         phasesRecorder = ResourceAwareMetricsRecorder.of(
             config.metrics().recorder(),
             registry,
-            config.metrics().baseName() + ".controller.connectors.reconcile.",
-            tags);
+            config.metrics().baseName() + ".controller.connectors.reconcile.");
 
         if (config.metrics().connectorOperand().enabled()) {
             operandController = new OperandControllerMetricsWrapper(
@@ -127,8 +120,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 ResourceAwareMetricsRecorder.of(
                     config.metrics().recorder(),
                     registry,
-                    config.metrics().baseName() + ".controller.event.operators.operand",
-                    tags));
+                    config.metrics().baseName() + ".controller.event.operators.operand"));
         } else {
             operandController = wrappedOperandController;
         }
@@ -146,8 +138,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 ResourceAwareMetricsRecorder.of(
                     config.metrics().recorder(),
                     registry,
-                    config.metrics().baseName() + ".controller.event.secrets",
-                    tags)));
+                    config.metrics().baseName() + ".controller.event.secrets")));
 
         eventSources.put(
             "_operators",
@@ -158,8 +149,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 ResourceAwareMetricsRecorder.of(
                     config.metrics().recorder(),
                     registry,
-                    config.metrics().baseName() + ".controller.event.operators",
-                    tags)));
+                    config.metrics().baseName() + ".controller.event.operators")));
 
         for (ResourceDefinitionContext res : operandController.getResourceTypes()) {
             final String id = res.getGroup() + "-" + res.getVersion() + "-" + res.getKind();
@@ -173,8 +163,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                     ResourceAwareMetricsRecorder.of(
                         config.metrics().recorder(),
                         registry,
-                        id,
-                        tags)));
+                        id)));
         }
 
         return eventSources;
