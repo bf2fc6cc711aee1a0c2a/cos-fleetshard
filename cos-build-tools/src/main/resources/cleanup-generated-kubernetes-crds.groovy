@@ -42,7 +42,7 @@ Files.list(sources).each {
                 }
                 ver.additionalPrinterColumns.each { col -> {
                     if (col.jsonPath == '.status.deployment.connectorTypeId') {
-                        col.jsonPath == '.spec.deployment.connectorTypeId'
+                        col.jsonPath = '.spec.deployment.connectorTypeId'
                     }
                 }}
             }
