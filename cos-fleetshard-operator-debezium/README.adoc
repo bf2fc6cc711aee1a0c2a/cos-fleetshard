@@ -89,3 +89,23 @@ To change the default values, use the following system properties:
 | ${kubernetes.namespace}
 | the namespace where operator related resources are created
 |===
+
+== Overriding connector log level
+
+* When a debezium connector is created, an empty ConfigMap is created with it.
+* This ConfigMap can be used to override log levels.
+* It is created in the same namespace as the connector, with the name `mctr-<deploymentId>-configmap`.
+* See `org.bf2.cos.fleetshard.support.resources.ConfigMaps.generateConnectorConfigMapId` and it's usages for more details.
+
+One can then use that ConfigMap to override log levels for the connector, by applying the following configuration to the ConfigMap:
+
+[source,yaml]
+----
+apiVersion: v1
+data:
+  override.properties: |-
+    io.debezium=DEBUG
+    org.apache.kafka.connect=DEBUG
+----
+
+Changes made to this ConfigMap triggers a redeployment of the connector with the specified log levels.
