@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.operator.debezium;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,17 +38,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
-import io.strimzi.api.kafka.model.ClientTlsBuilder;
-import io.strimzi.api.kafka.model.Constants;
-import io.strimzi.api.kafka.model.ExternalConfigurationReferenceBuilder;
-import io.strimzi.api.kafka.model.JmxPrometheusExporterMetricsBuilder;
-import io.strimzi.api.kafka.model.KafkaConnect;
-import io.strimzi.api.kafka.model.KafkaConnectBuilder;
-import io.strimzi.api.kafka.model.KafkaConnectSpecBuilder;
-import io.strimzi.api.kafka.model.KafkaConnector;
-import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
-import io.strimzi.api.kafka.model.KafkaConnectorSpecBuilder;
-import io.strimzi.api.kafka.model.PasswordSecretSourceBuilder;
+import io.strimzi.api.kafka.model.*;
 import io.strimzi.api.kafka.model.authentication.KafkaClientAuthenticationPlainBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationBuilder;
 import io.strimzi.api.kafka.model.connect.ExternalConfigurationVolumeSourceBuilder;
@@ -131,6 +122,10 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             .addToData(METRICS_CONFIG_FILENAME, METRICS_CONFIG)
             .build();
 
+        final Map<String, String> loggingMap = new HashMap<>();
+        connectorConfiguration.extractOverrideProperties()
+            .forEach((k, v) -> loggingMap.put(k.toString(), v.toString()));
+
         final KafkaConnectSpecBuilder kcsb = new KafkaConnectSpecBuilder()
             .withReplicas(1)
             .withBootstrapServers(connector.getSpec().getDeployment().getKafka().getUrl())
@@ -189,6 +184,9 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                 .addToRequests("memory", new Quantity("256Mi"))
                 .addToLimits("cpu", new Quantity("500m"))
                 .addToLimits("memory", new Quantity("1Gi"))
+                .build())
+            .withLogging(new InlineLoggingBuilder()
+                .withLoggers(loggingMap)
                 .build());
 
         kcsb.withImage(shardMetadata.getContainerImage());

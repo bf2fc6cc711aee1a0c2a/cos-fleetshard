@@ -83,38 +83,44 @@ public class KafkaConnectSteps extends StepsSupport {
 
     @And("the kc has an entry at path {string} with value {string}")
     public void kc_has_a_path_matching_value(String path, String value) {
-        KafkaConnect res = kafkaConnect();
+        awaiter.untilAsserted(() -> {
+            KafkaConnect res = kafkaConnect();
 
-        assertThat(res)
-            .isNotNull();
-        assertThatJson(JacksonUtil.asJsonNode(res))
-            .inPath(path)
-            .isString()
-            .isEqualTo(ctx.resolvePlaceholders(value));
+            assertThat(res)
+                .isNotNull();
+            assertThatJson(JacksonUtil.asJsonNode(res))
+                .inPath(path)
+                .isString()
+                .isEqualTo(ctx.resolvePlaceholders(value));
+        });
     }
 
     @And("the kc has an entry at path {string} with value {int}")
     public void kc_has_a_path_matching_value(String path, int value) {
-        KafkaConnect res = kafkaConnect();
+        awaiter.untilAsserted(() -> {
+            KafkaConnect res = kafkaConnect();
 
-        assertThat(res)
-            .isNotNull();
-        assertThatJson(JacksonUtil.asJsonNode(res))
-            .inPath(path)
-            .isNumber()
-            .satisfies(bd -> assertThat(bd.intValue()).isEqualTo(value));
+            assertThat(res)
+                .isNotNull();
+            assertThatJson(JacksonUtil.asJsonNode(res))
+                .inPath(path)
+                .isNumber()
+                .satisfies(bd -> assertThat(bd.intValue()).isEqualTo(value));
+        });
     }
 
     @And("the kc has an entry at path {string} with value {bool}")
     public void kc_has_a_path_matching_value(String path, Boolean value) {
-        KafkaConnect res = kafkaConnect();
+        awaiter.untilAsserted(() -> {
+            KafkaConnect res = kafkaConnect();
 
-        assertThat(res)
-            .isNotNull();
-        assertThatJson(JacksonUtil.asJsonNode(res))
-            .inPath(path)
-            .isBoolean()
-            .isEqualTo(value);
+            assertThat(res)
+                .isNotNull();
+            assertThatJson(JacksonUtil.asJsonNode(res))
+                .inPath(path)
+                .isBoolean()
+                .isEqualTo(value);
+        });
     }
 
     @And("the kc has an object at path {string} containing:")

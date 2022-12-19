@@ -1,6 +1,5 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -9,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -35,7 +33,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.Condition;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.sundr.utils.Strings;
@@ -304,7 +301,9 @@ public final class CamelOperandSupport {
                 cfg.exchangePooling().exchangeFactoryStatisticsEnabled());
         }
 
-        addOverrideProperties(connector, connectorConfiguration, props);
+        // add all override properties
+        connectorConfiguration.extractOverrideProperties()
+            .forEach((k, v) -> props.put((String) k, (String) v));
 
         Set<String> defaultTags = new TreeSet<>();
 
@@ -329,43 +328,6 @@ public final class CamelOperandSupport {
         }
 
         return props;
-    }
-
-    private static void addOverrideProperties(ManagedConnector connector,
-        ConnectorConfiguration<ObjectNode, ObjectNode> connectorConfiguration,
-        Map<String, String> props) {
-        // configure the empty config map created for logging
-        final ConfigMap configMap = connectorConfiguration.getConfigMap();
-        if (configMap == null) {
-            return;
-        }
-
-        final Map<String, String> data = configMap.getData();
-        if (data == null || data.isEmpty()) {
-            return;
-        }
-
-        String propertiesAsStr = data.get("override.properties");
-        if (propertiesAsStr == null) {
-            LOGGER.error("Connector ConfigMap can only have properties in a override.properties embedded file."
-                + "Current content will be ignored: {}", data);
-            return;
-        }
-        propertiesAsStr = propertiesAsStr.replace("|-", "");
-
-        Properties contents = new Properties();
-        try {
-            contents.load(new StringReader(propertiesAsStr));
-            LOGGER.info("ConfigMap for connector ({}/{}) contains data: {}",
-                connector.getMetadata().getNamespace(),
-                connector.getMetadata().getName(),
-                StringUtils.normalizeSpace(contents.toString()));
-            contents.forEach((k, v) -> props.put((String) k, (String) v));
-        } catch (Exception e) {
-            LOGGER.error(
-                "Unable to read properties from override.properties embedded in ConfigMap. Properties will get ignored.",
-                e);
-        }
     }
 
     /**

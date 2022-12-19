@@ -35,4 +35,5 @@ public final class ConfigMaps {
 
         return Long.toHexString(crc32.getValue());
     }
+
 }
