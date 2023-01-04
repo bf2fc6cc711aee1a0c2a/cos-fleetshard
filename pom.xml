@@ -23,7 +23,7 @@
         <kubernetes-client.version>5.12.4</kubernetes-client.version>
         <java-operator-sdk.version>3.2.3</java-operator-sdk.version>
         <lombok.version>1.18.24</lombok.version>
-        <quarkus.version>2.13.2.Final</quarkus.version>
+        <quarkus.version>2.15.2.Final</quarkus.version>
         <quarkus-cucumber.version>0.6.0</quarkus-cucumber.version>
         <quarkus-operator-sdk.version>4.0.2</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.9</swagger-annotations.version>
