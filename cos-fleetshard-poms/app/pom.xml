@@ -21,6 +21,7 @@
         <quarkus.container-image.group>rhoas</quarkus.container-image.group>
         <quarkus.container-image.name>${project.artifactId}</quarkus.container-image.name>
         <quarkus.container-image.tag>latest</quarkus.container-image.tag>
+        <quarkus.jib.base-jvm-image>registry.access.redhat.com/ubi8/openjdk-11-runtime:latest</quarkus.jib.base-jvm-image>
     </properties>
 
     <build>
