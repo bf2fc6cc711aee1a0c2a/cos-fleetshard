@@ -1,2 +1,2 @@
 resources:
-  - https://raw.githubusercontent.com/apache/camel-k/v1.8.1/config/crd/bases/camel.apache.org_kameletbindings.yaml
+  - https://raw.githubusercontent.com/apache/camel-k/v1.10.3/config/crd/bases/camel.apache.org_kameletbindings.yaml
