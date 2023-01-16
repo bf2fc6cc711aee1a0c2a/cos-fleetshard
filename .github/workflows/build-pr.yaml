@@ -55,7 +55,7 @@ jobs:
     uses: ./.github/workflows/build-it.yaml
     with:
       module: "cos-fleetshard-sync-it"
-      kubeVersion: 'v1.23.3'
+      kubeVersion: 'v1.25.3'
 
   operator-it:
     needs:
@@ -63,7 +63,7 @@ jobs:
     uses: ./.github/workflows/build-it.yaml
     with:
       module: "cos-fleetshard-operator-it"
-      kubeVersion: 'v1.23.3'
+      kubeVersion: 'v1.25.3'
 
   operator-camel-it:
     needs:
@@ -71,7 +71,7 @@ jobs:
     uses: ./.github/workflows/build-it.yaml
     with:
       module: "cos-fleetshard-operator-camel-it"
-      kubeVersion: 'v1.23.3'
+      kubeVersion: 'v1.25.3'
 
   operator-debezium-it:
     needs:
@@ -79,4 +79,15 @@ jobs:
     uses: ./.github/workflows/build-it.yaml
     with:
       module: "cos-fleetshard-operator-debezium-it"
-      kubeVersion: 'v1.23.3'
+      kubeVersion: 'v1.25.3'
+
+  e2e-install:
+    needs:
+      - sync-it
+      - operator-it
+      - operator-camel-it
+      - operator-debezium-it
+    uses: ./.github/workflows/build-e2e.yaml
+    with:
+      feature: 'Install'
+      kubeVersion: 'v1.25.3'

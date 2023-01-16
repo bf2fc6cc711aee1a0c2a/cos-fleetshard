@@ -1,9 +1,9 @@
-name: Build IT
+name: Build E2E
 
 on:
   workflow_call:
     inputs:
-      module:
+      feature:
         required: true
         type: string
       kubeVersion:
@@ -16,7 +16,7 @@ env:
   MAVEN_ARGS: -V -ntp -Dhttp.keepAlive=false -e
 
 jobs:
-  build-it:
+  build-e2e:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout Project'
@@ -26,7 +26,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-          server-id: github
       - name: "Download Maven Repo"
         uses: actions/download-artifact@v3
         with:
@@ -38,16 +37,23 @@ jobs:
           df -h /
           tar -xzf ../maven-repo.tgz -C ~
           df -h /
-      - name: 'SetUp KinD'
+
+      - name: "Build Container Images"
+        run: |
+          ./mvnw ${MAVEN_ARGS} clean install -DskipTests=true -Pcontainer-build
+
+      - name: 'Install KinD'
         uses: container-tools/kind-action@v2
         with:
           version: "v0.17.0"
           kubectl_version: ${{ inputs.kubeVersion }}
           registry: false
           node_image: kindest/node:${{ inputs.kubeVersion }}
-      - name: 'SetUp Kubernetes Cluster'
+
+      - name: 'SetUp KinD'
         run: |
-          kubectl apply -k ./etc/kubernetes/manifests/overlays/it
-      - name: "Build ${{ inputs.module }}"
+          ./etc/scripts/setup_kind_e2e.sh
+
+      - name: "Run ${{ inputs.features }}"
         run: |
-          ./mvnw ${MAVEN_ARGS} clean install -pl :${{ inputs.module }}
+          ./mvnw ${MAVEN_ARGS} clean install -pl :cos-fleetshard-operator-e2e -Pe2e -Dtest=${{ inputs.feature }}Test
