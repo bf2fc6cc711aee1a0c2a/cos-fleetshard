@@ -8,13 +8,8 @@ commonLabels:
 resources:
   # For the workflow pipeline to work the first resource should be the strimzi operator image.
   - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.32.0/strimzi-cluster-operator-0.32.0.yaml
-#  - 020-RoleBinding-strimzi-cluster-operator.yaml
-#  - 021-ClusterRoleBinding-strimzi-cluster-operator.yaml
-#  - 022-RoleBinding-strimzi-cluster-operator.yaml
-#  - 023-RoleBinding-strimzi-cluster-operator.yaml
-#  - 030-ClusterRoleBinding-strimzi-cluster-operator-kafka-broker-delegation.yaml
-#  - 031-RoleBinding-strimzi-cluster-operator-entity-operator-delegation.yaml
-#  - 033-ClusterRoleBinding-strimzi-cluster-operator-kafka-client-delegation.yaml
+  # enable Strimzi to monitor cluster wide
+  - 023-ClusterRoleBinding-strimzi-cluster-operator.yaml
 patches:
   # the Strimzi-cluster-operator yaml is a convenient way to install the
   # operator, so it includes everything that is needed including the CRDs
