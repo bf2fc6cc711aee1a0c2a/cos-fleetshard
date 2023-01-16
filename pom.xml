@@ -46,6 +46,7 @@
         <impsort-maven-plugin.version>1.8.0</impsort-maven-plugin.version>
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M8</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.0.0-M8</maven-failsafe-plugin.version>
         <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <gmavenplus-plugin.version>2.1.0</gmavenplus-plugin.version>
@@ -81,6 +82,7 @@
         <module>cos-fleetshard-operator-camel-it</module>
         <module>cos-fleetshard-operator-debezium</module>
         <module>cos-fleetshard-operator-debezium-it</module>
+        <module>cos-fleetshard-operator-e2e</module>
     </modules>
 
     <dependencyManagement>
@@ -408,6 +410,13 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven-failsafe-plugin.version}</version>
+                </plugin>
+
+
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>

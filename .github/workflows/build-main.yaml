@@ -32,7 +32,7 @@ jobs:
     strategy:
       matrix:
         kubernetes:
-          - "v1.22.1"
+          - "v1.25.3"
     outputs:
       camel-k-image: ${{ steps.output-camel-k-image.outputs.camel-k-image }}
       camel-k-newtag: ${{ steps.output-camel-k-image.outputs.camel-k-newtag }}
@@ -56,6 +56,7 @@ jobs:
         uses: container-tools/kind-action@v2
         with:
           registry: false
+          version: "v0.17.0"
           node_image: kindest/node:${{ matrix.kubernetes }}
       - name: "SetUp Kubernetes Cluster"
         run: |

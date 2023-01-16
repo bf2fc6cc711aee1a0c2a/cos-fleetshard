@@ -1,0 +1,86 @@
+resources:
+  - ../dev
+
+commonLabels:
+  e2e.cos.bf2.org/group: "cos"
+
+patchesStrategicMerge:
+  - |-
+    $patch: delete
+    apiVersion: camel.apache.org/v1
+    kind: IntegrationPlatform
+    metadata:
+      name: camel-k
+
+patches:
+  #
+  # sync
+  #
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-sync
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: "Never"
+
+  #
+  # strimzi
+  #
+  - target:
+      group: apps
+      kind: Deployment
+      name: strimzi-cluster-operator
+      version: v1
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  #
+  # debezium
+  #
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-operator-debezium
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: "Never"
+
+  #
+  # camel-k
+  #
+  - target:
+      group: apps
+      kind: Deployment
+      name: camel-k-operator
+      version: v1
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+  #
+  # camel
+  #
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: cos-fleetshard-operator-camel
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 0
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: "Never"
