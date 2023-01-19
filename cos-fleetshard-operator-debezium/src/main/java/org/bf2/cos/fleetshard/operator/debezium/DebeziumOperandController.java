@@ -77,6 +77,7 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     public static final String KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX = "-metrics";
     public static final String CLASS_NAME_POSTGRES_CONNECTOR = "io.debezium.connector.postgresql.PostgresConnector";
     public static final String CLASS_NAME_MONGODB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
+    public static final String CLASS_NAME_SQLSERVER_CONNECTOR = "io.debezium.connector.sqlserver.SqlServerConnector";
     public static final String CONFIG_OPTION_POSTGRES_PLUGIN_NAME = "plugin.name";
     public static final String PLUGIN_NAME_PGOUTPUT = "pgoutput";
 
@@ -254,6 +255,10 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             connectorConfig.putAll(databaseStorageConfigs);
         }
 
+        if (isSQLServerConnector(shardMetadata)) {
+            connectorConfig.put("database.encrypt", false);
+        }
+
         final KafkaConnector kctr = new KafkaConnectorBuilder()
             .withApiVersion(Constants.RESOURCE_GROUP_NAME + "/" + KafkaConnector.CONSUMED_VERSION)
             .withMetadata(new ObjectMetaBuilder()
@@ -340,5 +345,9 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
             default:
                 return true;
         }
+    }
+
+    private boolean isSQLServerConnector(DebeziumShardMetadata shardMetadata) {
+        return shardMetadata.getConnectorClass().equals(CLASS_NAME_SQLSERVER_CONNECTOR);
     }
 }
