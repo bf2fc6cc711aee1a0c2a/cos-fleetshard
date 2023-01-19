@@ -289,7 +289,7 @@ public class DebeziumOperandControllerTest {
 
                 if (MYSQL_CLASS.equals(connectorClass)) {
                     // Specifically test database history does not pass secrets directly
-                    assertThat(kctr.getSpec().getConfig().get("database.history.consumer.sasl.jaas.config"))
+                    assertThat(kctr.getSpec().getConfig().get("schema.history.internal.consumer.sasl.jaas.config"))
                         .isEqualTo("org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
                             + CLIENT_ID
                             + "\" password=\"${dir:/opt/kafka/external-configuration/"
@@ -297,7 +297,7 @@ public class DebeziumOperandControllerTest {
                             + ":"
                             + KAFKA_CLIENT_SECRET_KEY
                             + "}\";");
-                    assertThat(kctr.getSpec().getConfig().get("database.history.producer.sasl.jaas.config"))
+                    assertThat(kctr.getSpec().getConfig().get("schema.history.internal.producer.sasl.jaas.config"))
                         .isEqualTo("org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
                             + CLIENT_ID
                             + "\" password=\"${dir:/opt/kafka/external-configuration/"
