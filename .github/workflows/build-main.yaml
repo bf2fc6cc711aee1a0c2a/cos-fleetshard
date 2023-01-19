@@ -60,7 +60,7 @@ jobs:
           node_image: kindest/node:${{ matrix.kubernetes }}
       - name: "SetUp Kubernetes Cluster"
         run: |
-          kubectl apply -k ./etc/kubernetes/manifests/overlays/it
+          kubectl apply -k ./etc/kubernetes/manifests/overlays/it --server-side --force-conflicts
       - name: "Build and push container images"
         id: "images"
         run: |
