@@ -47,7 +47,7 @@ jobs:
           node_image: kindest/node:${{ inputs.kubeVersion }}
       - name: 'SetUp Kubernetes Cluster'
         run: |
-          kubectl apply -k ./etc/kubernetes/manifests/overlays/it
+          kubectl apply -k ./etc/kubernetes/manifests/overlays/it --server-side --force-conflicts
       - name: "Build ${{ inputs.module }}"
         run: |
           ./mvnw ${MAVEN_ARGS} clean install -pl :${{ inputs.module }}
