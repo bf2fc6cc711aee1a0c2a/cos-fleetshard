@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.micrometer.core.instrument.Tags;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CONNECTOR_ID;
@@ -79,7 +78,6 @@ public class ConnectorDeploymentProvisioner {
         for (ConnectorDeployment deployment : deployments) {
             this.recorder.record(
                 () -> provision(deployment),
-                Tags.of(TAG_DEPLOYMENT_ID, deployment.getId()),
                 e -> {
                     LOGGER.error("Failure while trying to provision connector deployment: id={}, revision={}",
                         deployment.getId(),

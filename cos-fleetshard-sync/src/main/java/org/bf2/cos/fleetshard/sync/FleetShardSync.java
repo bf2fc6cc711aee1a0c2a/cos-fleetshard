@@ -8,6 +8,7 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardObservabilityClient;
 import org.bf2.cos.fleetshard.sync.housekeeping.Housekeeper;
+import org.bf2.cos.fleetshard.sync.housekeeping.MetricsHousekeeper;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorClusterStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
@@ -26,6 +27,8 @@ public class FleetShardSync implements Service {
     ConnectorClusterStatusSync clusterStatusSync;
     @Inject
     Housekeeper housekeeping;
+    @Inject
+    MetricsHousekeeper metricsHousekeeping;
 
     @Override
     public void start() throws Exception {
@@ -36,6 +39,7 @@ public class FleetShardSync implements Service {
         startResourcesSync();
 
         housekeeping.start();
+        metricsHousekeeping.start();
     }
 
     @Override
@@ -43,6 +47,7 @@ public class FleetShardSync implements Service {
         stopResourcesSync();
 
         Resources.closeQuietly(housekeeping);
+        Resources.closeQuietly(metricsHousekeeping);
         Resources.closeQuietly(fleetShardClient);
     }
 
