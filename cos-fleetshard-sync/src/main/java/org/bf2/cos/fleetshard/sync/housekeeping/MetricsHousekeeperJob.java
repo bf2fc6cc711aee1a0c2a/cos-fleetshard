@@ -71,10 +71,10 @@ public class MetricsHousekeeperJob implements Job {
             }
         } catch (Exception ex) {
             LOGGER.warn("Error while deleting old connectors metric", ex);
-            
+
             JobExecutionException e = new JobExecutionException(ex);
             // this job will refire immediately
-            e.refireImmediately();
+            e.setRefireImmediately(true);
             throw e;
         }
 
