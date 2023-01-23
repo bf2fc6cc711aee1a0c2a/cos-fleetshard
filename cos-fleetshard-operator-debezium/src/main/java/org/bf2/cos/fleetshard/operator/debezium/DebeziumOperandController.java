@@ -77,8 +77,11 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     public static final String KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX = "-metrics";
     public static final String CLASS_NAME_POSTGRES_CONNECTOR = "io.debezium.connector.postgresql.PostgresConnector";
     public static final String CLASS_NAME_MONGODB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
+    public static final String CLASS_NAME_MYSQL_CONNECTOR = "io.debezium.connector.mysql.MySqlConnector";
     public static final String CLASS_NAME_SQLSERVER_CONNECTOR = "io.debezium.connector.sqlserver.SqlServerConnector";
     public static final String CONFIG_OPTION_POSTGRES_PLUGIN_NAME = "plugin.name";
+    public static final String CONFIG_OPTION_SQLSERVER_DATABASE_ENCRYPT = "database.encrypt";
+    public static final String CONFIG_OPTION_SQLSERVER_DATABASE_TRUST_CERTIFICATE = "database.trustServerCertificate";
     public static final String PLUGIN_NAME_PGOUTPUT = "pgoutput";
 
     static {
@@ -106,6 +109,39 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
     @Override
     public List<ResourceDefinitionContext> getResourceTypes() {
         return RESOURCE_TYPES;
+    }
+
+    private Map<String, Object> getSchemaHistoryConfig(ManagedConnector connector, ServiceAccountSpec serviceAccountSpec) {
+        final Map<String, Object> databaseStorageConfigs = new LinkedHashMap<>();
+
+        databaseStorageConfigs.put("schema.history.internal.kafka.bootstrap.servers",
+            connector.getSpec().getDeployment().getKafka().getUrl());
+        databaseStorageConfigs.put("schema.history.internal.kafka.topic",
+            connector.getMetadata().getName() + "-schema-history");
+        databaseStorageConfigs.put("schema.history.internal.producer.security.protocol", "SASL_SSL");
+        databaseStorageConfigs.put("schema.history.internal.consumer.security.protocol", "SASL_SSL");
+        databaseStorageConfigs.put("schema.history.internal.producer.sasl.mechanism", "PLAIN");
+        databaseStorageConfigs.put("schema.history.internal.consumer.sasl.mechanism", "PLAIN");
+        databaseStorageConfigs.put("schema.history.internal.producer.sasl.jaas.config",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                + serviceAccountSpec.getClientId()
+                + "\" password=\""
+                + "${dir:/opt/kafka/external-configuration/"
+                + EXTERNAL_CONFIG_DIRECTORY
+                + ":"
+                + KAFKA_CLIENT_SECRET_KEY
+                + "}\";");
+        databaseStorageConfigs.put("schema.history.internal.consumer.sasl.jaas.config",
+            "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                + serviceAccountSpec.getClientId()
+                + "\" password=\""
+                + "${dir:/opt/kafka/external-configuration/"
+                + EXTERNAL_CONFIG_DIRECTORY
+                + ":"
+                + KAFKA_CLIENT_SECRET_KEY
+                + "}\";");
+
+        return databaseStorageConfigs;
     }
 
     @Override
@@ -218,45 +254,20 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
                     connectorConfig.put(CONFIG_OPTION_POSTGRES_PLUGIN_NAME, PLUGIN_NAME_PGOUTPUT);
                 }
                 break;
+            case CLASS_NAME_SQLSERVER_CONNECTOR:
+                if (!connectorConfig.containsKey(CONFIG_OPTION_SQLSERVER_DATABASE_ENCRYPT)) {
+                    connectorConfig.put(CONFIG_OPTION_SQLSERVER_DATABASE_ENCRYPT, true);
+                }
+                if (!connectorConfig.containsKey(CONFIG_OPTION_SQLSERVER_DATABASE_TRUST_CERTIFICATE)) {
+                    connectorConfig.put(CONFIG_OPTION_SQLSERVER_DATABASE_TRUST_CERTIFICATE, true);
+                }
+                connectorConfig.putAll(getSchemaHistoryConfig(connector, serviceAccountSpec));
+                break;
+            case CLASS_NAME_MYSQL_CONNECTOR:
+                connectorConfig.putAll(getSchemaHistoryConfig(connector, serviceAccountSpec));
+                break;
             default:
                 break;
-        }
-
-        if (isDatabaseStorageSupported(shardMetadata)) {
-            final Map<String, Object> databaseStorageConfigs = new LinkedHashMap<>();
-
-            databaseStorageConfigs.put("schema.history.internal.kafka.bootstrap.servers",
-                connector.getSpec().getDeployment().getKafka().getUrl());
-            databaseStorageConfigs.put("schema.history.internal.kafka.topic",
-                connector.getMetadata().getName() + "-schema-history");
-            databaseStorageConfigs.put("schema.history.internal.producer.security.protocol", "SASL_SSL");
-            databaseStorageConfigs.put("schema.history.internal.consumer.security.protocol", "SASL_SSL");
-            databaseStorageConfigs.put("schema.history.internal.producer.sasl.mechanism", "PLAIN");
-            databaseStorageConfigs.put("schema.history.internal.consumer.sasl.mechanism", "PLAIN");
-            databaseStorageConfigs.put("schema.history.internal.producer.sasl.jaas.config",
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                    + serviceAccountSpec.getClientId()
-                    + "\" password=\""
-                    + "${dir:/opt/kafka/external-configuration/"
-                    + EXTERNAL_CONFIG_DIRECTORY
-                    + ":"
-                    + KAFKA_CLIENT_SECRET_KEY
-                    + "}\";");
-            databaseStorageConfigs.put("schema.history.internal.consumer.sasl.jaas.config",
-                "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                    + serviceAccountSpec.getClientId()
-                    + "\" password=\""
-                    + "${dir:/opt/kafka/external-configuration/"
-                    + EXTERNAL_CONFIG_DIRECTORY
-                    + ":"
-                    + KAFKA_CLIENT_SECRET_KEY
-                    + "}\";");
-
-            connectorConfig.putAll(databaseStorageConfigs);
-        }
-
-        if (isSQLServerConnector(shardMetadata)) {
-            connectorConfig.put("database.encrypt", false);
         }
 
         final KafkaConnector kctr = new KafkaConnectorBuilder()
@@ -337,17 +348,4 @@ public class DebeziumOperandController extends AbstractOperandController<Debeziu
         return kctr && kc && secret;
     }
 
-    private boolean isDatabaseStorageSupported(DebeziumShardMetadata shardMetadata) {
-        switch (shardMetadata.getConnectorClass()) {
-            case CLASS_NAME_MONGODB_CONNECTOR:
-            case CLASS_NAME_POSTGRES_CONNECTOR:
-                return false;
-            default:
-                return true;
-        }
-    }
-
-    private boolean isSQLServerConnector(DebeziumShardMetadata shardMetadata) {
-        return shardMetadata.getConnectorClass().equals(CLASS_NAME_SQLSERVER_CONNECTOR);
-    }
 }
