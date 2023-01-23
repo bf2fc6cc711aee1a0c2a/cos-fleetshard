@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.sync.resources;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -109,6 +110,12 @@ public class ConnectorStatusUpdater {
 
         if (gauge != null) {
             registry.remove(gauge);
+        }
+
+        // Adding deletion timestamp for metric housekeeping
+        if (CONNECTOR_STATE_DELETED == connectorState) {
+            LOGGER.info("Adding current timestamp to the deleted connector");
+            tags.add(Tag.of("deletion_timestamp", Instant.now().toString()));
         }
 
         Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
