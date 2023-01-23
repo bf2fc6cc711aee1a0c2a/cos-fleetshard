@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class MetricsHousekeeperJob implements Job {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetricsHousekeeperJob.class);
 
     @Override
-    public void execute(JobExecutionContext context) {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
 
         LOGGER.info("Executing Metrics housekeeping");
 
@@ -70,6 +71,11 @@ public class MetricsHousekeeperJob implements Job {
             }
         } catch (Exception ex) {
             LOGGER.warn("Error while deleting old connectors metric", ex);
+            
+            JobExecutionException e = new JobExecutionException(ex);
+            // this job will refire immediately
+            e.refireImmediately();
+            throw e;
         }
 
     }
