@@ -1,9 +1,13 @@
 /**
-* {{description}}{{^description}}{{classname}}{{/description}}{{#isDeprecated}}
-    * @deprecated{{/isDeprecated}}
-*/{{#isDeprecated}}
-    @Deprecated{{/isDeprecated}}{{#description}}
-    @ApiModel(description = "{{{.}}}"){{/description}}
+ * {{description}}{{^description}}{{classname}}{{/description}}{{#isDeprecated}}
+ * @deprecated{{/isDeprecated}}
+ */{{#isDeprecated}}
+@Deprecated{{/isDeprecated}}
+{{#swagger1AnnotationLibrary}}
+{{#description}}
+@ApiModel(description = "{{{.}}}")
+{{/description}}
+{{/swagger1AnnotationLibrary}}
 {{#jackson}}
     @JsonPropertyOrder({
     {{#vars}}
@@ -188,7 +192,10 @@ public {{classname}}() { {{#parent}}{{#parcelableModel}}
     {{#jsonb}}
         @JsonbProperty("{{baseName}}")
     {{/jsonb}}
-    {{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  @ApiModelProperty({{#example}}example = "{{{.}}}", {{/example}}{{#required}}required = {{required}}, {{/required}}value = "{{{description}}}")
+    {{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  
+    {{#swagger1AnnotationLibrary}}
+    @ApiModelProperty({{#example}}example = "{{{.}}}", {{/example}}{{#required}}required = {{required}}, {{/required}}value = "{{{description}}}")
+    {{/swagger1AnnotationLibrary}}
     {{#vendorExtensions.x-extra-annotation}}
         {{{vendorExtensions.x-extra-annotation}}}
     {{/vendorExtensions.x-extra-annotation}}
