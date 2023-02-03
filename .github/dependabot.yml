@@ -15,6 +15,7 @@ updates:
       - dependency-name: io.cucumber:cucumber-java8
       - dependency-name: io.quarkus:*
       - dependency-name: io.quarkiverse.operatorsdk:*
+      - dependency-name: org.openapitools:openapi-generator-maven-plugin:*
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
