@@ -135,9 +135,8 @@ public class ConnectorNamespaceProvisioner {
                     Resources.setLabels(namespace, Resources.LABEL_NAMESPACE_STATE_FORCED, "true");
 
                     fleetShard.getKubernetesClient()
-                        .namespaces()
-                        .withName(namespace.getMetadata().getName())
-                        .replace(namespace);
+                        .resource(namespace)
+                        .replace();
                 } catch (Exception e) {
                     LOGGER.warn("Error marking na {} for deletion (sync)", namespace.getMetadata().getName(), e);
                 }
@@ -202,9 +201,10 @@ public class ConnectorNamespaceProvisioner {
             quota,
             Resources.LABEL_UOW, uow);
 
-        fleetShard.getKubernetesClient().resourceQuotas()
+        fleetShard.getKubernetesClient()
+            .resource(quota)
             .inNamespace(fleetShard.generateNamespaceId(connectorNamespace.getId()))
-            .createOrReplace(quota);
+            .createOrReplace();
     }
 
     private void createResourceLimit(String uow, ConnectorNamespaceDeployment connectorNamespace) {
@@ -272,9 +272,10 @@ public class ConnectorNamespaceProvisioner {
             limits,
             Resources.LABEL_UOW, uow);
 
-        fleetShard.getKubernetesClient().limitRanges()
+        fleetShard.getKubernetesClient()
+            .resource(limits)
             .inNamespace(fleetShard.generateNamespaceId(connectorNamespace.getId()))
-            .createOrReplace(limits);
+            .createOrReplace();
     }
 
     public void provision(ConnectorNamespaceDeployment connectorNamespace) {

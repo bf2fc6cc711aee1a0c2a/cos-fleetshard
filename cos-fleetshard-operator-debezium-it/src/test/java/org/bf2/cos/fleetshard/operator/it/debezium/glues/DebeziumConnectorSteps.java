@@ -19,8 +19,8 @@ public class DebeziumConnectorSteps extends StepsSupport {
         var connector = Serialization.jsonMapper().createObjectNode();
         connector.put("database.dbname", "postgres");
         connector.put("database.hostname", "debezium-postgres");
-        connector.with("database.password").put("kind", "base64");
-        connector.with("database.password").put("value", "cG9zdGdyZXM=");
+        connector.withObject("/database.password").put("kind", "base64");
+        connector.withObject("/database.password").put("value", "cG9zdGdyZXM=");
         connector.put("database.server.name", "dbz_pg");
         connector.put("database.user", "postgres");
         connector.put("slot.drop.on.stop", "true");
@@ -37,7 +37,7 @@ public class DebeziumConnectorSteps extends StepsSupport {
     @And("with Debezium connector using {string} datashape")
     public void with_debezium_connector_using_datashape(String dataShape) {
         var connector = baseConfig();
-        connector.with("data_shape").put("key", dataShape).put("value", dataShape);
+        connector.withObject("/data_shape").put("key", dataShape).put("value", dataShape);
         Secrets.set(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR, connector);
 
         var meta = Serialization.jsonMapper().createObjectNode();

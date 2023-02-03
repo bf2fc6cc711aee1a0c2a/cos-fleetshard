@@ -109,10 +109,9 @@ public class ConnectorDeletedTest extends SyncTestSupport {
             .build());
 
         kubernetesClient
-            .resources(ManagedConnector.class)
+            .resource(connector)
             .inNamespace(ns)
-            .withName(connector.getMetadata().getName())
-            .replaceStatus(connector);
+            .replaceStatus();
 
         untilAsserted(() -> {
             server.verify(putRequestedFor(urlEqualTo(statusUrl))

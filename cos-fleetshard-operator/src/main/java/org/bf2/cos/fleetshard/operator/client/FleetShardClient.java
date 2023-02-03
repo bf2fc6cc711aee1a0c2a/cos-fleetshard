@@ -56,9 +56,9 @@ public class FleetShardClient {
     }
 
     public ManagedConnector create(ManagedConnector connector) {
-        return kubernetesClient.resources(ManagedConnector.class)
+        return kubernetesClient.resource(connector)
             .inNamespace(connector.getMetadata().getNamespace())
-            .createOrReplace(connector);
+            .createOrReplace();
     }
 
     public ManagedConnector edit(String name, Consumer<ManagedConnector> consumer) {
@@ -68,8 +68,8 @@ public class FleetShardClient {
     }
 
     public Secret create(Secret secret) {
-        return kubernetesClient.secrets()
+        return kubernetesClient.resource(secret)
             .inNamespace(secret.getMetadata().getNamespace())
-            .createOrReplace(secret);
+            .createOrReplace();
     }
 }

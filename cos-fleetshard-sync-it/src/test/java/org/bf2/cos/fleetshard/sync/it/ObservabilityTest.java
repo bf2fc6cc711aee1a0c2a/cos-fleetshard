@@ -134,9 +134,9 @@ public class ObservabilityTest extends SyncTestSupport {
                 .withData(secretData())
                 .build();
 
-            client.secrets()
+            client.resource(productionSecret)
                 .inNamespace(namespace)
-                .createOrReplace(productionSecret);
+                .createOrReplace();
         }
 
     }

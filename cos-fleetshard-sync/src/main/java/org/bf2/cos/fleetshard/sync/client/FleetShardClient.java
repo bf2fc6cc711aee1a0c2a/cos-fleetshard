@@ -172,8 +172,8 @@ public class FleetShardClient implements Service {
     }
 
     public Namespace createNamespace(Namespace namespace) {
-        return this.kubernetesClient.namespaces()
-            .createOrReplace(namespace);
+        return this.kubernetesClient.resource(namespace)
+            .createOrReplace();
     }
 
     // *************************************
@@ -183,10 +183,9 @@ public class FleetShardClient implements Service {
     // *************************************
 
     public Secret createSecret(Secret secret) {
-        return this.kubernetesClient.secrets()
+        return this.kubernetesClient.resource(secret)
             .inNamespace(secret.getMetadata().getNamespace())
-            .withName(secret.getMetadata().getName())
-            .createOrReplace(secret);
+            .createOrReplace();
     }
 
     public Optional<Secret> getSecret(ConnectorDeployment deployment) {
@@ -290,10 +289,9 @@ public class FleetShardClient implements Service {
     }
 
     public ManagedConnector createConnector(ManagedConnector connector) {
-        return kubernetesClient.resources(ManagedConnector.class)
+        return kubernetesClient.resource(connector)
             .inNamespace(connector.getMetadata().getNamespace())
-            .withName(connector.getMetadata().getName())
-            .createOrReplace(connector);
+            .createOrReplace();
     }
 
     public String generateConnectorId(String namespaceId) {
@@ -338,10 +336,9 @@ public class FleetShardClient implements Service {
                     .build())
                 .build();
 
-            return kubernetesClient.resources(ManagedConnectorCluster.class)
+            return kubernetesClient.resource(cluster)
                 .inNamespace(this.config.namespace())
-                .withName(cluster.getMetadata().getName())
-                .createOrReplace(cluster);
+                .createOrReplace();
         });
     }
 }

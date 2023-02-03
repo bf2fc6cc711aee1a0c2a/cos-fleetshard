@@ -28,11 +28,11 @@ public class CamelConnectorSteps extends StepsSupport {
         meta.put("connector_image", "quay.io/lburgazzoli/mci:0.1.2-log-sink-0.1");
         meta.put("connector_type", "sink");
 
-        meta.with("kamelets").with("adapter")
+        meta.withObject("/kamelets/adapter")
             .put("name", "log-sink")
             .put("prefix", "log");
 
-        meta.with("kamelets").with("kafka")
+        meta.withObject("/kamelets/kafka")
             .put("name", "managed-kafka-source")
             .put("prefix", "kafka");
 
@@ -48,7 +48,7 @@ public class CamelConnectorSteps extends StepsSupport {
         final String type = entries.getOrDefault(typeKey, "log");
 
         var connector = Secrets.extract(ctx.secret(), Secrets.SECRET_ENTRY_CONNECTOR);
-        var errorNode = connector.with("error_handler").with(type);
+        var errorNode = connector.withObject("/error_handler").withObject("/" + type);
         for (String k : entries.keySet()) {
             if (typeKey.equals(k)) {
                 continue;

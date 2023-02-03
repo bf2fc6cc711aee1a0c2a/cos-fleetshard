@@ -170,7 +170,7 @@ public class ConnectorProvisionerTest {
         //
         final ConnectorDeployment newDeployment = createDeployment(0, d -> {
             d.getSpec().getKafka().setUrl("my-kafka.acme.com:218");
-            ((ObjectNode) d.getSpec().getConnectorSpec()).with("connector").put("foo", "connector-baz");
+            ((ObjectNode) d.getSpec().getConnectorSpec()).withObject("/connector").put("foo", "connector-baz");
             ((ObjectNode) d.getSpec().getShardMetadata()).put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
         });
 
@@ -290,7 +290,7 @@ public class ConnectorProvisionerTest {
         final ConnectorDeployment newDeployment = createDeployment(0, d -> {
             d.getMetadata().setResourceVersion(1L);
             d.getSpec().getKafka().setUrl("my-kafka.acme.com:218");
-            ((ObjectNode) d.getSpec().getConnectorSpec()).with("connector").put("foo", "connector-baz");
+            ((ObjectNode) d.getSpec().getConnectorSpec()).withObject("/connector").put("foo", "connector-baz");
             ((ObjectNode) d.getSpec().getShardMetadata()).put("connector_image", "quay.io/mcs_dev/aws-s3-sink:0.1.0");
         });
 

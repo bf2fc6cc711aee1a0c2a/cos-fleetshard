@@ -91,8 +91,8 @@ public final class ConnectorTestSupport {
             deploymentRevision,
             () -> {
                 ObjectNode answer = Serialization.jsonMapper().createObjectNode();
-                answer.with("connector").put("foo", "connector-foo");
-                answer.with("kafka").put("topic", "kafka-foo");
+                answer.withObject("/connector").put("foo", "connector-foo");
+                answer.withObject("/kafka").put("topic", "kafka-foo");
                 return answer;
             },
             () -> {

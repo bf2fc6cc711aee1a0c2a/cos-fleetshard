@@ -79,10 +79,9 @@ public class FleetShardObservabilityClient {
             obsSecret.setMetadata(meta);
 
             obsSecret.setData(fromSecret.getData());
-            kubernetesClient.secrets()
+            kubernetesClient.resource(obsSecret)
                 .inNamespace(obsSecret.getMetadata().getNamespace())
-                .withName(obsSecret.getMetadata().getName())
-                .createOrReplace(obsSecret);
+                .createOrReplace();
         } else {
             LOGGER.warn("Observatorium secret for environment {} not found.", config.observability().environment());
         }
@@ -155,7 +154,10 @@ public class FleetShardObservabilityClient {
 
         observability.setSpec(spec);
 
-        getObservabilityFilter().createOrReplace(observability);
+        kubernetesClient.resource(observability)
+            .inNamespace(config.namespace())
+            .createOrReplace();
+
         LOGGER.info("Observability resource created");
     }
 

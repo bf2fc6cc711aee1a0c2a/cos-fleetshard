@@ -573,9 +573,9 @@ public class ConnectorSteps {
             uow);
 
         ctx.secret(
-            kubernetesClient.resources(Secret.class)
+            kubernetesClient.resource(ctx.secret())
                 .inNamespace(ctx.connectorsNamespace())
-                .createOrReplace(ctx.secret()));
+                .createOrReplace());
     }
 
     public void deploy_connector_with_uow(String uow) {
@@ -600,9 +600,9 @@ public class ConnectorSteps {
         ctx.connector().getSpec().getDeployment().setUnitOfWork(uow);
 
         ctx.connector(
-            kubernetesClient.resources(ManagedConnector.class)
+            kubernetesClient.resource(ctx.connector())
                 .inNamespace(ctx.connectorsNamespace())
-                .createOrReplace(ctx.connector()));
+                .createOrReplace());
     }
 
     private Resource<ConfigMap> getConfigMapFilter() {

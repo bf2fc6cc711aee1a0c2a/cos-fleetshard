@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
-import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
@@ -44,16 +43,17 @@ public class ClusterStatusUpdaterWithOperatorTest extends SyncTestSupport {
         final String statusUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/" + config.cluster().id() + "/status";
         final String operatorId = uid();
 
-        kubernetesClient.resources(ManagedConnectorOperator.class)
-            .inNamespace(ns)
-            .create(new ManagedConnectorOperatorBuilder()
+        kubernetesClient.resource(
+            new ManagedConnectorOperatorBuilder()
                 .withNewMetadata().withName(operatorId).endMetadata()
                 .withSpec(new ManagedConnectorOperatorSpecBuilder()
                     .withType("operator-type")
                     .withVersion("999")
                     .withRuntime("operator-runtime")
                     .build())
-                .build());
+                .build())
+            .inNamespace(ns)
+            .create();
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)

@@ -190,8 +190,8 @@ public class PaginationTest extends SyncTestSupport {
                                 .clientId(KAFKA_CLIENT_ID)
                                 .clientSecret(KAFKA_CLIENT_SECRET));
                         spec.connectorSpec(node(n -> {
-                            n.with("connector").put("foo", "connector-bar");
-                            n.with("kafka").put("topic", "kafka-bar");
+                            n.withObject("/connector").put("foo", "connector-bar");
+                            n.withObject("/kafka").put("topic", "kafka-bar");
                         }));
                         spec.shardMetadata(node(n -> {
                             n.put("connector_type", "sink");
@@ -234,8 +234,8 @@ public class PaginationTest extends SyncTestSupport {
                                 .clientId(KAFKA_CLIENT_ID)
                                 .clientSecret(KAFKA_CLIENT_SECRET));
                         spec.connectorSpec(node(n -> {
-                            n.with("connector").put("foo", "connector-bar");
-                            n.with("kafka").put("topic", "kafka-bar");
+                            n.withObject("/connector").put("foo", "connector-bar");
+                            n.withObject("/kafka").put("topic", "kafka-bar");
                         }));
                         spec.shardMetadata(node(n -> {
                             n.put("connector_type", "sink");

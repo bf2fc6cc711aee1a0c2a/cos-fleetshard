@@ -151,8 +151,8 @@ public class ConnectorProvisionerWithNamespacesTest extends SyncTestSupport {
                                     .clientId(KAFKA_CLIENT_ID)
                                     .clientSecret(KAFKA_CLIENT_SECRET));
                             spec.connectorSpec(node(n -> {
-                                n.with("connector").put("foo", "connector-foo");
-                                n.with("kafka").put("topic", "kafka-foo");
+                                n.withObject("/connector").put("foo", "connector-foo");
+                                n.withObject("/kafka").put("topic", "kafka-foo");
                             }));
                             spec.shardMetadata(node(n -> {
                                 n.put("connector_type", "sink");

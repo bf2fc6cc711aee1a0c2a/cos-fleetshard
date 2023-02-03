@@ -76,9 +76,9 @@ public class ManagedConnectorOperatorSteps {
     public void deploy_a_managedConnectorOperator(Map<String, String> entry) {
         a_managedConnectorOperator(entry);
         ctx.managedConnectorOperator(
-            kubernetesClient.resources(ManagedConnectorOperator.class)
+            kubernetesClient.resource(ctx.managedConnectorOperator())
                 .inNamespace(ctx.namespace())
-                .createOrReplace(ctx.managedConnectorOperator()));
+                .createOrReplace());
     }
 
     @Then("the ManagedConnectorOperator with name {string} exists")

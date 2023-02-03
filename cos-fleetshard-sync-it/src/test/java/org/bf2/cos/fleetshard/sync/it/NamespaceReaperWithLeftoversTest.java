@@ -84,9 +84,9 @@ public class NamespaceReaperWithLeftoversTest extends NamespaceReaperTestSupport
             .build();
 
         kubernetesClient
-            .resources(ManagedConnector.class)
+            .resource(connector)
             .inNamespace(connector.getMetadata().getNamespace())
-            .create(connector);
+            .create();
 
         untilAsserted(() -> {
             assertThat(fleetShardClient.getAllConnectors()).isNotEmpty();

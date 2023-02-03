@@ -114,10 +114,9 @@ public class EventClient {
         }
 
         try {
-            kubernetesClient.v1()
-                .events()
+            kubernetesClient.resource(event)
                 .inNamespace(event.getMetadata().getNamespace())
-                .create(event);
+                .create();
         } catch (Exception e) {
             LOGGER.warn("Error while broadcasting events", e);
         }
