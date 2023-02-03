@@ -7,7 +7,7 @@ commonLabels:
  
 resources:
   # For the workflow pipeline to work the first resource should be the strimzi operator image.
-  - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.32.0/strimzi-cluster-operator-0.32.0.yaml
+  - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.33.0/strimzi-cluster-operator-0.33.0.yaml
   # enable Strimzi to monitor cluster wide
   - 023-ClusterRoleBinding-strimzi-cluster-operator.yaml
 patches:
