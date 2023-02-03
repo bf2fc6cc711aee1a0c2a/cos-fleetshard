@@ -17,8 +17,8 @@ import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.openshift.api.model.config.v1.ClusterVersion;
 import io.fabric8.openshift.api.model.config.v1.ClusterVersionBuilder;
 import io.fabric8.openshift.api.model.config.v1.ClusterVersionSpecBuilder;
@@ -100,7 +100,7 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
             final String clusterId = UUID.randomUUID().toString();
             final String clusterVersion = "4.10.1";
 
-            try (KubernetesClient client = new DefaultKubernetesClient()) {
+            try (KubernetesClient client = new KubernetesClientBuilder().build()) {
                 ClusterVersion res = new ClusterVersionBuilder()
                     .withMetadata(new ObjectMetaBuilder()
                         .withName("version")
@@ -110,9 +110,8 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
                         .build())
                     .build();
 
-                client.resources(ClusterVersion.class)
-                    .withName("version")
-                    .createOrReplace(res);
+                client.resource(res)
+                    .createOrReplace();
 
                 client.resources(ClusterVersion.class)
                     .withName("version").editStatus(cv -> {
@@ -141,7 +140,7 @@ public class ClusterStatusUpdaterTest extends SyncTestSupport {
 
         @Override
         public void stop() {
-            try (KubernetesClient client = new DefaultKubernetesClient()) {
+            try (KubernetesClient client = new KubernetesClientBuilder().build()) {
                 client.resources(ClusterVersion.class)
                     .withName("version")
                     .delete();

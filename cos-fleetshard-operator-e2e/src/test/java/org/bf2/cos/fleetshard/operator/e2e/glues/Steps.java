@@ -318,7 +318,7 @@ public class Steps {
                 Base64.getEncoder().encodeToString(v.getBytes(StandardCharsets.UTF_8)));
         });
 
-        kubernetesClient.secrets().createOrReplace(secret);
+        kubernetesClient.resource(secret).createOrReplace();
     }
 
     @Then("a secret {string} with key {string} and data:")
@@ -363,7 +363,7 @@ public class Steps {
                 Base64.getEncoder().encodeToString(v.getBytes(StandardCharsets.UTF_8)));
         });
 
-        kubernetesClient.secrets().createOrReplace(secret);
+        kubernetesClient.resource(secret).createOrReplace();
     }
 
     @Then("delete secret {string}")
@@ -402,7 +402,7 @@ public class Steps {
             configmap.getData().put(k, v);
         });
 
-        kubernetesClient.configMaps().createOrReplace(configmap);
+        kubernetesClient.resource(configmap).createOrReplace();
     }
 
     @Given("a configmap {string} with key {string} and data:")
@@ -438,7 +438,7 @@ public class Steps {
             throw new RuntimeException(e);
         }
 
-        kubernetesClient.configMaps().createOrReplace(configmap);
+        kubernetesClient.resource(configmap).createOrReplace();
     }
 
     @Then("delete configmap {string}")

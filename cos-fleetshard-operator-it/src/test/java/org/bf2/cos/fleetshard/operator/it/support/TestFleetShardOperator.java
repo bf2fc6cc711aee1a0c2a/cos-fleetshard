@@ -35,32 +35,35 @@ public class TestFleetShardOperator extends FleetShardOperator {
 
         if (!existsNamespace(namespace)) {
             LOGGER.info("Creating namespace {}", namespace);
-            client.namespaces().create(
+            client.resource(
                 new NamespaceBuilder()
                     .withNewMetadata()
                     .withName(namespace)
                     .endMetadata()
-                    .build());
+                    .build())
+                .create();
         }
 
         if (!existsNamespace(cosFeatureContext.getConnectorsNamespace())) {
             LOGGER.info("Creating namespace {}", namespace);
-            client.namespaces().create(
+            client.resource(
                 new NamespaceBuilder()
                     .withNewMetadata()
                     .withName(cosFeatureContext.getConnectorsNamespace())
                     .endMetadata()
-                    .build());
+                    .build())
+                .create();
         }
 
         if (!existsNamespace(cosFeatureContext.getOperatorsNamespace())) {
             LOGGER.info("Creating namespace {}", namespace);
-            client.namespaces().create(
+            client.resource(
                 new NamespaceBuilder()
                     .withNewMetadata()
                     .withName(cosFeatureContext.getOperatorsNamespace())
                     .endMetadata()
-                    .build());
+                    .build())
+                .create();
         }
 
         super.start();

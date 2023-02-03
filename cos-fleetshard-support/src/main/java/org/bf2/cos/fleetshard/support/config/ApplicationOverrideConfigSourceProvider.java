@@ -21,7 +21,7 @@ public class ApplicationOverrideConfigSourceProvider implements ConfigSourceProv
         String overridePropertiesLocation = System.getenv(OVERRIDE_PROPERTIES_LOCATION);
         if (overridePropertiesLocation == null) {
             LOGGER.info("Properties Override support is disabled since OVERRIDE_PROPERTIES_LOCATION env var was not set.");
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         File f = new File(overridePropertiesLocation);
         if (f.exists() && !f.isDirectory()) {
@@ -38,6 +38,6 @@ public class ApplicationOverrideConfigSourceProvider implements ConfigSourceProv
             LOGGER.warn("OVERRIDE_PROPERTIES_LOCATION env var refer to a location not existent or that is not a file: {}",
                 overridePropertiesLocation);
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 }

@@ -470,11 +470,11 @@ public final class CamelOperandSupport {
         var dlq = errorHandler.putObject(ERROR_HANDLER_SINK_CHANNEL_TYPE);
         var endpoint = dlq.putObject("endpoint");
 
-        endpoint.with("ref")
+        endpoint.withObject("/ref")
             .put("kind", Kamelet.RESOURCE_KIND)
             .put("apiVersion", Kamelet.RESOURCE_API_VERSION)
             .put("name", ERROR_HANDLER_DEAD_LETTER_CHANNEL_KAMELET);
-        endpoint.with("properties")
+        endpoint.withObject("/properties")
             .put("user", SA_CLIENT_ID_PLACEHOLDER)
             .put("password", SA_CLIENT_SECRET_PLACEHOLDER)
             .put("bootstrapServers", connector.getSpec().getDeployment().getKafka().getUrl())

@@ -52,12 +52,13 @@ public class TestFleetShardSync extends FleetShardSync {
     public void start() throws Exception {
         LOGGER.info("Creating namespace {}", namespace);
 
-        client.namespaces().create(
+        client.resource(
             new NamespaceBuilder()
                 .withNewMetadata()
                 .withName(namespace)
                 .endMetadata()
-                .build());
+                .build())
+            .create();
 
         Secret addonPullSecret = new Secret();
 
@@ -68,22 +69,26 @@ public class TestFleetShardSync extends FleetShardSync {
         addonPullSecret.setType(ADDON_SECRET_TYPE);
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
 
-        client.secrets().inNamespace(namespace).create(addonPullSecret);
+        client.resource(addonPullSecret).inNamespace(namespace).create();
 
         addonPullSecretMetadata.setName(CUSTOM_ADDON_PULL_SECRET_NAME);
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
 
-        client.secrets().inNamespace(namespace).create(addonPullSecret);
+        client.resource(addonPullSecret).inNamespace(namespace).create();
 
         secretsToCopy.ifPresent(
             secretsNames -> secretsNames.forEach(
-                secretName -> client.secrets().inNamespace(namespace).create(
-                    new SecretBuilder().withMetadata(new ObjectMetaBuilder().withName(secretName).build()).build())));
+                secretName -> client.resource(
+                    new SecretBuilder().withMetadata(new ObjectMetaBuilder().withName(secretName).build()).build())
+                    .inNamespace(namespace)
+                    .create()));
 
         configMapsToCopy.ifPresent(
             configMapNames -> configMapNames.forEach(
-                configMapName -> client.configMaps().inNamespace(namespace).create(
-                    new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName(configMapName).build()).build())));
+                configMapName -> client.resource(
+                    new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName(configMapName).build()).build())
+                    .inNamespace(namespace)
+                    .create()));
 
         beforeStart();
 
@@ -104,7 +109,7 @@ public class TestFleetShardSync extends FleetShardSync {
 
             for (Namespace ns : client.namespaces().withLabel(LABEL_CLUSTER_ID, clusterId).list().getItems()) {
                 LOGGER.info("Deleting namespace {}", ns);
-                client.namespaces().delete(ns);
+                client.resource(ns).delete();
             }
         }
     }

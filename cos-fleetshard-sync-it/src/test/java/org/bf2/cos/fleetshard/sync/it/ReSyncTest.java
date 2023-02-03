@@ -7,7 +7,6 @@ import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.OperatorSelectorBuilder;
@@ -24,7 +23,6 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.ContentTypeHeader;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -60,27 +58,32 @@ public class ReSyncTest extends SyncTestSupport {
         final String namespacesUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces";
         final String deploymentsUrl = "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments";
 
-        kubernetesClient.resources(Namespace.class).createOrReplace(new NamespaceBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(Namespaces.generateNamespaceId(DEPLOYMENT_ID))
-                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
-                .addToAnnotations(ANNOTATION_NAMESPACE_RESOURCE_VERSION, "20")
+        kubernetesClient.resource(
+            new NamespaceBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(Namespaces.generateNamespaceId(DEPLOYMENT_ID))
+                    .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+                    .addToAnnotations(ANNOTATION_NAMESPACE_RESOURCE_VERSION, "20")
+                    .build())
                 .build())
-            .build());
+            .createOrReplace();
 
-        kubernetesClient.resources(ManagedConnector.class).inNamespace(ns).createOrReplace(new ManagedConnectorBuilder()
-            .withMetadata(new ObjectMetaBuilder()
-                .withName(Connectors.generateConnectorId(DEPLOYMENT_ID))
-                .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+        kubernetesClient.resource(
+            new ManagedConnectorBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName(Connectors.generateConnectorId(DEPLOYMENT_ID))
+                    .addToLabels(LABEL_CLUSTER_ID, config.cluster().id())
+                    .build())
+                .withSpec(new ManagedConnectorSpecBuilder()
+                    .withDeployment(new DeploymentSpecBuilder().withDeploymentResourceVersion(10L).build())
+                    .withClusterId(config.cluster().id())
+                    .withConnectorId(CONNECTOR_ID)
+                    .withDeploymentId(DEPLOYMENT_ID)
+                    .withOperatorSelector(new OperatorSelectorBuilder().withId(uid()).build())
+                    .build())
                 .build())
-            .withSpec(new ManagedConnectorSpecBuilder()
-                .withDeployment(new DeploymentSpecBuilder().withDeploymentResourceVersion(10L).build())
-                .withClusterId(config.cluster().id())
-                .withConnectorId(CONNECTOR_ID)
-                .withDeploymentId(DEPLOYMENT_ID)
-                .withOperatorSelector(new OperatorSelectorBuilder().withId(uid()).build())
-                .build())
-            .build());
+            .inNamespace(ns)
+            .createOrReplace();
 
         RestAssured.given()
             .contentType(MediaType.TEXT_PLAIN)

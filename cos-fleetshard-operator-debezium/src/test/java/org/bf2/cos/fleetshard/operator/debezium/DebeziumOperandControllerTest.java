@@ -155,22 +155,22 @@ public class DebeziumOperandControllerTest {
             .put("consumer.interceptor.classes", "io.opentracing.contrib.kafka.TracingConsumerInterceptor")
             .put("producer.interceptor.classes", "io.opentracing.contrib.kafka.TracingProducerInterceptor");
         var pwdB64 = Base64.getEncoder().encodeToString("orderpw".getBytes(StandardCharsets.UTF_8));
-        spec.with("database.password").put("kind", "base64").put("value", pwdB64);
+        spec.withObject("/database.password").put("kind", "base64").put("value", pwdB64);
         return spec;
     }
 
     private ObjectNode addAvroToConnectorConfig(ObjectNode baseConfig) {
-        baseConfig.with("data_shape").put("key", "AVRO").put("value", "AVRO");
+        baseConfig.withObject("/data_shape").put("key", "AVRO").put("value", "AVRO");
         return baseConfig;
     }
 
     private ObjectNode addJsonWithSchemaToConnectorConfig(ObjectNode baseConfig) {
-        baseConfig.with("data_shape").put("key", "JSON").put("value", "JSON");
+        baseConfig.withObject("/data_shape").put("key", "JSON").put("value", "JSON");
         return baseConfig;
     }
 
     private ObjectNode addSchemalessJsonToConnectorConfig(ObjectNode baseConfig) {
-        baseConfig.with("data_shape").put("key", "JSON without schema").put("value", "JSON without schema");
+        baseConfig.withObject("/data_shape").put("key", "JSON without schema").put("value", "JSON without schema");
         return baseConfig;
     }
 

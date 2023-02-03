@@ -463,10 +463,9 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                 configMap,
                 connector);
 
-            this.kubernetesClient.configMaps()
+            this.kubernetesClient.resource(configMap)
                 .inNamespace(configMap.getMetadata().getNamespace())
-                .withName(configMap.getMetadata().getName())
-                .create(configMap);
+                .create();
         }
 
         List<HasMetadata> resources;
