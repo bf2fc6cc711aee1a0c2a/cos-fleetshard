@@ -44,7 +44,7 @@ public class FleetShardOperator {
 
         client.resource(managedConnectorOperator)
             .inNamespace(config.namespace())
-            .create(managedConnectorOperator);
+            .createOrReplace();
 
         List<Tag> tags = List.of(
             Tag.of("cos.operator.id", managedConnectorOperator.getMetadata().getName()),
