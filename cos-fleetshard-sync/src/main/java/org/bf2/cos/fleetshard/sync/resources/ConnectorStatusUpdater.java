@@ -112,15 +112,15 @@ public class ConnectorStatusUpdater {
             registry.remove(gauge);
         }
 
+        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
+            .tags(tags)
+            .register(registry);
+
         // Adding deletion timestamp for metric housekeeping
         if (CONNECTOR_STATE_DELETED == connectorState) {
             LOGGER.info("Adding current timestamp to the deleted connector");
             tags.add(Tag.of("deletion_timestamp", Instant.now().toString()));
         }
-
-        Gauge.builder(config.metrics().baseName() + "." + CONNECTOR_STATE, () -> new AtomicInteger(connectorState))
-            .tags(tags)
-            .register(registry);
 
         Counter.builder(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
             .tags(tags)

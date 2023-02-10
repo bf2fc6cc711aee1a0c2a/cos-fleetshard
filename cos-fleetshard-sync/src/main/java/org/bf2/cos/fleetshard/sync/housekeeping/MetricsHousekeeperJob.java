@@ -39,19 +39,20 @@ public class MetricsHousekeeperJob implements Job {
 
         try {
 
-            Collection<Gauge> gauges = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE)
-                .tagKeys("deletion_timestamp").gauges();
+            // Fetching counters with deletion_timestamp
+            Collection<Counter> meters = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
+                .tagKeys("deletion_timestamp").counters();
 
-            if (gauges != null) {
-                for (Gauge gauge : gauges) {
+            if (meters != null) {
+                for (Counter meter : meters) {
 
-                    String deletedAt = gauge.getId().getTag("deletion_timestamp");
-                    String id = gauge.getId().getTag("cos.connector.id");
+                    String deletedAt = meter.getId().getTag("deletion_timestamp");
+                    String id = meter.getId().getTag("cos.connector.id");
 
                     if (deletedAt != null && id != null && Instant.now()
                         .isAfter(Instant.parse(deletedAt).plus(Duration.ofHours(6)))) {
 
-                        LOGGER.info("Got connector for deleting the metrics: {}", id);
+                        LOGGER.info("Got connector id for deleting the metrics: {}", id);
 
                         Collection<Counter> counters = registry
                             .find(config.metrics().baseName() + "." + CONNECTOR_STATE_COUNT)
@@ -64,7 +65,10 @@ public class MetricsHousekeeperJob implements Job {
                         }
 
                         // removing the gauge type metrics
+                        Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE)
+                                .tag("cos.connector.id", id).gauge();
                         registry.remove(gauge);
+
                         LOGGER.info("Deleted all connector metrics: {}", id);
                     }
                 }
