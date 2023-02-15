@@ -66,8 +66,10 @@ public class MetricsHousekeeperJob implements Job {
 
                         // removing the gauge type metrics
                         Gauge gauge = registry.find(config.metrics().baseName() + "." + CONNECTOR_STATE)
-                                .tag("cos.connector.id", id).gauge();
-                        registry.remove(gauge);
+                            .tag("cos.connector.id", id).gauge();
+                        if (gauge != null) {
+                            registry.remove(gauge);
+                        }
 
                         LOGGER.info("Deleted all connector metrics: {}", id);
                     }
