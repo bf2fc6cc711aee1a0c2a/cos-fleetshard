@@ -1,9 +1,7 @@
 package org.bf2.cos.fleetshard.sync.it;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
 
