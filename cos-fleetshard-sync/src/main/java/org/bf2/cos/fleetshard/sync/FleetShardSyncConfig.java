@@ -166,6 +166,15 @@ public interface FleetShardSyncConfig {
         @WithDefault("24h")
         @WithConverter(DurationConverter.class)
         Duration metricsHousekeeperInterval();
+
+        /**
+         * Determine how many hours old metrics will get deleted with Metrics Housekeeper.
+         *
+         * @return the metricshousekeeping interval
+         */
+        @WithDefault("6h")
+        @WithConverter(DurationConverter.class)
+        Duration metricsHousekeeperDeleteMetricsAfter();
     }
 
     interface Addon {

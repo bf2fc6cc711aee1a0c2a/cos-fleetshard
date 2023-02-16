@@ -50,7 +50,7 @@ public class MetricsHousekeeperJob implements Job {
                     String id = meter.getId().getTag("cos.connector.id");
 
                     if (deletedAt != null && id != null && Instant.now()
-                        .isAfter(Instant.parse(deletedAt).plus(Duration.ofHours(6)))) {
+                        .isAfter(Instant.parse(deletedAt).plus(config.resources().metricsHousekeeperDeleteMetricsAfter()))) {
 
                         LOGGER.info("Got connector id for deleting the metrics: {}", id);
 

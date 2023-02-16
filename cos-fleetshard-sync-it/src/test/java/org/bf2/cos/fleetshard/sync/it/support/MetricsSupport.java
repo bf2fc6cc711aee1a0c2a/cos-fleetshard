@@ -3,6 +3,7 @@ package org.bf2.cos.fleetshard.sync.it.support;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.search.Search;
 
@@ -31,5 +32,13 @@ public final class MetricsSupport {
 
     public static Counter counter(MeterRegistry registry, String base, String... subs) {
         return find(registry, base, subs).counter();
+    }
+
+    public static Counter counter(MeterRegistry registry, String tagKey, FleetShardSyncConfig config, String... subs) {
+        return find(registry, config, subs).tagKeys(tagKey).counter();
+    }
+
+    public static Gauge gauge(MeterRegistry registry, FleetShardSyncConfig config, String... subs) {
+        return find(registry, config, subs).gauge();
     }
 }
