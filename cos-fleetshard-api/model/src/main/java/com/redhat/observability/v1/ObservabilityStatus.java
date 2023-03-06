@@ -68,6 +68,18 @@ public class ObservabilityStatus implements io.fabric8.kubernetes.api.model.Kube
         this.stageStatus = stageStatus;
     }
 
+    @com.fasterxml.jackson.annotation.JsonProperty("migrated")
+    @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
+    private boolean migrated;
+
+    public boolean getMigrated() {
+        return migrated;
+    }
+
+    public void setMigrated(boolean migrated) {
+        this.migrated = migrated;
+    }
+
     @com.fasterxml.jackson.annotation.JsonProperty("tokenExpires")
     @com.fasterxml.jackson.annotation.JsonSetter(nulls = com.fasterxml.jackson.annotation.Nulls.SKIP)
     private Long tokenExpires;
