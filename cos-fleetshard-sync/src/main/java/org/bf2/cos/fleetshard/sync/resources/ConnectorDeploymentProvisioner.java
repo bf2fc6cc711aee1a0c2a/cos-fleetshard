@@ -197,7 +197,14 @@ public class ConnectorDeploymentProvisioner {
 
                 OperatorSelectorUtil.assign(operatorSelector, operators)
                     .map(Operator::getId)
-                    .ifPresent(operatorSelector::setId);
+                    .ifPresentOrElse(
+                        operatorSelector::setId,
+                        () -> {
+                            eventClient.broadcastWarning(
+                                "NoAssignableOperator",
+                                String.format("Unable to find a supported operator for deployment_id: %s", deployment.getId()),
+                                connector);
+                        });
             }
         }
         if (operatorSelector.getId() != null) {
