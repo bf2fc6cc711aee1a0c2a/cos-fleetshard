@@ -41,42 +41,52 @@ data:
 
 == local profile
 
-Start Quarkus in dev mode and read the application configuration from the current namespace.
+Starts Quarkus in dev mode and read the application configuration from the current namespace.
 
 [source,shell]
 ----
-export KUBERNETES_NAMESPACE=$(oc project -q)
-export COS_OPERATOR_ID=${some_value}
-export COS_OPERATOR_VERSION==${some_value}
-
-./mvnw -Dlocal
+mvn -Dlocal
 ----
+
+By default, the local profile starts the operator with the following properties
+
+
+[cols="1,1"]
+|===
+| Property | Value
+
+| cos.operator.id
+| camel-connector-operator
+
+| cos.operator.version
+| 1.5.0
+
+|===
 
 By default, the application searches for:
 
 * **ConfigMap**: cos-fleetshard-operator-camel-config
 
 To change the default values, use the following system properties:
+
 - quarkus.kubernetes-config.namespace
 - quarkus.kubernetes-config.config-maps
 
 == configuration options
 
-[cols="1,1,1"]
+[cols="1,1,1,1"]
 |===
-| Property | Default | Description
+| Property | Default | Description | Notes
 
 | cos.operator.id
 |
-| the id of the operator
+| A unique id for the operator.
+| This value is used for label selection when such feature is enabled (dsiabled by default whe running with the local profile)
 
 | cos.operator.version
 |
 | the version of the operator
-
-| cos.namespace
-| ${kubernetes.namespace}
-| the namespace where operator related resources are created
+| This value is used for the initial operator for the initial operator selector process. It must be compatible with the ranges declared in the connector catalog
 |===
 
 == Overriding connector properties and configs

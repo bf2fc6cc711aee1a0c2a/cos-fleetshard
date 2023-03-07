@@ -268,6 +268,13 @@
 
                                 -->
                                 <quarkus.kubernetes-client.trust-certs>true</quarkus.kubernetes-client.trust-certs>
+
+                                <!-- set default values -->
+                                <cos.operator.id>camel-connector-operator</cos.operator.id>
+                                <cos.operator.version>1.5.0</cos.operator.version>
+
+                                <!-- disable label selection for local dev -->
+                                <cos.operator.camel.label-selection.enabled>false</cos.operator.camel.label-selection.enabled>
                             </systemProperties>
                         </configuration>
                     </plugin>
