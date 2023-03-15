@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
 import java.util.List;
+import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
@@ -9,6 +10,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 
 public class OperandControllerMetricsWrapper implements OperandController {
     private final OperandController wrappedOperandController;
@@ -25,6 +27,13 @@ public class OperandControllerMetricsWrapper implements OperandController {
         return metricsRecorder.recorder().recordCallable(
             wrappedOperandController::getResourceTypes,
             ".getResourceTypes");
+    }
+
+    @Override
+    public Map<String, EventSource> getEventSources() {
+        return metricsRecorder.recorder().recordCallable(
+            wrappedOperandController::getEventSources,
+            ".getEventSources");
     }
 
     @Override

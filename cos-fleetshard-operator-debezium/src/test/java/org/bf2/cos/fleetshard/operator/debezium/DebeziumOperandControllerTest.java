@@ -2,56 +2,50 @@ package org.bf2.cos.fleetshard.operator.debezium;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
-import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.DeploymentSpecBuilder;
 import org.bf2.cos.fleetshard.api.KafkaSpecBuilder;
-import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorSpecBuilder;
 import org.bf2.cos.fleetshard.api.ServiceAccountSpecBuilder;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
 import org.bf2.cos.fleetshard.operator.connector.ConnectorConfiguration;
-import org.bf2.cos.fleetshard.operator.debezium.model.ApicurioAvroConverter;
+import org.bf2.cos.fleetshard.operator.debezium.client.KafkaConnectorClient;
+import org.bf2.cos.fleetshard.operator.debezium.converter.ApicurioAvroConverter;
+import org.bf2.cos.fleetshard.operator.debezium.converter.KafkaConnectJsonConverter;
+import org.bf2.cos.fleetshard.operator.debezium.converter.KeyAndValueConverters;
 import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumDataShape;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectJsonConverter;
-import org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatus;
-import org.bf2.cos.fleetshard.operator.debezium.model.KeyAndValueConverters;
+import org.bf2.cos.fleetshard.operator.debezium.model.DebeziumShardMetadataBuilder;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig;
+import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import io.strimzi.api.kafka.model.Constants;
-import io.strimzi.api.kafka.model.JmxPrometheusExporterMetrics;
-import io.strimzi.api.kafka.model.KafkaConnect;
-import io.strimzi.api.kafka.model.KafkaConnectBuilder;
-import io.strimzi.api.kafka.model.KafkaConnector;
-import io.strimzi.api.kafka.model.KafkaConnectorBuilder;
-import io.strimzi.api.kafka.model.status.Condition;
-import io.strimzi.api.kafka.model.status.ConditionBuilder;
-import io.strimzi.api.kafka.model.status.KafkaConnectStatusBuilder;
-import io.strimzi.api.kafka.model.status.KafkaConnectorStatusBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.bf2.cos.fleetshard.api.ManagedConnector.DESIRED_STATE_READY;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.EXTERNAL_CONFIG_FILE;
-import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.KAFKA_CLIENT_SECRET_KEY;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.CONNECTOR_CONFIG_FILENAME;
+import static org.bf2.cos.fleetshard.operator.debezium.DebeziumConstants.CONNECT_CONFIG_FILENAME;
 import static org.mockito.Mockito.when;
 
 public class DebeziumOperandControllerTest {
@@ -60,9 +54,12 @@ public class DebeziumOperandControllerTest {
     private static final String DEFAULT_CONNECTOR_TYPE_ID = "ctid";
     private static final String DEFAULT_CONNECTOR_IMAGE = "quay.io/cos/pg:1";
     private static final String DEFAULT_DEPLOYMENT_ID = "1";
+    private static final String DEFAULT_CLUSTER_ID = "cid";
     private static final Long DEFAULT_DEPLOYMENT_REVISION = 1L;
     private static final String CLIENT_ID = "kcid";
-    private static final String CLIENT_SECRET = Base64.getEncoder().encodeToString("kcs".getBytes(StandardCharsets.UTF_8));
+    private static final String CLIENT_SECRET_RAW = "kcs";
+    private static final String CLIENT_SECRET = Base64.getEncoder()
+        .encodeToString(CLIENT_SECRET_RAW.getBytes(StandardCharsets.UTF_8));
     private static final String DEFAULT_KAFKA_SERVER = "kafka.acme.com:2181";
     private static final String SCHEMA_REGISTRY_URL = "https://bu98.serviceregistry.rhcloud.com/t/51eba005-daft-punk-afe1-b2178bcb523d/apis/registry/v2";
     private static final String SCHEMA_REGISTRY_ID = "9bsv0s0k8lng031se9q0";
@@ -89,7 +86,22 @@ public class DebeziumOperandControllerTest {
 
         @Override
         public KafkaConnect kafkaConnect() {
-            return Map::of;
+            return new KafkaConnect() {
+                @Override
+                public Map<String, String> config() {
+                    return Collections.emptyMap();
+                }
+
+                @Override
+                public Offset offset() {
+                    return new Offset() {
+                        @Override
+                        public Quantity storage() {
+                            return new Quantity("1Mi");
+                        }
+                    };
+                }
+            };
         }
 
         @Override
@@ -126,16 +138,177 @@ public class DebeziumOperandControllerTest {
     void declaresExpectedResourceTypes() {
         FleetShardOperatorConfig config = fleetShardOperatorConfig();
         KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(config, kubernetesClient, CONFIGURATION);
+        DebeziumOperandController controller = new DebeziumOperandController(config, kubernetesClient, CONFIGURATION, null);
 
         assertThat(controller.getResourceTypes())
-            .hasSize(2)
-            .anyMatch(ctx -> Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
-                && KafkaConnect.CONSUMED_VERSION.equals(ctx.getVersion())
-                && KafkaConnect.RESOURCE_KIND.equals(ctx.getKind()))
-            .anyMatch(ctx -> Constants.RESOURCE_GROUP_NAME.equals(ctx.getGroup())
-                && KafkaConnector.CONSUMED_VERSION.equals(ctx.getVersion())
-                && KafkaConnector.RESOURCE_KIND.equals(ctx.getKind()));
+            .hasSize(1)
+            .first()
+            .matches(r -> "apps".equals(r.getGroup()) && "v1".equals(r.getVersion()) && "Deployment".equals(r.getKind()));
+    }
+
+    @Test
+    void testReifyWithSchemalessJson() {
+        this.reify(DebeziumConstants.CLASS_NAME_POSTGRES_CONNECTOR, addSchemalessJsonToConnectorConfig(getSpec()), result -> {
+            Properties connectProperties = Secrets.extract(result.secret, CONNECT_CONFIG_FILENAME, Properties.class);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable",
+                "false");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable",
+                "false");
+        });
+
+        this.reify(DebeziumConstants.CLASS_NAME_MYSQL_CONNECTOR, addSchemalessJsonToConnectorConfig(getSpec()), result -> {
+            Properties connectProperties = Secrets.extract(result.secret, CONNECT_CONFIG_FILENAME, Properties.class);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable",
+                "false");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable",
+                "false");
+        });
+    }
+
+    @Test
+    void testReifyWithAvro() {
+        this.reify(
+            DebeziumConstants.CLASS_NAME_POSTGRES_CONNECTOR,
+            addAvroToConnectorConfig(getSpec()),
+            getApicurioChecks(ApicurioAvroConverter.CONVERTER_CLASS));
+
+        this.reify(
+            DebeziumConstants.CLASS_NAME_MYSQL_CONNECTOR,
+            addAvroToConnectorConfig(getSpec()),
+            getApicurioChecks(ApicurioAvroConverter.CONVERTER_CLASS));
+    }
+
+    private Consumer<ReifyResult> getApicurioChecks(String converterClass) {
+        return result -> {
+
+            Properties connectProperties = Secrets.extract(result.secret, CONNECT_CONFIG_FILENAME, Properties.class);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                converterClass);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                converterClass);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.service.url",
+                CONFIGURATION.apicurioAuthServiceUrl());
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.service.url",
+                CONFIGURATION.apicurioAuthServiceUrl());
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.realm",
+                CONFIGURATION.apicurioAuthRealm());
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.realm",
+                CONFIGURATION.apicurioAuthRealm());
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.url",
+                SCHEMA_REGISTRY_URL);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.url",
+                SCHEMA_REGISTRY_URL);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.client.id",
+                CLIENT_ID);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.client.id",
+                CLIENT_ID);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.client.secret",
+                CLIENT_SECRET_RAW);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.client.secret",
+                CLIENT_SECRET_RAW);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.auto-register", "true");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.auto-register", "true");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.find-latest", "true");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.find-latest", "true");
+        };
+    }
+
+    @Test
+    void testReifyWithJsonWithSchema() {
+        this.reify(DebeziumConstants.CLASS_NAME_POSTGRES_CONNECTOR, addJsonWithSchemaToConnectorConfig(getSpec()), result -> {
+            Properties connectProperties = Secrets.extract(result.secret, CONNECT_CONFIG_FILENAME, Properties.class);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable",
+                "true");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable",
+                "true");
+        });
+
+        this.reify(DebeziumConstants.CLASS_NAME_MYSQL_CONNECTOR, addJsonWithSchemaToConnectorConfig(getSpec()), result -> {
+            Properties connectProperties = Secrets.extract(result.secret, CONNECT_CONFIG_FILENAME, Properties.class);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable",
+                "true");
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
+                KafkaConnectJsonConverter.CONVERTER_CLASS);
+
+            assertThat(connectProperties).containsEntry(
+                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable",
+                "true");
+        });
     }
 
     private ObjectNode getSpec() {
@@ -154,8 +327,10 @@ public class DebeziumOperandControllerTest {
             .put("poll.interval.ms", "100")
             .put("consumer.interceptor.classes", "io.opentracing.contrib.kafka.TracingConsumerInterceptor")
             .put("producer.interceptor.classes", "io.opentracing.contrib.kafka.TracingProducerInterceptor");
+
         var pwdB64 = Base64.getEncoder().encodeToString("orderpw".getBytes(StandardCharsets.UTF_8));
         spec.withObject("/database.password").put("kind", "base64").put("value", pwdB64);
+
         return spec;
     }
 
@@ -174,21 +349,82 @@ public class DebeziumOperandControllerTest {
         return baseConfig;
     }
 
-    void reify(String connectorClass, ObjectNode connectorConfig, Consumer<KafkaConnect> kafkaConnectChecks) {
+    public static class ReifyResult {
+        public final Deployment deployment;
+        public final Secret secret;
+        public final ConfigMap configMap;
+        public final PersistentVolumeClaim persistentVolume;
+        public final Service service;
+
+        public ReifyResult(Deployment deployment, Secret secret, ConfigMap configMap, PersistentVolumeClaim persistentVolume,
+            Service service) {
+            this.deployment = deployment;
+            this.secret = secret;
+            this.configMap = configMap;
+            this.persistentVolume = persistentVolume;
+            this.service = service;
+        }
+
+        public static ReifyResult of(List<HasMetadata> resources) {
+            return new ReifyResult(
+                resources.stream()
+                    .filter(Resources::isDeployment)
+                    .findFirst()
+                    .map(Deployment.class::cast)
+                    .orElse(null),
+                resources.stream()
+                    .filter(Resources::isSecret)
+                    .findFirst()
+                    .map(Secret.class::cast)
+                    .orElse(null),
+                resources.stream()
+                    .filter(Resources::isConfigMap)
+                    .findFirst()
+                    .map(ConfigMap.class::cast)
+                    .orElse(null),
+                resources.stream()
+                    .filter(Resources::isPersistentVolumeClaim)
+                    .findFirst()
+                    .map(PersistentVolumeClaim.class::cast)
+                    .orElse(null),
+                resources.stream()
+                    .filter(Resources::isService)
+                    .findFirst()
+                    .map(Service.class::cast)
+                    .orElse(null));
+        }
+    }
+
+    void reify(
+        String connectorClass,
+        ObjectNode connectorConfig,
+        Consumer<ReifyResult> resultConsumer) {
+
         FleetShardOperatorConfig config = fleetShardOperatorConfig();
         KubernetesClient kubernetesClient = Mockito.mock(KubernetesClient.class);
-        DebeziumOperandController controller = new DebeziumOperandController(config, kubernetesClient, CONFIGURATION);
+        KafkaConnectorClient konnectorClient = Mockito.mock(KafkaConnectorClient.class);
+
+        DebeziumOperandController controller = new DebeziumOperandController(
+            config,
+            kubernetesClient,
+            CONFIGURATION,
+            konnectorClient);
 
         var resources = controller.doReify(
             new ManagedConnectorBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                     .withName(DEFAULT_MANAGED_CONNECTOR_ID)
+                    .withNamespace(DEFAULT_MANAGED_CONNECTOR_ID)
                     .withUid(MANAGED_CONNECTOR_UID)
                     .addToAnnotations("my.cos.bf2.org/connector-group", "foo")
                     .addToLabels("cos.bf2.org/organization-id", "20000000")
                     .addToLabels("cos.bf2.org/pricing-tier", "essential")
+                    .addToLabels(Resources.LABEL_CLUSTER_ID, DEFAULT_CLUSTER_ID)
+                    .addToLabels(Resources.LABEL_CONNECTOR_ID, DEFAULT_MANAGED_CONNECTOR_ID)
+                    .addToLabels(Resources.LABEL_DEPLOYMENT_ID, DEFAULT_DEPLOYMENT_ID)
                     .build())
                 .withSpec(new ManagedConnectorSpecBuilder()
+                    .withClusterId(DEFAULT_CLUSTER_ID)
                     .withConnectorId(DEFAULT_MANAGED_CONNECTOR_ID)
                     .withDeploymentId(DEFAULT_DEPLOYMENT_ID)
                     .withDeployment(new DeploymentSpecBuilder()
@@ -202,7 +438,7 @@ public class DebeziumOperandControllerTest {
                         .build())
                     .build())
                 .build(),
-            new org.bf2.cos.fleetshard.operator.debezium.DebeziumShardMetadataBuilder()
+            new DebeziumShardMetadataBuilder()
                 .withContainerImage(DEFAULT_CONNECTOR_IMAGE)
                 .withConnectorClass(connectorClass)
                 .build(),
@@ -214,347 +450,58 @@ public class DebeziumOperandControllerTest {
                 .build());
 
         assertThat(resources)
-            .anyMatch(DebeziumOperandSupport::isKafkaConnect)
-            .anyMatch(DebeziumOperandSupport::isKafkaConnector)
-            .anyMatch(DebeziumOperandSupport::isSecret)
-            .anyMatch(DebeziumOperandSupport::isConfigMap);
+            .anyMatch(Resources::isDeployment)
+            .anyMatch(Resources::isPersistentVolumeClaim)
+            .anyMatch(Resources::isSecret)
+            .anyMatch(Resources::isConfigMap)
+            .anyMatch(Resources::isService);
 
-        assertThat(resources)
-            .filteredOn(DebeziumOperandSupport::isKafkaConnect)
-            .hasSize(1)
-            .first()
-            .isInstanceOfSatisfying(KafkaConnect.class, kc -> {
-                assertThat(kc.getSpec().getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
-                assertThat(kc.getSpec().getTemplate().getPod().getImagePullSecrets())
-                    .contains(CONFIGURATION.imagePullSecretsName());
+        ReifyResult result = ReifyResult.of(resources);
+        assertThat(result)
+            .hasNoNullFieldsOrProperties();
 
-                assertThat(kc.getMetadata().getLabels())
-                    .containsEntry("cos.bf2.org/organization-id", "20000000")
-                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+        assertThat(result.configMap.getData()).containsEntry(
+            DebeziumConstants.METRICS_CONFIG_FILENAME,
+            DebeziumConstants.METRICS_CONFIG);
 
-                assertThat(kc.getMetadata().getAnnotations())
-                    .containsEntry("my.cos.bf2.org/connector-group", "foo");
-
-                assertThat(kc.getSpec().getMetricsConfig().getType()).isEqualTo("jmxPrometheusExporter");
-                assertThat(kc.getSpec().getMetricsConfig()).isInstanceOfSatisfying(JmxPrometheusExporterMetrics.class,
-                    jmxMetricsConfig -> {
-                        assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getKey())
-                            .isEqualTo(DebeziumOperandController.METRICS_CONFIG_FILENAME);
-                        assertThat(jmxMetricsConfig.getValueFrom().getConfigMapKeyRef().getName())
-                            .isEqualTo(
-                                DEFAULT_MANAGED_CONNECTOR_ID
-                                    + DebeziumOperandController.KAFKA_CONNECT_METRICS_CONFIGMAP_NAME_SUFFIX);
-                    });
+        assertThat(result.deployment).satisfies(d -> {
+            assertThat(d.getSpec().getTemplate().getSpec().getContainers()).first().satisfies(c -> {
+                assertThat(c.getImage()).isEqualTo(DEFAULT_CONNECTOR_IMAGE);
             });
+            assertThat(d.getSpec().getTemplate().getSpec().getImagePullSecrets())
+                .contains(CONFIGURATION.imagePullSecretsName());
+        });
 
-        assertThat(resources)
-            .filteredOn(DebeziumOperandSupport::isConfigMap)
-            .hasSize(1)
-            .first()
-            .isInstanceOfSatisfying(ConfigMap.class, configMap -> {
-                assertThat(configMap.getData())
-                    .containsKey(DebeziumOperandController.METRICS_CONFIG_FILENAME);
-                assertThat(configMap.getData().get(DebeziumOperandController.METRICS_CONFIG_FILENAME))
-                    .isEqualTo(DebeziumOperandController.METRICS_CONFIG);
-            });
+        assertThat(result.secret).satisfies(s -> {
+            Properties connectorProperties = Secrets.extract(s, CONNECTOR_CONFIG_FILENAME, Properties.class);
 
-        assertThat(resources)
-            .filteredOn(DebeziumOperandSupport::isKafkaConnector)
-            .hasSize(1)
-            .first()
-            .isInstanceOfSatisfying(KafkaConnector.class, kctr -> {
-                assertThat(
-                    kctr.getSpec().getConfig()).containsEntry(
-                        "database.password",
-                        "${file:/opt/kafka/external-configuration/"
-                            + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
-                            + "/"
-                            + EXTERNAL_CONFIG_FILE
-                            + ":database.password}");
+            assertThat(connectorProperties).containsEntry(
+                "database.password",
+                "orderpw");
 
-                assertThat(kctr.getMetadata().getLabels())
-                    .containsEntry("cos.bf2.org/organization-id", "20000000")
-                    .containsEntry("cos.bf2.org/pricing-tier", "essential");
+            if (DebeziumConstants.CLASS_NAME_POSTGRES_CONNECTOR.equals(connectorClass)) {
+                // Specifically test the plugin name for PostgreSQL
+                assertThat(connectorProperties).containsEntry(
+                    DebeziumConstants.CONFIG_OPTION_POSTGRES_PLUGIN_NAME,
+                    DebeziumConstants.PLUGIN_NAME_PGOUTPUT);
+            }
 
-                assertThat(kctr.getMetadata().getAnnotations())
-                    .containsEntry("my.cos.bf2.org/connector-group", "foo");
+            if (DebeziumConstants.CLASS_NAME_MYSQL_CONNECTOR.equals(connectorClass)) {
+                // Specifically test database history does not pass secrets directly
+                assertThat(connectorProperties).containsEntry(
+                    "schema.history.internal.consumer.sasl.jaas.config",
+                    "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                        + CLIENT_ID
+                        + "\" password=\"" + CLIENT_SECRET_RAW + "\";");
+                assertThat(connectorProperties).containsEntry(
+                    "schema.history.internal.producer.sasl.jaas.config",
+                    "org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
+                        + CLIENT_ID
+                        + "\" password=\"" + CLIENT_SECRET_RAW + "\";");
+            }
+        });
 
-                if (DebeziumOperandController.CLASS_NAME_POSTGRES_CONNECTOR.equals(connectorClass)) {
-                    // Specifically test the plugin name for PostgreSQL
-                    assertThat(kctr.getSpec().getConfig().get(DebeziumOperandController.CONFIG_OPTION_POSTGRES_PLUGIN_NAME))
-                        .isEqualTo(DebeziumOperandController.PLUGIN_NAME_PGOUTPUT);
-                }
-
-                if (DebeziumOperandController.CLASS_NAME_MYSQL_CONNECTOR.equals(connectorClass)) {
-                    // Specifically test database history does not pass secrets directly
-                    assertThat(kctr.getSpec().getConfig().get("schema.history.internal.consumer.sasl.jaas.config"))
-                        .isEqualTo("org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                            + CLIENT_ID
-                            + "\" password=\"${dir:/opt/kafka/external-configuration/"
-                            + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
-                            + ":"
-                            + KAFKA_CLIENT_SECRET_KEY
-                            + "}\";");
-                    assertThat(kctr.getSpec().getConfig().get("schema.history.internal.producer.sasl.jaas.config"))
-                        .isEqualTo("org.apache.kafka.common.security.plain.PlainLoginModule required username=\""
-                            + CLIENT_ID
-                            + "\" password=\"${dir:/opt/kafka/external-configuration/"
-                            + DebeziumConstants.EXTERNAL_CONFIG_DIRECTORY
-                            + ":"
-                            + KAFKA_CLIENT_SECRET_KEY
-                            + "}\";");
-                }
-            });
-
-        assertThat(resources)
-            .filteredOn(DebeziumOperandSupport::isKafkaConnect)
-            .hasSize(1)
-            .first()
-            .isInstanceOfSatisfying(KafkaConnect.class, kafkaConnectChecks);
-    }
-
-    @Test
-    void testReifyWithSchemalessJson() {
-        this.reify(DebeziumOperandController.CLASS_NAME_POSTGRES_CONNECTOR, addSchemalessJsonToConnectorConfig(getSpec()),
-            kafkaConnect -> {
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable", "false");
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable", "false");
-            });
-
-        this.reify(DebeziumOperandController.CLASS_NAME_MYSQL_CONNECTOR, addSchemalessJsonToConnectorConfig(getSpec()),
-            kafkaConnect -> {
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable", "false");
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable", "false");
-            });
-    }
-
-    private Consumer<KafkaConnect> getApicurioChecks(String converterClass) {
-        return kafkaConnect -> {
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
-                converterClass);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
-                converterClass);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.service.url",
-                CONFIGURATION.apicurioAuthServiceUrl());
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.service.url",
-                CONFIGURATION.apicurioAuthServiceUrl());
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.realm", CONFIGURATION.apicurioAuthRealm());
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.realm", CONFIGURATION.apicurioAuthRealm());
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.url",
-                SCHEMA_REGISTRY_URL);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.url",
-                SCHEMA_REGISTRY_URL);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.client.id",
-                CLIENT_ID);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.client.id",
-                CLIENT_ID);
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.auth.client.secret",
-                "${dir:/opt/kafka/external-configuration/connector-configuration:_kafka.client.secret}");
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.auth.client.secret",
-                "${dir:/opt/kafka/external-configuration/connector-configuration:_kafka.client.secret}");
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.auto-register", "true");
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.auto-register", "true");
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".apicurio.registry.find-latest", "true");
-            assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(
-                KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".apicurio.registry.find-latest", "true");
-        };
-    }
-
-    @Test
-    void testReifyWithAvro() {
-        this.reify(DebeziumOperandController.CLASS_NAME_POSTGRES_CONNECTOR, addAvroToConnectorConfig(getSpec()),
-            getApicurioChecks(ApicurioAvroConverter.CONVERTER_CLASS));
-        this.reify(DebeziumOperandController.CLASS_NAME_MYSQL_CONNECTOR, addAvroToConnectorConfig(getSpec()),
-            getApicurioChecks(ApicurioAvroConverter.CONVERTER_CLASS));
-    }
-
-    @Test
-    void testReifyWithJsonWithSchema() {
-        this.reify(DebeziumOperandController.CLASS_NAME_POSTGRES_CONNECTOR, addJsonWithSchemaToConnectorConfig(getSpec()),
-            kafkaConnect -> {
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable", "true");
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable", "true");
-            });
-
-        this.reify(DebeziumOperandController.CLASS_NAME_MYSQL_CONNECTOR, addJsonWithSchemaToConnectorConfig(getSpec()),
-            kafkaConnect -> {
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_KEY_CONVERTER + ".schemas.enable", "true");
-                assertThat(kafkaConnect.getSpec().getConfig()).containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER,
-                    KafkaConnectJsonConverter.CONVERTER_CLASS);
-                assertThat(kafkaConnect.getSpec().getConfig())
-                    .containsEntry(KeyAndValueConverters.PROPERTY_VALUE_CONVERTER + ".schemas.enable", "true");
-            });
-    }
-
-    private static Condition createCondition(String type, String status, String reason) {
-        return new ConditionBuilder().withType(type).withStatus(status).withReason(reason).build();
-    }
-
-    private static List<Condition> createNotReadyConditions(String notReadyConditionReason) {
-        return List.of(createCondition("NotReady", "True", notReadyConditionReason));
-    }
-
-    private static List<Condition> createConditions(
-        String readyConditionStatus, String readyConditionReason,
-        String notReadyConditionReason) {
-        return List.of(
-            createCondition("Ready", readyConditionStatus, readyConditionReason),
-            createCondition("NotReady", "True", notReadyConditionReason));
-    }
-
-    private static List<Condition> createConditions(
-        String readyConditionStatus, String readyConditionReason) {
-        return List.of(createCondition("Ready", readyConditionStatus, readyConditionReason));
-    }
-
-    private static List<Condition> createConditions(
-        String readyConditionStatus, String readyConditionReason, Condition otherCondition) {
-        return List.of(createCondition("Ready", readyConditionStatus, readyConditionReason), otherCondition);
-    }
-
-    public static Stream<Arguments> computeStatus() {
-        return Stream.of(
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("True", null),
-                createConditions("True", null),
-                ManagedConnector.STATE_READY,
-                null, false),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("True", null),
-                createConditions("False", "reason", "TimeoutException"),
-                ManagedConnector.STATE_FAILED,
-                "KafkaClusterUnreachable", false),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("True", null),
-                createConditions("True", "Running", "TimeoutException"),
-                ManagedConnector.STATE_FAILED,
-                "KafkaClusterUnreachable", false),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                List.of(),
-                createNotReadyConditions("TimeoutException"),
-                ManagedConnector.STATE_FAILED,
-                "KafkaClusterUnreachable", false),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("True", null),
-                createConditions("True", null),
-                ManagedConnector.STATE_FAILED,
-                "DebeziumException", true),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("False", "reason", "reason"),
-                createConditions("True", null),
-                ManagedConnector.STATE_FAILED,
-                "reason", false),
-            arguments(
-                KafkaConnectorStatus.STATE_RUNNING,
-                createConditions("False", "reason", "ConnectRestException"),
-                createConditions("True", null),
-                ManagedConnector.STATE_FAILED,
-                "ConnectRestException", false),
-            arguments(
-                KafkaConnectorStatus.STATE_FAILED,
-                List.of(createCondition("Foo", "True", "Bar")),
-                createConditions("True", null),
-                ManagedConnector.STATE_FAILED,
-                "Bar", false),
-            arguments(
-                KafkaConnectorStatus.STATE_PAUSED,
-                List.of(createCondition("Foo", "True", "Bar")),
-                createConditions("True", null),
-                ManagedConnector.STATE_STOPPED,
-                "Paused", false),
-            arguments(
-                KafkaConnectorStatus.STATE_UNASSIGNED,
-                List.of(createCondition("Foo", "True", "Bar")),
-                createConditions("True", null),
-                ManagedConnector.STATE_PROVISIONING,
-                "Unassigned", false),
-            arguments(
-                null,
-                List.of(),
-                createNotReadyConditions("TimeoutException"),
-                ManagedConnector.STATE_FAILED,
-                "KafkaClusterUnreachable", false));
-    }
-
-    @ParameterizedTest
-    @MethodSource
-    void computeStatus(
-        String connectorState,
-        List<Condition> connectorConditions,
-        List<Condition> connectConditions,
-        String expectedManagedConnectorState,
-        String expectedReason,
-        boolean withDebeziumException) {
-
-        ConnectorStatusSpec status = new ConnectorStatusSpec();
-
-        DebeziumOperandSupport.computeStatus(
-            status,
-            new KafkaConnectBuilder()
-                .withStatus(new KafkaConnectStatusBuilder()
-                    .addAllToConditions(connectConditions)
-                    .build())
-                .build(),
-            new KafkaConnectorBuilder()
-                .withStatus(new KafkaConnectorStatusBuilder()
-                    .addAllToConditions(connectorConditions)
-                    .addToConnectorStatus("connector",
-                        new org.bf2.cos.fleetshard.operator.debezium.model.KafkaConnectorStatusBuilder()
-                            .withState(connectorState)
-                            .build())
-                    .addToConnectorStatus("tasks",
-                        withDebeziumException ? List.of(Map.of("id", "0", "state", KafkaConnectorStatus.STATE_FAILED,
-                            "trace",
-                            "io.debezium.DebeziumException: The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin-changelog.009801, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed."))
-                            : null)
-                    .build())
-                .build());
-
-        assertThat(status.getPhase()).isEqualTo(expectedManagedConnectorState);
-
-        assertThat(status.getConditions()).anySatisfy(condition -> assertThat(condition)
-            .hasFieldOrPropertyWithValue("type", "Ready")
-            .hasFieldOrPropertyWithValue("status", null == expectedReason ? "True" : "False")
-            .hasFieldOrPropertyWithValue("reason", expectedReason));
+        assertThat(result)
+            .satisfies(resultConsumer);
     }
 }

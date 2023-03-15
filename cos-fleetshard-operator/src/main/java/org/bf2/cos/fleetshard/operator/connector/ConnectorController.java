@@ -152,6 +152,10 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                         id)));
         }
 
+        if (operandController.getEventSources() != null) {
+            eventSources.putAll(operandController.getEventSources());
+        }
+
         return eventSources;
     }
 
@@ -548,9 +552,7 @@ public class ConnectorController implements Reconciler<ManagedConnector>, EventS
                     .withBlockOwnerDeletion(true)
                     .build()));
 
-            var result = kubernetesClient.resource(resource)
-                .inNamespace(connector.getMetadata().getNamespace())
-                .createOrReplace();
+            var result = Resources.createOrPatch(kubernetesClient, connector.getMetadata().getNamespace(), resource);
 
             LOGGER.debug("Resource {}:{}:{}@{} updated/created",
                 result.getApiVersion(),

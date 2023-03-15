@@ -39,8 +39,10 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - "pods"
   - "secrets"
   - "configmaps"
+  - "persistentvolumeclaims"
   verbs:
   - "create"
   - "delete"
@@ -50,10 +52,9 @@ rules:
   - "update"
   - "watch"
 - apiGroups:
-  - "kafka.strimzi.io"
+  - "apps"
   resources:
-  - "kafkaconnects"
-  - "kafkaconnectors"
+  - "deployments"
   verbs:
   - "create"
   - "delete"

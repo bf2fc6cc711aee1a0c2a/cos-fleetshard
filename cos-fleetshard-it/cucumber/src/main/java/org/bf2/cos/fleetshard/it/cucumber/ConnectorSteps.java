@@ -39,9 +39,13 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
@@ -50,9 +54,18 @@ import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.CONNECTOR_TYPE_ID;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_CONNECTOR_ID;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_CONNECTOR_RESOURCE_VERSION;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_DEPLOYMENT_ID;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_DEPLOYMENT_RESOURCE_VERSION;
 import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_BOOTSTRAP;
 import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_CLIENT_ID;
 import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.COS_KAFKA_CLIENT_SECRET;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.DESIRED_STATE;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.OPERATOR_ID;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.OPERATOR_TYPE;
+import static org.bf2.cos.fleetshard.it.cucumber.ConnectorContext.OPERATOR_VERSION;
 import static org.bf2.cos.fleetshard.it.cucumber.support.StepsSupport.PARSER;
 import static org.bf2.cos.fleetshard.support.resources.Resources.uid;
 
@@ -106,31 +119,31 @@ public class ConnectorSteps {
     void dump(Scenario scenario) {
         scenario.log("============================================");
 
-        if (ctx.connector() != null) {
-            ManagedConnector connector = connector();
-
-            if (connector != null) {
-                scenario.log("Connector:\n" + JacksonUtil.asPrettyPrintedYaml(connector));
-            }
-        }
-
-        if (ctx.secret() != null) {
-            Secret secret = kubernetesClient.resources(Secret.class)
-                .inNamespace(ctx.connectorsNamespace())
-                .withName(ctx.secret().getMetadata().getName())
-                .get();
-
-            if (secret != null) {
-                scenario.log("Secret:\n" + JacksonUtil.asPrettyPrintedYaml(secret));
-            }
-        }
-
-        ConfigMap configMap = getConfigMapFilter().get();
-        if (configMap != null) {
-            scenario.log("ConfigMap:\n" + JacksonUtil.asPrettyPrintedYaml(configMap));
-        }
+        dumpResources(scenario, ManagedConnector.class);
+        dumpResources(scenario, Deployment.class);
+        dumpResources(scenario, Pod.class);
+        dumpResources(scenario, Secret.class);
+        dumpResources(scenario, ConfigMap.class);
+        dumpResources(scenario, PersistentVolumeClaim.class);
 
         scenario.log("============================================");
+    }
+
+    private <T extends HasMetadata> void dumpResources(Scenario scenario, Class<T> type) {
+        if (ctx.connector() == null) {
+            return;
+        }
+
+        var list = kubernetesClient.resources(type)
+            .inNamespace(ctx.connector().getMetadata().getNamespace())
+            .withLabel(Resources.LABEL_DEPLOYMENT_ID, ctx.connector().getSpec().getDeploymentId())
+            .list();
+
+        if (list != null && list.getItems() != null) {
+            for (var item : list.getItems()) {
+                scenario.log(KubernetesResourceUtil.getKind(item) + ":\n" + JacksonUtil.asPrettyPrintedYaml(item));
+            }
+        }
     }
 
     void clear() {
@@ -160,10 +173,10 @@ public class ConnectorSteps {
     public void a_connector(Map<String, String> options) {
         Map<String, String> entry = ctx.resolvePlaceholders(options);
 
-        final Long drv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_DEPLOYMENT_RESOURCE_VERSION, "1"));
-        final Long crv = Long.parseLong(entry.getOrDefault(ConnectorContext.COS_CONNECTOR_RESOURCE_VERSION, "1"));
-        final String connectorId = entry.getOrDefault(ConnectorContext.COS_CONNECTOR_ID, uid());
-        final String deploymentId = entry.getOrDefault(ConnectorContext.COS_DEPLOYMENT_ID, uid());
+        final Long drv = Long.parseLong(entry.getOrDefault(COS_DEPLOYMENT_RESOURCE_VERSION, "1"));
+        final Long crv = Long.parseLong(entry.getOrDefault(COS_CONNECTOR_RESOURCE_VERSION, "1"));
+        final String connectorId = entry.getOrDefault(COS_CONNECTOR_ID, uid());
+        final String deploymentId = entry.getOrDefault(COS_DEPLOYMENT_ID, uid());
         final String clusterId = ctx.clusterId();
 
         var connector = new ManagedConnectorBuilder()
@@ -171,7 +184,7 @@ public class ConnectorSteps {
                 .addToLabels(Resources.LABEL_CLUSTER_ID, clusterId)
                 .addToLabels(Resources.LABEL_CONNECTOR_ID, connectorId)
                 .addToLabels(Resources.LABEL_DEPLOYMENT_ID, deploymentId)
-                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(ConnectorContext.OPERATOR_TYPE))
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(OPERATOR_TYPE))
                 .withName(Connectors.generateConnectorId(deploymentId))
                 .build())
             .withSpec(new ManagedConnectorSpecBuilder()
@@ -180,26 +193,26 @@ public class ConnectorSteps {
                 .withDeploymentId(deploymentId)
                 .withDeployment(new DeploymentSpecBuilder()
                     .withConnectorResourceVersion(crv)
-                    .withConnectorTypeId(entry.get(ConnectorContext.CONNECTOR_TYPE_ID))
+                    .withConnectorTypeId(entry.get(CONNECTOR_TYPE_ID))
                     .withDeploymentResourceVersion(drv)
                     .withNewSchemaRegistry(SCHEMA_REGISTRY_ID, SCHEMA_REGISTRY_URL)
                     .withKafka(
                         new KafkaSpecBuilder().withUrl(entry.getOrDefault(COS_KAFKA_BOOTSTRAP, KAFKA_URL))
                             .build())
-                    .withDesiredState(entry.get(ConnectorContext.DESIRED_STATE))
+                    .withDesiredState(entry.get(DESIRED_STATE))
                     .withSecret(Connectors.generateConnectorId(deploymentId) + "-" + drv)
                     .build())
                 .withOperatorSelector(new OperatorSelectorBuilder()
-                    .withId(entry.get(ConnectorContext.OPERATOR_ID))
-                    .withType(entry.get(ConnectorContext.OPERATOR_TYPE))
-                    .withVersion(entry.get(ConnectorContext.OPERATOR_VERSION))
+                    .withId(entry.get(OPERATOR_ID))
+                    .withType(entry.get(OPERATOR_TYPE))
+                    .withVersion(entry.get(OPERATOR_VERSION))
                     .build())
                 .build())
             .build();
 
         var secret = new SecretBuilder()
             .withMetadata(new ObjectMetaBuilder()
-                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(ConnectorContext.OPERATOR_TYPE))
+                .addToLabels(Resources.LABEL_OPERATOR_TYPE, entry.get(OPERATOR_TYPE))
                 .withName(connector.getMetadata().getName()
                     + "-"
                     + connector.getSpec().getDeployment().getDeploymentResourceVersion())

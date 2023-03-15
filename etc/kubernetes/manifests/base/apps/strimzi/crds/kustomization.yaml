@@ -1,9 +1,0 @@
-
-generatorOptions:
-  disableNameSuffixHash: true
-
-commonLabels:
-  app: strimzi
- 
-resources:
-  - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.33.0/strimzi-crds-0.33.0.yaml

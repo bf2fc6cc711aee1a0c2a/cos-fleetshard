@@ -7,6 +7,8 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperatorSpecBuilder;
 import org.bf2.cos.fleetshard.operator.FleetShardOperatorConfig;
+import org.bf2.cos.fleetshard.operator.debezium.client.DefaultKafkaConnectorClient;
+import org.bf2.cos.fleetshard.operator.debezium.client.KafkaConnectorClient;
 import org.bf2.cos.fleetshard.operator.operand.OperandController;
 import org.bf2.cos.fleetshard.operator.operand.OperandControllerMetricsWrapper;
 import org.bf2.cos.fleetshard.support.metrics.ResourceAwareMetricsRecorder;
@@ -17,6 +19,12 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.micrometer.core.instrument.MeterRegistry;
 
 public class DebeziumProducers {
+    @Singleton
+    @Produces
+    public KafkaConnectorClient client() {
+        return new DefaultKafkaConnectorClient();
+    }
+
     @Singleton
     @Produces
     public ManagedConnectorOperator operator(
@@ -43,13 +51,15 @@ public class DebeziumProducers {
         FleetShardOperatorConfig fleetShardOperatorConfig,
         MeterRegistry registry,
         KubernetesClient kubernetesClient,
-        DebeziumOperandConfiguration operandConfig) {
+        DebeziumOperandConfiguration operandConfig,
+        KafkaConnectorClient client) {
 
         return new OperandControllerMetricsWrapper(
             new DebeziumOperandController(
                 fleetShardOperatorConfig,
                 kubernetesClient,
-                operandConfig),
+                operandConfig,
+                client),
             ResourceAwareMetricsRecorder.of(
                 fleetShardOperatorConfig.metrics().recorder(),
                 registry,

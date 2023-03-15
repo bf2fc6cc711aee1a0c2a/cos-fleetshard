@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.it.cucumber.assertions;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 
 import org.assertj.core.api.AbstractAssert;
@@ -20,6 +21,30 @@ public class CucumberDataTableAssert extends AbstractAssert<CucumberDataTableAss
     }
 
     public <T> CucumberDataTableAssert matches(Map<String, T> elements) {
+        isNotNull();
+
+        Map<String, String> map = actual.asMap(String.class, String.class);
+        map.forEach((k, v) -> {
+            v = resolver.apply(v);
+
+            if (Strings.isNullOrEmpty(v) || "${cos.ignore}".equals(v)) {
+                assertThat(elements)
+                    .describedAs("The key %s exists with any value", k)
+                    .containsKey(k);
+            } else {
+                assertThat(elements)
+                    .describedAs("The key %s exists", k)
+                    .containsKey(k);
+                assertThat(elements.get(k))
+                    .describedAs("The key %s exists with value %s", k, v)
+                    .hasToString(v);
+            }
+        });
+
+        return this;
+    }
+
+    public CucumberDataTableAssert matches(Properties elements) {
         isNotNull();
 
         Map<String, String> map = actual.asMap(String.class, String.class);

@@ -20,6 +20,10 @@
             <artifactId>quarkus-cucumber</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.quarkiverse.jackson-jq</groupId>
+            <artifactId>quarkus-jackson-jq</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.bf2</groupId>
             <artifactId>cos-fleetshard-operator-debezium</artifactId>
         </dependency>
@@ -36,6 +40,11 @@
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-kubernetes-client</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

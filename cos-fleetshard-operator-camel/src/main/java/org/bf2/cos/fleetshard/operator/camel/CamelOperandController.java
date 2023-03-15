@@ -1,5 +1,6 @@
 package org.bf2.cos.fleetshard.operator.camel;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +31,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.APPLICATION_PROPERTIES;
 import static org.bf2.cos.fleetshard.operator.camel.CamelConstants.CONNECTOR_TYPE_SINK;
@@ -87,6 +89,11 @@ public class CamelOperandController extends AbstractOperandController<CamelShard
     @Override
     public List<ResourceDefinitionContext> getResourceTypes() {
         return List.of(KameletBinding.RESOURCE_DEFINITION);
+    }
+
+    @Override
+    public Map<String, EventSource> getEventSources() {
+        return Collections.emptyMap();
     }
 
     @SuppressFBWarnings("HARD_CODE_PASSWORD")

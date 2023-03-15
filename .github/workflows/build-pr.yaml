@@ -79,7 +79,7 @@ jobs:
     uses: ./.github/workflows/build-it.yaml
     with:
       module: "cos-fleetshard-operator-debezium-it"
-      kubeVersion: 'v1.25.3'
+      kubeVersion: 'none'
 
   e2e-install:
     needs:

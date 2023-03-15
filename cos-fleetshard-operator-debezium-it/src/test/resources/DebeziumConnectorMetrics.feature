@@ -18,6 +18,10 @@ Feature: Debezium Connector Metrics
 
     When deploy
     Then the connector exists
-     And the connector secret exists
-     And the connector is in phase "Monitor"
+    Then the connector secret exists
+     And the kc deployment exists
+     And the kc secret exists
+     And the kc configmap exists
+     And the kc svc exists
+     And the kc pvc exists
      And the meters does not have entries with name matching "operator.sdk.*"

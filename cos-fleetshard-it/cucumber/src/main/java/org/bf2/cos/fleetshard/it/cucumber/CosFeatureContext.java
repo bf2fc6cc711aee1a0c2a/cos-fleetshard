@@ -21,8 +21,6 @@ public class CosFeatureContext {
     @ConfigProperty(name = "cos.namespace")
     String operatorsNamespace;
 
-    String connectorsNamespace = "connectors-ns-" + uid();
-
     public String getClusterId() {
         return clusterId;
     }
@@ -36,7 +34,7 @@ public class CosFeatureContext {
     }
 
     public String getConnectorsNamespace() {
-        return connectorsNamespace;
+        return operatorsNamespace + "-" + clusterId;
     }
 
     public String getOperatorsNamespace() {

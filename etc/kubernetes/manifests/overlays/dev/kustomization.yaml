@@ -2,7 +2,6 @@
 resources:
   - namespace.yaml
   - camel-k
-  - strimzi
   - cos-fleetshard-sync
   - cos-fleetshard-operator-camel
   - cos-fleetshard-operator-debezium
@@ -15,15 +14,6 @@ patches:
       version: v1
       kind: ClusterRoleBinding
       name: ".*"
-    patch: |-
-      - op: replace
-        path: /subjects/0/namespace
-        value: "redhat-openshift-connectors"
-  - target:
-      group: rbac.authorization.k8s.io
-      version: v1
-      kind: RoleBinding
-      name: "strimzi.*"
     patch: |-
       - op: replace
         path: /subjects/0/namespace

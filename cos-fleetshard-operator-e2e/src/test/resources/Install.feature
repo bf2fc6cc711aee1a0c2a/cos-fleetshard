@@ -14,13 +14,6 @@ Feature: Install
      And scale component "camel-k-operator" to 0 replicas
      And the component "camel-k-operator" has 0 replicas
 
-  Scenario: Strimzi
-    When scale component "strimzi-cluster-operator" to 1 replicas
-    Then the component "strimzi-cluster-operator" has 1 replicas
-     And the component "strimzi-cluster-operator" has condition "Available" with status "True"
-     And scale component "strimzi-cluster-operator" to 0 replicas
-     And the component "strimzi-cluster-operator" has 0 replicas
-
   Scenario: Fleet Shard Camel
     When scale component "cos-fleetshard-operator-camel" to 1 replicas
     Then the component "cos-fleetshard-operator-camel" has 1 replicas

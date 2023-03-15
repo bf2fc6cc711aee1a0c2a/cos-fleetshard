@@ -39,6 +39,7 @@ jobs:
           tar -xzf ../maven-repo.tgz -C ~
           df -h /
       - name: 'SetUp KinD'
+        if: inputs.kubeVersion  != 'none'
         uses: container-tools/kind-action@v2
         with:
           version: "v0.17.0"
@@ -46,6 +47,7 @@ jobs:
           registry: false
           node_image: kindest/node:${{ inputs.kubeVersion }}
       - name: 'SetUp Kubernetes Cluster'
+        if: inputs.kubeVersion  != 'none'
         run: |
           kubectl apply -k ./etc/kubernetes/manifests/overlays/it --server-side --force-conflicts
       - name: "Build ${{ inputs.module }}"

@@ -1,6 +1,7 @@
 package org.bf2.cos.fleetshard.operator.operand;
 
 import java.util.List;
+import java.util.Map;
 
 import org.bf2.cos.fleetshard.api.ConnectorStatusSpec;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
@@ -9,12 +10,18 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 
 public interface OperandController {
     /**
      * @return a list of {@link ResourceDefinitionContext} describing the Kubernetes types the connector generates.
      */
     List<ResourceDefinitionContext> getResourceTypes();
+
+    /**
+     * Event sources
+     */
+    Map<String, EventSource> getEventSources();
 
     /**
      * Materialize the connector.

@@ -6,7 +6,7 @@ Feature: Debezium Connector Lifecycle
       | pollDelay    | 100     |
       | pollInterval | 500     |
 
-  Scenario: stop
+  Scenario: delete
     Given a Connector with:
       | connector.type.id           | debezium-postgres-1.9.4.Final    |
       | desired.state               | ready                            |
@@ -19,11 +19,20 @@ Feature: Debezium Connector Lifecycle
     When deploy
     Then the connector exists
     Then the connector secret exists
-    Then the kc exists
-    Then the kctr exists
+    And the kc deployment exists
+    And the kc secret exists
+    And the kc configmap exists
+    And the kc svc exists
+    And the kc pvc exists
 
-    When the connector desired status is set to "deleted"
-    Then the connector is in phase "Deleted"
+    When the connector desired status is set to "stopped"
+    Then the connector is in phase "Stopped"
     Then the connector secret exists
-    Then the kc does not exists
-    Then the kctr does not exists
+
+    Then the kc deployment does not exists
+     And the meters has counter "cos.fleetshard.controller.connectors.reconcile.initialization.count" with value greater than or equal to 1
+     And the meters has counter "cos.fleetshard.controller.connectors.reconcile.stopping.count" with value greater than or equal to 1
+     And the meters has counter "cos.fleetshard.controller.connectors.reconcile.stopped.count" with value greater than or equal to 1
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.initialization.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.stopping.time"
+     And the meters has timer with name "cos.fleetshard.controller.connectors.reconcile.stopped.time"

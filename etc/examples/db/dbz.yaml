@@ -1,0 +1,39 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: dbz-mk-pg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbz-mk-pg
+  template:
+    metadata:
+      labels:
+        app: dbz-mk-pg
+    spec:
+      containers:
+        - name: dbz-mk-pg
+          image: 'debezium/example-postgres:1.4'
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+          imagePullPolicy: IfNotPresent
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dbz-mk-pg
+spec:
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: NodePort
+  selector:
+    app: dbz-mk-pg

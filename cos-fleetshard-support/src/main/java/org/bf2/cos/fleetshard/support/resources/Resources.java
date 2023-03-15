@@ -1,24 +1,36 @@
 package org.bf2.cos.fleetshard.support.resources;
 
+import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
+import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ResourceRef;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.fabric8.kubernetes.api.Pluralize;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.LabelSelector;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.StatusDetails;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 import io.fabric8.kubernetes.client.utils.KubernetesResourceUtil;
 
@@ -100,6 +112,16 @@ public final class Resources {
         }
     }
 
+    public static void setLabel(ObjectMeta meta, String name, String value) {
+        if (value != null) {
+            if (meta.getLabels() == null) {
+                meta.setLabels(new TreeMap<>());
+            }
+
+            meta.getLabels().put(name, value);
+        }
+    }
+
     public static void setLabels(HasMetadata metadata, String name, String value, String... keyVals) {
         Map<String, String> labels = KubernetesResourceUtil.getOrCreateLabels(metadata);
         labels.put(name, value);
@@ -135,6 +157,16 @@ public final class Resources {
     public static void setAnnotation(HasMetadata metadata, String name, String value) {
         if (value != null) {
             KubernetesResourceUtil.getOrCreateAnnotations(metadata).put(name, value);
+        }
+    }
+
+    public static void setAnnotation(ObjectMeta meta, String name, String value) {
+        if (value != null) {
+            if (meta.getAnnotations() == null) {
+                meta.setAnnotations(new TreeMap<>());
+            }
+
+            meta.getAnnotations().put(name, value);
         }
     }
 
@@ -253,5 +285,107 @@ public final class Resources {
         }
 
         return Long.toHexString(crc32.getValue());
+    }
+
+    public static boolean isSecret(HasMetadata ref) {
+        if (ref instanceof Secret) {
+            return true;
+        }
+
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("Secret", ref.getKind());
+    }
+
+    public static boolean isConfigMap(HasMetadata ref) {
+        if (ref instanceof ConfigMap) {
+            return true;
+        }
+
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("ConfigMap", ref.getKind());
+    }
+
+    public static boolean isService(HasMetadata ref) {
+        if (ref instanceof Service) {
+            return true;
+        }
+
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("Service", ref.getKind());
+    }
+
+    public static boolean isSecret(ResourceRef ref) {
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("Secret", ref.getKind());
+    }
+
+    public static boolean isDeployment(HasMetadata ref) {
+        if (ref instanceof Deployment) {
+            return true;
+        }
+
+        return Objects.equals("apps/v1", ref.getApiVersion())
+            && Objects.equals("Deployment", ref.getKind());
+    }
+
+    public static boolean isDeployment(ResourceDefinitionContext ref) {
+        return Objects.equals("apps", ref.getGroup())
+            && Objects.equals("v1", ref.getVersion())
+            && Objects.equals("Deployment", ref.getKind());
+    }
+
+    public static boolean isPersistentVolumeClaim(HasMetadata ref) {
+        if (ref instanceof PersistentVolumeClaim) {
+            return true;
+        }
+
+        return Objects.equals("v1", ref.getApiVersion())
+            && Objects.equals("PersistentVolumeClaim", ref.getKind());
+    }
+
+    public static Deployment lookupDeployment(KubernetesClient client, ManagedConnector connector) {
+        return client.resources(Deployment.class)
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withName(connector.getMetadata().getName())
+            .get();
+    }
+
+    public static Pod lookupPod(KubernetesClient client, ManagedConnector connector) {
+        var pods = client.resources(Pod.class)
+            .inNamespace(connector.getMetadata().getNamespace())
+            .withLabel(LABEL_CLUSTER_ID, connector.getSpec().getClusterId())
+            .withLabel(LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId())
+            .withLabel(LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId())
+            .list();
+
+        if (pods.getItems().size() == 1) {
+            return pods.getItems().get(0);
+        }
+
+        return null;
+    }
+
+    public static LabelSelector selector(ManagedConnector connector) {
+        return new LabelSelector(
+            null,
+            Map.of(
+                LABEL_CONNECTOR_ID, connector.getSpec().getConnectorId(),
+                LABEL_DEPLOYMENT_ID, connector.getSpec().getDeploymentId()));
+    }
+
+    public static HasMetadata createOrPatch(
+        KubernetesClient client,
+        String namespace,
+        HasMetadata resource) {
+
+        try {
+            return client.resource(resource).inNamespace(namespace).create();
+        } catch (KubernetesClientException e) {
+            if (e.getCode() != HttpURLConnection.HTTP_CONFLICT) {
+                throw e;
+            }
+        }
+
+        return client.resource(resource).inNamespace(namespace).patch();
     }
 }

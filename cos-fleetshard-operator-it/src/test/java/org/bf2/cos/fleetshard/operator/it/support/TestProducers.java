@@ -2,6 +2,7 @@ package org.bf2.cos.fleetshard.operator.it.support;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -24,6 +25,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
+import io.javaoperatorsdk.operator.processing.event.source.EventSource;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @ApplicationScoped
@@ -58,6 +60,11 @@ public class TestProducers {
             @Override
             public List<ResourceDefinitionContext> getResourceTypes() {
                 return Collections.emptyList();
+            }
+
+            @Override
+            public Map<String, EventSource> getEventSources() {
+                return Collections.emptyMap();
             }
 
             @Override
