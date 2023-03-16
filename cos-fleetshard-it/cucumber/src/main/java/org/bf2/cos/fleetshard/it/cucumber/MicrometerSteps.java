@@ -205,6 +205,15 @@ public class MicrometerSteps extends StepsSupport {
             .isGreaterThan(0);
     }
 
+    @And("the meters does not have entries with name matching {string}")
+    public void meter_does_not_exists(String regex) {
+        assertThat(registry.getMeters()).allSatisfy(meter -> {
+            assertThat(meter.getId().getName().matches(regex))
+                .withFailMessage(() -> String.format("There is a meter %s matching '%s'", meter.getId().getName(), regex))
+                .isFalse();
+        });
+    }
+
     // ***********************************
     //
     // timers
