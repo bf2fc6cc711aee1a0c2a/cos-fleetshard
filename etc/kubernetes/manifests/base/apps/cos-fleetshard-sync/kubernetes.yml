@@ -393,8 +393,8 @@ spec:
             path: "/q/health/live"
             port: 8080
             scheme: "HTTP"
-          initialDelaySeconds: 0
-          periodSeconds: 30
+          initialDelaySeconds: 5
+          periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 10
         name: "cos-fleetshard-sync"
@@ -408,8 +408,8 @@ spec:
             path: "/q/health/ready"
             port: 8080
             scheme: "HTTP"
-          initialDelaySeconds: 0
-          periodSeconds: 30
+          initialDelaySeconds: 5
+          periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 10
         resources:
