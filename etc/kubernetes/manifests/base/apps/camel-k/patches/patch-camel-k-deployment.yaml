@@ -21,6 +21,8 @@ spec:
                 name: camel-k-override-config
                 key: log.level
                 optional: true
+          - name: OPERATOR_ID
+            value: "cos-fleetshard-operator-camel"
           resources:
             limits:
               cpu: "1000m"
