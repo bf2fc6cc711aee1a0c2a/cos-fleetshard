@@ -206,7 +206,7 @@ public class DebeziumOperandSupport {
             ConnectorStatusSpec statusSpec = connectorStatus.getStatusSpec();
             var kafkaConnectorStatus = connectorStatus(kafkaConnector);
             io.fabric8.kubernetes.api.model.Condition readyCondition = new io.fabric8.kubernetes.api.model.Condition();
-            if (null != kafkaConnectorStatus) {
+            if (null != kafkaConnectorStatus && null != kafkaConnectorStatus.getState()) {
                 if (null != connectorReadyCondition) {
                     readyCondition = cloneCondition(connectorReadyCondition);
                 } else {
@@ -309,7 +309,8 @@ public class DebeziumOperandSupport {
                     if ("TimeoutException".equals(kconnectNotReadyCondition.getReason())) {
                         io.fabric8.kubernetes.api.model.Condition readyCondition = connectorStatus.readyCondition();
                         readyCondition.setReason("KafkaClusterUnreachable");
-                        readyCondition.setMessage("The configured Kafka Cluster is unreachable or ACLs deny access.");
+                        readyCondition
+                            .setMessage("The configured Kafka Cluster is unreachable, or ACLs or policies deny access.");
                     }
                 }
                 connectorStatus.getStatusSpec().setPhase(ManagedConnector.STATE_FAILED);
