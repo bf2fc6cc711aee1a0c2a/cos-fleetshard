@@ -507,7 +507,13 @@ public class DebeziumOperandControllerTest {
                 List.of(createCondition("Foo", "True", "Bar")),
                 createConditions("True", null),
                 ManagedConnector.STATE_PROVISIONING,
-                "Unassigned", false));
+                "Unassigned", false),
+            arguments(
+                null,
+                List.of(),
+                createNotReadyConditions("TimeoutException"),
+                ManagedConnector.STATE_FAILED,
+                "KafkaClusterUnreachable", false));
     }
 
     @ParameterizedTest
@@ -537,7 +543,8 @@ public class DebeziumOperandControllerTest {
                             .withState(connectorState)
                             .build())
                     .addToConnectorStatus("tasks",
-                        withDebeziumException ? List.of(Map.of("id", "0", "state", KafkaConnectorStatus.STATE_FAILED, "trace",
+                        withDebeziumException ? List.of(Map.of("id", "0", "state", KafkaConnectorStatus.STATE_FAILED,
+                            "trace",
                             "io.debezium.DebeziumException: The connector is trying to read binlog starting at SourceInfo [currentGtid=null, currentBinlogFilename=mysql-bin-changelog.009801, currentBinlogPosition=157, currentRowNumber=0, serverId=0, sourceTime=null, threadId=-1, currentQuery=null, tableIds=[], databaseName=null], but this is no longer available on the server. Reconfigure the connector to use a snapshot when needed."))
                             : null)
                     .build())
