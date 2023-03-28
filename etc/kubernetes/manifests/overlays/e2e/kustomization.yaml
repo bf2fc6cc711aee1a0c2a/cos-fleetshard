@@ -10,7 +10,7 @@ patchesStrategicMerge:
     apiVersion: camel.apache.org/v1
     kind: IntegrationPlatform
     metadata:
-      name: camel-k
+      name: cos-fleetshard-operator-camel
 
 patches:
   #
