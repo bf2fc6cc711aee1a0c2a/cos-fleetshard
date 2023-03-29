@@ -180,6 +180,59 @@ paths:
                 500Example:
                   $ref: 'connector_mgmt.yaml#/components/examples/500Example'
           description: Unexpected error occurred
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/processordeployments/{processor_id}':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: processor_id
+        description: The id of the processor
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAssignedProcessorDeploymentById
+      summary: Returns a list of processor deployments assigned to the cluster.
+      description: Returns a list of processor deployments assigned to the cluster.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessorDeployment'
+          description: A processor deployment
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
+          description: Auth token is invalid
+        '410':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+          description: deployment has been deleted
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
+          description: Unexpected error occurred
 
   '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/deployments/{deployment_id}/status':
     parameters:
@@ -539,6 +592,109 @@ components:
           properties:
             object:
               $ref: '#/components/schemas/ConnectorDeployment'
+
+    ProcessorDeployment:
+      description: Holds the deployment configuration of a processor
+      allOf:
+        - $ref: 'connector_mgmt.yaml#/components/schemas/ObjectReference'
+        - type: object
+          properties:
+            metadata:
+              type: object
+              required:
+                - created_at
+                - updated_at
+                - resource_version
+                - resolved_secrets
+              properties:
+                created_at:
+                  format: date-time
+                  type: string
+                updated_at:
+                  format: date-time
+                  type: string
+                resource_version:
+                  type: integer
+                  format: int64
+                resolved_secrets:
+                  type: boolean
+                annotations:
+                  type: object
+                  additionalProperties:
+                    type: "string"
+            spec:
+              $ref: '#/components/schemas/ProcessorDeploymentSpec'
+            status:
+              $ref: '#/components/schemas/ProcessorDeploymentStatus'
+
+    ProcessorDeploymentSpec:
+      description: Holds the deployment specification of a processor
+      type: object
+      properties:
+        service_account:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ServiceAccount'
+        kafka:
+          $ref: 'connector_mgmt.yaml#/components/schemas/KafkaConnectionSettings'
+        schema_registry:
+          $ref: "connector_mgmt.yaml#/components/schemas/SchemaRegistryConnectionSettings"
+        connector_id:
+          type: string
+        connector_resource_version:
+          type: integer
+          format: int64
+        connector_type_id:
+          type: string
+        namespace_id:
+          type: string
+        connector_spec:
+          type: object
+        operator_id:
+          description: an optional operator id that the connector should be run under.
+          type: string
+        desired_state:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ProcessorDesiredState'
+        shard_metadata:
+          type: object
+
+    ProcessorDeploymentStatus:
+      description: The status of connector deployment
+      type: object
+      properties:
+        phase:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ProcessorState'
+        resource_version:
+          type: integer
+          format: int64
+        operators:
+          type: object
+          properties:
+            assigned:
+              $ref: '#/components/schemas/ConnectorOperator'
+            available:
+              $ref: '#/components/schemas/ConnectorOperator'
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
+
+    ProcessorDeploymentList:
+      allOf:
+        - $ref: 'connector_mgmt.yaml#/components/schemas/List'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/ProcessorDeployment'
+
+    ProcessorDeploymentWatchEvent:
+      allOf:
+        - $ref: '#/components/schemas/WatchEvent'
+        - type: object
+          properties:
+            object:
+              $ref: '#/components/schemas/ProcessorDeployment'
 
     ConnectorOperator:
       description: identifies an operator that runs on the fleet shards used to manage connectors.

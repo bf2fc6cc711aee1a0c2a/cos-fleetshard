@@ -1244,6 +1244,28 @@ components:
         - provisioning
         - deprovisioning
 
+    ProcessorDesiredState:
+      type: string
+      enum:
+        - unassigned
+        - ready
+        - stopped
+        - deleted
+
+    ProcessorState:
+      type: string
+      enum:
+        - assigning
+        - assigned
+        - updating
+        - ready
+        - stopped
+        - failed
+        - deleting
+        - deleted
+        - provisioning
+        - deprovisioning
+
     ConnectorConfiguration:
       required:
         - kafka
