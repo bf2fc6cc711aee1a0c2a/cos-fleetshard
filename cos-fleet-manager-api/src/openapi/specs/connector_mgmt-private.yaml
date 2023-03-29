@@ -637,16 +637,16 @@ components:
           $ref: 'connector_mgmt.yaml#/components/schemas/KafkaConnectionSettings'
         schema_registry:
           $ref: "connector_mgmt.yaml#/components/schemas/SchemaRegistryConnectionSettings"
-        connector_id:
+        processor_id:
           type: string
-        connector_resource_version:
+        processor_resource_version:
           type: integer
           format: int64
-        connector_type_id:
+        processor_type_id:
           type: string
         namespace_id:
           type: string
-        connector_spec:
+        processor_spec:
           type: object
         operator_id:
           description: an optional operator id that the connector should be run under.

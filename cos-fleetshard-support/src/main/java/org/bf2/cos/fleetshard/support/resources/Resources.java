@@ -29,6 +29,7 @@ public final class Resources {
     public static final String LABEL_NAMESPACE_ID = "cos.bf2.org/namespace.id";
     public static final String LABEL_DEPLOYMENT_ID = "cos.bf2.org/deployment.id";
     public static final String LABEL_CONNECTOR_ID = "cos.bf2.org/connector.id";
+    public static final String LABEL_PROCESSOR_ID = "cos.bf2.org/processor.id";
     public static final String LABEL_CONNECTOR_TYPE_ID = "cos.bf2.org/connector.type.id";
     public static final String LABEL_CONNECTOR_OPERATOR = "cos.bf2.org/connector.operator";
     public static final String LABEL_DEPLOYMENT_RESOURCE_VERSION = "cos.bf2.org/deployment.resource.version";
@@ -53,6 +54,8 @@ public final class Resources {
     public static final String CONNECTOR_SECRET_SUFFIX = "-config";
     public static final String CONNECTOR_SECRET_DEPLOYMENT_SUFFIX = "-deploy";
     public static final String CONNECTOR_CONFIGMAP_SUFFIX = "-configmap";
+
+    public static final String PROCESSOR_PREFIX = "pcr-";
 
     public static final String LABEL_KCP_TARGET_CLUSTER_ID = "kcp.dev/cluster";
 

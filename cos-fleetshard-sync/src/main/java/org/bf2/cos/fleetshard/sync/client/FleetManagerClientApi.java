@@ -30,6 +30,8 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentList;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentStatus;
 
 public interface FleetManagerClientApi {
 
@@ -55,6 +57,32 @@ public interface FleetManagerClientApi {
         @QueryParam("page") String page,
         @QueryParam("size") String size,
         @QueryParam("gt_version") Long gtVersion)
+        throws ApiException, ProcessingException;
+
+    /**
+     * Returns a list of processor deployments assigned to the cluster.
+     */
+    @GET
+    @Path("/kafka_connector_clusters/{connector_cluster_id}/processors/deployments")
+    @Produces(MediaType.APPLICATION_JSON)
+    ProcessorDeploymentList getProcessorDeployments(
+        @PathParam("connector_cluster_id") String connectorClusterId,
+        @QueryParam("page") String page,
+        @QueryParam("size") String size,
+        @QueryParam("gt_version") Long gtVersion)
+        throws ApiException, ProcessingException;
+
+    /**
+     * Update the status of a connector deployment
+     */
+    @PUT
+    @Path("/kafka_connector_clusters/{connector_cluster_id}/processors/deployments/{deployment_id}/status")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    void updateProcessorDeploymentStatus(
+        @PathParam("connector_cluster_id") String connectorClusterId,
+        @PathParam("deployment_id") String deploymentId,
+        ProcessorDeploymentStatus processorDeploymentStatus)
         throws ApiException, ProcessingException;
 
     /**

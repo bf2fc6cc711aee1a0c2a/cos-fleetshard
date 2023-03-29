@@ -1438,6 +1438,24 @@ components:
           items:
             $ref: "#/components/schemas/ConnectorTypeLabelCount"
 
+
+    Processor:
+      allOf:
+        - $ref: "#/components/schemas/ObjectReference"
+        - $ref: "#/components/schemas/ConnectorMeta"
+        - $ref: "#/components/schemas/ConnectorConfiguration"
+        - $ref: "#/components/schemas/ConnectorStatus"
+
+    ProcessorList:
+      allOf:
+        - $ref: "#/components/schemas/List"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Connector"
+
     #
     # Connector Namespaces
     #

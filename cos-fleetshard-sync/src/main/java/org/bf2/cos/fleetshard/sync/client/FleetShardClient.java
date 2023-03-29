@@ -9,15 +9,18 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.bf2.cos.fleet.manager.model.ConnectorDeployment;
+import org.bf2.cos.fleet.manager.model.ProcessorDeployment;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
+import org.bf2.cos.fleetshard.api.Processor;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
 import org.bf2.cos.fleetshard.support.resources.NamespacedName;
+import org.bf2.cos.fleetshard.support.resources.Processors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.support.watch.Informers;
@@ -46,6 +49,7 @@ public class FleetShardClient implements Service {
     private volatile SharedIndexInformer<ManagedConnector> connectorsInformer;
     private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
     private volatile SharedIndexInformer<Namespace> namespaceInformers;
+    private volatile SharedIndexInformer<Processor> processorsInformer;
 
     @SuppressWarnings("PMD.DoNotTerminateVM")
     @Override
@@ -194,6 +198,13 @@ public class FleetShardClient implements Service {
             deployment.getId());
     }
 
+    // TODO remove duplication here?
+    public Optional<Secret> getSecret(ProcessorDeployment deployment) {
+        return getSecret(
+            deployment.getSpec().getNamespaceId(),
+            deployment.getId());
+    }
+
     public Optional<Secret> getSecret(NamespacedName id) {
         return Optional.ofNullable(
             kubernetesClient.secrets()
@@ -224,6 +235,17 @@ public class FleetShardClient implements Service {
             .delete().isEmpty();
     }
 
+    public Optional<Processor> getProcessor(NamespacedName id) {
+        if (connectorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = Cache.namespaceKeyFunc(id.getNamespace(), id.getName());
+        final Processor val = processorsInformer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
+    }
+
     public Optional<ManagedConnector> getConnector(NamespacedName id) {
         if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
@@ -241,6 +263,12 @@ public class FleetShardClient implements Service {
             deployment.getId());
     }
 
+    public Optional<Processor> getProcessor(ProcessorDeployment deployment) {
+        return getProcessor(
+            deployment.getSpec().getNamespaceId(),
+            deployment.getId());
+    }
+
     public Optional<ManagedConnector> getConnector(String namespaceId, String deploymentId) {
         if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
@@ -248,6 +276,17 @@ public class FleetShardClient implements Service {
 
         final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
         final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
+    }
+
+    public Optional<Processor> getProcessor(String namespaceId, String deploymentId) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
+        final Processor val = processorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
     }
@@ -294,8 +333,18 @@ public class FleetShardClient implements Service {
             .createOrReplace();
     }
 
+    public Processor createProcessor(Processor processor) {
+        return kubernetesClient.resource(processor)
+            .inNamespace(processor.getMetadata().getNamespace())
+            .createOrReplace();
+    }
+
     public String generateConnectorId(String namespaceId) {
         return Connectors.generateConnectorId(namespaceId);
+    }
+
+    public String generateProcessorId(String namespaceId) {
+        return Processors.generateProcessorId(namespaceId);
     }
 
     // *************************************
