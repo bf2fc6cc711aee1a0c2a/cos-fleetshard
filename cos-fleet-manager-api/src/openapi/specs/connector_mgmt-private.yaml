@@ -180,7 +180,7 @@ paths:
                 500Example:
                   $ref: 'connector_mgmt.yaml#/components/examples/500Example'
           description: Unexpected error occurred
-  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/processordeployments/{processor_id}':
+  '/api/connector_mgmt/v1/agent/kafka_connector_clusters/{connector_cluster_id}/processors/deployments/{processor_id}':
     parameters:
       - name: connector_cluster_id
         description: The id of the connector cluster
