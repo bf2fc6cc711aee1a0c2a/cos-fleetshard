@@ -143,43 +143,39 @@ public final class CamelOperandSupport {
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getConsumes());
+        String consumesClass = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
+            .map(spec -> spec.at("/consumes/contentClass"))
+            .filter(node -> !node.isMissingNode())
+            .map(JsonNode::asText)
+            .orElse(shardMetadata.getConsumesClass());
         String produces = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
             .map(spec -> spec.at("/produces/format"))
             .filter(node -> !node.isMissingNode())
             .map(JsonNode::asText)
             .orElse(shardMetadata.getProduces());
+        String producesClass = Optional.ofNullable(connectorConfiguration.getDataShapeSpec())
+            .map(spec -> spec.at("/produces/contentClass"))
+            .filter(node -> !node.isMissingNode())
+            .map(JsonNode::asText)
+            .orElse(shardMetadata.getProducesClass());
 
-        final List<StepEndpoint> stepDefinitions = new ArrayList<>(3);
+        final List<StepEndpoint> stepDefinitions = new ArrayList<>(5);
 
         if (consumes != null) {
-            switch (consumes) {
-                case "application/json":
-                    stepDefinitions.add(kamelet("cos-decoder-json-action", properties -> {
-                        if (shardMetadata.getConsumesClass() != null) {
-                            properties.put("contentClass", shardMetadata.getConsumesClass());
-                        }
-                    }));
-                    break;
-                case "avro/binary":
-                    stepDefinitions.add(kamelet("cos-decoder-avro-action", properties -> {
-                        if (shardMetadata.getConsumesClass() != null) {
-                            properties.put("contentClass", shardMetadata.getConsumesClass());
-                        }
-                    }));
-                    break;
-                case "application/x-java-object":
-                    stepDefinitions.add(kamelet("cos-decoder-pojo-action", properties -> {
-                        if (shardMetadata.getConsumesClass() != null) {
-                            properties.put("mimeType", produces);
-                        }
-                    }));
-                    break;
-                case "text/plain":
-                case "application/octet-stream":
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported value format " + consumes);
-            }
+            stepDefinitions.add(kamelet("cos-resolve-schema-action", properties -> {
+                properties.put("mimeType", consumes);
+                if (consumesClass != null) {
+                    properties.put("contentClass", consumesClass);
+                }
+
+                if (produces != null) {
+                    properties.put("targetMimeType", produces);
+                }
+            }));
+
+            stepDefinitions.add(kamelet("cos-data-type-action", properties -> {
+                properties.put("format", consumes.replaceAll("/", "-"));
+            }));
         }
 
         if (enableProcessors && !connectorConfiguration.getProcessorsSpec().isEmpty()) {
@@ -187,30 +183,16 @@ public final class CamelOperandSupport {
         }
 
         if (produces != null) {
-            switch (produces) {
-                case "application/json":
-                    stepDefinitions.add(kamelet("cos-encoder-json-action", properties -> {
-                        if (shardMetadata.getProducesClass() != null) {
-                            properties.put("contentClass", shardMetadata.getProducesClass());
-                        }
-                    }));
-                    break;
-                case "avro/binary":
-                    stepDefinitions.add(kamelet("cos-encoder-avro-action", properties -> {
-                        if (shardMetadata.getProducesClass() != null) {
-                            properties.put("contentClass", shardMetadata.getProducesClass());
-                        }
-                    }));
-                    break;
-                case "text/plain":
-                    stepDefinitions.add(kamelet("cos-encoder-string-action"));
-                    break;
-                case "application/octet-stream":
-                    stepDefinitions.add(kamelet("cos-encoder-bytearray-action"));
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unsupported value format " + produces);
-            }
+            stepDefinitions.add(kamelet("cos-resolve-schema-action", properties -> {
+                properties.put("mimeType", produces);
+                if (producesClass != null) {
+                    properties.put("contentClass", producesClass);
+                }
+            }));
+
+            stepDefinitions.add(kamelet("cos-data-type-action", properties -> {
+                properties.put("format", produces.replaceAll("/", "-"));
+            }));
         }
 
         // If it is a sink, then it consumes from kafka

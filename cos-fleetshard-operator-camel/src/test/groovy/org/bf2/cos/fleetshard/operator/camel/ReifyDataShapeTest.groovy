@@ -35,7 +35,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -47,11 +47,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-json-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-json'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -74,7 +86,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -86,11 +98,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-json-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-json'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -116,7 +140,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.source) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -128,11 +152,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-json-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-json'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -155,7 +191,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.source) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -167,11 +203,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-json-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-json'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -203,7 +251,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 1
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -215,7 +263,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-octet-stream'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-octet-stream'
             }
     }
 
@@ -238,7 +302,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 1
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -250,7 +314,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-octet-stream'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-octet-stream'
             }
     }
 
@@ -268,8 +348,8 @@ class ReifyDataShapeTest extends BaseSpec {
         when:
             def resources = reify(connector, sm, sa, [
                     data_shape: [
-                            produces: [ format: 'application/octet-stream' ],
-                            consumes: [ format: 'application/octet-stream' ]
+                        produces: [ format: 'application/octet-stream' ],
+                        consumes: [ format: 'application/octet-stream' ]
                     ]
             ])
 
@@ -277,7 +357,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 1
+                spec.steps.size() == 4
 
                 with(it.spec.source) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -289,7 +369,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-octet-stream'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-octet-stream'
             }
     }
 
@@ -312,7 +408,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 1
+                spec.steps.size() == 4
 
                 with(it.spec.source) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -324,7 +420,23 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-encoder-bytearray-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-octet-stream'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/octet-stream'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-octet-stream'
             }
     }
 
@@ -341,6 +453,7 @@ class ReifyDataShapeTest extends BaseSpec {
 
             def sm = sharedMeta()
             sm.consumes = 'application/x-java-object'
+            sm.consumesClass = 'org.sample.Foo'
 
         when:
             def resources = reify(connector, sm, sa, [
@@ -353,7 +466,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -365,11 +478,25 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-pojo-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/x-java-object'
+                spec.steps[0].properties['contentClass'] == 'org.sample.Foo'
+                spec.steps[0].properties['targetMimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-x-java-object'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -407,15 +534,27 @@ class ReifyDataShapeTest extends BaseSpec {
                     it.properties['valueSerializer'] == 'org.bf2.cos.connector.camel.serdes.avro.AvroSerializer'
                 }
 
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-json-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/json'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-avro-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-json'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'avro/binary'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'avro-binary'
             }
     }
 
@@ -431,7 +570,7 @@ class ReifyDataShapeTest extends BaseSpec {
             def resources = reify(connector, sm, sa, [
                     data_shape: [
                             produces: [ format: 'application/json' ],
-                            consumes: [ format: 'avro/binary' ]
+                            consumes: [ format: 'avro/x-struct', contentClass: 'org.sample.Foo' ],
                     ]
             ])
 
@@ -439,7 +578,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -451,11 +590,24 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-avro-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'avro/x-struct'
+                spec.steps[0].properties['contentClass'] == 'org.sample.Foo'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'avro-x-struct'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -471,7 +623,7 @@ class ReifyDataShapeTest extends BaseSpec {
             def resources = reify(connector, sm, sa, [
                     data_shape: [
                             produces: [ format: 'application/json' ],
-                            consumes: [ format: 'application/x-java-object' ]
+                            consumes: [ format: 'application/x-java-object', contentClass: 'org.sample.Foo' ],
                     ]
             ])
 
@@ -479,7 +631,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -491,11 +643,25 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-pojo-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/x-java-object'
+                spec.steps[0].properties['targetMimeType'] == 'application/json'
+                spec.steps[0].properties['contentClass'] == 'org.sample.Foo'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-json-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-x-java-object'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'application/json'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'application-json'
             }
     }
 
@@ -519,7 +685,7 @@ class ReifyDataShapeTest extends BaseSpec {
             resources.size() == 2
 
             with(klb(resources)) {
-                spec.steps.size() == 2
+                spec.steps.size() == 4
 
                 with(it.spec.sink) {
                     it.ref.apiVersion == Kamelet.RESOURCE_API_VERSION
@@ -531,11 +697,24 @@ class ReifyDataShapeTest extends BaseSpec {
 
                 spec.steps[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[0].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[0].ref.name == 'cos-decoder-pojo-action'
+                spec.steps[0].ref.name == 'cos-resolve-schema-action'
+                spec.steps[0].properties['mimeType'] == 'application/x-java-object'
+                spec.steps[0].properties['targetMimeType'] == 'avro/binary'
 
                 spec.steps[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                 spec.steps[1].ref.kind == Kamelet.RESOURCE_KIND
-                spec.steps[1].ref.name == 'cos-encoder-avro-action'
+                spec.steps[1].ref.name == 'cos-data-type-action'
+                spec.steps[1].properties['format'] == 'application-x-java-object'
+
+                spec.steps[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[2].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[2].ref.name == 'cos-resolve-schema-action'
+                spec.steps[2].properties['mimeType'] == 'avro/binary'
+
+                spec.steps[3].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                spec.steps[3].ref.kind == Kamelet.RESOURCE_KIND
+                spec.steps[3].ref.name == 'cos-data-type-action'
+                spec.steps[3].properties['format'] == 'avro-binary'
 
                 spec.integration.flows == null
             }
