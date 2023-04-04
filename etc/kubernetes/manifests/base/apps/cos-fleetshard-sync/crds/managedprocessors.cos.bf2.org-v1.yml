@@ -31,9 +31,6 @@ spec:
     - jsonPath: .spec.deploymentSpec.processorTypeId
       name: PROCESSOR_TYPE_ID
       type: string
-    - jsonPath: .status.deployment.processorTypeId
-      name: PROCESSOR_TYPE_ID
-      type: string
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -97,28 +94,6 @@ spec:
                       type: string
                   type: object
                 type: array
-              deployment:
-                properties:
-                  configMap:
-                    type: string
-                  deploymentResourceVersion:
-                    type: integer
-                  desiredState:
-                    type: string
-                  kafka:
-                    properties:
-                      id:
-                        type: string
-                      url:
-                        type: string
-                    type: object
-                  processorTypeId:
-                    type: string
-                  secret:
-                    type: string
-                  unitOfWork:
-                    type: string
-                type: object
               phase:
                 enum:
                 - Initialization

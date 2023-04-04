@@ -16,7 +16,6 @@ public class ManagedProcessorStatus {
     @PrinterColumn(name = "PHASE")
     private PhaseType phase = PhaseType.Initialization;
     private List<Condition> conditions = new ArrayList<>();
-    private ProcessorDeploymentSpec deployment = new ProcessorDeploymentSpec();
     private ProcessorStatusSpec processorStatus = new ProcessorStatusSpec();
 
     public PhaseType getPhase() {
@@ -33,14 +32,6 @@ public class ManagedProcessorStatus {
 
     public void setConditions(List<Condition> conditions) {
         this.conditions = conditions;
-    }
-
-    public ProcessorDeploymentSpec getDeployment() {
-        return deployment;
-    }
-
-    public void setDeployment(ProcessorDeploymentSpec deployment) {
-        this.deployment = deployment;
     }
 
     public ProcessorStatusSpec getProcessorStatus() {
@@ -60,13 +51,13 @@ public class ManagedProcessorStatus {
             return false;
         }
         ManagedProcessorStatus that = (ManagedProcessorStatus) o;
-        return phase == that.phase && Objects.equals(conditions, that.conditions) && Objects.equals(deployment, that.deployment)
+        return phase == that.phase && Objects.equals(conditions, that.conditions)
             && Objects.equals(processorStatus, that.processorStatus);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(phase, conditions, deployment, processorStatus);
+        return Objects.hash(phase, conditions, processorStatus);
     }
 
     @Override
@@ -74,7 +65,6 @@ public class ManagedProcessorStatus {
         return "ManagedProcessorStatus{" +
             "phase=" + phase +
             ", conditions=" + conditions +
-            ", deployment=" + deployment +
             ", processorStatus=" + processorStatus +
             '}';
     }
