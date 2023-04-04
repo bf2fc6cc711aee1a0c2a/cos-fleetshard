@@ -28,7 +28,7 @@ spec:
     - jsonPath: .spec.processorId
       name: PROCESSOR_ID
       type: string
-    - jsonPath: .spec.deploymentSpec.processorTypeId
+    - jsonPath: .spec.processorTypeId
       name: PROCESSOR_TYPE_ID
       type: string
     name: v1alpha1
@@ -39,28 +39,19 @@ spec:
             properties:
               clusterId:
                 type: string
+              definition:
+                type: string
               deploymentId:
                 type: string
-              deploymentSpec:
+              deploymentResourceVersion:
+                type: integer
+              desiredState:
+                type: string
+              kafka:
                 properties:
-                  configMap:
+                  id:
                     type: string
-                  deploymentResourceVersion:
-                    type: integer
-                  desiredState:
-                    type: string
-                  kafka:
-                    properties:
-                      id:
-                        type: string
-                      url:
-                        type: string
-                    type: object
-                  processorTypeId:
-                    type: string
-                  secret:
-                    type: string
-                  unitOfWork:
+                  url:
                     type: string
                 type: object
               operatorSelector:
@@ -73,6 +64,12 @@ spec:
                     type: string
                 type: object
               processorId:
+                type: string
+              processorTypeId:
+                type: string
+              secret:
+                type: string
+              unitOfWork:
                 type: string
             type: object
           status:
