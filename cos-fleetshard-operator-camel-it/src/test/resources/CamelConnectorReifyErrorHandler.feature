@@ -80,7 +80,9 @@ Feature: Camel Connector Reify
     Then the klb exists
      And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "rc:fail?routeId=current"
 
-    When the klb phase is "error"
+    When the klb with conditions:
+      | message   | reason   | status     | type     | lastTransitionTime        |
+      | a message | Error    | False      | Ready    | 2021-06-12T12:35:09+02:00 |
     Then the connector is in phase "Monitor"
      And the connector operand status is in phase "failed"
 
@@ -102,6 +104,8 @@ Feature: Camel Connector Reify
     Then the klb exists
     And the klb has an entry at path "$.spec.errorHandler.sink.endpoint.uri" with value "rc:fail?routeId=current"
 
-    When the klb phase is "error"
+    When the klb with conditions:
+      | message   | reason   | status     | type     | lastTransitionTime        |
+      | a message | Error    | False      | Ready    | 2021-06-12T12:35:09+02:00 |
     Then the connector is in phase "Monitor"
     And the connector operand status is in phase "failed"

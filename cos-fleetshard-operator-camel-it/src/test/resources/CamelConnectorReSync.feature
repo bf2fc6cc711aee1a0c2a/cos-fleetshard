@@ -22,7 +22,7 @@ Feature: Camel Connector ReSync
     Then the klb exists
     Then the klb secret exists
 
-    When the klb phase is "Ready" with conditions:
+    When the klb with conditions:
       | message   | reason   | status     | type     | lastTransitionTime        |
       | a message | a reason | True       | Ready    | 2021-06-12T12:35:09+02:00 |
     Then the connector is in phase "Monitor"

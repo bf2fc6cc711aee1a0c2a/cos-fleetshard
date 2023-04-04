@@ -40,8 +40,8 @@ public class KameletBindingSteps extends StepsSupport {
     }
 
     @SuppressWarnings("unchecked")
-    @When("the klb phase is {string} with conditions:")
-    public void klb_phase_and_conditions(String phase, DataTable table) {
+    @When("the klb with conditions:")
+    public void klb_phase_and_conditions(DataTable table) {
 
         // TODO: investigate using KubernetesClient.resources(KameletBinding.class) result in a bad patch
         kubernetesClient.genericKubernetesResources(KameletBinding.RESOURCE_DEFINITION)
@@ -66,7 +66,6 @@ public class KameletBindingSteps extends StepsSupport {
                         .build());
                 }
 
-                status.put("phase", phase);
                 status.put("conditions", conditions);
                 binding.getAdditionalProperties().put("status", status);
 
@@ -99,25 +98,6 @@ public class KameletBindingSteps extends StepsSupport {
         //
         //                return binding;
         //            });
-    }
-
-    @SuppressWarnings("unchecked")
-    @When("the klb phase is {string}")
-    public void klb_phase_and_conditions(String phase) {
-        kubernetesClient.genericKubernetesResources(KameletBinding.RESOURCE_DEFINITION)
-            .inNamespace(ctx.connector().getMetadata().getNamespace())
-            .withName(ctx.connector().getMetadata().getName())
-            .editStatus(binding -> {
-                Map<String, Object> status = (Map<String, Object>) binding.getAdditionalProperties().get("status");
-                if (status == null) {
-                    status = new HashMap<>();
-                }
-
-                status.put("phase", phase);
-                binding.getAdditionalProperties().put("status", status);
-
-                return binding;
-            });
     }
 
     @When("the klb path {string} is set to json:")
