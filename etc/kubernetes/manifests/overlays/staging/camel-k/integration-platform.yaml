@@ -1,4 +1,6 @@
 apiVersion: camel.apache.org/v1
 kind: IntegrationPlatform
 metadata:
-  name: camel-k
+  name: cos-fleetshard-operator-camel
+  annotations:
+    camel.apache.org/operator.id: "cos-fleetshard-operator-camel"
