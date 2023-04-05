@@ -1,0 +1,153 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: managedprocessors.cos.bf2.org
+spec:
+  group: cos.bf2.org
+  names:
+    kind: ManagedProcessor
+    plural: managedprocessors
+    shortNames:
+    - mpsr
+    singular: managedprocessor
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clusterId
+      name: CLUSTER_ID
+      type: string
+    - jsonPath: .spec.deploymentId
+      name: DEPLOYMENT_ID
+      type: string
+    - jsonPath: .status.processorStatus.phase
+      name: DEPLOYMENT_PHASE
+      type: string
+    - jsonPath: .status.phase
+      name: PHASE
+      type: string
+    - jsonPath: .spec.processorId
+      name: PROCESSOR_ID
+      type: string
+    - jsonPath: .spec.processorTypeId
+      name: PROCESSOR_TYPE_ID
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              clusterId:
+                type: string
+              definition:
+                type: string
+              deploymentId:
+                type: string
+              deploymentResourceVersion:
+                type: integer
+              desiredState:
+                type: string
+              kafka:
+                properties:
+                  id:
+                    type: string
+                  url:
+                    type: string
+                type: object
+              operatorSelector:
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  version:
+                    type: string
+                type: object
+              processorId:
+                type: string
+              processorTypeId:
+                type: string
+              secret:
+                type: string
+              unitOfWork:
+                type: string
+            type: object
+          status:
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      type: string
+                    message:
+                      type: string
+                    observedGeneration:
+                      type: integer
+                    reason:
+                      type: string
+                    status:
+                      type: string
+                    type:
+                      type: string
+                  type: object
+                type: array
+              phase:
+                enum:
+                - Initialization
+                - Augmentation
+                - Monitor
+                - Deleting
+                - Deleted
+                - Stopping
+                - Stopped
+                - Transferring
+                - Transferred
+                - Error
+                - id
+                type: string
+              processorStatus:
+                properties:
+                  assignedOperator:
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  availableOperator:
+                    properties:
+                      id:
+                        type: string
+                      type:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  conditions:
+                    items:
+                      properties:
+                        lastTransitionTime:
+                          type: string
+                        message:
+                          type: string
+                        observedGeneration:
+                          type: integer
+                        reason:
+                          type: string
+                        status:
+                          type: string
+                        type:
+                          type: string
+                      type: object
+                    type: array
+                  phase:
+                    type: string
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
