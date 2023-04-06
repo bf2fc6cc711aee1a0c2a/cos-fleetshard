@@ -55,7 +55,7 @@ public final class Resources {
     public static final String CONNECTOR_SECRET_DEPLOYMENT_SUFFIX = "-deploy";
     public static final String CONNECTOR_CONFIGMAP_SUFFIX = "-configmap";
 
-    public static final String PROCESSOR_PREFIX = "pcr-";
+    public static final String PROCESSOR_PREFIX = "mpsr-";
 
     public static final String LABEL_KCP_TARGET_CLUSTER_ID = "kcp.dev/cluster";
 

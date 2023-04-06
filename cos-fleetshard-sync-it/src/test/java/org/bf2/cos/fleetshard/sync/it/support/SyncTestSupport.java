@@ -24,6 +24,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorNamespaceState;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenant;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceTenantKind;
+import org.bf2.cos.fleet.manager.model.ProcessorDeployment;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentList;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentSpec;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
 
@@ -54,6 +57,19 @@ public class SyncTestSupport {
         items.total(deployments.length);
 
         for (ConnectorDeployment deployment : deployments) {
+            items.addItemsItem(deployment);
+        }
+
+        return Serialization.jsonMapper().convertValue(items, ObjectNode.class);
+    }
+
+    public static ObjectNode processorDeploymentList(ProcessorDeployment... deployments) {
+        var items = new ProcessorDeploymentList();
+        items.page(1);
+        items.size(deployments.length);
+        items.total(deployments.length);
+
+        for (ProcessorDeployment deployment : deployments) {
             items.addItemsItem(deployment);
         }
 
@@ -129,6 +145,24 @@ public class SyncTestSupport {
             .id(name)
             .metadata(new ConnectorDeploymentAllOfMetadata().resourceVersion(revision))
             .spec(new ConnectorDeploymentSpec());
+
+        deploymentConsumer.accept(answer);
+        deploymentSpecConsumer.accept(answer.getSpec());
+
+        return answer;
+    }
+
+    public static ProcessorDeployment processorDeployment(
+        String name,
+        long revision,
+        Consumer<ProcessorDeployment> deploymentConsumer,
+        Consumer<ProcessorDeploymentSpec> deploymentSpecConsumer) {
+
+        ProcessorDeployment answer = new ProcessorDeployment()
+            .kind("ProcessorDeployment")
+            .id(name)
+            .metadata(new ConnectorDeploymentAllOfMetadata().resourceVersion(revision))
+            .spec(new ProcessorDeploymentSpec());
 
         deploymentConsumer.accept(answer);
         deploymentSpecConsumer.accept(answer.getSpec());

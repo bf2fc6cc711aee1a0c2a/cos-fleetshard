@@ -66,6 +66,10 @@ public class FleetShardClient implements Service {
             .inAnyNamespace()
             .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
             .inform();
+        processorsInformer = kubernetesClient.resources(ManagedProcessor.class)
+            .inAnyNamespace()
+            .withLabel(Resources.LABEL_CLUSTER_ID, getClusterId())
+            .inform();
 
         operatorsInformer.stopped().whenComplete((unused, throwable) -> {
             if (throwable != null) {
@@ -85,6 +89,12 @@ public class FleetShardClient implements Service {
                 System.exit(-1);
             }
         });
+        processorsInformer.stopped().whenComplete((unused, throwable) -> {
+            if (throwable != null) {
+                LOGGER.warn("Processor informer has stopped working, exiting", throwable);
+                System.exit(-1);
+            }
+        });
     }
 
     @Override
@@ -92,6 +102,7 @@ public class FleetShardClient implements Service {
         Resources.closeQuietly(operatorsInformer);
         Resources.closeQuietly(namespaceInformers);
         Resources.closeQuietly(connectorsInformer);
+        Resources.closeQuietly(processorsInformer);
     }
 
     public String getClusterId() {
@@ -105,6 +116,13 @@ public class FleetShardClient implements Service {
     public long getMaxDeploymentResourceRevision() {
         return this.connectorsInformer.getIndexer().list().stream()
             .mapToLong(c -> c.getSpec().getDeployment().getDeploymentResourceVersion())
+            .max()
+            .orElse(0);
+    }
+
+    public long getProcessorMaxDeploymentResourceRevision() {
+        return this.processorsInformer.getIndexer().list().stream()
+            .mapToLong(c -> c.getSpec().getDeploymentResourceVersion())
             .max()
             .orElse(0);
     }
@@ -198,7 +216,6 @@ public class FleetShardClient implements Service {
             deployment.getId());
     }
 
-    // TODO remove duplication here?
     public Optional<Secret> getSecret(ProcessorDeployment deployment) {
         return getSecret(
             deployment.getSpec().getNamespaceId(),
@@ -221,6 +238,14 @@ public class FleetShardClient implements Service {
                 .get());
     }
 
+    public Optional<Secret> getProcessorSecret(String namespaceId, String deploymentId) {
+        return Optional.ofNullable(
+            kubernetesClient.secrets()
+                .inNamespace(generateNamespaceId(namespaceId))
+                .withName(Secrets.generateProcessorSecretId(deploymentId))
+                .get());
+    }
+
     // *************************************
     //
     // Connectors
@@ -233,17 +258,6 @@ public class FleetShardClient implements Service {
             .withName(managedConnector.getMetadata().getName())
             .withPropagationPolicy(DeletionPropagation.FOREGROUND)
             .delete().isEmpty();
-    }
-
-    public Optional<ManagedProcessor> getProcessor(NamespacedName id) {
-        if (connectorsInformer == null) {
-            throw new IllegalStateException("Informer must be started before adding handlers");
-        }
-
-        final String key = Cache.namespaceKeyFunc(id.getNamespace(), id.getName());
-        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
-
-        return Optional.ofNullable(val);
     }
 
     public Optional<ManagedConnector> getConnector(NamespacedName id) {
@@ -263,12 +277,6 @@ public class FleetShardClient implements Service {
             deployment.getId());
     }
 
-    public Optional<ManagedProcessor> getProcessor(ProcessorDeployment deployment) {
-        return getProcessor(
-            deployment.getSpec().getNamespaceId(),
-            deployment.getId());
-    }
-
     public Optional<ManagedConnector> getConnector(String namespaceId, String deploymentId) {
         if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
@@ -276,17 +284,6 @@ public class FleetShardClient implements Service {
 
         final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
         final ManagedConnector val = connectorsInformer.getIndexer().getByKey(key);
-
-        return Optional.ofNullable(val);
-    }
-
-    public Optional<ManagedProcessor> getProcessor(String namespaceId, String deploymentId) {
-        if (processorsInformer == null) {
-            throw new IllegalStateException("Informer must be started before adding handlers");
-        }
-
-        final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
-        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
     }
@@ -333,14 +330,92 @@ public class FleetShardClient implements Service {
             .createOrReplace();
     }
 
+    public String generateConnectorId(String namespaceId) {
+        return Connectors.generateConnectorId(namespaceId);
+    }
+
+    // *************************************
+    //
+    // Processors
+    //
+    // *************************************
+
+    public Boolean deleteProcessor(ManagedProcessor managedProcessor) {
+        return !kubernetesClient.resources(ManagedProcessor.class)
+            .inNamespace(managedProcessor.getMetadata().getNamespace())
+            .withName(managedProcessor.getMetadata().getName())
+            .withPropagationPolicy(DeletionPropagation.FOREGROUND)
+            .delete().isEmpty();
+    }
+
+    public Optional<ManagedProcessor> getProcessor(NamespacedName id) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = Cache.namespaceKeyFunc(id.getNamespace(), id.getName());
+        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
+    }
+
+    public Optional<ManagedProcessor> getProcessor(ProcessorDeployment deployment) {
+        return getProcessor(
+            deployment.getSpec().getNamespaceId(),
+            deployment.getId());
+    }
+
+    public Optional<ManagedProcessor> getProcessor(String namespaceId, String deploymentId) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateProcessorId(deploymentId));
+        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
+
+        return Optional.ofNullable(val);
+    }
+
+    public List<ManagedProcessor> getAllProcessors() {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        return processorsInformer.getIndexer().list();
+    }
+
+    public List<ManagedProcessor> getProcessors(String namespace) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        return processorsInformer.getIndexer().byIndex(Cache.NAMESPACE_INDEX, namespace);
+    }
+
+    public List<ManagedProcessor> getProcessors(Namespace namespace) {
+        return getProcessors(namespace.getMetadata().getName());
+    }
+
+    public void watchProcessors(Consumer<ManagedProcessor> handler) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        processorsInformer.addEventHandler(Informers.wrap(handler));
+    }
+
+    public void watchProcessors(ResourceEventHandler<ManagedProcessor> handler) {
+        if (processorsInformer == null) {
+            throw new IllegalStateException("Informer must be started before adding handlers");
+        }
+
+        processorsInformer.addEventHandler(handler);
+    }
+
     public ManagedProcessor createProcessor(ManagedProcessor processor) {
         return kubernetesClient.resource(processor)
             .inNamespace(processor.getMetadata().getNamespace())
             .createOrReplace();
-    }
-
-    public String generateConnectorId(String namespaceId) {
-        return Connectors.generateConnectorId(namespaceId);
     }
 
     public String generateProcessorId(String namespaceId) {

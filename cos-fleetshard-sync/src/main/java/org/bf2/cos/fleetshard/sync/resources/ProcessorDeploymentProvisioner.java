@@ -21,6 +21,7 @@ import org.bf2.cos.fleetshard.support.client.EventClient;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorder;
 import org.bf2.cos.fleetshard.support.resources.Processors;
 import org.bf2.cos.fleetshard.support.resources.Resources;
+import org.bf2.cos.fleetshard.support.resources.Secrets;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.bf2.cos.fleetshard.sync.client.FleetManagerClient;
 import org.bf2.cos.fleetshard.sync.client.FleetShardClient;
@@ -32,6 +33,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Secret;
 
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_CLUSTER_ID;
 import static org.bf2.cos.fleetshard.support.resources.Resources.LABEL_DEPLOYMENT_ID;
@@ -122,11 +124,14 @@ public class ProcessorDeploymentProvisioner {
             uow);
 
         ManagedProcessor processor = createProcessor(uow, deployment, null);
+        final Secret secret = createProcessorSecret(uow, deployment, processor);
 
-        LOGGER.info("CreateOrReplace - uow: {}, processor: {}/{}",
+        LOGGER.info("CreateOrReplace - uow: {}, processor: {}/{}, secret: {}/{}",
             uow,
             processor.getMetadata().getNamespace(),
-            processor.getMetadata().getName());
+            processor.getMetadata().getName(),
+            secret.getMetadata().getNamespace(),
+            secret.getMetadata().getName());
     }
 
     private ManagedProcessor createProcessor(String uow, ProcessorDeployment deployment, HasMetadata owner) {
@@ -211,7 +216,7 @@ public class ProcessorDeploymentProvisioner {
                 operatorSelector.getType());
         }
 
-        if (config != null) {
+        if (config != null && config.processors() != null) {
             config.processors().labels().forEach((k, v) -> {
                 Resources.setLabel(processor, k, v);
             });
@@ -239,7 +244,6 @@ public class ProcessorDeploymentProvisioner {
         processor.getSpec().setDeploymentResourceVersion(deployment.getMetadata().getResourceVersion());
         processor.getSpec().setDesiredState(deployment.getSpec().getDesiredState().getValue());
         processor.getSpec().setProcessorTypeId(deployment.getSpec().getProcessorTypeId());
-        processor.getSpec().setDeploymentResourceVersion(deployment.getSpec().getProcessorResourceVersion());
 
         KafkaConnectionSettings kafkaConnectionSettings = deployment.getSpec().getKafka();
         if (kafkaConnectionSettings != null) {
@@ -249,6 +253,7 @@ public class ProcessorDeploymentProvisioner {
         }
 
         processor.getSpec().setOperatorSelector(operatorSelector);
+        processor.getSpec().setSecret(Secrets.generateProcessorSecretId(deployment.getId()));
 
         copyMetadata(deployment, processor);
 
@@ -265,7 +270,69 @@ public class ProcessorDeploymentProvisioner {
         }
     }
 
+    private Secret createProcessorSecret(String uow, ProcessorDeployment deployment, ManagedProcessor owner) {
+        Secret secret = fleetShard.getSecret(deployment)
+            .orElseGet(() -> {
+                LOGGER.info(
+                    "Secret not found (cluster_id: {}, namespace_id: {}, processor_id: {}, deployment_id: {}, resource_version: {}), creating a new one",
+                    fleetShard.getClusterId(),
+                    deployment.getSpec().getNamespaceId(),
+                    deployment.getSpec().getProcessorId(),
+                    deployment.getId(),
+                    deployment.getMetadata().getResourceVersion());
+
+                Secret answer = new Secret();
+                answer.setMetadata(new ObjectMeta());
+                answer.getMetadata().setNamespace(fleetShard.generateNamespaceId(deployment.getSpec().getNamespaceId()));
+                answer.getMetadata().setName(Secrets.generateProcessorSecretId(deployment.getId()));
+
+                Resources.setLabels(
+                    answer,
+                    LABEL_CLUSTER_ID, fleetShard.getClusterId(),
+                    LABEL_PROCESSOR_ID, deployment.getSpec().getProcessorId(),
+                    LABEL_DEPLOYMENT_ID, deployment.getId(),
+                    LABEL_DEPLOYMENT_RESOURCE_VERSION, "" + deployment.getMetadata().getResourceVersion());
+
+                return answer;
+            });
+
+        Resources.setOwnerReferences(
+            secret,
+            owner);
+
+        // add resource version to label
+        Resources.setLabel(
+            secret,
+            LABEL_DEPLOYMENT_RESOURCE_VERSION,
+            "" + deployment.getMetadata().getResourceVersion());
+
+        // add uow
+        Resources.setLabel(
+            secret,
+            LABEL_UOW,
+            uow);
+
+        // copy operator type
+        Resources.setLabel(
+            secret,
+            LABEL_OPERATOR_TYPE,
+            owner.getMetadata().getLabels().get(LABEL_OPERATOR_TYPE));
+
+        Secrets.set(secret, Secrets.SECRET_ENTRY_SERVICE_ACCOUNT, deployment.getSpec().getServiceAccount());
+        Secrets.set(secret, Secrets.SECRET_ENTRY_META, deployment.getSpec().getShardMetadata());
+
+        copyMetadata(deployment, secret);
+
+        try {
+            return fleetShard.createSecret(secret);
+        } catch (Exception e) {
+            LOGGER.warn("", e);
+            throw e;
+        }
+    }
+
     // TODO remove duplication here
+    // Used for the billing model so it might be not necessary as well
     private void copyMetadata(ProcessorDeployment deployment, HasMetadata target) {
         if (deployment.getMetadata() != null && deployment.getMetadata().getAnnotations() != null) {
             config.metrics().recorder().tags().labels()
