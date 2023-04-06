@@ -130,19 +130,6 @@ public final class Secrets {
         return answer;
     }
 
-    public static String generateProcessorSecretId(String id) {
-        String answer = id;
-
-        if (!answer.startsWith(Resources.PROCESSOR_PREFIX)) {
-            answer = Resources.PROCESSOR_PREFIX + answer;
-        }
-        if (!answer.endsWith(Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX)) {
-            answer += Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;
-        }
-
-        return answer;
-    }
-
     public static String generateSecretId(String id) {
         String answer = id;
 

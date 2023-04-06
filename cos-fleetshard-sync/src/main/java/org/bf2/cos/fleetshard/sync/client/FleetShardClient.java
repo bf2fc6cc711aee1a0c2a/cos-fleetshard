@@ -15,7 +15,7 @@ import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorClusterSpecBuilder;
 import org.bf2.cos.fleetshard.api.ManagedConnectorOperator;
-import org.bf2.cos.fleetshard.api.Processor;
+import org.bf2.cos.fleetshard.api.ManagedProcessor;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Clusters;
 import org.bf2.cos.fleetshard.support.resources.Connectors;
@@ -49,7 +49,7 @@ public class FleetShardClient implements Service {
     private volatile SharedIndexInformer<ManagedConnector> connectorsInformer;
     private volatile SharedIndexInformer<ManagedConnectorOperator> operatorsInformer;
     private volatile SharedIndexInformer<Namespace> namespaceInformers;
-    private volatile SharedIndexInformer<Processor> processorsInformer;
+    private volatile SharedIndexInformer<ManagedProcessor> processorsInformer;
 
     @SuppressWarnings("PMD.DoNotTerminateVM")
     @Override
@@ -235,13 +235,13 @@ public class FleetShardClient implements Service {
             .delete().isEmpty();
     }
 
-    public Optional<Processor> getProcessor(NamespacedName id) {
+    public Optional<ManagedProcessor> getProcessor(NamespacedName id) {
         if (connectorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
         final String key = Cache.namespaceKeyFunc(id.getNamespace(), id.getName());
-        final Processor val = processorsInformer.getIndexer().getByKey(key);
+        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
     }
@@ -263,7 +263,7 @@ public class FleetShardClient implements Service {
             deployment.getId());
     }
 
-    public Optional<Processor> getProcessor(ProcessorDeployment deployment) {
+    public Optional<ManagedProcessor> getProcessor(ProcessorDeployment deployment) {
         return getProcessor(
             deployment.getSpec().getNamespaceId(),
             deployment.getId());
@@ -280,13 +280,13 @@ public class FleetShardClient implements Service {
         return Optional.ofNullable(val);
     }
 
-    public Optional<Processor> getProcessor(String namespaceId, String deploymentId) {
+    public Optional<ManagedProcessor> getProcessor(String namespaceId, String deploymentId) {
         if (processorsInformer == null) {
             throw new IllegalStateException("Informer must be started before adding handlers");
         }
 
         final String key = Cache.namespaceKeyFunc(generateNamespaceId(namespaceId), generateConnectorId(deploymentId));
-        final Processor val = processorsInformer.getIndexer().getByKey(key);
+        final ManagedProcessor val = processorsInformer.getIndexer().getByKey(key);
 
         return Optional.ofNullable(val);
     }
@@ -333,7 +333,7 @@ public class FleetShardClient implements Service {
             .createOrReplace();
     }
 
-    public Processor createProcessor(Processor processor) {
+    public ManagedProcessor createProcessor(ManagedProcessor processor) {
         return kubernetesClient.resource(processor)
             .inNamespace(processor.getMetadata().getNamespace())
             .createOrReplace();

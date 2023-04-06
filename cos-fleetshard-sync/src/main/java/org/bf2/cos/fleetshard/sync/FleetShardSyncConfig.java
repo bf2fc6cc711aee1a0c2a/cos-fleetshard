@@ -7,7 +7,7 @@ import java.util.Optional;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.api.ManagedConnectorCluster;
-import org.bf2.cos.fleetshard.api.Processor;
+import org.bf2.cos.fleetshard.api.ManagedProcessor;
 import org.bf2.cos.fleetshard.support.DurationConverter;
 import org.bf2.cos.fleetshard.support.metrics.MetricsRecorderConfig;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
@@ -249,14 +249,14 @@ public interface FleetShardSyncConfig {
 
     interface Processors {
         /**
-         * An optional map of additional labels to be added to the generated {@link Processor}.
+         * An optional map of additional labels to be added to the generated {@link }.
          *
          * @return the additional labels
          */
         Map<String, String> labels();
 
         /**
-         * An optional map of additional annotations to be added to the generated {@link Processor}.
+         * An optional map of additional annotations to be added to the generated {@link ManagedProcessor}.
          *
          * @return the additional annotations
          */
