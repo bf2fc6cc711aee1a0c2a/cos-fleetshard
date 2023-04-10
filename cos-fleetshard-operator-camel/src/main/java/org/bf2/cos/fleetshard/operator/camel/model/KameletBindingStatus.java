@@ -18,8 +18,6 @@ import lombok.ToString;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Buildable(builderPackage = "io.fabric8.kubernetes.api.builder")
 public class KameletBindingStatus {
-    public static final String PHASE_READY = "ready";
-    public static final String PHASE_ERROR = "error";
 
     @JsonProperty
     public String phase;

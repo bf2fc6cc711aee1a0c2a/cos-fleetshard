@@ -41,7 +41,6 @@ class OperandTest extends BaseSpec {
             CamelOperandSupport.computeStatus(
                     status,
                     new KameletBindingStatusBuilder()
-                            .withPhase(KameletBindingStatus.PHASE_READY)
                             .addToConditions(new ConditionBuilder()
                                     .withType("Ready")
                                     .withStatus("False")
@@ -57,6 +56,29 @@ class OperandTest extends BaseSpec {
             }
     }
 
+    def 'status (RuntimeNotReady)'() {
+        given:
+        def status = new ConnectorStatusSpec()
+
+        when:
+        CamelOperandSupport.computeStatus(
+                status,
+                new KameletBindingStatusBuilder()
+                        .addToConditions(new ConditionBuilder()
+                                .withType("Ready")
+                                .withStatus("False")
+                                .withReason("RuntimeNotReady")
+                                .withMessage("message")
+                                .build())
+                        .build());
+
+        then:
+        status.phase == STATE_FAILED
+        status.conditions.any {
+            it.type == 'Ready' && it.reason == 'RuntimeNotReady'
+        }
+    }
+
     def 'status (ready)'() {
         given:
         def status = new ConnectorStatusSpec()
@@ -65,7 +87,6 @@ class OperandTest extends BaseSpec {
         CamelOperandSupport.computeStatus(
                 status,
                 new KameletBindingStatusBuilder()
-                        .withPhase(KameletBindingStatus.PHASE_READY)
                         .addToConditions(new ConditionBuilder()
                                 .withType("Ready")
                                 .withStatus("True")
@@ -81,8 +102,6 @@ class OperandTest extends BaseSpec {
         }
     }
 
-
-
     def 'status (error)'() {
         given:
             def status = new ConnectorStatusSpec()
@@ -91,11 +110,10 @@ class OperandTest extends BaseSpec {
             CamelOperandSupport.computeStatus(
                     status,
                     new KameletBindingStatusBuilder()
-                            .withPhase(KameletBindingStatus.PHASE_ERROR)
                             .addToConditions(new ConditionBuilder()
                                     .withType("Ready")
                                     .withStatus("False")
-                                    .withReason("reason")
+                                    .withReason("Error")
                                     .withMessage("message")
                                     .build())
                             .build());
@@ -103,7 +121,7 @@ class OperandTest extends BaseSpec {
         then:
             status.phase == STATE_FAILED
             status.conditions.any {
-                it.type == 'Ready' && it.reason == 'reason'
+                it.type == 'Ready' && it.reason == 'Error'
             }
     }
 }

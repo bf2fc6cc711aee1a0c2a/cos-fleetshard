@@ -373,25 +373,20 @@ public final class CamelOperandSupport {
     }
 
     public static void computeStatus(ConnectorStatusSpec statusSpec, KameletBindingStatus kameletBindingStatus) {
-        if (kameletBindingStatus.phase != null) {
-            switch (kameletBindingStatus.phase.toLowerCase(Locale.US)) {
-                case KameletBindingStatus.PHASE_READY:
-                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                    if (kameletBindingStatus.conditions != null) {
-                        boolean readyCondition = kameletBindingStatus.conditions.stream()
-                            .anyMatch(cond -> "Ready".equals(cond.getType())
-                                && "True".equals(cond.getStatus()));
-                        if (readyCondition) {
-                            statusSpec.setPhase(ManagedConnector.STATE_READY);
-                        }
+        statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
+        if (kameletBindingStatus.conditions != null) {
+            Optional<Condition> readyConditionOpt = kameletBindingStatus.conditions.stream()
+                .filter(cond -> "Ready".equals(cond.getType())).findAny();
+            if (readyConditionOpt.isPresent()) {
+                Condition readyCondition = readyConditionOpt.get();
+                boolean klbReady = "True".equals(readyCondition.getStatus());
+                if (klbReady) {
+                    statusSpec.setPhase(ManagedConnector.STATE_READY);
+                } else {
+                    if (isErrorReasons(readyCondition.getReason())) {
+                        statusSpec.setPhase(ManagedConnector.STATE_FAILED);
                     }
-                    break;
-                case KameletBindingStatus.PHASE_ERROR:
-                    statusSpec.setPhase(ManagedConnector.STATE_FAILED);
-                    break;
-                default:
-                    statusSpec.setPhase(ManagedConnector.STATE_PROVISIONING);
-                    break;
+                }
             }
         }
 
@@ -414,6 +409,13 @@ public final class CamelOperandSupport {
                     "False".equals(cond.getStatus()))
             .findFirst()
             .ifPresent(ConditionMessageImprover::improve);
+    }
+
+    private static boolean isErrorReasons(String reason) {
+        if (reason == null) {
+            return false;
+        }
+        return List.of("Error", "RuntimeNotReady").contains(reason);
     }
 
     public static ObjectNode createErrorHandler(
