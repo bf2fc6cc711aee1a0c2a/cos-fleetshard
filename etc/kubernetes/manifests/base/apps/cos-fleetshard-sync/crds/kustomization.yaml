@@ -3,3 +3,4 @@ resources:
   - ./managedconnectorclusters.cos.bf2.org-v1.yml
   - ./managedconnectoroperators.cos.bf2.org-v1.yml
   - ./managedconnectors.cos.bf2.org-v1.yml
+  - ./managedprocessors.cos.bf2.org-v1.yml

@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.enterprise.context.ApplicationScoped;
 
 import org.bf2.cos.fleetshard.api.ManagedConnector;
+import org.bf2.cos.fleetshard.api.ManagedProcessor;
 import org.bf2.cos.fleetshard.support.Service;
 import org.bf2.cos.fleetshard.support.resources.Namespaces;
 import org.bf2.cos.fleetshard.support.resources.Resources;
@@ -73,14 +74,16 @@ public class NamespacesReaper implements Housekeeper.Task, Service {
 
     private void delete(Namespace ns) {
         Collection<ManagedConnector> connectors = fleetShardClient.getConnectors(ns);
+        Collection<ManagedProcessor> processors = fleetShardClient.getProcessors(ns);
 
         try {
-            LOGGER.info("Deleting namespace: {} (id: {}, state: {}, expiration: {}, connectors {}",
+            LOGGER.info("Deleting namespace: {} (id: {}, state: {}, expiration: {}, connectors {}, processors {}",
                 ns.getMetadata().getName(),
                 Resources.getLabel(ns, Resources.LABEL_NAMESPACE_ID),
                 Resources.getLabel(ns, Resources.LABEL_NAMESPACE_STATE),
                 Resources.getAnnotation(ns, Resources.ANNOTATION_NAMESPACE_EXPIRATION),
-                connectors.size());
+                connectors.size(),
+                processors.size());
 
             fleetShardClient.deleteNamespace(ns);
 

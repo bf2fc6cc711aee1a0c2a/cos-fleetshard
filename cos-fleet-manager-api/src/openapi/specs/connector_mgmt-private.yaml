@@ -405,6 +405,174 @@ paths:
               schema:
                 $ref: 'connector_mgmt.yaml#/components/schemas/Error'
 
+  '/api/connector_mgmt/v2alpha1/agent/kafka_connector_clusters/{connector_cluster_id}/processors/deployments':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAssignedProcessorDeployments
+      summary: Returns a list of processor deployments assigned to the cluster.
+      description: Returns a list of processor deployments assigned to the cluster.
+      parameters:
+        - $ref: 'connector_mgmt.yaml#/components/parameters/page'
+        - $ref: 'connector_mgmt.yaml#/components/parameters/size'
+        - in: query
+          name: gt_version
+          description: filters the processors to those with a version greater than the given value
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: watch
+          description: watch for changes to the resources and return them as a stream of watch events. Specify gt_version to specify the starting point.
+          schema:
+            type: string
+
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessorDeploymentList'
+          description: A list of processors
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
+          description: Auth token is invalid
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
+          description: Unexpected error occurred
+
+  '/api/connector_mgmt/v2alpha1/agent/kafka_connector_clusters/{connector_cluster_id}/processors/deployments/{processor_deployment_id}':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: processor_deployment_id
+        description: The id of the processor deployment
+        schema:
+          type: string
+        in: path
+        required: true
+    get:
+      tags:
+        - Connector Clusters Agent
+      security:
+        - Bearer: [ ]
+      operationId: getClusterAssignedProcessorDeploymentById
+      summary: Returns a processor deployment assigned to the cluster.
+      description: Returns a processor deployment assigned to the cluster.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessorDeployment'
+          description: A processor deployment
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                401Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/401Example'
+          description: Auth token is invalid
+        '410':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+          description: deployment has been deleted
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                500Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/500Example'
+          description: Unexpected error occurred
+
+  '/api/connector_mgmt/v2alpha1/agent/kafka_connector_clusters/{connector_cluster_id}/processors/deployments/{processor_deployment_id}/status':
+    parameters:
+      - name: connector_cluster_id
+        description: The id of the connector cluster
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: processor_deployment_id
+        description: The id of the processor deployment
+        schema:
+          type: string
+        in: path
+        required: true
+    put:
+      tags:
+        - Connector Clusters Agent
+      operationId: updateProcessorDeploymentStatus
+      summary: update the processor deployment status
+      description: update the processor deployment status
+      security:
+        - Bearer: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessorDeploymentStatus'
+        required: true
+      responses:
+        '200':
+          description: Processor deployment status is updated
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                400InvalidIdExample:
+                  $ref: '#/components/examples/400InvalidIdExample'
+          description: id value is not valid
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+              examples:
+                404Example:
+                  $ref: 'connector_mgmt.yaml#/components/examples/404Example'
+          # This is deliberate to hide the endpoints for unauthorised users
+          description: Auth token is not valid.
+        '410':
+          description: deployment has been deleted
+          content:
+            application/json:
+              schema:
+                $ref: 'connector_mgmt.yaml#/components/schemas/Error'
+
 components:
   schemas:
 
@@ -663,6 +831,102 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MetaV1Condition'
+
+    #
+    # Processors
+    #
+    ProcessorDeployment:
+      description: Holds the deployment configuration of a processor
+      allOf:
+        - $ref: 'connector_mgmt.yaml#/components/schemas/ObjectReference'
+        - type: object
+          properties:
+            metadata:
+              type: object
+              required:
+                - created_at
+                - updated_at
+                - resource_version
+                - resolved_secrets
+              properties:
+                created_at:
+                  format: date-time
+                  type: string
+                updated_at:
+                  format: date-time
+                  type: string
+                resource_version:
+                  type: integer
+                  format: int64
+                resolved_secrets:
+                  type: boolean
+                annotations:
+                  type: object
+                  additionalProperties:
+                    type: "string"
+            spec:
+              $ref: '#/components/schemas/ProcessorDeploymentSpec'
+            status:
+              $ref: '#/components/schemas/ProcessorDeploymentStatus'
+
+    ProcessorDeploymentSpec:
+      description: Holds the deployment specification of a processor
+      type: object
+      properties:
+        processor_id:
+          type: string
+        namespace_id:
+          type: string
+        processor_type_id:
+          type: string
+        desired_state:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ProcessorDesiredState'
+        shard_metadata:
+          type: object
+        processor_resource_version:
+          type: integer
+          format: int64
+        kafka:
+          $ref: 'connector_mgmt.yaml#/components/schemas/KafkaConnectionSettings'
+        service_account:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ServiceAccount'
+        definition:
+          type: object
+        operator_id:
+          description: an optional operator id that the processor should be run under.
+          type: string
+
+    ProcessorDeploymentStatus:
+      description: The status of processor deployment
+      type: object
+      properties:
+        phase:
+          $ref: 'connector_mgmt.yaml#/components/schemas/ProcessorState'
+        resource_version:
+          type: integer
+          format: int64
+        operators:
+          type: object
+          properties:
+            assigned:
+              $ref: '#/components/schemas/ConnectorOperator'
+            available:
+              $ref: '#/components/schemas/ConnectorOperator'
+        conditions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetaV1Condition'
+
+    ProcessorDeploymentList:
+      allOf:
+        - $ref: 'connector_mgmt.yaml#/components/schemas/List'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/ProcessorDeployment'
 
   securitySchemes:
     Bearer:
