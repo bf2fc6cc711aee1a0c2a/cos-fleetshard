@@ -31,7 +31,7 @@
         <groovy.version>4.0.11</groovy.version>
         <json-unit.version>2.37.0</json-unit.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <strimzi.version>0.33.0</strimzi.version>
+        <strimzi.version>0.34.0</strimzi.version>
         <bson.version>4.9.1</bson.version>
         <cucumber.version>7.1.0</cucumber.version>
         <json-path.version>2.8.0</json-path.version>
