@@ -57,13 +57,13 @@ public class ProcessorProvisionerTest extends SyncTestSupport {
     void processorIsProvisioned() {
         {
             given()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(0L)
-                    .post("/test/provisioner/namespaces");
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(0L)
+                .post("/test/provisioner/namespaces");
 
             Namespace ns1 = until(
-                    () -> fleetShardClient.getNamespace(clusterId),
-                    Objects::nonNull);
+                () -> fleetShardClient.getNamespace(clusterId),
+                Objects::nonNull);
         }
 
         {
@@ -72,32 +72,32 @@ public class ProcessorProvisionerTest extends SyncTestSupport {
             //
 
             given()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .accept(MediaType.TEXT_PLAIN)
-                    .body(0L)
-                    .post("/test/provisioner/processors");
+                .contentType(MediaType.TEXT_PLAIN)
+                .accept(MediaType.TEXT_PLAIN)
+                .body(0L)
+                .post("/test/provisioner/processors");
 
             Secret s1 = until(
-                    () -> fleetShardClient.getProcessorSecret(clusterId, DEPLOYMENT_ID),
-                    item -> Objects.equals(
-                            "1",
-                            item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
+                () -> fleetShardClient.getProcessorSecret(clusterId, DEPLOYMENT_ID),
+                item -> Objects.equals(
+                    "1",
+                    item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedProcessor mp = until(
-                    () -> fleetShardClient.getProcessor(clusterId, DEPLOYMENT_ID),
-                    item -> {
-                        return item.getSpec().getDeploymentResourceVersion() == 1L
-                                && item.getSpec().getSecret() != null;
-                    });
+                () -> fleetShardClient.getProcessor(clusterId, DEPLOYMENT_ID),
+                item -> {
+                    return item.getSpec().getDeploymentResourceVersion() == 1L
+                        && item.getSpec().getSecret() != null;
+                });
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                        .isEqualTo(Secrets.generateProcessorSecretId(mp.getSpec().getDeploymentId()));
+                    .isEqualTo(Secrets.generateProcessorSecretId(mp.getSpec().getDeploymentId()));
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_SERVICE_ACCOUNT))
-                        .isObject()
-                        .containsEntry("client_id", KAFKA_CLIENT_ID)
-                        .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
+                    .isObject()
+                    .containsEntry("client_id", KAFKA_CLIENT_ID)
+                    .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
             });
 
             assertThat(mp.getMetadata().getName()).startsWith(Resources.PROCESSOR_PREFIX);
@@ -110,32 +110,32 @@ public class ProcessorProvisionerTest extends SyncTestSupport {
             //
 
             given()
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .accept(MediaType.TEXT_PLAIN)
-                    .body(1L)
-                    .post("/test/provisioner/processors");
+                .contentType(MediaType.TEXT_PLAIN)
+                .accept(MediaType.TEXT_PLAIN)
+                .body(1L)
+                .post("/test/provisioner/processors");
 
             Secret s1 = until(
-                    () -> fleetShardClient.getProcessorSecret(clusterId, DEPLOYMENT_ID),
-                    item -> Objects.equals(
-                            "2",
-                            item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
+                () -> fleetShardClient.getProcessorSecret(clusterId, DEPLOYMENT_ID),
+                item -> Objects.equals(
+                    "2",
+                    item.getMetadata().getLabels().get(Resources.LABEL_DEPLOYMENT_RESOURCE_VERSION)));
 
             ManagedProcessor mc = until(
-                    () -> fleetShardClient.getProcessor(clusterId, DEPLOYMENT_ID),
-                    item -> {
-                        return item.getSpec().getDeploymentResourceVersion() == 2L
-                                && item.getSpec().getSecret() != null;
-                    });
+                () -> fleetShardClient.getProcessor(clusterId, DEPLOYMENT_ID),
+                item -> {
+                    return item.getSpec().getDeploymentResourceVersion() == 2L
+                        && item.getSpec().getSecret() != null;
+                });
 
             assertThat(s1).satisfies(item -> {
                 assertThat(item.getMetadata().getName())
-                        .isEqualTo(Secrets.generateProcessorSecretId(mc.getSpec().getDeploymentId()));
+                    .isEqualTo(Secrets.generateProcessorSecretId(mc.getSpec().getDeploymentId()));
 
                 assertThatJson(Secrets.extract(item, SECRET_ENTRY_SERVICE_ACCOUNT))
-                        .isObject()
-                        .containsEntry("client_id", KAFKA_CLIENT_ID)
-                        .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
+                    .isObject()
+                    .containsEntry("client_id", KAFKA_CLIENT_ID)
+                    .containsEntry("client_secret", KAFKA_CLIENT_SECRET);
             });
 
             assertThat(mc.getMetadata().getName()).startsWith(Resources.PROCESSOR_PREFIX);
@@ -149,21 +149,21 @@ public class ProcessorProvisionerTest extends SyncTestSupport {
         @Override
         public Map<String, String> getConfigOverrides() {
             return Map.of(
-                    "cos.cluster.id", getId(),
-                    "test.namespace", Namespaces.generateNamespaceId(getId()),
-                    "cos.namespace", Namespaces.generateNamespaceId(getId()),
-                    "cos.resources.poll-interval", "disabled",
-                    "cos.resources.resync-interval", "disabled",
-                    "cos.resources.update-interval", "disabled",
-                    "cos.metrics.recorder.tags.annotations[0]", "my.cos.bf2.org/processor-group",
-                    "cos.metrics.recorder.tags.labels[0]", "cos.bf2.org/organization-id",
-                    "cos.metrics.recorder.tags.labels[1]", "cos.bf2.org/pricing-tier");
+                "cos.cluster.id", getId(),
+                "test.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.namespace", Namespaces.generateNamespaceId(getId()),
+                "cos.resources.poll-interval", "disabled",
+                "cos.resources.resync-interval", "disabled",
+                "cos.resources.update-interval", "disabled",
+                "cos.metrics.recorder.tags.annotations[0]", "my.cos.bf2.org/processor-group",
+                "cos.metrics.recorder.tags.labels[0]", "cos.bf2.org/organization-id",
+                "cos.metrics.recorder.tags.labels[1]", "cos.bf2.org/pricing-tier");
         }
 
         @Override
         public List<TestResourceEntry> testResources() {
             return List.of(
-                    new TestResourceEntry(FleetManagerTestResource.class));
+                new TestResourceEntry(FleetManagerTestResource.class));
         }
     }
 
@@ -174,89 +174,89 @@ public class ProcessorProvisionerTest extends SyncTestSupport {
             final String clusterId = ConfigProvider.getConfig().getValue("cos.cluster.id", String.class);
 
             server.stubMatching(
-                    RequestMethod.GET,
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
-                    resp -> {
-                        JsonNode body = namespaceList(
-                                namespace(clusterId, clusterId));
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/namespaces",
+                resp -> {
+                    JsonNode body = namespaceList(
+                        namespace(clusterId, clusterId));
 
-                        resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                                .withJsonBody(body);
-                    });
-
-            server.stubMatching(
-                    RequestMethod.PUT,
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
-                    () -> WireMock.ok());
+                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
+                        .withJsonBody(body);
+                });
 
             server.stubMatching(
-                    RequestMethod.GET,
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
-                    req -> req.withQueryParam("gt_version", equalTo("0")),
-                    resp -> {
-                        JsonNode body = processorDeploymentList(
-                                processorDeployment(DEPLOYMENT_ID, 1L,
-                                                    depl -> {
-                                                        depl.getMetadata().annotations(Map.of());
-                                                    },
-                                                    spec -> {
-                                                        spec.namespaceId(clusterId);
-                                                        spec.processorId("processor-1");
-                                                        spec.processorTypeId("processor-type-1");
-                                                        spec.processorResourceVersion(1L);
-                                                        spec.kafka(
-                                                                new KafkaConnectionSettings()
-                                                                        .url(KAFKA_URL));
-                                                        spec.serviceAccount(
-                                                                new ServiceAccount()
-                                                                        .clientId(KAFKA_CLIENT_ID)
-                                                                        .clientSecret(KAFKA_CLIENT_SECRET));
-                                                        spec.shardMetadata(node(n -> {
-                                                            n.withArray("operators").addObject()
-                                                                    .put("type", "camel-connector-operator")
-                                                                    .put("version", "[1.0.0,2.0.0)");
-                                                        }));
-
-                                                        spec.desiredState(ProcessorDesiredState.READY);
-                                                    }));
-
-                        resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                                .withJsonBody(body);
-                    });
+                RequestMethod.PUT,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments/.*/status",
+                () -> WireMock.ok());
 
             server.stubMatching(
-                    RequestMethod.GET,
-                    "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
-                    req -> req.withQueryParam("gt_version", equalTo("1")),
-                    resp -> {
-                        JsonNode body = processorDeploymentList(
-                                processorDeployment(DEPLOYMENT_ID, 2L,
-                                                    depl -> {
-                                                        depl.getMetadata().annotations(Map.of());
-                                                    },
-                                                    spec -> {
-                                                        spec.namespaceId(clusterId);
-                                                        spec.processorId("processor-1");
-                                                        spec.processorTypeId("processor-type-1");
-                                                        spec.processorResourceVersion(1L);
-                                                        spec.kafka(
-                                                                new KafkaConnectionSettings()
-                                                                        .url(KAFKA_URL));
-                                                        spec.serviceAccount(
-                                                                new ServiceAccount()
-                                                                        .clientId(KAFKA_CLIENT_ID)
-                                                                        .clientSecret(KAFKA_CLIENT_SECRET));
-                                                        spec.shardMetadata(node(n -> {
-                                                            n.withArray("operators").addObject()
-                                                                    .put("type", "camel-connector-operator")
-                                                                    .put("version", "[1.0.0,2.0.0)");
-                                                        }));
-                                                        spec.desiredState(ProcessorDesiredState.READY);
-                                                    }));
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
+                req -> req.withQueryParam("gt_version", equalTo("0")),
+                resp -> {
+                    JsonNode body = processorDeploymentList(
+                        processorDeployment(DEPLOYMENT_ID, 1L,
+                            depl -> {
+                                depl.getMetadata().annotations(Map.of());
+                            },
+                            spec -> {
+                                spec.namespaceId(clusterId);
+                                spec.processorId("processor-1");
+                                spec.processorTypeId("processor-type-1");
+                                spec.processorResourceVersion(1L);
+                                spec.kafka(
+                                    new KafkaConnectionSettings()
+                                        .url(KAFKA_URL));
+                                spec.serviceAccount(
+                                    new ServiceAccount()
+                                        .clientId(KAFKA_CLIENT_ID)
+                                        .clientSecret(KAFKA_CLIENT_SECRET));
+                                spec.shardMetadata(node(n -> {
+                                    n.withArray("operators").addObject()
+                                        .put("type", "camel-connector-operator")
+                                        .put("version", "[1.0.0,2.0.0)");
+                                }));
 
-                        resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
-                                .withJsonBody(body);
-                    });
+                                spec.desiredState(ProcessorDesiredState.READY);
+                            }));
+
+                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
+                        .withJsonBody(body);
+                });
+
+            server.stubMatching(
+                RequestMethod.GET,
+                "/api/connector_mgmt/v1/agent/kafka_connector_clusters/.*/deployments",
+                req -> req.withQueryParam("gt_version", equalTo("1")),
+                resp -> {
+                    JsonNode body = processorDeploymentList(
+                        processorDeployment(DEPLOYMENT_ID, 2L,
+                            depl -> {
+                                depl.getMetadata().annotations(Map.of());
+                            },
+                            spec -> {
+                                spec.namespaceId(clusterId);
+                                spec.processorId("processor-1");
+                                spec.processorTypeId("processor-type-1");
+                                spec.processorResourceVersion(1L);
+                                spec.kafka(
+                                    new KafkaConnectionSettings()
+                                        .url(KAFKA_URL));
+                                spec.serviceAccount(
+                                    new ServiceAccount()
+                                        .clientId(KAFKA_CLIENT_ID)
+                                        .clientSecret(KAFKA_CLIENT_SECRET));
+                                spec.shardMetadata(node(n -> {
+                                    n.withArray("operators").addObject()
+                                        .put("type", "camel-connector-operator")
+                                        .put("version", "[1.0.0,2.0.0)");
+                                }));
+                                spec.desiredState(ProcessorDesiredState.READY);
+                            }));
+
+                    resp.withHeader(ContentTypeHeader.KEY, APPLICATION_JSON)
+                        .withJsonBody(body);
+                });
         }
     }
 }
