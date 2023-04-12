@@ -205,6 +205,18 @@ Use the `local` maven profile to run the application. It will use `quarkus:dev` 
 ----
 mvn -Dlocal
 ----
++
+* *Code style*
++
+The build process automatically formats the code according to the following Eclipse code formatter configuration files:
+
+- cos-build-tools/src/main/resources/eclipse-format.xml
+- cos-build-tools/src/main/resources/eclipse.importorder
++
+[TIP]
+====
+IntelliJ users can install the https://plugins.jetbrains.com/plugin/6546-adapter-for-eclipse-code-formatter[Adapter for Eclipse Code Formatter] plugin to use Eclipse code formatter directly from IntelliJ
+====
 
 == testing
 
