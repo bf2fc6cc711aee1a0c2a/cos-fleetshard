@@ -4,7 +4,7 @@ generatorOptions:
 
 commonLabels:
   app: strimzi
- 
+
 resources:
   # For the workflow pipeline to work the first resource should be the strimzi operator image.
   - https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.33.0/strimzi-cluster-operator-0.33.0.yaml
@@ -28,6 +28,8 @@ patches:
         name: ".*.strimzi.io"
   # By setting the value of the STRIMZI_NAMESPACE environment variable
   # to *, the Cluster Operator will watch resources across all namespaces
+  # Enable filtering of CRs w.r.t. a specific label
+  # Also Removing the env vars w.r.t. Leader Election mechanism
   - target:
       group: apps
       kind: Deployment
@@ -44,6 +46,8 @@ patches:
             containers:
             - name: strimzi-cluster-operator
               env:
+              - name: STRIMZI_CUSTOM_RESOURCE_SELECTOR
+                value: "cos.bf2.org/connector.operator=cos-fleetshard-operator-debezium"
               - name: STRIMZI_NAMESPACE            
                 valueFrom:
                   $patch: delete  
@@ -54,6 +58,18 @@ patches:
                     name: strimzi-override-config
                     key: log.level
                     optional: true
+              - name: STRIMZI_LEADER_ELECTION_ENABLED
+                valueFrom:
+                  $patch: delete
+              - name: STRIMZI_LEADER_ELECTION_LEASE_NAME
+                valueFrom:
+                  $patch: delete
+              - name: STRIMZI_LEADER_ELECTION_LEASE_NAMESPACE
+                valueFrom:
+                  $patch: delete
+              - name: STRIMZI_LEADER_ELECTION_IDENTITY
+                valueFrom:
+                  $patch: delete
               resources:
                 limits:
                   cpu: "1000m"
@@ -61,3 +77,16 @@ patches:
                 requests:
                   cpu: "100m"
                   memory: "384Mi"
+  # Removing the resources w.r.t. Leader Election mechanism
+  - patch: |-
+      $patch: delete
+      kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: "strimzi-cluster-operator-leader-election"
+  - patch: |-
+      $patch: delete
+      kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: "strimzi-cluster-operator-leader-election"
