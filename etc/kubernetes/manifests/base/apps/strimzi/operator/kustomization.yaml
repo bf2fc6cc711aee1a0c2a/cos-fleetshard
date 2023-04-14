@@ -59,17 +59,13 @@ patches:
                     key: log.level
                     optional: true
               - name: STRIMZI_LEADER_ELECTION_ENABLED
-                valueFrom:
-                  $patch: delete
+                $patch: delete
               - name: STRIMZI_LEADER_ELECTION_LEASE_NAME
-                valueFrom:
-                  $patch: delete
+                $patch: delete
               - name: STRIMZI_LEADER_ELECTION_LEASE_NAMESPACE
-                valueFrom:
-                  $patch: delete
+                $patch: delete
               - name: STRIMZI_LEADER_ELECTION_IDENTITY
-                valueFrom:
-                  $patch: delete
+                $patch: delete
               resources:
                 limits:
                   cpu: "1000m"
