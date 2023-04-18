@@ -1,8 +1,6 @@
 package org.bf2.cos.fleetshard.sync.it.support;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -42,12 +40,6 @@ public class TestFleetShardSync extends FleetShardSync {
     @ConfigProperty(name = "cos.cluster.id")
     String clusterId;
 
-    @ConfigProperty(name = "cos.observability.secrets-to-copy")
-    Optional<List<String>> secretsToCopy;
-
-    @ConfigProperty(name = "cos.observability.config-maps-to-copy")
-    Optional<List<String>> configMapsToCopy;
-
     @Override
     public void start() throws Exception {
         LOGGER.info("Creating namespace {}", namespace);
@@ -75,20 +67,6 @@ public class TestFleetShardSync extends FleetShardSync {
         addonPullSecret.setData(Map.of(ADDON_SECRET_FIELD, ADDON_SECRET_VALUE));
 
         client.resource(addonPullSecret).inNamespace(namespace).create();
-
-        secretsToCopy.ifPresent(
-            secretsNames -> secretsNames.forEach(
-                secretName -> client.resource(
-                    new SecretBuilder().withMetadata(new ObjectMetaBuilder().withName(secretName).build()).build())
-                    .inNamespace(namespace)
-                    .create()));
-
-        configMapsToCopy.ifPresent(
-            configMapNames -> configMapNames.forEach(
-                configMapName -> client.resource(
-                    new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName(configMapName).build()).build())
-                    .inNamespace(namespace)
-                    .create()));
 
         beforeStart();
 
