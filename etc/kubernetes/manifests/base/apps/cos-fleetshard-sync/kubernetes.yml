@@ -203,38 +203,6 @@ rules:
   - "watch"
 ---
 apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "Role"
-metadata:
-  name: "cos-fleetshard-sync-observability"
-rules:
-- apiGroups:
-  - "observability.redhat.com"
-  resources:
-  - "observabilities"
-  verbs:
-  - "create"
-  - "delete"
-  - "deletecollection"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
-- apiGroups:
-  - "operators.coreos.com"
-  resources:
-  - "subscriptions"
-  verbs:
-  - "create"
-  - "delete"
-  - "deletecollection"
-  - "get"
-  - "list"
-  - "patch"
-  - "update"
-  - "watch"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
 kind: "ClusterRole"
 metadata:
   name: "cos-fleetshard-sync-events"
@@ -286,18 +254,6 @@ roleRef:
   apiGroup: "rbac.authorization.k8s.io"
   kind: "Role"
   name: "cos-fleetshard-sync-operators"
-subjects:
-- kind: "ServiceAccount"
-  name: "cos-fleetshard-sync"
----
-apiVersion: "rbac.authorization.k8s.io/v1"
-kind: "RoleBinding"
-metadata:
-  name: "cos-fleetshard-sync-observability"
-roleRef:
-  apiGroup: "rbac.authorization.k8s.io"
-  kind: "Role"
-  name: "cos-fleetshard-sync-observability"
 subjects:
 - kind: "ServiceAccount"
   name: "cos-fleetshard-sync"

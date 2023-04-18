@@ -1,3 +1,2 @@
 resources:
-  - crds/observabilities.observability.redhat.com-v1.yml
   - crds/clusterversions.config.openshift.io-v1.yml

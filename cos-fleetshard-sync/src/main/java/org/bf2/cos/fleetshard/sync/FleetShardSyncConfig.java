@@ -79,8 +79,6 @@ public interface FleetShardSyncConfig {
 
     Quota quota();
 
-    Observability observability();
-
     interface Cluster {
         /**
          * The ID assigned to the operator.
@@ -308,35 +306,6 @@ public interface FleetShardSyncConfig {
         @WithDefault("10s")
         @WithConverter(DurationConverter.class)
         Duration readTimeout();
-    }
-
-    interface Observability {
-        @WithDefault("false")
-        boolean enabled();
-
-        @WithDefault("production")
-        String environment();
-
-        @WithDefault("redhat-openshift-connectors-observability")
-        String namespace();
-
-        @WithDefault("rhoc-observability-stack")
-        String resourceName();
-
-        @WithDefault("60m")
-        String resyncPeriod();
-
-        @WithDefault("30d")
-        String retention();
-
-        @WithDefault("100Gi")
-        String storageRequest();
-
-        @WithDefault("observability-operator")
-        String configuresMatchLabel();
-
-        @WithDefault("observatorium-configuration-red-hat-sso")
-        String observatoriumSecretName();
     }
 
 }

@@ -12,7 +12,6 @@ import org.bf2.cos.fleetshard.support.resources.Resources;
 import org.bf2.cos.fleetshard.support.watch.AbstractWatcher;
 import org.bf2.cos.fleetshard.sync.FleetShardSync;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
-import org.bf2.cos.fleetshard.sync.client.FleetShardObservabilityClient;
 import org.bf2.cos.fleetshard.sync.housekeeping.Housekeeper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private final KubernetesClient kubernetesClient;
     private final FleetShardSyncConfig config;
     private final FleetShardSync fleetShardSync;
-    private final FleetShardObservabilityClient observabilityClient;
     private final AddonConfigMapWatcher watcher;
     private final AtomicLong retries;
     private final AtomicBoolean running;
@@ -44,11 +42,10 @@ public class AddonReaper implements Housekeeper.Task, Service {
     private final EventClient eventClient;
 
     public AddonReaper(KubernetesClient kubernetesClient, FleetShardSyncConfig config, FleetShardSync fleetShardSync,
-        FleetShardObservabilityClient observabilityClient, EventClient eventClient) {
+        EventClient eventClient) {
         this.kubernetesClient = kubernetesClient;
         this.config = config;
         this.fleetShardSync = fleetShardSync;
-        this.observabilityClient = observabilityClient;
         this.eventClient = eventClient;
         this.watcher = new AddonConfigMapWatcher();
         this.retries = new AtomicLong(0);
@@ -109,9 +106,8 @@ public class AddonReaper implements Housekeeper.Task, Service {
         getNamespaceFilter().delete();
 
         eventClient.broadcastNormal(CLEANUP_EVENT_REASON, "Asking for Observability clean up");
-        observabilityClient.cleanUp();
 
-        if (getNamespaceFilter().list().getItems().isEmpty() && observabilityClient.isCleanedUp()) {
+        if (getNamespaceFilter().list().getItems().isEmpty()) {
             eventClient.broadcastNormal(CLEANUP_EVENT_REASON,
                 "All namespaces have been deleted. Deleting %s in namespace %s to signal that addon " +
                     "and operators removals should proceed.",
