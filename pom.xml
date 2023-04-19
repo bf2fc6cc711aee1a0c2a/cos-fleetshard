@@ -22,7 +22,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <lombok.version>1.18.26</lombok.version>
         <quarkus.version>2.16.4.Final</quarkus.version>
-        <quarkus-cucumber.version>0.6.0</quarkus-cucumber.version>
+        <quarkus-cucumber.version>1.0.0</quarkus-cucumber.version>
         <quarkus-operator-sdk.version>5.1.1</quarkus-operator-sdk.version>
         <swagger-annotations.version>1.6.10</swagger-annotations.version>
         <sundrio.version>0.93.1</sundrio.version>
