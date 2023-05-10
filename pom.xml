@@ -43,7 +43,7 @@
         <spotbugs.version>4.7.3</spotbugs.version>
 
         <formatter-maven-plugin.version>2.22.0</formatter-maven-plugin.version>
-        <impsort-maven-plugin.version>1.8.0</impsort-maven-plugin.version>
+        <impsort-maven-plugin.version>1.9.0</impsort-maven-plugin.version>
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.0.0</maven-failsafe-plugin.version>
