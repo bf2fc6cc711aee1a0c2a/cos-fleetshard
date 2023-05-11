@@ -58,7 +58,7 @@
         <maven-site-plugin.version>3.12.1</maven-site-plugin.version>
         <spotbugs-maven-plugin.version>4.7.3.4</spotbugs-maven-plugin.version>
         <maven-pmd-plugin.version>3.20.0</maven-pmd-plugin.version>
-        <openapi-generator-maven-plugin.version>6.4.0</openapi-generator-maven-plugin.version>
+        <openapi-generator-maven-plugin.version>6.6.0</openapi-generator-maven-plugin.version>
         <versions-maven-plugin.version>2.15.0</versions-maven-plugin.version>
         <git-commit-id-maven-plugin.version>5.0.0</git-commit-id-maven-plugin.version>
         <maven-assembly-plugin.version>3.5.0</maven-assembly-plugin.version>
