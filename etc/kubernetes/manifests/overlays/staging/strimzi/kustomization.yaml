@@ -1,2 +1,21 @@
+commonLabels:
+  app: strimzi
+
+generatorOptions:
+  disableNameSuffixHash: true
+
 resources:
-- ../../../base/apps/strimzi
+  - ../../../base/apps/strimzi/operator
+
+patchesJson6902:
+  - target:
+      kind: ServiceAccount
+      name: strimzi-cluster-operator
+      version: v1
+    patch: |-
+      - op: add
+        path: /metadata/namespace
+        value: "myproject"
+
+transformers:
+  - namePrefixConfig.yaml
