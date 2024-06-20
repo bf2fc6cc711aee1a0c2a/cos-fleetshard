@@ -116,15 +116,29 @@ class ReifyTest extends BaseSpec {
                 }
 
                 with(it.spec.steps) {
+                    it.size() == 5
+
                     it[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
                     it[0].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[0].ref.name == 'cos-decoder-json-action'
+                    it[0].ref.name == 'cos-resolve-schema-action'
+                    it[0].properties['mimeType'] == 'application/json'
 
-                    it[1].uri == 'direct:cos-transform'
+                    it[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it[1].ref.kind ==  Kamelet.RESOURCE_KIND
+                    it[1].ref.name == 'cos-data-type-action'
+                    it[1].properties['format'] == 'application-json'
 
-                    it[2].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
-                    it[2].ref.kind ==  Kamelet.RESOURCE_KIND
-                    it[2].ref.name == 'cos-encoder-json-action'
+                    it[2].uri == 'direct:cos-transform'
+
+                    it[0].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it[0].ref.kind ==  Kamelet.RESOURCE_KIND
+                    it[0].ref.name == 'cos-resolve-schema-action'
+                    it[0].properties['mimeType'] == 'application/json'
+
+                    it[1].ref.apiVersion == Kamelet.RESOURCE_API_VERSION
+                    it[1].ref.kind ==  Kamelet.RESOURCE_KIND
+                    it[1].ref.name == 'cos-data-type-action'
+                    it[1].properties['format'] == 'application-json'
                 }
             }
 
