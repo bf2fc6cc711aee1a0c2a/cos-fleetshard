@@ -1,0 +1,21 @@
+apiVersion: builtin
+kind: PrefixSuffixTransformer
+metadata:
+  name: "customPrefix"
+prefix: "cos-"
+fieldSpecs:
+  - path: metadata/name
+    apiVersion: v1
+    kind: ServiceAccount
+  - path: metadata/name
+    apiVersion: v1
+    kind: ClusterRole
+  - path: metadata/name
+    apiVersion: v1
+    kind: RoleBinding
+  - path: metadata/name
+    apiVersion: v1
+    kind: ClusterRoleBinding
+  - path: metadata/name
+    apiVersion: v1
+    kind: Role
