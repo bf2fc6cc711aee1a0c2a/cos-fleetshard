@@ -10,6 +10,7 @@ import javax.ws.rs.core.MediaType;
 import org.bf2.cos.fleetshard.sync.housekeeping.reapers.AddonReaper;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorDeploymentProvisioner;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorNamespaceProvisioner;
+import org.bf2.cos.fleetshard.sync.resources.ProcessorDeploymentProvisioner;
 import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
 
 @ApplicationScoped
@@ -19,6 +20,8 @@ public class SyncResource {
     ConnectorNamespaceProvisioner namespaceProvisioner;
     @Inject
     ConnectorDeploymentProvisioner deploymentProvisioner;
+    @Inject
+    ProcessorDeploymentProvisioner processorDeploymentProvisioner;
     @Inject
     AddonReaper addonReaper;
     @Inject
@@ -38,12 +41,20 @@ public class SyncResource {
         deploymentProvisioner.poll(gv);
     }
 
+    @Path("/provisioner/processors")
+    @POST
+    @Consumes(MediaType.TEXT_PLAIN)
+    public void pollProcessors(Long gv) {
+        processorDeploymentProvisioner.poll(gv);
+    }
+
     @Path("/provisioner/all")
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
     public void poll() {
         namespaceProvisioner.poll(0);
         deploymentProvisioner.poll(0);
+        processorDeploymentProvisioner.poll(0);
     }
 
     @Path("/provisioner/sync")

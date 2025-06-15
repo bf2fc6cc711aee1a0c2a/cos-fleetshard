@@ -10,6 +10,7 @@ import org.bf2.cos.fleetshard.sync.housekeeping.Housekeeper;
 import org.bf2.cos.fleetshard.sync.housekeeping.MetricsHousekeeper;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorClusterStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ConnectorStatusSync;
+import org.bf2.cos.fleetshard.sync.resources.ProcessorStatusSync;
 import org.bf2.cos.fleetshard.sync.resources.ResourcePoll;
 
 @ApplicationScoped
@@ -22,6 +23,8 @@ public class FleetShardSync implements Service {
     ConnectorStatusSync connectorStatusSync;
     @Inject
     ConnectorClusterStatusSync clusterStatusSync;
+    @Inject
+    ProcessorStatusSync processorStatusSync;
     @Inject
     Housekeeper housekeeping;
     @Inject
@@ -51,12 +54,14 @@ public class FleetShardSync implements Service {
         resourceSync.start();
         connectorStatusSync.start();
         clusterStatusSync.start();
+        processorStatusSync.start();
     }
 
     public void stopResourcesSync() throws Exception {
         Resources.closeQuietly(resourceSync);
         Resources.closeQuietly(connectorStatusSync);
         Resources.closeQuietly(clusterStatusSync);
+        Resources.closeQuietly(processorStatusSync);
     }
 
 }

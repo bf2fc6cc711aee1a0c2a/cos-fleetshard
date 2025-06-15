@@ -18,6 +18,9 @@ import org.bf2.cos.fleet.manager.model.ConnectorDeploymentStatus;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeployment;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentList;
 import org.bf2.cos.fleet.manager.model.ConnectorNamespaceDeploymentStatus;
+import org.bf2.cos.fleet.manager.model.ProcessorDeployment;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentList;
+import org.bf2.cos.fleet.manager.model.ProcessorDeploymentStatus;
 import org.bf2.cos.fleetshard.api.ManagedConnector;
 import org.bf2.cos.fleetshard.sync.FleetShardSyncConfig;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
@@ -77,9 +80,9 @@ public class FleetManagerClient {
         });
     }
 
-    public void getDeployments(long gv, Consumer<Collection<ConnectorDeployment>> consumer) {
+    public void getConnectorDeployments(long gv, Consumer<Collection<ConnectorDeployment>> consumer) {
         RestClientHelper.run(() -> {
-            LOGGER.debug("polling deployment with gv: {}", gv);
+            LOGGER.debug("polling connector deployments with gv: {}", gv);
 
             final AtomicInteger counter = new AtomicInteger();
             final List<ConnectorDeployment> items = new ArrayList<>();
@@ -93,6 +96,38 @@ public class FleetManagerClient {
 
                 if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
                     LOGGER.info("No connectors for cluster {}", config.cluster().id());
+                    break;
+                }
+
+                items.clear();
+                items.addAll(list.getItems());
+                items.sort(Comparator.comparingLong(d -> d.getMetadata().getResourceVersion()));
+
+                consumer.accept(items);
+
+                if (counter.addAndGet(items.size()) >= list.getTotal()) {
+                    break;
+                }
+            }
+        });
+    }
+
+    public void getProcessorDeployments(long gv, Consumer<Collection<ProcessorDeployment>> consumer) {
+        RestClientHelper.run(() -> {
+            LOGGER.debug("polling processor deployments with gv: {}", gv);
+
+            final AtomicInteger counter = new AtomicInteger();
+            final List<ProcessorDeployment> items = new ArrayList<>();
+
+            for (int i = 1; i < Integer.MAX_VALUE; i++) {
+                ProcessorDeploymentList list = controlPlane.getProcessorDeployments(
+                    config.cluster().id(),
+                    Integer.toString(i),
+                    null,
+                    gv);
+
+                if (list == null || list.getItems() == null || list.getItems().isEmpty()) {
+                    LOGGER.info("No processors for cluster {}", config.cluster().id());
                     break;
                 }
 
@@ -130,6 +165,20 @@ public class FleetManagerClient {
         });
     }
 
+    public void updateProcessorStatus(String clusterId, String deploymentId, ProcessorDeploymentStatus status) {
+        RestClientHelper.run(() -> {
+            LOGGER.info("Update processor status: cluster_id={}, deployment_id={}, status={}",
+                clusterId,
+                deploymentId,
+                Serialization.asJson(status));
+
+            controlPlane.updateProcessorDeploymentStatus(
+                clusterId,
+                deploymentId,
+                status);
+        });
+    }
+
     public void updateNamespaceStatus(String clusterId, String namespaceId, ConnectorNamespaceDeploymentStatus status) {
         RestClientHelper.run(() -> {
             LOGGER.info("Update namespace status: cluster_id={}, namespace_id={}, status={}",
@@ -155,4 +204,5 @@ public class FleetManagerClient {
                 status);
         });
     }
+
 }

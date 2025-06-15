@@ -31,6 +31,8 @@ public class ResourcePoll implements Service {
     @Inject
     ConnectorDeploymentProvisioner connectorsProvisioner;
     @Inject
+    ProcessorDeploymentProvisioner processorDeploymentProvisioner;
+    @Inject
     ConnectorNamespaceProvisioner namespaceProvisioner;
 
     @Inject
@@ -76,6 +78,7 @@ public class ResourcePoll implements Service {
     private void sync() {
         namespaceProvisioner.poll(BEGINNING);
         connectorsProvisioner.poll(BEGINNING);
+        processorDeploymentProvisioner.poll(BEGINNING);
     }
 
     private void poll() {
@@ -83,5 +86,7 @@ public class ResourcePoll implements Service {
             connectorClient.getMaxNamespaceResourceRevision());
         connectorsProvisioner.poll(
             connectorClient.getMaxDeploymentResourceRevision());
+        processorDeploymentProvisioner.poll(
+            connectorClient.getProcessorMaxDeploymentResourceRevision());
     }
 }

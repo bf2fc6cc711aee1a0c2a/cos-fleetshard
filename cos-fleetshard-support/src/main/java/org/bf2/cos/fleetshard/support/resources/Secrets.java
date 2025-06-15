@@ -17,6 +17,7 @@ import io.fabric8.kubernetes.client.utils.Serialization;
 
 public final class Secrets {
     public static final String SECRET_ENTRY_CONNECTOR = "connector";
+    public static final String SECRET_ENTRY_PROCESSOR = "processor";
     public static final String SECRET_ENTRY_SERVICE_ACCOUNT = "serviceAccount";
     public static final String SECRET_ENTRY_META = "meta";
 
@@ -121,6 +122,19 @@ public final class Secrets {
 
         if (!answer.startsWith(Resources.CONNECTOR_PREFIX)) {
             answer = Resources.CONNECTOR_PREFIX + answer;
+        }
+        if (!answer.endsWith(Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX)) {
+            answer += Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;
+        }
+
+        return answer;
+    }
+
+    public static String generateProcessorSecretId(String id) {
+        String answer = id;
+
+        if (!answer.startsWith(Resources.PROCESSOR_PREFIX)) {
+            answer = Resources.PROCESSOR_PREFIX + answer;
         }
         if (!answer.endsWith(Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX)) {
             answer += Resources.CONNECTOR_SECRET_DEPLOYMENT_SUFFIX;

@@ -452,6 +452,15 @@ paths:
                 404Example:
                   $ref: "#/components/examples/404Example"
           description: No matching resource exists
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                404Example:
+                  $ref: "#/components/examples/409Example"
+          description: An attempt was made to modify an immutable field
         "410":
           content:
             application/json:
@@ -1009,6 +1018,391 @@ paths:
                   $ref: "#/components/examples/500Example"
           description: An unexpected error occurred creating the connector namespace
 
+  /api/connector_mgmt/v2alpha1/processors:
+    get:
+      description: Returns a list of processors
+      operationId: listProcessors
+      parameters:
+        - description: Page index
+          examples:
+            page:
+              value: "1"
+          explode: true
+          in: query
+          name: page
+          required: false
+          schema:
+            type: string
+          style: form
+        - description: Number of items in each page
+          examples:
+            size:
+              value: "100"
+          explode: true
+          in: query
+          name: size
+          required: false
+          schema:
+            type: string
+          style: form
+        - description: |-
+            Specifies the order by criteria. The syntax of this parameter is
+            similar to the syntax of the `order by` clause of an SQL statement.
+            Each query can be ordered by any of the underlying resource fields supported in the search parameter.
+            For example, to return all Processors ordered by their name, use the following syntax:
+
+            ```sql
+            name asc
+            ```
+
+            If the parameter isn't provided, or if the value is empty, then
+            the results are ordered by name.
+          examples:
+            orderBy:
+              value: name asc
+          explode: true
+          in: query
+          name: orderBy
+          required: false
+          schema:
+            type: string
+          style: form
+        - description: |
+            Search criteria.
+
+            The syntax of this parameter is similar to the syntax of the `where` clause of a
+            SQL statement.
+
+            Allowed fields in the search depend on the resource type:
+
+            * Cluster: id, created_at, updated_at, owner, organisation_id, name, state, client_id
+            * Namespace: id, created_at, updated_at, name, cluster_id, owner, expiration, tenant_user_id, tenant_organisation_id, state
+            * [manstis] Need to add more
+
+            Allowed operators are `<>`, `=`, `LIKE`, or `ILIKE`.
+            Allowed conjunctive operators are `AND` and `OR`. However, you can use a maximum of 10 conjunctions in a search query.
+
+            Examples:
+
+            To return a Processor with the name `processor1`, use the following syntax:
+
+            ```
+            name = processor1
+            ```
+
+            To return a Processor with a name that starts with `proc`, use the following syntax:
+
+            ```
+            name like proc%25
+            ```
+
+            To return a Processor with a name containing `roc` matching any character case combination, use the following syntax:
+
+            ```
+            name ilike %25roc%25
+            ```
+
+            If the parameter isn't provided, or if the value is empty, then all the resources
+            that the user has permission to see are returned.
+
+            Note. If the query is invalid, an error is returned.
+          examples:
+            search:
+              value: name = processor1
+          explode: true
+          in: query
+          name: search
+          required: false
+          schema:
+            type: string
+          style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessorList'
+          description: A list of processors
+        "401":
+          content:
+            application/json:
+              examples:
+                "401Example":
+                  $ref: '#/components/examples/401Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        "500":
+          content:
+            application/json:
+              examples:
+                "500Example":
+                  $ref: '#/components/examples/500Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      security:
+        - Bearer: [ ]
+      summary: Returns a list of processors
+      tags:
+        - Processors
+    post:
+      description: Create a new processor
+      operationId: createProcessor
+      parameters:
+        - description: Perform the action in an asynchronous manner
+          explode: true
+          in: query
+          name: async
+          required: true
+          schema:
+            type: boolean
+          style: form
+      requestBody:
+        content:
+          application/json:
+            examples:
+              ProcessorCreateExample:
+                $ref: '#/components/examples/ProcessorCreateExample'
+            schema:
+              $ref: '#/components/schemas/ProcessorRequest'
+        description: Processor data
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Processor'
+          description: Accepted
+        "400":
+          content:
+            application/json:
+              examples:
+                "400CreationExample":
+                  $ref: '#/components/examples/400CreationExample'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Validation errors occurred
+        "401":
+          content:
+            application/json:
+              examples:
+                "401Example":
+                  $ref: '#/components/examples/401Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        "404":
+          content:
+            application/json:
+              examples:
+                "404Example":
+                  $ref: '#/components/examples/404Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource doesn't exist
+        "500":
+          content:
+            application/json:
+              examples:
+                "500Example":
+                  $ref: '#/components/examples/500Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: An unexpected error occurred creating the processor
+      security:
+        - Bearer: [ ]
+      summary: Create a new processor
+      tags:
+        - Processors
+  /api/connector_mgmt/v2alpha1/processors/{id}:
+    delete:
+      description: Delete a processor
+      operationId: deleteProcessor
+      parameters:
+        - description: The ID of record
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "204":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Deleted
+        "401":
+          content:
+            application/json:
+              examples:
+                "401Example":
+                  $ref: '#/components/examples/401Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        "404":
+          content:
+            application/json:
+              examples:
+                "404DeleteExample":
+                  $ref: '#/components/examples/404DeleteExample'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No processor with the specified ID exists
+        "500":
+          content:
+            application/json:
+              examples:
+                "500DeleteExample":
+                  $ref: '#/components/examples/500DeleteExample'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      security:
+        - Bearer: [ ]
+      summary: Delete a processor
+      tags:
+        - Processors
+    get:
+      description: Get a processor
+      operationId: getProcessor
+      parameters:
+        - description: The ID of record
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Processor'
+          description: The processor matching the request
+        "401":
+          content:
+            application/json:
+              examples:
+                "401Example":
+                  $ref: '#/components/examples/401Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        "404":
+          content:
+            application/json:
+              examples:
+                "404Example":
+                  $ref: '#/components/examples/404Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching processor exists
+        "410":
+          content:
+            application/json:
+              examples:
+                "404Example":
+                  $ref: '#/components/examples/410Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource doesn't exist anymore
+        "500":
+          content:
+            application/json:
+              examples:
+                "500Example":
+                  $ref: '#/components/examples/500Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      security:
+        - Bearer: [ ]
+      summary: Get a processor
+      tags:
+        - Processors
+    patch:
+      description: Patch a processor
+      operationId: patchProcessor
+      parameters:
+        - description: The ID of record
+          explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              type: object
+          application/json-patch+json:
+            schema:
+              description: A JSON Patch, RFC 6902 - https://tools.ietf.org/html/rfc6902
+              type: object
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessorRequest'
+        description: Data to patch the processor with
+        required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Processor'
+          description: The processor matching the request
+        "401":
+          content:
+            application/json:
+              examples:
+                "401Example":
+                  $ref: '#/components/examples/401Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Auth token is invalid
+        "404":
+          content:
+            application/json:
+              examples:
+                "404Example":
+                  $ref: '#/components/examples/404Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: No matching resource exists
+        "410":
+          content:
+            application/json:
+              examples:
+                "404Example":
+                  $ref: '#/components/examples/410Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: The requested resource doesn't exist anymore
+        "500":
+          content:
+            application/json:
+              examples:
+                "500Example":
+                  $ref: '#/components/examples/500Example'
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error occurred
+      security:
+        - Bearer: [ ]
+      summary: Patch a processor
+      tags:
+        - Processors
+
 components:
   schemas:
 
@@ -1563,6 +1957,120 @@ components:
             - tenant
             - status
 
+    #
+    # Processors
+    #
+    Processor:
+      allOf:
+        - $ref: "#/components/schemas/ObjectReference"
+        - $ref: "#/components/schemas/ProcessorMeta"
+        - $ref: "#/components/schemas/ProcessorConfiguration"
+        - $ref: "#/components/schemas/ProcessorStatus"
+
+    ProcessorList:
+      allOf:
+        - $ref: '#/components/schemas/List'
+        - $ref: '#/components/schemas/ProcessorList_allOf'
+
+    ProcessorList_allOf:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/Processor'
+          type: array
+
+    ProcessorRequest:
+      allOf:
+        - $ref: '#/components/schemas/ProcessorRequestMeta'
+        - $ref: '#/components/schemas/ProcessorConfiguration'
+
+    ProcessorMeta:
+      allOf:
+        - $ref: "#/components/schemas/ObjectMeta"
+        - $ref: "#/components/schemas/ProcessorRequestMeta"
+        - type: object
+          properties:
+            resource_version:
+              type: integer
+              format: int64
+
+    ProcessorRequestMeta:
+      type: object
+      required:
+        - name
+        - namespace_id
+        - processor_type_id
+        - desired_state
+      properties:
+        name:
+          type: string
+        namespace_id:
+          type: string
+        processor_type_id:
+          type: string
+        channel:
+          $ref: "#/components/schemas/Channel"
+        desired_state:
+          $ref: "#/components/schemas/ProcessorDesiredState"
+        annotations:
+          $ref: "#/components/schemas/ProcessorResourceAnnotations"
+
+    ProcessorConfiguration:
+      required:
+        - kafka
+        - service_account
+        - processor
+    properties:
+      kafka:
+        $ref: "#/components/schemas/KafkaConnectionSettings"
+      service_account:
+        $ref: '#/components/schemas/ServiceAccount'
+      schema_registry:
+        $ref: "#/components/schemas/SchemaRegistryConnectionSettings"
+      processor:
+        # processor specific properties
+        # data shape
+        # processors
+        # error handling
+        type: object
+
+    ProcessorResourceAnnotations:
+      description: Name-value string annotations for resource
+      type: object
+      additionalProperties:
+        type: "string"
+
+    ProcessorDesiredState:
+      type: string
+      enum:
+        - ready
+        - stopped
+        - deleted
+
+    ProcessorState:
+      type: string
+      enum:
+        - preparing
+        - prepared
+        - provisioning
+        - ready
+        - updating
+        - stopped
+        - failed
+        - deprovisioning
+        - deleting
+        - deleted
+
+    ProcessorStatus:
+      properties:
+        status:
+          type: object
+          properties:
+            state:
+              $ref: "#/components/schemas/ProcessorState"
+            error:
+              type: string
+
     MemoryQuota:
       description: Memory quota for limits or requests
       type: string
@@ -1837,6 +2345,22 @@ components:
         name: "MyEvalNamespace"
         annotations:
           "cos.bf2.org/profile": "evaluation-profile"
+    ProcessorCreateExample:
+      value:
+        name: "MyProcessor"
+        namespace_id: "my-namespace-id"
+        desired_state: "ready"
+        kafka:
+          id: "kafka-id"
+          url: "kafka-url"
+        service_account:
+          client_id: "SA-121212"
+          client_secret: "secret"
+        processor:
+          flows: "MyDefinition"
+        error_handling:
+          dead_letter_queue:
+            topic: "dlq"
     400CreationExample:
       value:
         id: "103"
